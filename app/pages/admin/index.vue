@@ -1,0 +1,3 @@
+<template>
+    <h1>Admin index page</h1>
+</template>
