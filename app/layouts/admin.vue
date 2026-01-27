@@ -20,6 +20,49 @@ watch(() => route.path, () => {
   isMobileMenuOpen.value = false
 })
 
+// Company Selector
+interface Company {
+  id: string
+  name: string
+  logo?: string
+}
+
+const availableCompanies = ref<Company[]>([
+  { id: '1', name: 'Acme Corporation', logo: undefined },
+  { id: '2', name: 'TechStart Inc.', logo: undefined },
+  { id: '3', name: 'Global Services', logo: undefined },
+])
+
+const selectedCompanyId = ref<string>(availableCompanies.value[0]?.id || '')
+const isCompanySelectorOpen = ref(false)
+
+const selectedCompany = computed(() => 
+  availableCompanies.value.find(c => c.id === selectedCompanyId.value)
+)
+
+const selectCompany = (companyId: string) => {
+  selectedCompanyId.value = companyId
+  isCompanySelectorOpen.value = false
+}
+
+const toggleCompanySelector = () => {
+  isCompanySelectorOpen.value = !isCompanySelectorOpen.value
+}
+
+// Cerrar selector al hacer click fuera
+const companySelectorRef = ref<HTMLElement | null>(null)
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+const handleClickOutside = (event: MouseEvent) => {
+  if (companySelectorRef.value && !companySelectorRef.value.contains(event.target as Node)) {
+    isCompanySelectorOpen.value = false
+  }
+}
+
 // Definición de módulos del sidebar
 const menuItems = [
   {
@@ -32,11 +75,6 @@ const menuItems = [
     title: 'Partners',
     icon: 'users',
     to: '/admin/partners'
-  },
-  {
-    title: 'Empresas',
-    icon: 'building',
-    to: '/admin/companies'
   },
   {
     title: 'Productos',
@@ -275,37 +313,123 @@ const handleLogout = () => {
             </div>
           </div>
 
-          <!-- Right: Search + Notifications + Avatar -->
+          <!-- Right: Selected Company + Avatar -->
           <div class="flex items-center gap-3">
-            <!-- Search -->
-            <!-- <div class="hidden md:flex items-center">
-              <div class="relative">
-                <input
-                  type="text"
-                  placeholder="Buscar..."
-                  class="w-64 pl-10 pr-4 py-2 text-sm bg-slate-100 border-0 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
-                />
+            <!-- Company Selector -->
+            <div ref="companySelectorRef" class="relative">
+              <button
+                type="button"
+                class="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                @click="toggleCompanySelector"
+              >
+                <!-- Company Icon -->
+                <div class="w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center flex-shrink-0">
+                  <span class="text-white text-xs font-semibold">
+                    {{ selectedCompany?.name?.charAt(0) || 'C' }}
+                  </span>
+                </div>
+                <!-- Company Name -->
+                <span class="hidden sm:block text-sm font-medium text-slate-700 max-w-[120px] truncate">
+                  {{ selectedCompany?.name || 'Seleccionar' }}
+                </span>
+                <!-- Chevron -->
                 <svg
-                  class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+                  :class="[
+                    'w-4 h-4 text-slate-400 transition-transform duration-200',
+                    isCompanySelectorOpen ? 'rotate-180' : ''
+                  ]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
-              </div>
-            </div> -->
+              </button>
 
-            <!-- Notifications -->
-            <!-- <button
-              type="button"
-              class="relative p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
-            </button> -->
+              <!-- Dropdown Menu -->
+              <Transition
+                enter-active-class="transition duration-200 ease-out"
+                enter-from-class="opacity-0 scale-95 -translate-y-1"
+                enter-to-class="opacity-100 scale-100 translate-y-0"
+                leave-active-class="transition duration-150 ease-in"
+                leave-from-class="opacity-100 scale-100 translate-y-0"
+                leave-to-class="opacity-0 scale-95 -translate-y-1"
+              >
+                <div
+                  v-if="isCompanySelectorOpen"
+                  class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50"
+                >
+                  <!-- Header -->
+                  <div class="px-3 py-2 border-b border-slate-100">
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                      Seleccionar empresa
+                    </p>
+                  </div>
+
+                  <!-- Company List -->
+                  <div class="max-h-60 overflow-y-auto py-1">
+                    <button
+                      v-for="company in availableCompanies"
+                      :key="company.id"
+                      type="button"
+                      :class="[
+                        'w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-slate-50 transition-colors',
+                        selectedCompanyId === company.id ? 'bg-indigo-50' : ''
+                      ]"
+                      @click="selectCompany(company.id)"
+                    >
+                      <!-- Company Icon -->
+                      <div
+                        :class="[
+                          'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
+                          selectedCompanyId === company.id 
+                            ? 'bg-gradient-to-br from-indigo-500 to-violet-600' 
+                            : 'bg-slate-200'
+                        ]"
+                      >
+                        <span
+                          :class="[
+                            'text-sm font-semibold',
+                            selectedCompanyId === company.id ? 'text-white' : 'text-slate-600'
+                          ]"
+                        >
+                          {{ company.name.charAt(0) }}
+                        </span>
+                      </div>
+                      <!-- Company Info -->
+                      <div class="flex-1 min-w-0">
+                        <p
+                          :class="[
+                            'text-sm font-medium truncate',
+                            selectedCompanyId === company.id ? 'text-indigo-700' : 'text-slate-700'
+                          ]"
+                        >
+                          {{ company.name }}
+                        </p>
+                      </div>
+                      <!-- Check Icon -->
+                      <svg
+                        v-if="selectedCompanyId === company.id"
+                        class="w-5 h-5 text-indigo-600 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <!-- Empty State -->
+                  <div
+                    v-if="availableCompanies.length === 0"
+                    class="px-3 py-4 text-center"
+                  >
+                    <p class="text-sm text-slate-500">No hay empresas disponibles</p>
+                  </div>
+                </div>
+              </Transition>
+            </div>
 
             <!-- Divider -->
             <div class="hidden sm:block w-px h-6 bg-slate-200" />
