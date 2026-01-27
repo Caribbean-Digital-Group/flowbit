@@ -1,0 +1,331 @@
+<script setup lang="ts">
+// Estado del sidebar
+const isSidebarOpen = ref(true)
+const isSidebarCollapsed = ref(false)
+const isMobileMenuOpen = ref(false)
+
+// Toggle sidebar en desktop (colapsado/expandido)
+const toggleSidebarCollapse = () => {
+  isSidebarCollapsed.value = !isSidebarCollapsed.value
+}
+
+// Toggle sidebar en mobile
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value
+}
+
+// Cerrar mobile menu al cambiar de ruta
+const route = useRoute()
+watch(() => route.path, () => {
+  isMobileMenuOpen.value = false
+})
+
+// Definición de módulos del sidebar
+const menuItems = [
+  {
+    title: 'Dashboard',
+    icon: 'dashboard',
+    to: '/admin',
+    exact: true
+  },
+  {
+    title: 'Partners',
+    icon: 'users',
+    to: '/admin/partners'
+  },
+  {
+    title: 'Empresas',
+    icon: 'building',
+    to: '/admin/companies'
+  },
+  {
+    title: 'Productos',
+    icon: 'cube',
+    to: '/admin/products'
+  },
+  {
+    title: 'Órdenes',
+    icon: 'clipboard',
+    to: '/admin/orders'
+  },
+  {
+    title: 'Reportes',
+    icon: 'chart',
+    to: '/admin/reports'
+  },
+  {
+    title: 'Configuración',
+    icon: 'settings',
+    to: '/admin/settings'
+  }
+]
+
+// Handlers para el Avatar dropdown
+const handleProfile = () => {
+  navigateTo('/admin/profile')
+}
+
+const handleLogout = () => {
+  console.log('Cerrando sesión...')
+  // Aquí puedes agregar la lógica de logout con Supabase
+}
+</script>
+
+<template>
+  <div class="min-h-screen bg-slate-100">
+    <!-- Mobile Menu Overlay -->
+    <Transition
+      enter-active-class="transition-opacity duration-300"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-300"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="isMobileMenuOpen"
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 lg:hidden"
+        @click="toggleMobileMenu"
+      />
+    </Transition>
+
+    <!-- Sidebar -->
+    <aside
+      :class="[
+        'fixed top-0 left-0 z-50 h-screen bg-white border-r border-slate-200 transition-all duration-300 ease-in-out',
+        // Desktop: colapsado o expandido
+        isSidebarCollapsed ? 'lg:w-20' : 'lg:w-64',
+        // Mobile: mostrar/ocultar
+        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      ]"
+    >
+      <!-- Logo Header -->
+      <div class="flex items-center justify-between h-16 px-4 border-b border-slate-200">
+        <NuxtLink
+          to="/admin"
+          class="flex items-center gap-2.5 group overflow-hidden"
+        >
+          <div class="w-9 h-9 min-w-[36px] bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25 group-hover:shadow-indigo-500/40 transition-shadow">
+            <span class="text-white font-bold text-sm">FB</span>
+          </div>
+          <Transition
+            enter-active-class="transition-all duration-300"
+            enter-from-class="opacity-0 -translate-x-4"
+            enter-to-class="opacity-100 translate-x-0"
+            leave-active-class="transition-all duration-200"
+            leave-from-class="opacity-100 translate-x-0"
+            leave-to-class="opacity-0 -translate-x-4"
+          >
+            <span
+              v-if="!isSidebarCollapsed"
+              class="text-xl font-semibold text-slate-900 whitespace-nowrap"
+            >
+              Flowbit
+            </span>
+          </Transition>
+        </NuxtLink>
+
+        <!-- Close button mobile -->
+        <button
+          type="button"
+          class="lg:hidden p-1.5 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          @click="toggleMobileMenu"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Navigation Menu -->
+      <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <NuxtLink
+          v-for="item in menuItems"
+          :key="item.to"
+          :to="item.to"
+          :class="[
+            'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group',
+            isSidebarCollapsed ? 'justify-center' : '',
+          ]"
+          active-class="bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/25"
+          :exact="item.exact"
+        >
+          <!-- Icons -->
+          <div class="w-5 h-5 min-w-[20px] flex items-center justify-center">
+            <!-- Dashboard -->
+            <svg v-if="item.icon === 'dashboard'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+            <!-- Users/Partners -->
+            <svg v-else-if="item.icon === 'users'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <!-- Building/Companies -->
+            <svg v-else-if="item.icon === 'building'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <!-- Cube/Products -->
+            <svg v-else-if="item.icon === 'cube'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+            <!-- Clipboard/Orders -->
+            <svg v-else-if="item.icon === 'clipboard'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+            <!-- Chart/Reports -->
+            <svg v-else-if="item.icon === 'chart'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <!-- Settings -->
+            <svg v-else-if="item.icon === 'settings'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+
+          <!-- Label -->
+          <Transition
+            enter-active-class="transition-all duration-300"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition-all duration-200"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+          >
+            <span
+              v-if="!isSidebarCollapsed"
+              class="whitespace-nowrap"
+              :class="[
+                $route.path === item.to || (!item.exact && $route.path.startsWith(item.to))
+                  ? 'text-white'
+                  : 'text-slate-600 group-hover:text-slate-900'
+              ]"
+            >
+              {{ item.title }}
+            </span>
+          </Transition>
+        </NuxtLink>
+      </nav>
+
+      <!-- Collapse Toggle Button (Desktop only) -->
+      <div class="hidden lg:block p-3 border-t border-slate-200">
+        <button
+          type="button"
+          :class="[
+            'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200',
+            isSidebarCollapsed ? 'justify-center' : ''
+          ]"
+          @click="toggleSidebarCollapse"
+        >
+          <svg
+            :class="[
+              'w-5 h-5 transition-transform duration-300',
+              isSidebarCollapsed ? 'rotate-180' : ''
+            ]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+          </svg>
+          <Transition
+            enter-active-class="transition-all duration-300"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition-all duration-200"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+          >
+            <span v-if="!isSidebarCollapsed" class="whitespace-nowrap">
+              Colapsar menú
+            </span>
+          </Transition>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div
+      :class="[
+        'transition-all duration-300 ease-in-out',
+        isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
+      ]"
+    >
+      <!-- Top Header -->
+      <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200">
+        <div class="flex items-center justify-between h-16 px-4 sm:px-6">
+          <!-- Left: Mobile menu button + Breadcrumb -->
+          <div class="flex items-center gap-4">
+            <!-- Mobile menu button -->
+            <button
+              type="button"
+              class="lg:hidden p-2 -ml-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              @click="toggleMobileMenu"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+
+            <!-- Page title / Breadcrumb slot -->
+            <div class="hidden sm:block">
+              <h1 class="text-lg font-semibold text-slate-900">
+                <slot name="header-title">Panel de Administración</slot>
+              </h1>
+            </div>
+          </div>
+
+          <!-- Right: Search + Notifications + Avatar -->
+          <div class="flex items-center gap-3">
+            <!-- Search -->
+            <!-- <div class="hidden md:flex items-center">
+              <div class="relative">
+                <input
+                  type="text"
+                  placeholder="Buscar..."
+                  class="w-64 pl-10 pr-4 py-2 text-sm bg-slate-100 border-0 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                />
+                <svg
+                  class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+            </div> -->
+
+            <!-- Notifications -->
+            <!-- <button
+              type="button"
+              class="relative p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+            </button> -->
+
+            <!-- Divider -->
+            <div class="hidden sm:block w-px h-6 bg-slate-200" />
+
+            <!-- Avatar Dropdown -->
+            <Avatar
+              name="Juan Pérez"
+              email="juan@ejemplo.com"
+              size="md"
+              @profile="handleProfile"
+              @logout="handleLogout"
+            />
+          </div>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <main class="p-4 sm:p-6 lg:p-8">
+        <slot />
+      </main>
+    </div>
+  </div>
+</template>
