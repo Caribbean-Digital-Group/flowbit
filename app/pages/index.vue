@@ -35,8 +35,8 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
               </a>
-              <a href="#galeria" class="inline-flex items-center justify-center px-6 py-3 border-2 border-white/30 text-base font-medium rounded-lg text-white hover:bg-white/10 transition-colors">
-                Ver galería
+              <a href="#ventajas" class="inline-flex items-center justify-center px-6 py-3 border-2 border-white/30 text-base font-medium rounded-lg text-white hover:bg-white/10 transition-colors">
+                Ver ventajas
               </a>
             </div>
             
@@ -46,13 +46,13 @@
                 <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                 </svg>
-                14 días gratis
+                Gratis para siempre
               </div>
               <div class="flex items-center gap-2">
                 <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                 </svg>
-                Sin tarjeta de crédito
+                Sin limite de usuarios
               </div>
               <div class="flex items-center gap-2">
                 <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
@@ -141,9 +141,9 @@
               <div class="mt-6 text-center">
                 <p class="text-sm text-gray-500">
                   ¿No tienes una cuenta?
-                  <a href="#" class="text-indigo-600 hover:text-indigo-700 font-medium">
+                  <span class="text-indigo-600 hover:text-indigo-700 font-medium">
                     Regístrate gratis
-                  </a>
+                  </span>
                 </p>
               </div>
             </div>
@@ -303,112 +303,204 @@
       </div>
     </section>
 
-    <!-- Gallery Section -->
-    <section id="galeria" class="bg-gray-900 px-4 sm:px-6 lg:px-8 py-20 scroll-mt-20">
-      <div class="max-w-7xl mx-auto">
+    <!-- Unique Advantages Section -->
+    <section id="ventajas" class="relative bg-gradient-to-br from-slate-50 via-white to-indigo-50 px-4 sm:px-6 lg:px-8 py-24 scroll-mt-20 overflow-hidden">
+      <!-- Decorative Background Shapes -->
+      <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <!-- Large gradient blob top right -->
+        <div class="absolute -top-32 -right-32 w-[500px] h-[500px] bg-gradient-to-br from-indigo-200/60 via-purple-200/40 to-pink-200/60 rounded-full blur-3xl animate-blob"></div>
+        <!-- Large gradient blob bottom left -->
+        <div class="absolute -bottom-32 -left-32 w-[400px] h-[400px] bg-gradient-to-tr from-cyan-200/60 via-blue-200/40 to-indigo-200/60 rounded-full blur-3xl animate-blob" style="animation-delay: 2s;"></div>
+        <!-- Center accent blob -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-violet-100/30 via-fuchsia-100/20 to-rose-100/30 rounded-full blur-3xl animate-blob" style="animation-delay: 4s;"></div>
+        
+        <!-- Geometric shapes -->
+        <svg class="absolute top-20 left-10 w-20 h-20 text-indigo-200 animate-float opacity-60" viewBox="0 0 100 100">
+          <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" fill="currentColor"/>
+        </svg>
+        <svg class="absolute top-40 right-20 w-16 h-16 text-purple-200 animate-float-delayed opacity-50" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill="currentColor"/>
+        </svg>
+        <svg class="absolute bottom-32 left-1/4 w-12 h-12 text-cyan-200 animate-float opacity-70" viewBox="0 0 100 100">
+          <rect x="10" y="10" width="80" height="80" rx="15" fill="currentColor" transform="rotate(15 50 50)"/>
+        </svg>
+        <svg class="absolute top-1/3 right-1/4 w-14 h-14 text-pink-200 animate-float-delayed opacity-60" viewBox="0 0 100 100">
+          <polygon points="50,10 90,90 10,90" fill="currentColor"/>
+        </svg>
+        <svg class="absolute bottom-20 right-16 w-10 h-10 text-amber-200 animate-float opacity-50" viewBox="0 0 100 100">
+          <polygon points="50,5 61,40 98,40 68,62 79,97 50,75 21,97 32,62 2,40 39,40" fill="currentColor"/>
+        </svg>
+      </div>
+
+      <div class="max-w-7xl mx-auto relative">
         <!-- Section Header -->
-        <div class="text-center mb-16">
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-500/20 text-indigo-300 mb-4">
-            Galería
+        <div class="text-center mb-20">
+          <span class="inline-flex items-center px-5 py-2.5 rounded-full text-sm font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 text-white mb-6 shadow-lg shadow-indigo-500/25">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+            Ventajas Únicas
           </span>
-          <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Conoce la plataforma
+          <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+            ¿Por qué elegir 
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 animate-gradient">Flowbit</span>?
           </h2>
-          <p class="text-lg text-gray-400 max-w-2xl mx-auto">
-            Explora las diferentes pantallas y funcionalidades de Flowbit. Interfaz intuitiva y moderna para una mejor experiencia.
+          <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            Una plataforma diseñada para democratizar la gestión operativa. 
+            Sin barreras, sin costos ocultos, sin límites.
           </p>
         </div>
         
-        <!-- Gallery Grid -->
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <!-- Image 1 - Dashboard -->
-          <div class="group relative overflow-hidden rounded-2xl bg-gray-800 aspect-video cursor-pointer">
-            <img 
-              src="https://placehold.co/600x400/1e1b4b/818cf8?text=Dashboard" 
-              alt="Dashboard principal" 
-              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div class="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div class="absolute bottom-0 left-0 right-0 p-6">
-                <h3 class="text-lg font-semibold text-white">Dashboard Principal</h3>
-                <p class="text-sm text-gray-300">Vista general de métricas y KPIs</p>
+        <!-- Main Advantages - Bento Grid Layout -->
+        <div class="grid lg:grid-cols-3 gap-6 mb-16">
+          <!-- Card 1 - Gratis de por vida (Large) -->
+          <div class="lg:col-span-2 group relative">
+            <div class="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+            <div class="relative h-full bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-8 border border-emerald-100 hover:border-emerald-300 transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-500/20 hover:-translate-y-1 overflow-hidden">
+              <!-- Decorative corner shape -->
+              <div class="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-emerald-200/50 to-teal-200/50 rounded-full"></div>
+              <div class="absolute -bottom-8 -left-8 w-32 h-32 bg-gradient-to-tr from-emerald-100/80 to-teal-100/80 rounded-full"></div>
+              
+              <div class="relative flex flex-col sm:flex-row items-start gap-6">
+                <div class="flex-shrink-0">
+                  <div class="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="flex-1">
+                  <div class="flex flex-wrap items-center gap-3 mb-4">
+                    <h3 class="text-2xl sm:text-3xl font-bold text-gray-900">Gratis de por vida</h3>
+                    <span class="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-bold rounded-full shadow-lg">$0 SIEMPRE</span>
+                  </div>
+                  <p class="text-gray-600 text-lg leading-relaxed">
+                    Sin costos ocultos, sin planes premium obligatorios. Accede a todas las funcionalidades sin pagar absolutamente nada. Nunca tendrás que sacar tu tarjeta de crédito. La gestión operativa profesional ahora es accesible para todos.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
           
-          <!-- Image 2 - Clients -->
-          <div class="group relative overflow-hidden rounded-2xl bg-gray-800 aspect-video cursor-pointer">
-            <img 
-              src="https://placehold.co/600x400/1e1b4b/34d399?text=Clientes" 
-              alt="Gestión de clientes" 
-              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div class="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div class="absolute bottom-0 left-0 right-0 p-6">
-                <h3 class="text-lg font-semibold text-white">Gestión de Clientes</h3>
-                <p class="text-sm text-gray-300">Administra tu cartera de clientes</p>
+          <!-- Card 2 - Open Source -->
+          <div class="group relative">
+            <div class="absolute inset-0 bg-gradient-to-r from-violet-400 to-purple-500 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+            <div class="relative h-full bg-gradient-to-br from-violet-50 to-purple-50 rounded-3xl p-8 border border-violet-100 hover:border-violet-300 transition-all duration-500 hover:shadow-2xl hover:shadow-violet-500/20 hover:-translate-y-1 overflow-hidden">
+              <div class="absolute -top-6 -right-6 w-24 h-24 bg-gradient-to-br from-violet-200/60 to-purple-200/60 rounded-full"></div>
+              
+              <div class="relative">
+                <div class="w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl shadow-violet-500/30 mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                  <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                  </svg>
+                </div>
+                <div class="flex items-center gap-2 mb-3">
+                  <h3 class="text-2xl font-bold text-gray-900">Open Source</h3>
+                  <span class="px-3 py-1 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-bold rounded-full">MIT</span>
+                </div>
+                <p class="text-gray-600 leading-relaxed">
+                  Código 100% abierto y transparente. Audita, modifica y contribuye al proyecto.
+                </p>
               </div>
             </div>
           </div>
           
-          <!-- Image 3 - Orders -->
-          <div class="group relative overflow-hidden rounded-2xl bg-gray-800 aspect-video cursor-pointer">
-            <img 
-              src="https://placehold.co/600x400/1e1b4b/f59e0b?text=Ordenes" 
-              alt="Órdenes de trabajo" 
-              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div class="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div class="absolute bottom-0 left-0 right-0 p-6">
-                <h3 class="text-lg font-semibold text-white">Órdenes de Trabajo</h3>
-                <p class="text-sm text-gray-300">Seguimiento completo de órdenes</p>
+          <!-- Card 3 - Sin límite de usuarios -->
+          <div class="group relative">
+            <div class="absolute inset-0 bg-gradient-to-r from-sky-400 to-blue-500 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+            <div class="relative h-full bg-gradient-to-br from-sky-50 to-blue-50 rounded-3xl p-8 border border-sky-100 hover:border-sky-300 transition-all duration-500 hover:shadow-2xl hover:shadow-sky-500/20 hover:-translate-y-1 overflow-hidden">
+              <div class="absolute -bottom-6 -right-6 w-28 h-28 bg-gradient-to-tl from-sky-200/60 to-blue-200/60 rounded-full"></div>
+              
+              <div class="relative">
+                <div class="w-16 h-16 bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-xl shadow-sky-500/30 mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                  </svg>
+                </div>
+                <div class="flex items-center gap-2 mb-3">
+                  <h3 class="text-2xl font-bold text-gray-900">Sin límites</h3>
+                  <span class="px-3 py-1 bg-gradient-to-r from-sky-500 to-blue-500 text-white text-xs font-bold rounded-full">ILIMITADO</span>
+                </div>
+                <p class="text-gray-600 leading-relaxed">
+                  Invita a todo tu equipo sin restricciones. 5 o 500 usuarios, todos acceden igual.
+                </p>
               </div>
             </div>
           </div>
           
-          <!-- Image 4 - Inventory -->
-          <div class="group relative overflow-hidden rounded-2xl bg-gray-800 aspect-video cursor-pointer">
-            <img 
-              src="https://placehold.co/600x400/1e1b4b/ec4899?text=Inventario" 
-              alt="Control de inventario" 
-              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div class="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div class="absolute bottom-0 left-0 right-0 p-6">
-                <h3 class="text-lg font-semibold text-white">Control de Inventario</h3>
-                <p class="text-sm text-gray-300">Gestión de productos y stock</p>
+          <!-- Card 4 - Sin conocimiento técnico (Large) -->
+          <div class="lg:col-span-2 group relative">
+            <div class="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-500 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+            <div class="relative h-full bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-8 border border-amber-100 hover:border-amber-300 transition-all duration-500 hover:shadow-2xl hover:shadow-amber-500/20 hover:-translate-y-1 overflow-hidden">
+              <div class="absolute -top-10 -left-10 w-40 h-40 bg-gradient-to-br from-amber-200/50 to-orange-200/50 rounded-full"></div>
+              <div class="absolute -bottom-8 -right-8 w-32 h-32 bg-gradient-to-tr from-amber-100/80 to-orange-100/80 rounded-full"></div>
+              
+              <div class="relative flex flex-col sm:flex-row items-start gap-6">
+                <div class="flex-shrink-0">
+                  <div class="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-xl shadow-amber-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="flex-1">
+                  <div class="flex flex-wrap items-center gap-3 mb-4">
+                    <h3 class="text-2xl sm:text-3xl font-bold text-gray-900">Sin conocimiento técnico</h3>
+                    <span class="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-bold rounded-full shadow-lg">SUPER FÁCIL</span>
+                  </div>
+                  <p class="text-gray-600 text-lg leading-relaxed">
+                    Interfaz intuitiva diseñada para cualquier usuario. No necesitas ser experto en tecnología para aprovechar al máximo todas las funcionalidades. Empieza a usar Flowbit en minutos, no en semanas.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-          
-          <!-- Image 5 - Calendar -->
-          <div class="group relative overflow-hidden rounded-2xl bg-gray-800 aspect-video cursor-pointer">
-            <img 
-              src="https://placehold.co/600x400/1e1b4b/06b6d4?text=Calendario" 
-              alt="Calendario de mantenimientos" 
-              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div class="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div class="absolute bottom-0 left-0 right-0 p-6">
-                <h3 class="text-lg font-semibold text-white">Calendario</h3>
-                <p class="text-sm text-gray-300">Programa mantenimientos y citas</p>
-              </div>
+        </div>
+        
+        <!-- Additional Features - Compact Cards -->
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <!-- Feature 1 -->
+          <div class="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 hover:border-teal-200 hover:bg-white transition-all duration-300 hover:shadow-xl hover:shadow-teal-500/10 hover:-translate-y-1">
+            <div class="w-14 h-14 bg-gradient-to-br from-teal-100 to-teal-200 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-7 h-7 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
             </div>
+            <h4 class="text-lg font-bold text-gray-900 mb-2">Acceso global</h4>
+            <p class="text-gray-500 text-sm leading-relaxed">Trabaja desde cualquier lugar y dispositivo, 24/7.</p>
           </div>
           
-          <!-- Image 6 - Reports -->
-          <div class="group relative overflow-hidden rounded-2xl bg-gray-800 aspect-video cursor-pointer">
-            <img 
-              src="https://placehold.co/600x400/1e1b4b/a855f7?text=Reportes" 
-              alt="Reportes y análisis" 
-              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div class="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div class="absolute bottom-0 left-0 right-0 p-6">
-                <h3 class="text-lg font-semibold text-white">Reportes y Análisis</h3>
-                <p class="text-sm text-gray-300">Visualiza datos y tendencias</p>
-              </div>
+          <!-- Feature 2 -->
+          <div class="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 hover:border-rose-200 hover:bg-white transition-all duration-300 hover:shadow-xl hover:shadow-rose-500/10 hover:-translate-y-1">
+            <div class="w-14 h-14 bg-gradient-to-br from-rose-100 to-rose-200 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-7 h-7 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
             </div>
+            <h4 class="text-lg font-bold text-gray-900 mb-2">Rendimiento óptimo</h4>
+            <p class="text-gray-500 text-sm leading-relaxed">Plataforma rápida y optimizada al máximo.</p>
+          </div>
+          
+          <!-- Feature 3 -->
+          <div class="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 hover:border-emerald-200 hover:bg-white transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1">
+            <div class="w-14 h-14 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+            </div>
+            <h4 class="text-lg font-bold text-gray-900 mb-2">Privacidad primero</h4>
+            <p class="text-gray-500 text-sm leading-relaxed">Tus datos son tuyos. No vendemos información.</p>
+          </div>
+          
+          <!-- Feature 4 -->
+          <div class="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 hover:border-blue-200 hover:bg-white transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1">
+            <div class="w-14 h-14 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+              </svg>
+            </div>
+            <h4 class="text-lg font-bold text-gray-900 mb-2">Documentación completa</h4>
+            <p class="text-gray-500 text-sm leading-relaxed">Guías y tutoriales para dominar la plataforma.</p>
           </div>
         </div>
       </div>
@@ -431,13 +523,10 @@
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
               <a href="#" class="inline-flex items-center justify-center px-8 py-4 bg-white text-indigo-600 font-semibold rounded-xl hover:bg-indigo-50 transition-colors shadow-lg">
-                Comenzar prueba gratuita
+                Registrate gratis
                 <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                 </svg>
-              </a>
-              <a href="#" class="inline-flex items-center justify-center px-8 py-4 border-2 border-white/30 text-white font-semibold rounded-xl hover:bg-white/10 transition-colors">
-                Solicitar demo
               </a>
             </div>
           </div>
@@ -465,3 +554,80 @@ const handleLogin = () => {
   // TODO: Implement actual login logic with Supabase
 }
 </script>
+
+<style scoped>
+/* Floating animation for geometric shapes */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-15px) rotate(5deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(-3deg);
+  }
+  75% {
+    transform: translateY(-20px) rotate(3deg);
+  }
+}
+
+@keyframes float-delayed {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-12px) rotate(-5deg);
+  }
+  50% {
+    transform: translateY(-18px) rotate(4deg);
+  }
+  75% {
+    transform: translateY(-6px) rotate(-2deg);
+  }
+}
+
+/* Blob animation for background shapes */
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(20px, -30px) scale(1.05);
+  }
+  50% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
+  75% {
+    transform: translate(30px, 10px) scale(1.02);
+  }
+}
+
+@keyframes gradient {
+  0%, 100% {
+    background-size: 200% 200%;
+    background-position: left center;
+  }
+  50% {
+    background-size: 200% 200%;
+    background-position: right center;
+  }
+}
+
+.animate-float {
+  animation: float 8s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 10s ease-in-out infinite;
+}
+
+.animate-blob {
+  animation: blob 15s ease-in-out infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 4s ease infinite;
+}
+</style>
