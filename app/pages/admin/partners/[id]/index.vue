@@ -17,13 +17,32 @@ const isLoading = ref(false)
 
 // Datos del partner (normalmente vendrían de una API)
 const partner = reactive({
+  // Información básica
   name: 'Acme Corporation',
+  display_name: 'Acme Corp',
   email: 'contacto@acme.com',
   phone: '+52 55 1234 5678',
-  address: 'Av. Insurgentes Sur 1234, CDMX, México',
+  mobile: '+52 55 8765 4321',
+  website: 'https://www.acme.com',
+  
+  // Dirección
+  street: 'Av. Insurgentes Sur 1234',
+  street2: 'Piso 5, Oficina 501',
+  city: 'Ciudad de México',
+  state: 'CDMX',
+  zip: '03100',
+  country_code: 'MX',
+  
+  // Información adicional
   company_type: 'company',
   is_company: true,
   parent_id: null,
+  vat: 'ACM850101ABC',
+  function: 'Proveedor Principal',
+  credit_limit: 50000,
+  comment: 'Cliente preferente desde 2020',
+  
+  // Metadata
   created_at: '2026-01-15T10:30:00Z',
   updated_at: '2026-01-28T15:45:00Z',
   created_by: 'Juan Pérez',
@@ -262,42 +281,177 @@ const formatDate = (dateString: string): string => {
       <!-- ════════════════════════════════════════════════════════════════════ -->
       <!-- SLOT DEFAULT: Contenido principal del card                           -->
       <!-- ════════════════════════════════════════════════════════════════════ -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Información básica -->
-        <div class="space-y-4">
-          <h3 class="text-lg font-semibold text-slate-800">Información de Contacto</h3>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- ─────────────────────────────────────────────────────────────────── -->
+        <!-- INFORMACIÓN BÁSICA                                                  -->
+        <!-- ─────────────────────────────────────────────────────────────────── -->
+        <div class="space-y-6">
+          <h3 class="text-lg font-semibold text-slate-800 border-b border-slate-200 pb-2">
+            Información Básica
+          </h3>
           
-          <div class="space-y-3">
-            <div>
-              <label class="text-sm font-medium text-slate-500">Email</label>
-              <p class="text-base text-slate-800">{{ partner.email }}</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="sm:col-span-2">
+              <FormInput
+                v-model="partner.name"
+                label="Nombre"
+                placeholder="Nombre del partner"
+                :readonly="!isEditing"
+                required
+                size="md"
+              />
             </div>
-            <div>
-              <label class="text-sm font-medium text-slate-500">Teléfono</label>
-              <p class="text-base text-slate-800">{{ partner.phone }}</p>
+            
+            <div class="sm:col-span-2">
+              <FormInput
+                v-model="partner.display_name"
+                label="Nombre para mostrar"
+                placeholder="Nombre comercial o alias"
+                :readonly="!isEditing"
+                size="md"
+              />
             </div>
-            <div>
-              <label class="text-sm font-medium text-slate-500">Dirección</label>
-              <p class="text-base text-slate-800">{{ partner.address }}</p>
-            </div>
+            
+            <FormInput
+              v-model="partner.email"
+              type="email"
+              label="Email"
+              placeholder="correo@ejemplo.com"
+              :readonly="!isEditing"
+              size="md"
+            />
+            
+            <FormInput
+              v-model="partner.phone"
+              type="tel"
+              label="Teléfono"
+              placeholder="+52 55 1234 5678"
+              :readonly="!isEditing"
+              size="md"
+            />
+            
+            <FormInput
+              v-model="partner.mobile"
+              type="tel"
+              label="Móvil"
+              placeholder="+52 55 8765 4321"
+              :readonly="!isEditing"
+              size="md"
+            />
+            
+            <FormInput
+              v-model="partner.website"
+              type="url"
+              label="Sitio Web"
+              placeholder="https://www.ejemplo.com"
+              :readonly="!isEditing"
+              size="md"
+            />
           </div>
         </div>
 
-        <!-- Información adicional -->
-        <div class="space-y-4">
-          <h3 class="text-lg font-semibold text-slate-800">Detalles</h3>
+        <!-- ─────────────────────────────────────────────────────────────────── -->
+        <!-- INFORMACIÓN ADICIONAL                                               -->
+        <!-- ─────────────────────────────────────────────────────────────────── -->
+        <div class="space-y-6">
+          <h3 class="text-lg font-semibold text-slate-800 border-b border-slate-200 pb-2">
+            Información Adicional
+          </h3>
           
-          <div class="space-y-3">
-            <div>
-              <label class="text-sm font-medium text-slate-500">Tipo</label>
-              <p class="text-base text-slate-800">
-                {{ partner.is_company ? 'Empresa' : 'Persona Natural' }}
-              </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormInput
+              v-model="partner.vat"
+              label="RFC / NIT / RUT"
+              placeholder="Identificación fiscal"
+              :readonly="!isEditing"
+              size="md"
+            />
+            
+            <FormInput
+              v-model="partner.function"
+              label="Cargo / Función"
+              placeholder="Ej: Proveedor, Cliente"
+              :readonly="!isEditing"
+              size="md"
+            />
+            
+            <FormInput
+              v-model="partner.credit_limit"
+              type="number"
+              label="Límite de Crédito"
+              placeholder="0.00"
+              :readonly="!isEditing"
+              size="md"
+            />
+            
+            <div class="sm:col-span-2">
+              <FormInput
+                v-model="partner.comment"
+                label="Comentarios"
+                placeholder="Notas adicionales sobre el partner"
+                :readonly="!isEditing"
+                size="md"
+              />
             </div>
-            <div>
-              <label class="text-sm font-medium text-slate-500">ID</label>
-              <p class="text-base text-slate-800 font-mono">{{ id }}</p>
+          </div>
+          
+          <!-- Dirección -->
+          <h4 class="text-base font-medium text-slate-700 border-b border-slate-100 pb-2 mt-6">
+            Dirección
+          </h4>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="sm:col-span-2">
+              <FormInput
+                v-model="partner.street"
+                label="Calle"
+                placeholder="Av. Principal 123"
+                :readonly="!isEditing"
+                size="md"
+              />
             </div>
+            
+            <div class="sm:col-span-2">
+              <FormInput
+                v-model="partner.street2"
+                label="Calle 2"
+                placeholder="Piso, oficina, interior"
+                :readonly="!isEditing"
+                size="md"
+              />
+            </div>
+            
+            <FormInput
+              v-model="partner.city"
+              label="Ciudad"
+              placeholder="Ciudad"
+              :readonly="!isEditing"
+              size="md"
+            />
+            
+            <FormInput
+              v-model="partner.state"
+              label="Estado / Provincia"
+              placeholder="Estado"
+              :readonly="!isEditing"
+              size="md"
+            />
+            
+            <FormInput
+              v-model="partner.zip"
+              label="Código Postal"
+              placeholder="12345"
+              :readonly="!isEditing"
+              size="md"
+            />
+            
+            <FormInput
+              v-model="partner.country_code"
+              label="País"
+              placeholder="MX"
+              :readonly="!isEditing"
+              size="md"
+            />
           </div>
         </div>
       </div>
