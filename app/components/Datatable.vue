@@ -11,36 +11,13 @@
       <!-- Search & Export Actions -->
       <div class="flex flex-col sm:flex-row gap-3">
         <!-- Search Input -->
-        <div class="flex items-center gap-3 px-4 h-12 bg-slate-50 border border-slate-200 rounded-xl 
-                    focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition-all sm:w-80">
-          <svg 
-            class="w-5 h-5 text-slate-400 flex-shrink-0" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
+        <div class="w-80">
+            <FormInput
             v-model="searchQuery"
             type="text"
             :placeholder="searchPlaceholder"
-            class="flex-1 h-full bg-transparent text-base text-slate-900 placeholder-slate-400 
-                   outline-none border-none focus:ring-0"
-          />
-          <!-- Clear search button -->
-          <button
-            v-if="searchQuery"
-            @click="searchQuery = ''"
-            class="p-1 text-slate-400 hover:text-slate-600 transition-colors rounded-md hover:bg-slate-200 flex-shrink-0"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+            />
         </div>
-
         <!-- Export CSV Button -->
         <button
           v-if="exportable"
@@ -58,6 +35,26 @@
 
         <!-- Custom header actions slot -->
         <slot name="headerActions" />
+      </div>
+    </div>
+
+        <!-- Selected items info bar -->
+    <div
+      v-if="selectable && selectedRows.length > 0"
+      class="mt-4 mb-4 px-6 py-4 bg-indigo-50 rounded-xl border border-indigo-100 flex items-center justify-between"
+    >
+      <p class="text-base text-indigo-700">
+        <span class="font-bold">{{ selectedRows.length }}</span> elemento(s) seleccionado(s)
+      </p>
+      <div class="flex items-center gap-3">
+        <slot name="bulkActions" :selected="selectedRows" />
+        <button
+          @click="clearSelection"
+          class="px-4 py-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700 
+                 hover:bg-indigo-100 rounded-lg transition-colors"
+        >
+          Limpiar selección
+        </button>
       </div>
     </div>
 
@@ -362,25 +359,6 @@
       </div>
     </div>
 
-    <!-- Selected items info bar -->
-    <div
-      v-if="selectable && selectedRows.length > 0"
-      class="mt-4 px-6 py-4 bg-indigo-50 rounded-xl border border-indigo-100 flex items-center justify-between"
-    >
-      <p class="text-base text-indigo-700">
-        <span class="font-bold">{{ selectedRows.length }}</span> elemento(s) seleccionado(s)
-      </p>
-      <div class="flex items-center gap-3">
-        <slot name="bulkActions" :selected="selectedRows" />
-        <button
-          @click="clearSelection"
-          class="px-4 py-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700 
-                 hover:bg-indigo-100 rounded-lg transition-colors"
-        >
-          Limpiar selección
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
