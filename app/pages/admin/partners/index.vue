@@ -33,7 +33,7 @@ const customers = [
 // Funciones de acciones
 const edit = (row: Record<string, any>) => {
   console.log('Editar:', row)
-  // Aquí puedes abrir un modal o navegar a una página de edición
+  navigateTo(`/admin/partners/${row.id}`)
 }
 
 const remove = (row: Record<string, any>) => {
