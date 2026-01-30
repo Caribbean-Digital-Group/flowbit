@@ -20,6 +20,14 @@ watch(() => route.path, () => {
   isMobileMenuOpen.value = false
 })
 
+// Función para determinar si un item del menú está activo
+const isMenuItemActive = (item: { to: string; exact?: boolean }) => {
+  if (item.exact) {
+    return route.path === item.to
+  }
+  return route.path === item.to || route.path.startsWith(item.to + '/')
+}
+
 // Company Selector
 interface Company {
   id: string
@@ -197,9 +205,10 @@ const handleLogout = () => {
           :class="[
             'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group',
             isSidebarCollapsed ? 'justify-center' : '',
+            isMenuItemActive(item)
+              ? 'bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/25'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           ]"
-          active-class="bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/25"
-          :exact="item.exact"
         >
           <!-- Icon -->
           <svg class="w-5 h-5 min-w-[20px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -225,11 +234,6 @@ const handleLogout = () => {
             <span
               v-if="!isSidebarCollapsed"
               class="whitespace-nowrap"
-              :class="[
-                $route.path === item.to || (!item.exact && $route.path.startsWith(item.to))
-                  ? 'text-white'
-                  : 'text-slate-600 group-hover:text-slate-900'
-              ]"
             >
               {{ item.title }}
             </span>
