@@ -33,6 +33,24 @@
           <span>Exportar CSV</span>
         </button>
 
+        <button
+          v-if="creatable"
+          @click="emit('create')"
+          class="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl
+                 bg-gradient-to-br from-indigo-500 via-violet-600 to-fuchsia-600
+                 hover:from-indigo-700 hover:to-fuchsia-700 text-white font-bold text-base
+                 shadow-xl shadow-violet-600/15 hover:shadow-violet-500/30
+                 ring-1 ring-indigo-200/60 hover:ring-2 hover:ring-fuchsia-300
+                 transition-all duration-200 focus:outline-none"
+        >
+          <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/10 backdrop-blur">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+          </span>
+          <span>{{ createLabel }}</span>
+        </button>
+
         <!-- Custom header actions slot -->
         <slot name="headerActions" />
       </div>
@@ -409,6 +427,9 @@ interface Props {
   exportFilename?: string
   selectable?: boolean
   striped?: boolean
+  // Create button
+  creatable?: boolean
+  createLabel?: string
   // Empty state
   emptyTitle?: string
   emptyMessage?: string
@@ -427,6 +448,8 @@ const props = withDefaults(defineProps<Props>(), {
   exportFilename: 'data',
   selectable: false,
   striped: false,
+  creatable: false,
+  createLabel: 'Nuevo',
   emptyTitle: 'Sin datos',
   emptyMessage: 'No se encontraron registros que coincidan con tu búsqueda.'
 })
@@ -436,6 +459,7 @@ const emit = defineEmits<{
   'row-click': [row: Record<string, any>]
   'selection-change': [selected: Record<string, any>[]]
   'sort-change': [key: string, order: 'asc' | 'desc']
+  'create': []
 }>()
 
 // State

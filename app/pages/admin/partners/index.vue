@@ -45,6 +45,11 @@ const deleteMany = (selected: Record<string, any>[]) => {
   console.log('Eliminar múltiples:', selected)
   // Aquí puedes eliminar múltiples registros
 }
+
+const createPartner = () => {
+  console.log('Crear cliente')
+  navigateTo('/admin/partners/create')
+}
 </script>
 <template>
   <div class="w-full py-4">
@@ -55,7 +60,10 @@ const deleteMany = (selected: Record<string, any>[]) => {
       :columns="columns"
       :selectable="true"
       :exportable="true"
+      :creatable="true"
+      create-label="Nuevo Cliente"
       export-filename="clientes"
+      @create="createPartner"
     >
       <!-- Acciones personalizadas por fila -->
       <template #actions="{ row }">

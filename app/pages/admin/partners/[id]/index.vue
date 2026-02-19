@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { MenuOption } from '~/components/CardSheet.vue'
+import type { PartnerFormData } from '~/components/Partner/Form.vue'
 
 definePageMeta({
   layout: 'admin'
@@ -15,34 +16,31 @@ const { id } = route.params
 const isEditing = ref(false)
 const isLoading = ref(false)
 
-// Datos del partner (normalmente vendrían de una API)
-const partner = reactive({
-  // Información básica
+// Datos del formulario (normalmente vendrían de una API)
+const partnerForm = ref<PartnerFormData>({
   name: 'Acme Corporation',
   display_name: 'Acme Corp',
   email: 'contacto@acme.com',
   phone: '+52 55 1234 5678',
   mobile: '+52 55 8765 4321',
   website: 'https://www.acme.com',
-  
-  // Dirección
   street: 'Av. Insurgentes Sur 1234',
   street2: 'Piso 5, Oficina 501',
   city: 'Ciudad de México',
   state: 'CDMX',
   zip: '03100',
   country_code: 'MX',
-  
-  // Información adicional
-  company_type: 'company',
-  is_company: true,
-  parent_id: null,
   vat: 'ACM850101ABC',
   function: 'Proveedor Principal',
   credit_limit: 50000,
-  comment: 'Cliente preferente desde 2020',
-  
-  // Metadata
+  comment: 'Cliente preferente desde 2020'
+})
+
+// Metadata del registro (no editables desde el formulario)
+const partnerMeta = reactive({
+  company_type: 'company',
+  is_company: true,
+  parent_id: null as number | null,
   created_at: '2026-01-15T10:30:00Z',
   updated_at: '2026-01-28T15:45:00Z',
   created_by: 'Juan Pérez',
@@ -156,7 +154,7 @@ const handleSave = async () => {
   try {
     // Simular guardado
     await new Promise(resolve => setTimeout(resolve, 1000))
-    console.log('Datos guardados:', partner)
+    console.log('Datos guardados:', partnerForm.value)
     isEditing.value = false
   } catch (error) {
     console.error('Error al guardar:', error)
@@ -233,18 +231,18 @@ const formatDate = (dateString: string): string => {
       ╚═══════════════════════════════════════════════════════════════════════════╝
     -->
     <CardSheet
-      :title="partner.name"
-      :subtitle="partner.email"
+      :title="partnerForm.name"
+      :subtitle="partnerForm.email"
       :show-back-button="true"
       :show-options-button="true"
       :show-edit-button="true"
       :show-footer="true"
       :is-editing="isEditing"
       :is-loading="isLoading"
-      :created-by="partner.created_by"
-      :created-at="formatDate(partner.created_at)"
-      :updated-by="partner.updated_by"
-      :updated-at="formatDate(partner.updated_at)"
+      :created-by="partnerMeta.created_by"
+      :created-at="formatDate(partnerMeta.created_at)"
+      :updated-by="partnerMeta.updated_by"
+      :updated-at="formatDate(partnerMeta.updated_at)"
       :menu-options="menuOptions"
       variant="elevated"
       padding="lg"
@@ -255,19 +253,13 @@ const formatDate = (dateString: string): string => {
       @save="handleSave"
       @cancel="handleCancel"
     >
-      <!-- ════════════════════════════════════════════════════════════════════ -->
-      <!-- SLOT #status: Badge de estado junto al título                        -->
-      <!-- ════════════════════════════════════════════════════════════════════ -->
       <template #status>
         <BadgeApp 
-          :label="partner.company_type === 'company' ? 'Empresa' : 'Persona'" 
+          :label="partnerMeta.company_type === 'company' ? 'Empresa' : 'Persona'" 
           variant="primary" 
         />
       </template>
 
-      <!-- ════════════════════════════════════════════════════════════════════ -->
-      <!-- SLOT #headerActions: Acciones adicionales en el header (opcional)    -->
-      <!-- ════════════════════════════════════════════════════════════════════ -->
       <template #headerActions>
         <BtnApp variant="ghost" size="sm" @click="handleCustomAction">
           <template #iconLeft>
@@ -278,187 +270,8 @@ const formatDate = (dateString: string): string => {
         </BtnApp>
       </template>
 
-      <!-- ════════════════════════════════════════════════════════════════════ -->
-      <!-- SLOT DEFAULT: Contenido principal del card                           -->
-      <!-- ════════════════════════════════════════════════════════════════════ -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- ─────────────────────────────────────────────────────────────────── -->
-        <!-- INFORMACIÓN BÁSICA                                                  -->
-        <!-- ─────────────────────────────────────────────────────────────────── -->
-        <div class="space-y-6">
-          <h3 class="text-lg font-semibold text-slate-800 border-b border-slate-200 pb-2">
-            Información Básica
-          </h3>
-          
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="sm:col-span-2">
-              <FormInput
-                v-model="partner.name"
-                label="Nombre"
-                placeholder="Nombre del partner"
-                :readonly="!isEditing"
-                required
-                size="md"
-              />
-            </div>
-            
-            <div class="sm:col-span-2">
-              <FormInput
-                v-model="partner.display_name"
-                label="Nombre para mostrar"
-                placeholder="Nombre comercial o alias"
-                :readonly="!isEditing"
-                size="md"
-              />
-            </div>
-            
-            <FormInput
-              v-model="partner.email"
-              type="email"
-              label="Email"
-              placeholder="correo@ejemplo.com"
-              :readonly="!isEditing"
-              size="md"
-            />
-            
-            <FormInput
-              v-model="partner.phone"
-              type="tel"
-              label="Teléfono"
-              placeholder="+52 55 1234 5678"
-              :readonly="!isEditing"
-              size="md"
-            />
-            
-            <FormInput
-              v-model="partner.mobile"
-              type="tel"
-              label="Móvil"
-              placeholder="+52 55 8765 4321"
-              :readonly="!isEditing"
-              size="md"
-            />
-            
-            <FormInput
-              v-model="partner.website"
-              type="url"
-              label="Sitio Web"
-              placeholder="https://www.ejemplo.com"
-              :readonly="!isEditing"
-              size="md"
-            />
-          </div>
-        </div>
+      <PartnerForm v-model="partnerForm" :readonly="!isEditing" />
 
-        <!-- ─────────────────────────────────────────────────────────────────── -->
-        <!-- INFORMACIÓN ADICIONAL                                               -->
-        <!-- ─────────────────────────────────────────────────────────────────── -->
-        <div class="space-y-6">
-          <h3 class="text-lg font-semibold text-slate-800 border-b border-slate-200 pb-2">
-            Información Adicional
-          </h3>
-          
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormInput
-              v-model="partner.vat"
-              label="RFC / NIT / RUT"
-              placeholder="Identificación fiscal"
-              :readonly="!isEditing"
-              size="md"
-            />
-            
-            <FormInput
-              v-model="partner.function"
-              label="Cargo / Función"
-              placeholder="Ej: Proveedor, Cliente"
-              :readonly="!isEditing"
-              size="md"
-            />
-            
-            <FormInput
-              v-model="partner.credit_limit"
-              type="number"
-              label="Límite de Crédito"
-              placeholder="0.00"
-              :readonly="!isEditing"
-              size="md"
-            />
-            
-            <div class="sm:col-span-2">
-              <FormInput
-                v-model="partner.comment"
-                label="Comentarios"
-                placeholder="Notas adicionales sobre el partner"
-                :readonly="!isEditing"
-                size="md"
-              />
-            </div>
-          </div>
-          
-          <!-- Dirección -->
-          <h4 class="text-base font-medium text-slate-700 border-b border-slate-100 pb-2 mt-6">
-            Dirección
-          </h4>
-          
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="sm:col-span-2">
-              <FormInput
-                v-model="partner.street"
-                label="Calle"
-                placeholder="Av. Principal 123"
-                :readonly="!isEditing"
-                size="md"
-              />
-            </div>
-            
-            <div class="sm:col-span-2">
-              <FormInput
-                v-model="partner.street2"
-                label="Calle 2"
-                placeholder="Piso, oficina, interior"
-                :readonly="!isEditing"
-                size="md"
-              />
-            </div>
-            
-            <FormInput
-              v-model="partner.city"
-              label="Ciudad"
-              placeholder="Ciudad"
-              :readonly="!isEditing"
-              size="md"
-            />
-            
-            <FormInput
-              v-model="partner.state"
-              label="Estado / Provincia"
-              placeholder="Estado"
-              :readonly="!isEditing"
-              size="md"
-            />
-            
-            <FormInput
-              v-model="partner.zip"
-              label="Código Postal"
-              placeholder="12345"
-              :readonly="!isEditing"
-              size="md"
-            />
-            
-            <FormInput
-              v-model="partner.country_code"
-              label="País"
-              placeholder="MX"
-              :readonly="!isEditing"
-              size="md"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- ════════════════════════════════════════════════════════════════════ -->
-      <!-- SLOT #sections: Secciones adicionales después del contenido main     -->
-      <!-- ════════════════════════════════════════════════════════════════════ -->
       <template #sections>
         <div class="border-t border-slate-200 pt-6">
           <h3 class="text-lg font-semibold text-slate-800 mb-4">Sección Adicional</h3>
@@ -468,45 +281,6 @@ const formatDate = (dateString: string): string => {
           </p>
         </div>
       </template>
-
-      <!-- ════════════════════════════════════════════════════════════════════ -->
-      <!-- SLOTS OPCIONALES PARA PERSONALIZAR:                                  -->
-      <!--                                                                      -->
-      <!-- #backButton   → Reemplaza el botón de retroceso completo             -->
-      <!-- #title        → Reemplaza el área de título/subtítulo                -->
-      <!-- #options      → Reemplaza el botón de opciones (3 puntos)            -->
-      <!--                 NOTA: Si pasas menuOptions como prop, se muestra     -->
-      <!--                 un dropdown con las opciones. El slot #options       -->
-      <!--                 permite reemplazar todo el comportamiento.           -->
-      <!-- #editButton   → Reemplaza el botón de editar                         -->
-      <!-- #saveButtons  → Reemplaza los botones guardar/cancelar               -->
-      <!-- #footer       → Reemplaza el footer completo                         -->
-      <!-- #createdBy    → Personaliza solo el valor de "creado por"            -->
-      <!-- #createdAt    → Personaliza solo el valor de "creado el"             -->
-      <!-- #updatedBy    → Personaliza solo el valor de "actualizado por"       -->
-      <!-- #updatedAt    → Personaliza solo el valor de "actualizado el"        -->
-      <!-- ════════════════════════════════════════════════════════════════════ -->
-      
-      <!-- ════════════════════════════════════════════════════════════════════ -->
-      <!-- EJEMPLO DE USO DE menuOptions:                                       -->
-      <!--                                                                      -->
-      <!-- const menuOptions: MenuOption[] = [                                  -->
-      <!--   {                                                                  -->
-      <!--     id: 'duplicate',                                                 -->
-      <!--     label: 'Duplicar',                                               -->
-      <!--     icon: 'M8 16H6a2...',  // Path SVG del icono                     -->
-      <!--     action: () => handleDuplicate(),                                 -->
-      <!--     variant: 'default'     // 'default'|'danger'|'warning'|'success' -->
-      <!--   },                                                                 -->
-      <!--   {                                                                  -->
-      <!--     id: 'delete',                                                    -->
-      <!--     label: 'Eliminar',                                               -->
-      <!--     action: () => handleDelete(),                                    -->
-      <!--     variant: 'danger',                                               -->
-      <!--     divider: true          // Muestra línea separadora antes         -->
-      <!--   }                                                                  -->
-      <!-- ]                                                                    -->
-      <!-- ════════════════════════════════════════════════════════════════════ -->
     </CardSheet>
   </div>
 </template>
