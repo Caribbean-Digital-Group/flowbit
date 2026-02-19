@@ -135,22 +135,27 @@ const handleError = () => {
       <!-- Botones de acción -->
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <button
+          class="px-8 py-4 bg-white/80 border border-slate-200 rounded-xl font-semibold text-slate-700 hover:bg-white hover:border-slate-300 hover:text-slate-900 transition-all duration-300 backdrop-blur-sm shadow-sm cursor-pointer"
+          @click="$router.go(-1)"
+        >
+          <span class="flex items-center justify-center gap-2">
+            <svg class="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Página anterior
+          </span>
+        </button>
+        <button
           class="group relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-500 rounded-xl font-semibold text-white shadow-lg shadow-purple-300/50 hover:shadow-purple-400/60 transition-all duration-300 hover:scale-105 cursor-pointer"
           @click="handleError"
         >
           <span class="relative z-10 flex items-center justify-center gap-2">
-            <svg class="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 12l9-9 9 9M4 10v10h16V10M9 21V14h6v7" />
             </svg>
             Volver al inicio
           </span>
-        </button>
-
-        <button
-          class="px-8 py-4 bg-white/80 border border-slate-200 rounded-xl font-semibold text-slate-700 hover:bg-white hover:border-slate-300 hover:text-slate-900 transition-all duration-300 backdrop-blur-sm shadow-sm cursor-pointer"
-          @click="$router.go(-1)"
-        >
-          Página anterior
         </button>
       </div>
     </div>

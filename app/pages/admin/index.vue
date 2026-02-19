@@ -56,7 +56,7 @@ const stats: StatItem[] = [
         </NuxtLink>
 
         <NuxtLink
-          to="/admin/purchases"
+          to="/admin/orders"
           class="flex flex-col items-center gap-2 p-4 rounded-xl bg-slate-50 hover:bg-amber-50 hover:text-amber-600 transition-colors group"
         >
           <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
