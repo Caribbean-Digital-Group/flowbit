@@ -38,7 +38,10 @@ const currentError = computed(() => {
   }
 })
 
-const handleError = () => clearError({ redirect: '/' })
+const handleError = () => {
+  clearError()
+  navigateTo('/')
+}
 </script>
 
 <template>
@@ -150,17 +153,6 @@ const handleError = () => clearError({ redirect: '/' })
           Página anterior
         </button>
       </div>
-
-      <!-- Footer con info adicional -->
-      <!-- <div class="mt-12 pt-8 border-t border-slate-200">
-        <p class="text-slate-400 text-sm">
-          ¿Necesitas ayuda?
-          <a href="#" class="text-purple-600 hover:text-purple-700 transition-colors">
-            Contacta soporte
-          </a>
-        </p>
-      </div> -->
-
     </div>
   </div>
 </template>
