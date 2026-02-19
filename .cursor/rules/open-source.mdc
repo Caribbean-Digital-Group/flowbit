@@ -1,0 +1,66 @@
+---
+description: Guías de contribución y estándares para proyecto open source
+alwaysApply: true
+---
+
+# Flowbit - Estándares Open Source
+
+## Idioma del Código
+
+- **Código fuente**: inglés (variables, funciones, tipos, nombres de archivo)
+- **UI/UX**: español (labels, placeholders, mensajes, tooltips)
+- **Documentación**: español (README, comentarios de contexto, CONTRIBUTING)
+- **Commits**: inglés, formato convencional
+
+## Convenciones de Commits
+
+```
+tipo(alcance): descripción breve en inglés
+
+feat(partners): add partner search by category
+fix(orders): correct total calculation on discount
+refactor(composables): extract pagination logic
+docs(readme): update installation instructions
+style(datatable): adjust mobile responsive layout
+chore(deps): update supabase-js to v2.92
+```
+
+Tipos: `feat`, `fix`, `refactor`, `docs`, `style`, `chore`, `test`, `perf`
+
+## Estructura de Branches
+
+- `main` — producción estable
+- `develop` — integración de features
+- `feat/{nombre}` — nuevas funcionalidades
+- `fix/{nombre}` — correcciones de bugs
+- `refactor/{nombre}` — refactorizaciones
+
+## Estándares de Código
+
+- TypeScript estricto: tipar parámetros, retornos y props explícitamente
+- No usar `any` — usar tipos generados de Supabase o interfaces propias
+- No dejar `console.log` en código productivo (solo `console.error` en manejo de errores)
+- Props de componentes siempre tipadas con `interface Props`
+- Emits siempre tipados con `defineEmits<{...}>()`
+- Preferir `const` sobre `let`, nunca usar `var`
+- Funciones async para operaciones de datos, no callbacks
+
+## Nuevos Módulos
+
+Al crear un nuevo módulo (ej: invoices), seguir este checklist:
+
+1. **Migración SQL**: `supabase/migrations/YYYYMMDD_create_{module}_table.sql`
+2. **Regenerar tipos**: `npm run db:types`
+3. **Composable**: `app/composables/use{Module}.ts`
+4. **Form component**: `app/components/{Module}/Form.vue`
+5. **Páginas**:
+   - `app/pages/admin/{module}/index.vue` (listado con Datatable)
+   - `app/pages/admin/{module}/create.vue` (creación)
+   - `app/pages/admin/{module}/[id]/index.vue` (detalle/edición con CardSheet)
+6. **Menú lateral**: agregar entrada en `app/layouts/admin.vue`
+
+## Archivos Sensibles (NO commitear)
+
+- `.env`, `.env.local`, `.env.production`
+- `supabase/.env`
+- Cualquier archivo con claves API o secretos

@@ -1,0 +1,108 @@
+---
+description: Convenciones para composables y acceso a datos con Supabase
+globs: app/composables/**/*.ts
+alwaysApply: false
+---
+
+# Composables - Convenciones
+
+## Nomenclatura
+
+- Archivo: `use{Entity}.ts` (ej: `usePartner.ts`, `useProduct.ts`, `useOrder.ts`)
+- Función exportada: `use{Entity}()` retornando un objeto con métodos
+
+## Estructura Estándar
+
+```ts
+import type { Entity, EntityInsert, EntityUpdate } from '~/types/database.types'
+
+export const useEntity = () => {
+  const supabase = useSupabase()
+
+  const getById = async (id: string): Promise<Entity | null> => {
+    const { data, error } = await supabase
+      .from('entity')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      console.error('Error fetching entity:', error)
+      return null
+    }
+    return data
+  }
+
+  const getAll = async (options?: {
+    limit?: number
+    offset?: number
+  }): Promise<Entity[]> => {
+    let query = supabase.from('entity').select('*')
+    if (options?.limit) query = query.limit(options.limit)
+    if (options?.offset) query = query.range(options.offset, options.offset + (options.limit || 10) - 1)
+
+    const { data, error } = await query.order('name')
+    if (error) {
+      console.error('Error fetching entities:', error)
+      return []
+    }
+    return data || []
+  }
+
+  const create = async (entity: EntityInsert): Promise<Entity | null> => {
+    const user = await useSupabaseUser()
+    const { data, error } = await supabase
+      .from('entity')
+      .insert({ ...entity, created_by: user?.id, updated_by: user?.id })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error creating entity:', error)
+      return null
+    }
+    return data
+  }
+
+  const update = async (id: string, updates: EntityUpdate): Promise<Entity | null> => {
+    const user = await useSupabaseUser()
+    const { data, error } = await supabase
+      .from('entity')
+      .update({ ...updates, updated_by: user?.id })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error updating entity:', error)
+      return null
+    }
+    return data
+  }
+
+  const archive = async (id: string): Promise<boolean> => {
+    const { error } = await supabase
+      .from('entity')
+      .update({ active: false })
+      .eq('id', id)
+
+    if (error) {
+      console.error('Error archiving entity:', error)
+      return false
+    }
+    return true
+  }
+
+  return { getById, getAll, create, update, archive }
+}
+```
+
+## Reglas Clave
+
+- Siempre usar los tipos generados de `~/types/database.types` (Entity, EntityInsert, EntityUpdate)
+- Obtener el cliente Supabase via `useSupabase()` (singleton)
+- Obtener el usuario actual via `useSupabaseUser()` para auditoría (created_by, updated_by)
+- Manejar errores con `console.error` y retornar `null` o `[]` — no lanzar excepciones
+- Usar soft-delete (`.update({ active: false })`) en vez de `.delete()`
+- Para búsquedas de texto, usar `.ilike('field', '%term%')` o full-text search
+- Las queries deben respetar el scope multi-tenant (filtrar por `company_id` cuando aplique)
