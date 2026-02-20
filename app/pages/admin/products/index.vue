@@ -136,8 +136,11 @@ const products = [
 ]
 
 // Funciones de acciones
+const create = () => {
+  navigateTo('/admin/products/create')
+}
+
 const edit = (row: Record<string, any>) => {
-  console.log('Editar:', row)
   navigateTo(`/admin/products/${row.id}`)
 }
 
@@ -161,7 +164,10 @@ const deleteMany = (selected: Record<string, any>[]) => {
       :columns="columns"
       :selectable="true"
       :exportable="true"
+      :creatable="true"
+      create-label="Crear producto"
       export-filename="productos"
+      @create="create"
     >
       <!-- Acciones personalizadas por fila -->
       <template #actions="{ row }">
