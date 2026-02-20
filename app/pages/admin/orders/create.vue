@@ -31,18 +31,6 @@ const handleSave = async () => {
 const handleCancel = () => {
   router.push('/admin/orders')
 }
-
-const handleAddLine = () => {
-  // TODO: open line creation dialog
-}
-
-const handleEditLine = (_lineId: string) => {
-  // TODO: open line edit dialog
-}
-
-const handleRemoveLine = (lineId: string) => {
-  orderLines.value = orderLines.value.filter(l => l.id !== lineId)
-}
 </script>
 
 <template>
@@ -59,10 +47,7 @@ const handleRemoveLine = (lineId: string) => {
   >
     <OrderForm
       v-model="formData"
-      :lines="orderLines"
-      @add-line="handleAddLine"
-      @edit-line="handleEditLine"
-      @remove-line="handleRemoveLine"
+      v-model:lines="orderLines"
     />
   </CardSheet>
 </template>

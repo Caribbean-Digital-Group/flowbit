@@ -64,7 +64,7 @@ export const createEmptyOrderForm = (): OrderFormData => ({
   partner_name: '',
   created_by_partner_id: null,
   created_by_partner_name: '',
-  order_date: new Date().toISOString().split('T')[0],
+  order_date: new Date().toISOString().split('T')[0] || '',
   confirmation_date: null,
   delivery_date: '',
   currency: 'MXN',
@@ -113,24 +113,18 @@ export const createEmptyOrderLine = (): OrderLine => ({
 </script>
 
 <script setup lang="ts">
+import { createEmptyOrderLineForm, type OrderLineFormData } from '~/components/OrderLine/Form.vue'
+
 interface Props {
   readonly?: boolean
-  lines?: OrderLine[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  readonly: false,
-  lines: () => []
+  readonly: false
 })
 
-const emit = defineEmits<{
-  'update:lines': [lines: OrderLine[]]
-  'add-line': []
-  'edit-line': [lineId: string]
-  'remove-line': [lineId: string]
-}>()
-
 const formData = defineModel<OrderFormData>({ required: true })
+const lines = defineModel<OrderLine[]>('lines', { default: () => [] })
 
 const activeTab = ref('other_info')
 
@@ -148,8 +142,118 @@ const currencyOptions = [
 
 const isEditing = computed(() => !props.readonly)
 
+// Slide-over state for line form
+const showLinePanel = ref(false)
+const editingLineId = ref<string | null>(null)
+const lineFormData = ref<OrderLineFormData>(createEmptyOrderLineForm())
+
+const linePanelTitle = computed(() =>
+  editingLineId.value ? 'Editar Línea' : 'Agregar Línea'
+)
+
+const openAddLine = () => {
+  editingLineId.value = null
+  lineFormData.value = createEmptyOrderLineForm(formData.value.tax_rate)
+  showLinePanel.value = true
+}
+
+const openEditLine = (lineId: string) => {
+  const line = lines.value.find(l => l.id === lineId)
+  if (!line) return
+
+  editingLineId.value = lineId
+  lineFormData.value = {
+    product_id: line.product_id,
+    product_name: line.product_name,
+    description: line.description,
+    quantity: line.quantity,
+    unit_price: line.unit_price,
+    unit_cost: line.unit_cost,
+    discount_percent: line.discount_percent,
+    tax_rate: line.tax_rate
+  }
+  showLinePanel.value = true
+}
+
+const calculateLineFields = (data: OrderLineFormData) => {
+  const discountAmount = Math.round(data.quantity * data.unit_price * data.discount_percent / 100 * 100) / 100
+  const subtotal = Math.round((data.quantity * data.unit_price - discountAmount) * 100) / 100
+  const taxAmount = Math.round(subtotal * data.tax_rate / 100 * 100) / 100
+  const total = Math.round((subtotal + taxAmount) * 100) / 100
+  const marginVal = Math.round((subtotal - data.quantity * data.unit_cost) * 100) / 100
+  const marginPct = subtotal > 0 ? Math.round(marginVal / subtotal * 100 * 100) / 100 : 0
+
+  return {
+    product_id: data.product_id,
+    product_name: data.product_name,
+    description: data.description,
+    quantity: data.quantity,
+    unit_price: data.unit_price,
+    unit_cost: data.unit_cost,
+    discount_percent: data.discount_percent,
+    discount_amount: discountAmount,
+    tax_rate: data.tax_rate,
+    tax_amount: taxAmount,
+    subtotal,
+    total,
+    margin: marginVal,
+    margin_percent: marginPct
+  }
+}
+
+const recalculateOrderTotals = () => {
+  formData.value.amount_untaxed = lines.value.reduce((sum, l) => sum + l.subtotal, 0)
+  formData.value.amount_tax = lines.value.reduce((sum, l) => sum + l.tax_amount, 0)
+  formData.value.amount_total = lines.value.reduce((sum, l) => sum + l.total, 0)
+  formData.value.amount_discount = lines.value.reduce((sum, l) => sum + l.discount_amount, 0)
+}
+
+const saveLine = () => {
+  if (!lineFormData.value.product_name.trim() && !lineFormData.value.description.trim()) return
+
+  const calculated = calculateLineFields(lineFormData.value)
+
+  if (editingLineId.value) {
+    const idx = lines.value.findIndex(l => l.id === editingLineId.value)
+    if (idx !== -1) {
+      const existing = lines.value[idx]!
+      lines.value[idx] = {
+        id: existing.id,
+        sequence: existing.sequence,
+        quantity_delivered: existing.quantity_delivered,
+        quantity_invoiced: existing.quantity_invoiced,
+        ...calculated
+      }
+    }
+  } else {
+    const maxSequence = lines.value.length > 0
+      ? Math.max(...lines.value.map(l => l.sequence))
+      : 0
+
+    lines.value.push({
+      id: crypto.randomUUID(),
+      sequence: maxSequence + 10,
+      quantity_delivered: 0,
+      quantity_invoiced: 0,
+      ...calculated
+    })
+  }
+
+  recalculateOrderTotals()
+  showLinePanel.value = false
+}
+
+const cancelLineForm = () => {
+  showLinePanel.value = false
+}
+
+const removeLine = (lineId: string) => {
+  lines.value = lines.value.filter(l => l.id !== lineId)
+  recalculateOrderTotals()
+}
+
 const totalMargin = computed(() => {
-  return props.lines.reduce((sum, line) => sum + line.margin, 0)
+  return lines.value.reduce((sum, line) => sum + line.margin, 0)
 })
 
 const totalMarginPercent = computed(() => {
@@ -160,7 +264,7 @@ const totalMarginPercent = computed(() => {
 })
 
 const totalQuantity = computed(() => {
-  return props.lines.reduce((sum, line) => sum + line.quantity, 0)
+  return lines.value.reduce((sum, line) => sum + line.quantity, 0)
 })
 
 const formatShortDate = (dateString: string | null): string => {
@@ -267,7 +371,7 @@ const formatCurrency = (value: number): string => {
           label="Agregar Línea"
           variant="primary"
           size="sm"
-          @click="emit('add-line')"
+          @click="openAddLine"
         />
       </div>
 
@@ -324,7 +428,7 @@ const formatCurrency = (value: number): string => {
                   <button
                     class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
                     title="Editar"
-                    @click="emit('edit-line', line.id)"
+                    @click="openEditLine(line.id)"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -333,7 +437,7 @@ const formatCurrency = (value: number): string => {
                   <button
                     class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                     title="Eliminar"
-                    @click="emit('remove-line', line.id)"
+                    @click="removeLine(line.id)"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -691,5 +795,77 @@ const formatCurrency = (value: number): string => {
         </div>
       </div>
     </div>
+
+    <!-- Slide-over Panel: OrderLine Form -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div v-if="showLinePanel" class="fixed inset-0 z-50 overflow-hidden">
+          <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" @click="cancelLineForm" />
+
+          <Transition
+            enter-active-class="transition duration-300 ease-out transform"
+            enter-from-class="translate-x-full"
+            enter-to-class="translate-x-0"
+            leave-active-class="transition duration-200 ease-in transform"
+            leave-from-class="translate-x-0"
+            leave-to-class="translate-x-full"
+          >
+            <div
+              v-if="showLinePanel"
+              class="absolute right-0 inset-y-0 w-full max-w-lg flex flex-col bg-white shadow-2xl"
+            >
+              <!-- Header -->
+              <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-violet-50">
+                <div>
+                  <h3 class="text-lg font-semibold text-slate-800">{{ linePanelTitle }}</h3>
+                  <p class="text-sm text-slate-500">
+                    {{ editingLineId ? 'Modifica los datos de la línea' : 'Completa los datos para agregar una línea' }}
+                  </p>
+                </div>
+                <button
+                  class="p-2 text-slate-400 hover:text-slate-600 hover:bg-white/80 rounded-lg transition-colors"
+                  @click="cancelLineForm"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Body -->
+              <div class="flex-1 overflow-y-auto px-6 py-6">
+                <OrderLineForm
+                  v-model="lineFormData"
+                  :currency="formData.currency"
+                />
+              </div>
+
+              <!-- Footer -->
+              <div class="border-t border-slate-200 px-6 py-4 flex justify-end gap-3 bg-slate-50">
+                <BtnApp
+                  label="Cancelar"
+                  variant="secondary"
+                  size="sm"
+                  @click="cancelLineForm"
+                />
+                <BtnApp
+                  :label="editingLineId ? 'Actualizar' : 'Agregar'"
+                  variant="primary"
+                  size="sm"
+                  @click="saveLine"
+                />
+              </div>
+            </div>
+          </Transition>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>

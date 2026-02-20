@@ -215,18 +215,6 @@ const handleCancel = () => {
   isEditing.value = false
 }
 
-const handleAddLine = () => {
-  // TODO: open line creation dialog
-}
-
-const handleEditLine = (_lineId: string) => {
-  // TODO: open line edit dialog
-}
-
-const handleRemoveLine = (lineId: string) => {
-  orderLines.value = orderLines.value.filter(l => l.id !== lineId)
-}
-
 const formatDate = (dateString: string | null): string => {
   if (!dateString) return '—'
   const date = new Date(dateString)
@@ -294,11 +282,8 @@ const formatDate = (dateString: string | null): string => {
 
       <OrderForm
         v-model="formData"
-        :lines="orderLines"
+        v-model:lines="orderLines"
         :readonly="!isEditing"
-        @add-line="handleAddLine"
-        @edit-line="handleEditLine"
-        @remove-line="handleRemoveLine"
       />
     </CardSheet>
   </div>
