@@ -1,0 +1,112 @@
+---
+description: Convenciones para componentes Vue en Flowbit
+globs: app/components/**/*.vue, app/pages/**/*.vue
+alwaysApply: false
+---
+
+# Componentes Vue - Convenciones
+
+## Estructura de un Componente
+
+```vue
+<!-- 1. Bloque de tipos exportables (si aplica) -->
+<script lang="ts">
+export interface MiFormData { ... }
+</script>
+
+<!-- 2. Script setup -->
+<script setup lang="ts">
+// Imports de tipos
+import type { Column } from '~/components/Datatable.vue'
+
+// definePageMeta (solo en pages)
+definePageMeta({ layout: 'admin' })
+
+// Props con withDefaults
+interface Props { ... }
+const props = withDefaults(defineProps<Props>(), { ... })
+
+// Emits tipados
+const emit = defineEmits<{ 'event-name': [payload: Type] }>()
+
+// Estado reactivo (ref, reactive, computed)
+// Composables
+// Métodos
+// Watchers
+// defineExpose (si es necesario)
+</script>
+
+<!-- 3. Template -->
+<template>
+  <div>...</div>
+</template>
+
+<!-- 4. Estilos scoped (opcional, preferir Tailwind) -->
+<style scoped>...</style>
+```
+
+## Componentes Base del Proyecto
+
+### Listados → usa `Datatable`
+```vue
+<Datatable
+  title="Título"
+  description="Descripción"
+  :data="items"
+  :columns="columns"
+  :selectable="true"
+  :creatable="true"
+  create-label="Nuevo Item"
+  @create="handleCreate"
+>
+  <template #actions="{ row }">...</template>
+  <template #bulkActions="{ selected }">...</template>
+</Datatable>
+```
+
+### Detalle/Edición → usa `CardSheet`
+```vue
+<CardSheet
+  :title="item.name"
+  :subtitle="item.email"
+  :is-editing="isEditing"
+  :is-loading="isLoading"
+  :menu-options="menuOptions"
+  @back="handleBack"
+  @edit="handleEdit"
+  @save="handleSave"
+  @cancel="handleCancel"
+>
+  <ModuleForm v-model="formData" :readonly="!isEditing" />
+</CardSheet>
+```
+
+### Formularios por módulo → `{Module}/Form.vue`
+- Exportar la interfaz `{Module}FormData` en un bloque `<script lang="ts">` separado
+- Exportar factory `createEmpty{Module}Form()` para inicialización
+- Usar `defineModel<FormData>()` para v-model bidireccional
+- Prop `readonly` para alternar entre vista y edición
+- Inputs con `FormInput` y `FormSelect`
+
+## Páginas Admin - Estructura de Rutas
+
+```
+pages/admin/{module}/
+├── index.vue       # Listado con Datatable
+├── create.vue      # Creación (CardSheet + Form)
+└── [id]/
+    └── index.vue   # Detalle/Edición (CardSheet + Form)
+```
+
+Todas las páginas admin deben declarar:
+```ts
+definePageMeta({ layout: 'admin' })
+```
+
+## Reglas de Estilo
+
+- Usa Tailwind CSS exclusivamente, evita `<style>` salvo casos especiales
+- Botones: `BtnApp` (variant: primary, secondary, ghost, danger)
+- Badges: `BadgeApp` (variant: primary, success, warning, danger)
+- Eliminar: `BtnDelete` para acciones destructivas
+- SVG inline para iconos (sin librería de iconos externa)

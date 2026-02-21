@@ -1,0 +1,66 @@
+---
+description: Reglas generales del proyecto Flowbit - Stack, arquitectura y convenciones
+alwaysApply: true
+---
+
+# Flowbit - Reglas del Proyecto
+
+## Stack Tecnológico
+
+- **Framework**: Nuxt 4 (Vue 3.5+, Composition API)
+- **Lenguaje**: TypeScript (estricto)
+- **Estilos**: Tailwind CSS v4 (plugin Vite)
+- **Base de datos**: Supabase (PostgreSQL + Auth + RLS)
+- **Tipo de app**: SaaS multi-tenant
+
+## Arquitectura
+
+```
+app/
+├── components/       # Componentes Vue reutilizables
+│   ├── Form/         # Inputs, selects, formularios base
+│   └── {Module}/     # Componentes específicos por módulo
+├── composables/      # Lógica reutilizable (use*.ts)
+├── layouts/          # admin.vue, default.vue
+├── pages/admin/      # Páginas del panel administrativo
+│   ├── partners/     # Módulo de socios/clientes
+│   ├── products/     # Módulo de productos
+│   ├── orders/       # Módulo de órdenes
+│   ├── reports.vue   # Reportes
+│   └── settings.vue  # Configuración
+├── middleware/        # Guards de navegación
+├── plugins/           # Plugins de Nuxt
+└── utils/             # Funciones utilitarias puras
+types/
+└── database.types.ts  # Tipos generados de Supabase (NO editar manualmente)
+supabase/
+└── migrations/        # Migraciones SQL (orden cronológico)
+```
+
+## Módulos Actuales
+
+| Módulo     | Ruta base              | Composable        | Estado       |
+|------------|------------------------|--------------------|--------------|
+| Partners   | `/admin/partners`      | `usePartner`       | En progreso  |
+| Products   | `/admin/products`      | (pendiente)        | Scaffolding  |
+| Orders     | `/admin/orders`        | (pendiente)        | Scaffolding  |
+| Reports    | `/admin/reports`       | (pendiente)        | Scaffolding  |
+| Settings   | `/admin/settings`      | (pendiente)        | Scaffolding  |
+
+## Convenciones Generales
+
+- La interfaz de usuario está en **español** (labels, mensajes, placeholders)
+- Responde siempre en **español**
+- Usa `<script setup lang="ts">` en todos los componentes Vue
+- Nunca uses Options API; siempre Composition API
+- El locale para formatos de fecha y moneda es `es-MX`
+- Todos los datos de negocio están scoped por `company_id` (multi-tenant)
+- Usa soft-delete (`active = false`) en vez de DELETE real
+- Los tipos de Supabase se generan con `npm run db:types` — nunca los edites manualmente
+
+## Paleta de Diseño
+
+- Gradiente principal: `from-indigo-500 via-violet-600 to-fuchsia-600`
+- Bordes redondeados: `rounded-2xl` para cards, `rounded-xl` para botones
+- Sombras: `shadow-lg shadow-slate-200/50`
+- Texto principal: `text-slate-800`, secundario: `text-slate-500`
