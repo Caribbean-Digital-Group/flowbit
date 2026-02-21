@@ -19,6 +19,8 @@ export type PartnerType = 'person' | 'company'
 export type PartnerTitle = 'mr' | 'mrs' | 'ms' | 'dr' | 'prof' | 'other'
 export type OrderType = 'purchase' | 'sale'
 export type OrderState = 'draft' | 'posted' | 'cancel'
+export type CompanyStatus = 'active' | 'inactive' | 'suspended' | 'pending_verification'
+export type CompanySize = 'micro' | 'small' | 'medium' | 'large' | 'enterprise'
 
 export interface Database {
   public: {
@@ -343,6 +345,117 @@ export interface Database {
           }
         ]
       }
+      company: {
+        Row: {
+          id: string
+          name: string
+          display_name: string | null
+          legal_name: string | null
+          slug: string | null
+          logo_url: string | null
+          banner_url: string | null
+          primary_color: string
+          email: string | null
+          phone: string | null
+          website: string | null
+          street: string | null
+          street2: string | null
+          city: string | null
+          state: string | null
+          zip: string | null
+          country_code: string
+          vat: string | null
+          fiscal_regime: string | null
+          legal_representative: string | null
+          industry: string | null
+          company_size: CompanySize
+          founded_date: string | null
+          description: string | null
+          lang: string
+          tz: string
+          currency: string
+          status: CompanyStatus
+          is_personal: boolean
+          settings: Json
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          display_name?: string | null
+          legal_name?: string | null
+          slug?: string | null
+          logo_url?: string | null
+          banner_url?: string | null
+          primary_color?: string
+          email?: string | null
+          phone?: string | null
+          website?: string | null
+          street?: string | null
+          street2?: string | null
+          city?: string | null
+          state?: string | null
+          zip?: string | null
+          country_code?: string
+          vat?: string | null
+          fiscal_regime?: string | null
+          legal_representative?: string | null
+          industry?: string | null
+          company_size?: CompanySize
+          founded_date?: string | null
+          description?: string | null
+          lang?: string
+          tz?: string
+          currency?: string
+          status?: CompanyStatus
+          is_personal?: boolean
+          settings?: Json
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          display_name?: string | null
+          legal_name?: string | null
+          slug?: string | null
+          logo_url?: string | null
+          banner_url?: string | null
+          primary_color?: string
+          email?: string | null
+          phone?: string | null
+          website?: string | null
+          street?: string | null
+          street2?: string | null
+          city?: string | null
+          state?: string | null
+          zip?: string | null
+          country_code?: string
+          vat?: string | null
+          fiscal_regime?: string | null
+          legal_representative?: string | null
+          industry?: string | null
+          company_size?: CompanySize
+          founded_date?: string | null
+          description?: string | null
+          lang?: string
+          tz?: string
+          currency?: string
+          status?: CompanyStatus
+          is_personal?: boolean
+          settings?: Json
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       order_line: {
         Row: {
           id: string
@@ -440,6 +553,8 @@ export interface Database {
       partner_title: PartnerTitle
       order_type: OrderType
       order_state: OrderState
+      company_status: CompanyStatus
+      company_size: CompanySize
     }
   }
 }
@@ -460,3 +575,7 @@ export type OrderUpdate = Database['public']['Tables']['order']['Update']
 export type OrderLineRow = Database['public']['Tables']['order_line']['Row']
 export type OrderLineInsert = Database['public']['Tables']['order_line']['Insert']
 export type OrderLineUpdate = Database['public']['Tables']['order_line']['Update']
+
+export type Company = Database['public']['Tables']['company']['Row']
+export type CompanyInsert = Database['public']['Tables']['company']['Insert']
+export type CompanyUpdate = Database['public']['Tables']['company']['Update']
