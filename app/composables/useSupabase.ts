@@ -54,9 +54,10 @@ interface AuthResult {
 
 export const useSupabaseAuth = () => {
   const supabase = useSupabase()
+  const authStore = useAuthStore()
 
   const signIn = async (credentials: LoginCredentials): Promise<AuthResult> => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: credentials.email,
       password: credentials.password,
     })
@@ -64,6 +65,10 @@ export const useSupabaseAuth = () => {
     if (error) {
       console.error('Error signing in:', error)
       return { success: false, error: error.message }
+    }
+
+    if (data.session) {
+      await authStore.setSession(data.session)
     }
 
     return { success: true, error: null }
@@ -82,6 +87,10 @@ export const useSupabaseAuth = () => {
 
     if (data.user && !data.session) {
       return { success: false, error: 'Se envió un correo de confirmación. Revisa tu bandeja de entrada.' }
+    }
+
+    if (data.session) {
+      await authStore.setSession(data.session)
     }
 
     return { success: true, error: null }
@@ -103,6 +112,8 @@ export const useSupabaseAuth = () => {
       console.error('Error signing out:', error)
       return { success: false, error: error.message }
     }
+
+    authStore.clearSession()
 
     return { success: true, error: null }
   }

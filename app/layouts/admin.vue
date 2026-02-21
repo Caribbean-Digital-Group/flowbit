@@ -28,34 +28,35 @@ const isMenuItemActive = (item: { to: string; exact?: boolean }) => {
   return route.path === item.to || route.path.startsWith(item.to + '/')
 }
 
-// Company Selector
-interface Company {
-  id: string
-  name: string
-  logo?: string
-}
+// Auth Store
+const authStore = useAuthStore()
 
-const availableCompanies = ref<Company[]>([
-  { id: '1', name: 'Acme Corporation', logo: undefined },
-  { id: '2', name: 'TechStart Inc.', logo: undefined },
-  { id: '3', name: 'Global Services', logo: undefined },
-])
-
-const selectedCompanyId = ref<string>(availableCompanies.value[0]?.id || '')
-const isCompanySelectorOpen = ref(false)
-
-const selectedCompany = computed(() => 
-  availableCompanies.value.find(c => c.id === selectedCompanyId.value)
+const availableCompanies = computed(() =>
+  authStore.companies.map(c => c.company)
 )
 
+const selectedCompanyId = computed(() => authStore.selectedCompanyId ?? '')
+const isCompanySelectorOpen = ref(false)
+
+const selectedCompany = computed(() => authStore.selectedCompany)
+
 const selectCompany = (companyId: string) => {
-  selectedCompanyId.value = companyId
+  authStore.selectCompany(companyId)
   isCompanySelectorOpen.value = false
 }
 
 const toggleCompanySelector = () => {
   isCompanySelectorOpen.value = !isCompanySelectorOpen.value
 }
+
+onMounted(async () => {
+  if (!authStore.isAuthenticated) {
+    await authStore.loadSession()
+  }
+  if (!authStore.isAuthenticated) {
+    await navigateTo('/')
+  }
+})
 
 // Cerrar selector al hacer click fuera
 const companySelectorRef = ref<HTMLElement | null>(null)
@@ -124,9 +125,11 @@ const handleProfile = () => {
   navigateTo('/admin/profile')
 }
 
-const handleLogout = () => {
-  console.log('Cerrando sesión...')
-  // Aquí puedes agregar la lógica de logout con Supabase
+const { signOut } = useSupabaseAuth()
+
+const handleLogout = async () => {
+  await signOut()
+  await navigateTo('/')
 }
 </script>
 
@@ -432,8 +435,8 @@ const handleLogout = () => {
 
             <!-- Avatar Dropdown -->
             <Avatar
-              name="Juan Pérez"
-              email="juan@ejemplo.com"
+              :name="authStore.partnerDisplayName"
+              :email="authStore.partnerEmail"
               size="md"
               @profile="handleProfile"
               @logout="handleLogout"
