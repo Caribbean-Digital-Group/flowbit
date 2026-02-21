@@ -1,10 +1,6 @@
 <template>
-    <header>
-      Header content
-    </header>
+  <NuxtLayout>
     <NuxtPage />
-    <footer>
-      Footer content
-    </footer>
-  </template>
+  </NuxtLayout>
+</template>
   

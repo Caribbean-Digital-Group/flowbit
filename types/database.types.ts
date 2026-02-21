@@ -17,6 +17,10 @@ export type Json =
 
 export type PartnerType = 'person' | 'company'
 export type PartnerTitle = 'mr' | 'mrs' | 'ms' | 'dr' | 'prof' | 'other'
+export type OrderType = 'purchase' | 'sale'
+export type OrderState = 'draft' | 'posted' | 'cancel'
+export type CompanyStatus = 'active' | 'inactive' | 'suspended' | 'pending_verification'
+export type CompanySize = 'micro' | 'small' | 'medium' | 'large' | 'enterprise'
 
 export interface Database {
   public: {
@@ -205,6 +209,338 @@ export interface Database {
           }
         ]
       }
+      order: {
+        Row: {
+          id: string
+          company_id: string
+          order_type: OrderType
+          name: string | null
+          reference: string | null
+          partner_id: string
+          created_by_partner_id: string | null
+          order_state: OrderState
+          order_date: string
+          confirmation_date: string | null
+          delivery_date: string | null
+          currency: string
+          exchange_rate: number
+          tax_rate: number
+          tax_included: boolean
+          amount_untaxed: number
+          amount_tax: number
+          amount_total: number
+          amount_discount: number
+          payment_term: string | null
+          payment_due_date: string | null
+          shipping_street: string | null
+          shipping_street2: string | null
+          shipping_city: string | null
+          shipping_state: string | null
+          shipping_zip: string | null
+          shipping_country_code: string | null
+          notes: string | null
+          terms: string | null
+          is_invoiced: boolean
+          is_delivered: boolean
+          is_paid: boolean
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          order_type?: OrderType
+          name?: string | null
+          reference?: string | null
+          partner_id: string
+          created_by_partner_id?: string | null
+          order_state?: OrderState
+          order_date?: string
+          confirmation_date?: string | null
+          delivery_date?: string | null
+          currency?: string
+          exchange_rate?: number
+          tax_rate?: number
+          tax_included?: boolean
+          amount_untaxed?: number
+          amount_tax?: number
+          amount_total?: number
+          amount_discount?: number
+          payment_term?: string | null
+          payment_due_date?: string | null
+          shipping_street?: string | null
+          shipping_street2?: string | null
+          shipping_city?: string | null
+          shipping_state?: string | null
+          shipping_zip?: string | null
+          shipping_country_code?: string | null
+          notes?: string | null
+          terms?: string | null
+          is_invoiced?: boolean
+          is_delivered?: boolean
+          is_paid?: boolean
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          order_type?: OrderType
+          name?: string | null
+          reference?: string | null
+          partner_id?: string
+          created_by_partner_id?: string | null
+          order_state?: OrderState
+          order_date?: string
+          confirmation_date?: string | null
+          delivery_date?: string | null
+          currency?: string
+          exchange_rate?: number
+          tax_rate?: number
+          tax_included?: boolean
+          amount_untaxed?: number
+          amount_tax?: number
+          amount_total?: number
+          amount_discount?: number
+          payment_term?: string | null
+          payment_due_date?: string | null
+          shipping_street?: string | null
+          shipping_street2?: string | null
+          shipping_city?: string | null
+          shipping_state?: string | null
+          shipping_zip?: string | null
+          shipping_country_code?: string | null
+          notes?: string | null
+          terms?: string | null
+          is_invoiced?: boolean
+          is_delivered?: boolean
+          is_paid?: boolean
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'order_company_id_fkey'
+            columns: ['company_id']
+            referencedRelation: 'company'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'order_partner_id_fkey'
+            columns: ['partner_id']
+            referencedRelation: 'partner'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'order_created_by_partner_id_fkey'
+            columns: ['created_by_partner_id']
+            referencedRelation: 'partner'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      company: {
+        Row: {
+          id: string
+          name: string
+          display_name: string | null
+          legal_name: string | null
+          slug: string | null
+          logo_url: string | null
+          banner_url: string | null
+          primary_color: string
+          email: string | null
+          phone: string | null
+          website: string | null
+          street: string | null
+          street2: string | null
+          city: string | null
+          state: string | null
+          zip: string | null
+          country_code: string
+          vat: string | null
+          fiscal_regime: string | null
+          legal_representative: string | null
+          industry: string | null
+          company_size: CompanySize
+          founded_date: string | null
+          description: string | null
+          lang: string
+          tz: string
+          currency: string
+          status: CompanyStatus
+          is_personal: boolean
+          settings: Json
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          display_name?: string | null
+          legal_name?: string | null
+          slug?: string | null
+          logo_url?: string | null
+          banner_url?: string | null
+          primary_color?: string
+          email?: string | null
+          phone?: string | null
+          website?: string | null
+          street?: string | null
+          street2?: string | null
+          city?: string | null
+          state?: string | null
+          zip?: string | null
+          country_code?: string
+          vat?: string | null
+          fiscal_regime?: string | null
+          legal_representative?: string | null
+          industry?: string | null
+          company_size?: CompanySize
+          founded_date?: string | null
+          description?: string | null
+          lang?: string
+          tz?: string
+          currency?: string
+          status?: CompanyStatus
+          is_personal?: boolean
+          settings?: Json
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          display_name?: string | null
+          legal_name?: string | null
+          slug?: string | null
+          logo_url?: string | null
+          banner_url?: string | null
+          primary_color?: string
+          email?: string | null
+          phone?: string | null
+          website?: string | null
+          street?: string | null
+          street2?: string | null
+          city?: string | null
+          state?: string | null
+          zip?: string | null
+          country_code?: string
+          vat?: string | null
+          fiscal_regime?: string | null
+          legal_representative?: string | null
+          industry?: string | null
+          company_size?: CompanySize
+          founded_date?: string | null
+          description?: string | null
+          lang?: string
+          tz?: string
+          currency?: string
+          status?: CompanyStatus
+          is_personal?: boolean
+          settings?: Json
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      order_line: {
+        Row: {
+          id: string
+          order_id: string
+          product_id: string | null
+          sequence: number
+          description: string
+          quantity: number
+          quantity_delivered: number
+          quantity_invoiced: number
+          uom_id: string | null
+          unit_price: number
+          unit_cost: number
+          discount_percent: number
+          discount_amount: number
+          tax_rate: number
+          tax_amount: number
+          subtotal: number
+          total: number
+          margin: number
+          margin_percent: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          product_id?: string | null
+          sequence?: number
+          description: string
+          quantity?: number
+          quantity_delivered?: number
+          quantity_invoiced?: number
+          uom_id?: string | null
+          unit_price?: number
+          unit_cost?: number
+          discount_percent?: number
+          discount_amount?: number
+          tax_rate?: number
+          tax_amount?: number
+          subtotal?: number
+          total?: number
+          margin?: number
+          margin_percent?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          product_id?: string | null
+          sequence?: number
+          description?: string
+          quantity?: number
+          quantity_delivered?: number
+          quantity_invoiced?: number
+          uom_id?: string | null
+          unit_price?: number
+          unit_cost?: number
+          discount_percent?: number
+          discount_amount?: number
+          tax_rate?: number
+          tax_amount?: number
+          subtotal?: number
+          total?: number
+          margin?: number
+          margin_percent?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'order_line_order_id_fkey'
+            columns: ['order_id']
+            referencedRelation: 'order'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'order_line_product_id_fkey'
+            columns: ['product_id']
+            referencedRelation: 'product'
+            referencedColumns: ['id']
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -215,6 +551,10 @@ export interface Database {
     Enums: {
       partner_type: PartnerType
       partner_title: PartnerTitle
+      order_type: OrderType
+      order_state: OrderState
+      company_status: CompanyStatus
+      company_size: CompanySize
     }
   }
 }
@@ -227,3 +567,15 @@ export type PartnerUpdate = Database['public']['Tables']['partner']['Update']
 export type PartnerCategory = Database['public']['Tables']['partner_category']['Row']
 export type PartnerCategoryInsert = Database['public']['Tables']['partner_category']['Insert']
 export type PartnerCategoryUpdate = Database['public']['Tables']['partner_category']['Update']
+
+export type Order = Database['public']['Tables']['order']['Row']
+export type OrderInsert = Database['public']['Tables']['order']['Insert']
+export type OrderUpdate = Database['public']['Tables']['order']['Update']
+
+export type OrderLineRow = Database['public']['Tables']['order_line']['Row']
+export type OrderLineInsert = Database['public']['Tables']['order_line']['Insert']
+export type OrderLineUpdate = Database['public']['Tables']['order_line']['Update']
+
+export type Company = Database['public']['Tables']['company']['Row']
+export type CompanyInsert = Database['public']['Tables']['company']['Insert']
+export type CompanyUpdate = Database['public']['Tables']['company']['Update']

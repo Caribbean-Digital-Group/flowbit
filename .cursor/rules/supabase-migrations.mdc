@@ -1,0 +1,64 @@
+---
+description: Convenciones para migraciones SQL y esquema de Supabase
+globs: supabase/migrations/**/*.sql
+alwaysApply: false
+---
+
+# Migraciones Supabase - Convenciones
+
+## Crear Migraciones
+
+```bash
+npm run db:migration:new nombre_descriptivo
+```
+
+Formato del nombre: `descripcion_en_snake_case` (ej: `create_invoice_table`, `add_tax_field_to_product`)
+
+## Estructura de una Tabla
+
+```sql
+CREATE TABLE IF NOT EXISTS public.entity (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id UUID NOT NULL REFERENCES public.company(id) ON DELETE CASCADE,
+
+  -- Campos de negocio aquí
+
+  active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  created_by UUID REFERENCES auth.users(id),
+  updated_by UUID REFERENCES auth.users(id)
+);
+
+-- RLS obligatorio
+ALTER TABLE public.entity ENABLE ROW LEVEL SECURITY;
+
+-- Trigger para updated_at
+CREATE TRIGGER update_entity_updated_at
+  BEFORE UPDATE ON public.entity
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Índices
+CREATE INDEX idx_entity_company ON public.entity(company_id);
+CREATE INDEX idx_entity_active ON public.entity(active);
+```
+
+## Reglas Obligatorias
+
+- **Multi-tenant**: toda tabla de negocio debe tener `company_id` con FK a `company`
+- **RLS**: habilitar Row Level Security en TODAS las tablas
+- **Auditoría**: incluir `created_at`, `updated_at`, `created_by`, `updated_by`
+- **Soft delete**: campo `active BOOLEAN DEFAULT true`
+- **UUIDs**: usar `UUID` como primary key con `gen_random_uuid()`
+- **Trigger updated_at**: siempre crear el trigger `update_updated_at_column()`
+- **Índices**: crear índices en FKs y campos de filtro frecuente
+- **Full-text search**: usar config `spanish` para índices de búsqueda
+
+## Después de Migrar
+
+```bash
+npm run db:migration:up    # Aplicar migración
+npm run db:types           # Regenerar tipos TypeScript
+```
+
+Nunca editar `types/database.types.ts` manualmente.
