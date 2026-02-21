@@ -18,7 +18,7 @@
     "db:push": "supabase db push",
     "db:pull": "supabase db pull",
     "db:diff": "supabase db diff",
-    "db:types": "supabase gen types typescript --local > types/database.types.ts"
+    "db:types": "supabase gen types typescript --linked > types/database.types.ts"
   },
   "dependencies": {
     "@pinia/nuxt": "^0.11.3",

@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia'
 import type { User, Session } from '@supabase/supabase-js'
-import type { Partner, Company } from '~/types/database.types'
+import type { Tables } from '~/types/database.types'
+
+type Partner = Tables<'partner'>
+type Company = Tables<'company'>
 
 interface PartnerCompanyRelation {
   company_id: string
