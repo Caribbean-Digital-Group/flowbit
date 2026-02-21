@@ -27,8 +27,8 @@
             </h1>
             
             <p class="text-lg sm:text-xl text-slate-600 mb-8 max-w-xl mx-auto lg:mx-0">
-              Planifica, organiza y controla mantenimientos, reparaciones, soportes y trabajos técnicos. 
-              Simplifica tu gestión operativa con Flowbit.
+              Gestiona tus operaciones, proyectos, órdenes de venta y compra en un solo lugar. 
+              Optimiza cada proceso y haz crecer tu negocio con Flowbit.
             </p>
             
             <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
@@ -152,9 +152,9 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
               </svg>
             </div>
-            <h3 class="text-xl font-semibold text-slate-900 mb-3">Mantenimientos y Reparaciones</h3>
+            <h3 class="text-xl font-semibold text-slate-900 mb-3">Gestión de Proyectos</h3>
             <p class="text-slate-600">
-              Programa y da seguimiento a mantenimientos preventivos y correctivos. Historial completo de cada equipo o activo.
+              Crea, asigna y sigue el progreso de tus proyectos. Define tareas, fechas de entrega y recursos necesarios para cada etapa.
             </p>
           </div>
           
@@ -181,8 +181,8 @@
               </svg>
             </div>
             <div>
-              <h4 class="font-semibold text-slate-900">Agenda y Calendario</h4>
-              <p class="text-sm text-slate-500">Planifica tareas y citas</p>
+              <h4 class="font-semibold text-slate-900">Gestión de Proyectos</h4>
+              <p class="text-sm text-slate-500">Define tareas, fechas de entrega y recursos.</p>
             </div>
           </div>
           
