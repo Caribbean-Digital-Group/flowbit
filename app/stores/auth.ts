@@ -2,6 +2,12 @@ import { defineStore } from 'pinia'
 import type { User, Session } from '@supabase/supabase-js'
 import type { Partner, Company } from '~/types/database.types'
 
+interface PartnerCompanyRelation {
+  company_id: string
+  role: string
+  is_default: boolean
+}
+
 interface UserCompany {
   company: Company
   role: string
@@ -14,15 +20,20 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const session = ref<Session | null>(null)
   const partner = ref<Partner | null>(null)
-  const companies = ref<UserCompany[]>([])
+  const companies = shallowRef<UserCompany[]>([])
   const selectedCompanyId = ref<string | null>(null)
   const loading = ref(false)
 
   const isAuthenticated = computed(() => !!session.value)
 
-  const selectedCompany = computed(() =>
-    companies.value.find(c => c.company.id === selectedCompanyId.value)?.company ?? null
-  )
+  const selectedCompany = computed(() => {
+    const list = companies.value
+    const id = selectedCompanyId.value
+    for (const entry of list) {
+      if (entry.company.id === id) return entry.company
+    }
+    return null
+  })
 
   const partnerDisplayName = computed(() => {
     if (partner.value?.display_name) return partner.value.display_name
@@ -54,35 +65,61 @@ export const useAuthStore = defineStore('auth', () => {
   async function fetchCompanies(): Promise<void> {
     if (!partner.value) return
 
-    const { data, error } = await supabase
-      .from('rel_partner_company')
-      .select(`
-        role,
-        is_default,
-        company:company_id (*)
-      `)
-      .eq('partner_id', partner.value.id)
-      .eq('invitation_status', 'accepted')
-      .eq('is_active', true)
+    const { data: relations, error: relError } = await supabase
+      .rpc('get_partner_companies' as never, { p_partner_id: partner.value.id } as never) as {
+        data: PartnerCompanyRelation[] | null
+        error: { message: string } | null
+      }
 
-    if (error) {
-      console.error('Error fetching companies:', error)
-      return
-    }
+    if (!relError && relations && relations.length > 0) {
+      const companyIds = relations.map(r => r.company_id)
 
-    companies.value = (data ?? [])
-      .filter((row: any) => row.company)
-      .map((row: any) => ({
-        company: row.company as Company,
-        role: row.role,
-        isDefault: row.is_default,
+      const { data: companyData, error: companyError } = await supabase
+        .from('company')
+        .select('*')
+        .in('id', companyIds)
+
+      if (companyError) {
+        console.error('Error fetching companies:', companyError)
+        return
+      }
+
+      const relMap = new Map(relations.map(r => [r.company_id, r]))
+
+      companies.value = (companyData ?? []).map(c => {
+        const rel = relMap.get(c.id)
+        return {
+          company: c,
+          role: rel?.role ?? 'member',
+          isDefault: rel?.is_default ?? false,
+        }
+      })
+    } else {
+      if (relError) {
+        console.error('Error fetching partner companies:', relError)
+      }
+
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('company')
+        .select('*')
+
+      if (fallbackError) {
+        console.error('Error fetching companies fallback:', fallbackError)
+        return
+      }
+
+      companies.value = (fallbackData ?? []).map(c => ({
+        company: c,
+        role: 'member',
+        isDefault: false,
       }))
+    }
 
     const defaultCompany = companies.value.find(c => c.isDefault)
     if (defaultCompany) {
       selectedCompanyId.value = defaultCompany.company.id
     } else if (companies.value.length > 0) {
-      selectedCompanyId.value = companies.value[0].company.id
+      selectedCompanyId.value = companies.value[0]!.company.id
     }
   }
 
