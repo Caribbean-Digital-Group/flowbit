@@ -11,6 +11,17 @@
       <p class="text-slate-500 mt-3 text-lg">Accede a tu cuenta de Flowbit</p>
     </div>
 
+    <div
+      v-if="errorMessage"
+      class="mb-6 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+    >
+      <svg class="h-5 w-5 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      {{ errorMessage }}
+    </div>
+
     <form @submit.prevent="handleLogin" class="space-y-6">
       <FormInput
         id="email"
@@ -66,31 +77,38 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+const { signInOrSignUp } = useSupabaseAuth()
 
-// Login form state
 const loginForm = reactive({
   email: '',
   password: '',
-  remember: false
+  remember: false,
 })
 
-// Loading state
 const isLoading = ref(false)
+const errorMessage = ref<string | null>(null)
 
-// Handle login
 const handleLogin = async () => {
   if (isLoading.value) return
-  
+
   isLoading.value = true
-  
+  errorMessage.value = null
+
   try {
-    console.log('Login attempt:', loginForm)
-    // TODO: Implement actual login logic with Supabase
-    // Simular delay de login
-    await new Promise(resolve => setTimeout(resolve, 2000))
-  } catch (error) {
-    console.error('Login error:', error)
+    const { success, error } = await signInOrSignUp({
+      email: loginForm.email,
+      password: loginForm.password,
+    })
+
+    if (!success) {
+      errorMessage.value = error
+      return
+    }
+
+    await navigateTo('/admin')
+  } catch (err) {
+    console.error('Login error:', err)
+    errorMessage.value = 'Ocurrió un error inesperado. Intenta de nuevo.'
   } finally {
     isLoading.value = false
   }
