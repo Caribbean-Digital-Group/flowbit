@@ -115,6 +115,17 @@ const formData = defineModel<PartnerFormData>({ required: true })
           :readonly="readonly"
           size="md"
         />
+
+        <div class="sm:col-span-2">
+          <FormTextArea
+            v-model="formData.comment"
+            label="Comentarios"
+            placeholder="Notas adicionales sobre el partner"
+            :readonly="readonly"
+            :rows="8"
+            size="md"
+          />
+        </div>
       </div>
     </div>
 
@@ -150,15 +161,7 @@ const formData = defineModel<PartnerFormData>({ required: true })
           size="md"
         />
 
-        <div class="sm:col-span-2">
-          <FormInput
-            v-model="formData.comment"
-            label="Comentarios"
-            placeholder="Notas adicionales sobre el partner"
-            :readonly="readonly"
-            size="md"
-          />
-        </div>
+
       </div>
 
       <!-- Dirección -->
