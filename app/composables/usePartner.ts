@@ -87,9 +87,13 @@ export const usePartner = () => {
   }
 
   /**
-   * Obtiene los partners asociados a una company mediante rel_partner_company.
-   * Usa un inner join sobre la tabla relacional para limitar el resultado
-   * únicamente a los partners vinculados con la company indicada.
+   * Obtiene los partners asociados a una company a través de rel_partner_company.
+   *
+   * Implementación en dos pasos (en lugar de un inner join embebido) para evitar
+   * que un row de la relación oculto por RLS excluya silenciosamente al partner
+   * del resultado:
+   *   1. Recupera los partner_id vinculados a la company (con sus filtros).
+   *   2. Recupera los partners por id.
    */
   const getPartnersByCompany = async (
     companyId: string,
@@ -102,19 +106,34 @@ export const usePartner = () => {
       offset?: number
     }
   ): Promise<Partner[]> => {
+    let relQuery = supabase
+      .from('rel_partner_company')
+      .select('partner_id, is_active, role')
+      .eq('company_id', companyId)
+
+    relQuery = relQuery.eq('is_active', options?.relationActive ?? true)
+
+    if (options?.role) {
+      relQuery = relQuery.eq('role', options.role)
+    }
+
+    const { data: rels, error: relError } = await relQuery
+
+    if (relError) {
+      console.error('Error fetching partner relations by company:', relError)
+      return []
+    }
+
+    const partnerIds = Array.from(new Set((rels ?? []).map(r => r.partner_id)))
+    if (partnerIds.length === 0) return []
+
     let query = supabase
       .from('partner')
-      .select('*, rel_partner_company!inner(company_id, is_active, role)')
-      .eq('rel_partner_company.company_id', companyId)
+      .select('*')
+      .in('id', partnerIds)
 
     if (options?.active !== undefined) {
       query = query.eq('active', options.active)
-    }
-    if (options?.relationActive !== undefined) {
-      query = query.eq('rel_partner_company.is_active', options.relationActive)
-    }
-    if (options?.role) {
-      query = query.eq('rel_partner_company.role', options.role)
     }
     if (options?.companyType) {
       query = query.eq('company_type', options.companyType)
@@ -133,7 +152,7 @@ export const usePartner = () => {
       return []
     }
 
-    return (data as Partner[] | null) || []
+    return data ?? []
   }
 
   /**
@@ -151,20 +170,33 @@ export const usePartner = () => {
   }
 
   /**
-   * Create a new partner
+   * Crea un partner asociado a una company y devuelve el registro creado.
+   *
+   * Internamente invoca el RPC `create_partner_for_company` que:
+   *  - valida que el usuario actual sea owner/admin de la company,
+   *  - inserta la fila en `partner`,
+   *  - crea la relación en `rel_partner_company`,
+   * todo dentro de una misma transacción (SECURITY DEFINER en Postgres).
    */
-  const createPartner = async (partner: PartnerInsert): Promise<Partner | null> => {
-    const user = await useSupabaseUser()
+  const createPartner = async (
+    companyId: string,
+    partner: PartnerInsert
+  ): Promise<Partner | null> => {
+    if (!companyId) {
+      console.error('createPartner: companyId is required')
+      return null
+    }
 
-    const { data, error } = await supabase
-      .from('partner')
-      .insert({
-        ...partner,
-        created_by: user?.id,
-        updated_by: user?.id
-      })
-      .select()
-      .single()
+    const { data, error } = await supabase.rpc(
+      'create_partner_for_company' as never,
+      {
+        p_company_id: companyId,
+        p_partner: partner
+      } as never
+    ) as {
+      data: Partner | null
+      error: { message: string; code?: string } | null
+    }
 
     if (error) {
       console.error('Error creating partner:', error)

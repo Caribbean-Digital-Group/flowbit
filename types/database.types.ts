@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       company: {
@@ -1499,6 +1474,50 @@ export type Database = {
         }
         Returns: string
       }
+      create_partner_for_company: {
+        Args: { p_company_id: string; p_partner: Json }
+        Returns: {
+          active: boolean | null
+          avatar_url: string | null
+          barcode: string | null
+          birthdate: string | null
+          city: string | null
+          comment: string | null
+          company_type: Database["public"]["Enums"]["partner_type"] | null
+          country_code: string | null
+          created_at: string | null
+          created_by: string | null
+          credit_limit: number | null
+          display_name: string | null
+          email: string | null
+          function: string | null
+          id: string
+          is_company: boolean | null
+          lang: string | null
+          mobile: string | null
+          name: string
+          parent_id: string | null
+          phone: string | null
+          ref: string | null
+          state: string | null
+          street: string | null
+          street2: string | null
+          title: Database["public"]["Enums"]["partner_title"] | null
+          tz: string | null
+          updated_at: string | null
+          updated_by: string | null
+          user_id: string | null
+          vat: string | null
+          website: string | null
+          zip: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "partner"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_partner_companies: {
         Args: { p_partner_id: string }
         Returns: {
@@ -1682,9 +1701,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       company_size: ["micro", "small", "medium", "large", "enterprise"],

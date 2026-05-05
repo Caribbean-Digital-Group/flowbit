@@ -7,13 +7,7 @@ import { storeToRefs } from 'pinia'
 import type { Column } from '~/components/Datatable.vue'
 import type { Tables } from '~/types/database.types'
 
-type PartnerRow = Tables<'partner'> & {
-  rel_partner_company?: {
-    company_id: string
-    is_active: boolean | null
-    role: Tables<'rel_partner_company'>['role']
-  }[]
-}
+type PartnerRow = Tables<'partner'>
 
 const columns: Column[] = [
   {
@@ -72,7 +66,7 @@ const loadPartners = async () => {
   isLoadingPartners.value = true
   try {
     const list = await getPartnersByCompany(companyId)
-    partners.value = (list as PartnerRow[]).map(mapPartnerToTableRow)
+    partners.value = list.map(mapPartnerToTableRow)
   } finally {
     isLoadingPartners.value = false
   }
