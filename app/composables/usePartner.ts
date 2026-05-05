@@ -1,4 +1,9 @@
-import type { Partner, PartnerInsert, PartnerUpdate, PartnerCategory } from '~/types/database.types'
+import type { Tables, TablesInsert, TablesUpdate } from '~/types/database.types'
+
+type Partner = Tables<'partner'>
+type PartnerInsert = TablesInsert<'partner'>
+type PartnerUpdate = TablesUpdate<'partner'>
+type PartnerCategory = Tables<'partner_category'>
 
 export const usePartner = () => {
   const supabase = useSupabase()

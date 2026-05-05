@@ -1,4 +1,8 @@
-import type { OrderLineRow, OrderLineInsert, OrderLineUpdate } from '~/types/database.types'
+import type { Tables, TablesInsert, TablesUpdate } from '~/types/database.types'
+
+type OrderLineRow = Tables<'order_line'>
+type OrderLineInsert = TablesInsert<'order_line'>
+type OrderLineUpdate = TablesUpdate<'order_line'>
 
 export const useOrderLine = () => {
   const supabase = useSupabase()
