@@ -1,9 +1,10 @@
-import type { Tables, TablesInsert, TablesUpdate } from '~/types/database.types'
+import type { Database, Tables, TablesInsert, TablesUpdate } from '~/types/database.types'
 
 type Partner = Tables<'partner'>
 type PartnerInsert = TablesInsert<'partner'>
 type PartnerUpdate = TablesUpdate<'partner'>
 type PartnerCategory = Tables<'partner_category'>
+type PartnerCompanyRole = Database['public']['Enums']['partner_company_role']
 
 export const usePartner = () => {
   const supabase = useSupabase()
@@ -83,6 +84,56 @@ export const usePartner = () => {
     }
 
     return data || []
+  }
+
+  /**
+   * Obtiene los partners asociados a una company mediante rel_partner_company.
+   * Usa un inner join sobre la tabla relacional para limitar el resultado
+   * únicamente a los partners vinculados con la company indicada.
+   */
+  const getPartnersByCompany = async (
+    companyId: string,
+    options?: {
+      active?: boolean
+      relationActive?: boolean
+      role?: PartnerCompanyRole
+      companyType?: 'person' | 'company'
+      limit?: number
+      offset?: number
+    }
+  ): Promise<Partner[]> => {
+    let query = supabase
+      .from('partner')
+      .select('*, rel_partner_company!inner(company_id, is_active, role)')
+      .eq('rel_partner_company.company_id', companyId)
+
+    if (options?.active !== undefined) {
+      query = query.eq('active', options.active)
+    }
+    if (options?.relationActive !== undefined) {
+      query = query.eq('rel_partner_company.is_active', options.relationActive)
+    }
+    if (options?.role) {
+      query = query.eq('rel_partner_company.role', options.role)
+    }
+    if (options?.companyType) {
+      query = query.eq('company_type', options.companyType)
+    }
+    if (options?.limit) {
+      query = query.limit(options.limit)
+    }
+    if (options?.offset) {
+      query = query.range(options.offset, options.offset + (options.limit || 10) - 1)
+    }
+
+    const { data, error } = await query.order('name')
+
+    if (error) {
+      console.error('Error fetching partners by company:', error)
+      return []
+    }
+
+    return (data as Partner[] | null) || []
   }
 
   /**
@@ -289,6 +340,7 @@ export const usePartner = () => {
     getCurrentPartner,
     getPartnerById,
     getPartners,
+    getPartnersByCompany,
     getCompanies,
     getCompanyContacts,
     createPartner,

@@ -3,66 +3,147 @@ definePageMeta({
   layout: 'admin'
 })
 
+import { storeToRefs } from 'pinia'
 import type { Column } from '~/components/Datatable.vue'
+import type { Tables } from '~/types/database.types'
+
+type PartnerRow = Tables<'partner'> & {
+  rel_partner_company?: {
+    company_id: string
+    is_active: boolean | null
+    role: Tables<'rel_partner_company'>['role']
+  }[]
+}
 
 const columns: Column[] = [
-  { 
-    key: 'name', 
-    label: 'Cliente', 
-    type: 'avatar', 
-    subtitleKey: 'email' 
+  {
+    key: 'name',
+    label: 'Cliente',
+    type: 'avatar',
+    subtitleKey: 'email',
+    avatarKey: 'avatar_url'
   },
-  { 
-    key: 'status', 
-    label: 'Estado', 
+  {
+    key: 'tipo',
+    label: 'Tipo',
+    type: 'text'
+  },
+  {
+    key: 'status',
+    label: 'Estado',
     type: 'badge',
     badgeConfig: {
       labels: { active: 'Activo', inactive: 'Inactivo' }
     }
   },
-  { key: 'total', label: 'Total', type: 'currency' },
-  { key: 'progress', label: 'Progreso', type: 'progress' },
-  { key: 'created_at', label: 'Fecha', type: 'date' }
+  { key: 'phone', label: 'Teléfono', type: 'text' },
+  { key: 'created_at', label: 'Alta', type: 'date' }
 ]
 
-const customers = [
-  { id: 1, name: 'Juan Pérez', email: 'juan@email.com', status: 'active', total: 5000, progress: 75, created_at: '2026-01-15' },
-  { id: 2, name: 'María García', email: 'maria@email.com', status: 'pending', total: 3200, progress: 45, created_at: '2026-01-20' }
-]
+const authStore = useAuthStore()
+const { selectedCompanyId } = storeToRefs(authStore)
 
-// Funciones de acciones
-const edit = (row: Record<string, any>) => {
-  console.log('Editar:', row)
-  navigateTo(`/admin/partners/${row.id}`)
+const { getPartnersByCompany, archivePartner } = usePartner()
+
+const partners = ref<Record<string, unknown>[]>([])
+const isLoadingPartners = ref(false)
+
+function mapPartnerToTableRow(raw: PartnerRow): Record<string, unknown> {
+  const displayName = raw.display_name?.trim() || raw.name
+  return {
+    id: raw.id,
+    name: displayName,
+    email: raw.email ?? '',
+    avatar_url: raw.avatar_url ?? '',
+    tipo: raw.company_type === 'company' ? 'Empresa' : 'Persona',
+    status: raw.active === false ? 'inactive' : 'active',
+    phone: raw.phone?.trim() ? raw.phone : '—',
+    created_at: raw.created_at ?? ''
+  }
 }
 
-const remove = (row: Record<string, any>) => {
-  console.log('Eliminar:', row)
-  // Aquí puedes mostrar confirmación y eliminar
+const loadPartners = async () => {
+  const companyId = selectedCompanyId.value
+  if (!companyId) {
+    partners.value = []
+    return
+  }
+
+  isLoadingPartners.value = true
+  try {
+    const list = await getPartnersByCompany(companyId)
+    partners.value = (list as PartnerRow[]).map(mapPartnerToTableRow)
+  } finally {
+    isLoadingPartners.value = false
+  }
 }
 
-const deleteMany = (selected: Record<string, any>[]) => {
-  console.log('Eliminar múltiples:', selected)
-  // Aquí puedes eliminar múltiples registros
+watch(
+  selectedCompanyId,
+  () => {
+    loadPartners()
+  },
+  { immediate: true }
+)
+
+const edit = (row: Record<string, unknown>) => {
+  navigateTo(`/admin/partners/${row.id as string}`)
+}
+
+const remove = async (row: Record<string, unknown>) => {
+  const id = row.id as string
+  const ok = await archivePartner(id)
+  if (ok) {
+    await loadPartners()
+  }
+}
+
+const deleteMany = async (selected: Record<string, unknown>[]) => {
+  for (const row of selected) {
+    await archivePartner(row.id as string)
+  }
+  await loadPartners()
 }
 
 const createPartner = () => {
-  console.log('Crear cliente')
   navigateTo('/admin/partners/create')
 }
 </script>
 <template>
   <div class="w-full py-4">
+    <div
+      v-if="!selectedCompanyId"
+      class="rounded-2xl border border-amber-100 bg-amber-50 px-6 py-4 text-amber-900"
+    >
+      <p class="font-semibold">
+        Sin empresa seleccionada
+      </p>
+      <p class="mt-1 text-sm text-amber-800/90">
+        Elige una empresa en el selector del panel superior para ver sus socios y clientes.
+      </p>
+    </div>
+
+    <div
+      v-else-if="isLoadingPartners"
+      class="flex justify-center rounded-2xl border border-slate-100 bg-white py-16 text-slate-500 shadow-lg shadow-slate-200/50"
+    >
+      Cargando socios…
+    </div>
+
     <Datatable
+      v-else
       title="Clientes"
-      description="Lista de todos los clientes registrados"
-      :data="customers"
+      description="Socios vinculados a la empresa seleccionada"
+      :data="partners"
       :columns="columns"
+      :search-keys="['name', 'email', 'phone', 'tipo']"
       :selectable="true"
       :exportable="true"
       :creatable="true"
       create-label="Nuevo Cliente"
       export-filename="clientes"
+      empty-title="Sin socios"
+      empty-message="No hay socios asociados a esta empresa o aún no se han registrado."
       @create="createPartner"
     >
       <!-- Acciones personalizadas por fila -->
