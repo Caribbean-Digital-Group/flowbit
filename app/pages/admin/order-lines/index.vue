@@ -52,17 +52,20 @@ const columns: Column[] = [
   {
     key: 'unit_price',
     label: 'Precio Unit.',
-    type: 'currency'
+    type: 'currency',
+    currencyKey: 'currency'
   },
   {
     key: 'subtotal',
     label: 'Subtotal',
-    type: 'currency'
+    type: 'currency',
+    currencyKey: 'currency'
   },
   {
     key: 'total',
     label: 'Total',
-    type: 'currency'
+    type: 'currency',
+    currencyKey: 'currency'
   }
 ]
 

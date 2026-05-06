@@ -1540,6 +1540,15 @@ export type Database = {
       is_company_member: { Args: { p_company_id: string }; Returns: boolean }
       is_own_partner: { Args: { p_partner_id: string }; Returns: boolean }
       post_order: { Args: { p_order_id: string }; Returns: boolean }
+      preview_order_stock_shortages: {
+        Args: { p_order_id: string }
+        Returns: {
+          available: number
+          product_id: string
+          product_name: string
+          requested: number
+        }[]
+      }
       respond_to_invitation: {
         Args: { p_accept: boolean; p_rel_id: string }
         Returns: boolean

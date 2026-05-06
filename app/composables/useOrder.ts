@@ -111,15 +111,44 @@ export const useOrder = () => {
     return data
   }
 
-  const postOrderById = async (orderId: string): Promise<boolean> => {
+  const previewOrderStockShortages = async (
+    orderId: string
+  ): Promise<
+    { product_id: string; product_name: string; requested: number; available: number }[]
+  > => {
+    const { data, error } = await supabase.rpc('preview_order_stock_shortages', {
+      p_order_id: orderId
+    })
+
+    if (error) {
+      console.error('Error previewing order stock:', error)
+      return []
+    }
+
+    if (!data?.length) return []
+
+    return data.map((row) => ({
+      product_id: row.product_id,
+      product_name: row.product_name,
+      requested: Number(row.requested),
+      available: Number(row.available)
+    }))
+  }
+
+  const postOrderById = async (
+    orderId: string
+  ): Promise<{ success: boolean; errorMessage: string | null }> => {
     const { data, error } = await supabase.rpc('post_order', { p_order_id: orderId })
 
     if (error) {
       console.error('Error posting order:', error)
-      return false
+      return {
+        success: false,
+        errorMessage: error.message?.trim() || 'No se pudo confirmar la orden.'
+      }
     }
 
-    return Boolean(data)
+    return { success: Boolean(data), errorMessage: null }
   }
 
   const cancelOrderById = async (orderId: string): Promise<boolean> => {
@@ -168,6 +197,7 @@ export const useOrder = () => {
     getOrderViewById,
     updateOrder,
     createDraftOrder,
+    previewOrderStockShortages,
     postOrderById,
     cancelOrderById,
     addOrderLineRpc

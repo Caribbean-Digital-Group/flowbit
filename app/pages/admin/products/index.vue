@@ -42,7 +42,7 @@ const columns: Column[] = [
       }
     }
   },
-  { key: 'sale_price', label: 'Precio', type: 'currency' },
+  { key: 'sale_price', label: 'Precio', type: 'currency', currencyKey: 'currency' },
   { key: 'stock_quantity', label: 'Stock', type: 'text' },
   { key: 'created_at', label: 'Fecha', type: 'date' }
 ]
@@ -63,6 +63,7 @@ function mapProductToTableRow(raw: ProductRow): Record<string, unknown> {
     product_type: raw.product_type,
     status: raw.status ?? 'inactive',
     sale_price: raw.sale_price ?? 0,
+    currency: (raw.currency?.trim() || 'MXN').toUpperCase(),
     stock_quantity: raw.stock_quantity ?? 0,
     image_url: raw.image_url ?? '',
     created_at: raw.created_at ?? ''

@@ -24,6 +24,7 @@ const { selectedCompanyId } = storeToRefs(authStore)
 const {
   getOrderViewById,
   updateOrder,
+  previewOrderStockShortages,
   postOrderById,
   cancelOrderById,
   addOrderLineRpc
@@ -41,9 +42,17 @@ const orderId = computed(() => {
   return Array.isArray(raw) ? raw[0] : raw
 })
 
+type StockShortageRow = {
+  product_id: string
+  product_name: string
+  requested: number
+  available: number
+}
+
 const isEditing = ref(false)
 const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
+const stockShortageLines = ref<StockShortageRow[]>([])
 const partnerOptions = ref<{ value: string; label: string }[]>([])
 
 const formData = ref<OrderFormData>(createEmptyOrderForm())
@@ -108,6 +117,22 @@ const menuOptions = computed<MenuOption[]>(() => {
     })
   }
   return opts
+})
+
+const refreshStockShortagePreview = async () => {
+  stockShortageLines.value = []
+  const id = orderId.value
+  if (!id || !selectedCompanyId.value) return
+  if (formData.value.order_state !== 'draft' || formData.value.order_type !== 'sale') {
+    return
+  }
+  stockShortageLines.value = await previewOrderStockShortages(id)
+}
+
+watch(isEditing, (editing) => {
+  if (editing) {
+    stockShortageLines.value = []
+  }
 })
 
 const mapViewToForm = (v: OrderViewRow): OrderFormData => ({
@@ -239,6 +264,8 @@ const loadOrder = async () => {
     const lines = lineRows.map(mapViewLineToUi)
     orderLines.value = lines
     initialLineIds.value = new Set(lines.map((l) => l.id))
+
+    await refreshStockShortagePreview()
   } finally {
     isLoading.value = false
   }
@@ -259,11 +286,25 @@ const handlePostOrder = async () => {
   isLoading.value = true
   errorMessage.value = null
   try {
-    const ok = await postOrderById(id)
-    if (!ok) {
-      errorMessage.value = 'No se pudo confirmar la orden. Debe estar en borrador y tener al menos una línea.'
+    if (formData.value.order_type === 'sale') {
+      stockShortageLines.value = await previewOrderStockShortages(id)
+      if (stockShortageLines.value.length > 0) {
+        errorMessage.value =
+          'No se puede confirmar la orden hasta resolver el inventario. Revisa el aviso amarillo o ajusta las líneas.'
+        return
+      }
+    }
+
+    const result = await postOrderById(id)
+    if (!result.success) {
+      errorMessage.value =
+        result.errorMessage
+        ?? 'No se pudo confirmar la orden. Debe estar en borrador y tener al menos una línea.'
+      await refreshStockShortagePreview()
       return
     }
+
+    stockShortageLines.value = []
     await loadOrder()
   } finally {
     isLoading.value = false
@@ -409,9 +450,36 @@ const formatDate = (dateString: string | null): string => {
   <div>
     <div
       v-if="errorMessage"
-      class="mb-4 rounded-2xl border border-red-100 bg-red-50 px-6 py-4 text-red-700"
+      class="mb-4 rounded-2xl border border-red-100 bg-red-50 px-6 py-4 text-red-700 whitespace-pre-line"
     >
       {{ errorMessage }}
+    </div>
+
+    <div
+      v-if="
+        stockShortageLines.length > 0
+          && !isEditing
+          && formData.order_state === 'draft'
+          && formData.order_type === 'sale'
+      "
+      class="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-6 py-4 text-amber-950 shadow-sm shadow-amber-100/50"
+    >
+      <p class="font-semibold flex items-start gap-2">
+        <svg class="w-5 h-5 shrink-0 text-amber-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        Inventario insuficiente para confirmar esta venta
+      </p>
+      <ul class="mt-3 list-disc pl-5 text-sm leading-relaxed space-y-1.5">
+        <li v-for="row in stockShortageLines" :key="row.product_id">
+          <span class="font-medium">{{ row.product_name }}</span>:
+          piden {{ row.requested }}, disponibles {{ row.available }}
+        </li>
+      </ul>
+      <p class="mt-3 text-xs text-amber-900/85">
+        Aumenta stock en el catálogo, reduce cantidades en las líneas o elimina productos antes de usar «Confirmar orden».
+      </p>
     </div>
 
     <CardSheet

@@ -2,7 +2,6 @@
 import { storeToRefs } from 'pinia'
 import {
   createEmptyOrderForm,
-  createEmptyOrderLine,
   type OrderFormData,
   type OrderLine
 } from '~/components/Order/Form.vue'
@@ -21,7 +20,7 @@ const { createDraftOrder, updateOrder, addOrderLineRpc } = useOrder()
 const { getPartnersByCompany } = usePartner()
 
 const formData = ref<OrderFormData>(createEmptyOrderForm())
-const orderLines = ref<OrderLine[]>([createEmptyOrderLine()])
+const orderLines = ref<OrderLine[]>([])
 const partnerOptions = ref<{ value: string; label: string }[]>([])
 const isSaving = ref(false)
 const errorMessage = ref<string | null>(null)
@@ -89,11 +88,11 @@ const handleSave = async () => {
     return
   }
 
-  const invalidLine = orderLines.value.some(
-    line => !line.description.trim() && !line.product_name.trim()
+  const linesToSave = orderLines.value.filter(
+    line => !!line.description.trim() || !!line.product_name.trim()
   )
-  if (invalidLine) {
-    errorMessage.value = 'Cada línea debe tener descripción o nombre de producto.'
+  if (linesToSave.length === 0) {
+    errorMessage.value = 'Agrega al menos una línea con nombre de producto o descripción.'
     return
   }
 
@@ -118,7 +117,7 @@ const handleSave = async () => {
       return
     }
 
-    for (const line of orderLines.value) {
+    for (const line of linesToSave) {
       const productId = line.product_id?.trim() || null
       const desc = line.description.trim() || line.product_name.trim() || 'Línea'
       const lineId = await addOrderLineRpc({

@@ -39,7 +39,7 @@ const columns: Column[] = [
       }
     }
   },
-  { key: 'amount_total', label: 'Total', type: 'currency' },
+  { key: 'amount_total', label: 'Total', type: 'currency', currencyKey: 'currency' },
   { key: 'order_date', label: 'Fecha', type: 'date' }
 ]
 
