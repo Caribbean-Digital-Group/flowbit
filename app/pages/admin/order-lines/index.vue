@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
+import type { Column } from '~/components/Datatable.vue'
+import type { Database } from '~/types/database.types'
+
 definePageMeta({
   layout: 'admin'
 })
 
-import type { Column } from '~/components/Datatable.vue'
+type OrderLineRow = Database['public']['Views']['v_order_lines']['Row']
 
 const columns: Column[] = [
   {
@@ -11,6 +15,29 @@ const columns: Column[] = [
     label: 'Orden',
     type: 'avatar',
     subtitleKey: 'product_name'
+  },
+  {
+    key: 'order_type',
+    label: 'Tipo orden',
+    type: 'badge',
+    badgeConfig: {
+      labels: {
+        sale: 'Venta',
+        purchase: 'Compra'
+      }
+    }
+  },
+  {
+    key: 'order_state',
+    label: 'Estado',
+    type: 'badge',
+    badgeConfig: {
+      labels: {
+        draft: 'Borrador',
+        posted: 'Confirmada',
+        cancel: 'Cancelada'
+      }
+    }
   },
   {
     key: 'description',
@@ -39,131 +66,126 @@ const columns: Column[] = [
   }
 ]
 
-const orderLines = [
-  {
-    id: '660e8400-e29b-41d4-a716-446655440001',
-    order_id: '550e8400-e29b-41d4-a716-446655440001',
-    order_name: 'SO-000001',
-    product_name: 'Laptop HP Pavilion 15',
-    description: 'Laptop HP Pavilion 15 con Intel Core i7, 16GB RAM',
-    quantity: 5,
-    unit_price: 18999.00,
-    unit_cost: 15000.00,
-    discount_percent: 5.00,
-    discount_amount: 4749.75,
-    tax_rate: 16.00,
-    tax_amount: 14439.62,
-    subtotal: 90245.25,
-    total: 104684.87,
-    currency: 'MXN'
-  },
-  {
-    id: '660e8400-e29b-41d4-a716-446655440002',
-    order_id: '550e8400-e29b-41d4-a716-446655440001',
-    order_name: 'SO-000001',
-    product_name: 'Mouse Logitech MX Master 3',
-    description: 'Mouse inalámbrico ergonómico',
-    quantity: 10,
-    unit_price: 1999.00,
-    unit_cost: 1200.00,
-    discount_percent: 0.00,
-    discount_amount: 0.00,
-    tax_rate: 16.00,
-    tax_amount: 3198.40,
-    subtotal: 19990.00,
-    total: 23188.40,
-    currency: 'MXN'
-  },
-  {
-    id: '660e8400-e29b-41d4-a716-446655440003',
-    order_id: '550e8400-e29b-41d4-a716-446655440002',
-    order_name: 'SO-000002',
-    product_name: 'Monitor Dell 27"',
-    description: 'Monitor Dell UltraSharp 27" 4K USB-C',
-    quantity: 3,
-    unit_price: 12500.00,
-    unit_cost: 9800.00,
-    discount_percent: 10.00,
-    discount_amount: 3750.00,
-    tax_rate: 16.00,
-    tax_amount: 5400.00,
-    subtotal: 33750.00,
-    total: 39150.00,
-    currency: 'MXN'
-  },
-  {
-    id: '660e8400-e29b-41d4-a716-446655440004',
-    order_id: '550e8400-e29b-41d4-a716-446655440003',
-    order_name: 'PO-000001',
-    product_name: 'Teclado Mecánico Keychron K2',
-    description: 'Teclado mecánico inalámbrico 75%',
-    quantity: 20,
-    unit_price: 2499.00,
-    unit_cost: 1800.00,
-    discount_percent: 15.00,
-    discount_amount: 7497.00,
-    tax_rate: 16.00,
-    tax_amount: 6798.72,
-    subtotal: 42492.00,
-    total: 49290.72,
-    currency: 'MXN'
-  },
-  {
-    id: '660e8400-e29b-41d4-a716-446655440005',
-    order_id: '550e8400-e29b-41d4-a716-446655440004',
-    order_name: 'SO-000003',
-    product_name: 'Webcam Logitech C920',
-    description: 'Cámara web Full HD 1080p',
-    quantity: 8,
-    unit_price: 1799.00,
-    unit_cost: 1200.00,
-    discount_percent: 0.00,
-    discount_amount: 0.00,
-    tax_rate: 16.00,
-    tax_amount: 2302.72,
-    subtotal: 14392.00,
-    total: 16694.72,
-    currency: 'MXN'
-  },
-  {
-    id: '660e8400-e29b-41d4-a716-446655440006',
-    order_id: '550e8400-e29b-41d4-a716-446655440005',
-    order_name: 'PO-000002',
-    product_name: 'Audífonos Sony WH-1000XM5',
-    description: 'Audífonos con cancelación de ruido',
-    quantity: 15,
-    unit_price: 6999.00,
-    unit_cost: 5200.00,
-    discount_percent: 8.00,
-    discount_amount: 8398.80,
-    tax_rate: 16.00,
-    tax_amount: 15437.79,
-    subtotal: 96486.20,
-    total: 111923.99,
-    currency: 'MXN'
+const authStore = useAuthStore()
+const { selectedCompanyId } = storeToRefs(authStore)
+
+const { getOrderLinesByCompany, deleteOrderLine } = useOrderLine()
+
+const orderLines = ref<Record<string, unknown>[]>([])
+const isLoadingLines = ref(false)
+const errorMessage = ref<string | null>(null)
+
+function mapLineToRow(raw: OrderLineRow): Record<string, unknown> {
+  return {
+    id: raw.id,
+    order_id: raw.order_id,
+    order_name: raw.order_name ?? '—',
+    order_type: raw.order_type,
+    order_state: raw.order_state,
+    product_name: raw.product_name?.trim() ? raw.product_name : '—',
+    description: raw.description ?? '',
+    quantity: raw.quantity ?? 0,
+    unit_price: raw.unit_price ?? 0,
+    subtotal: raw.subtotal ?? 0,
+    total: raw.total ?? 0,
+    currency: raw.currency ?? 'MXN'
   }
-]
+}
+
+const loadLines = async () => {
+  errorMessage.value = null
+  const companyId = selectedCompanyId.value
+  if (!companyId) {
+    orderLines.value = []
+    return
+  }
+
+  isLoadingLines.value = true
+  try {
+    const list = await getOrderLinesByCompany(companyId)
+    orderLines.value = list.map(mapLineToRow)
+  } finally {
+    isLoadingLines.value = false
+  }
+}
+
+watch(selectedCompanyId, () => {
+  loadLines()
+}, { immediate: true })
 
 const viewOrder = (row: Record<string, unknown>) => {
-  navigateTo(`/admin/orders/${row.order_id}`)
+  navigateTo(`/admin/orders/${row.order_id as string}`)
 }
 
-const remove = (row: Record<string, unknown>) => {
-  console.error('Eliminar línea:', row.id)
+const remove = async (row: Record<string, unknown>) => {
+  errorMessage.value = null
+
+  if (row.order_state !== 'draft') {
+    errorMessage.value = 'Solo se pueden eliminar líneas de órdenes en borrador.'
+    return
+  }
+
+  const ok = await deleteOrderLine(row.id as string)
+  if (!ok) {
+    errorMessage.value = 'No se pudo eliminar la línea. Verifica permisos o el estado de la orden.'
+    return
+  }
+
+  await loadLines()
 }
 
-const deleteMany = (selected: Record<string, unknown>[]) => {
-  console.error('Eliminar múltiples líneas:', selected.map(s => s.id))
+const deleteMany = async (selected: Record<string, unknown>[]) => {
+  errorMessage.value = null
+
+  for (const row of selected) {
+    if (row.order_state !== 'draft') {
+      errorMessage.value = 'Solo se pueden eliminar líneas de órdenes en borrador.'
+      return
+    }
+  }
+
+  for (const row of selected) {
+    await deleteOrderLine(row.id as string)
+  }
+  await loadLines()
 }
 </script>
 
 <template>
   <div class="w-full py-4">
+    <div
+      v-if="errorMessage"
+      class="mb-4 rounded-2xl border border-red-100 bg-red-50 px-6 py-4 text-red-700"
+    >
+      {{ errorMessage }}
+    </div>
+
+    <div
+      v-if="!selectedCompanyId"
+      class="rounded-2xl border border-amber-100 bg-amber-50 px-6 py-4 text-amber-900"
+    >
+      <p class="font-semibold">
+        Sin empresa seleccionada
+      </p>
+      <p class="mt-1 text-sm text-amber-800/90">
+        Elige una empresa para ver las líneas de orden de esa compañía.
+      </p>
+    </div>
+
+    <div
+      v-else-if="isLoadingLines"
+      class="flex justify-center rounded-2xl border border-slate-100 bg-white py-16 text-slate-500 shadow-lg shadow-slate-200/50"
+    >
+      Cargando líneas…
+    </div>
+
     <Datatable
+      v-else
       title="Líneas de Orden"
-      description="Listado de todas las líneas de órdenes de venta y compra"
+      description="Líneas de órdenes de venta y compra del partner y productos vinculados"
       :data="orderLines"
       :columns="columns"
+      :search-keys="['order_name', 'product_name', 'description', 'order_type', 'order_state']"
       :selectable="true"
       :exportable="true"
       :creatable="false"

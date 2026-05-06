@@ -117,10 +117,26 @@ import { createEmptyOrderLineForm, type OrderLineFormData } from '~/components/O
 
 interface Props {
   readonly?: boolean
+  partnerOptions?: { value: string; label: string }[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  readonly: false
+  readonly: false,
+  partnerOptions: () => []
+})
+
+const orderTypeOptions = [
+  { value: 'sale', label: 'Venta' },
+  { value: 'purchase', label: 'Compra' }
+]
+
+const partnerSelectModel = computed({
+  get: () => formData.value.partner_id ?? '',
+  set: (v: string) => {
+    formData.value.partner_id = v ? v : null
+    const opt = props.partnerOptions.find(o => o.value === v)
+    if (opt) formData.value.partner_name = opt.label
+  }
 })
 
 const formData = defineModel<OrderFormData>({ required: true })
@@ -290,10 +306,32 @@ const formatCurrency = (value: number): string => {
     <!-- HEADER: Información principal de la orden -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pb-6">
       <div class="lg:col-span-2">
+        <FormSelect
+          v-if="partnerOptions.length > 0 && isEditing"
+          v-model="partnerSelectModel"
+          :label="formData.order_type === 'sale' ? 'Cliente' : 'Proveedor'"
+          :options="partnerOptions"
+          :readonly="readonly"
+          placeholder="Selecciona…"
+          required
+          size="md"
+        />
         <FormInput
+          v-else
           v-model="formData.partner_name"
           :label="formData.order_type === 'sale' ? 'Cliente' : 'Proveedor'"
-          placeholder="Seleccionar..."
+          placeholder="Seleccionar cliente o proveedor…"
+          :readonly="readonly"
+          required
+          size="md"
+        />
+      </div>
+
+      <div>
+        <FormSelect
+          v-model="formData.order_type"
+          label="Tipo"
+          :options="orderTypeOptions"
           :readonly="readonly"
           required
           size="md"

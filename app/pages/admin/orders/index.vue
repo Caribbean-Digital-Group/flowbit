@@ -1,35 +1,39 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
+import type { Column } from '~/components/Datatable.vue'
+import type { Database } from '~/types/database.types'
+
 definePageMeta({
   layout: 'admin'
 })
 
-import type { Column } from '~/components/Datatable.vue'
+type OrderListRow = Database['public']['Views']['v_orders']['Row']
 
 const columns: Column[] = [
-  { 
-    key: 'name', 
-    label: 'Orden', 
-    type: 'avatar', 
-    subtitleKey: 'partner_name' 
+  {
+    key: 'name',
+    label: 'Orden',
+    type: 'avatar',
+    subtitleKey: 'partner_name'
   },
-  { 
-    key: 'order_type', 
-    label: 'Tipo', 
+  {
+    key: 'order_type',
+    label: 'Tipo',
     type: 'badge',
     badgeConfig: {
-      labels: { 
-        sale: 'Venta', 
-        purchase: 'Compra' 
+      labels: {
+        sale: 'Venta',
+        purchase: 'Compra'
       }
     }
   },
-  { 
-    key: 'order_state', 
-    label: 'Estado', 
+  {
+    key: 'order_state',
+    label: 'Estado',
     type: 'badge',
     badgeConfig: {
-      labels: { 
-        draft: 'Borrador', 
+      labels: {
+        draft: 'Borrador',
         posted: 'Confirmada',
         cancel: 'Cancelada'
       }
@@ -39,116 +43,98 @@ const columns: Column[] = [
   { key: 'order_date', label: 'Fecha', type: 'date' }
 ]
 
-// Datos de ejemplo
-const orders = [
-  { 
-    id: '550e8400-e29b-41d4-a716-446655440001', 
-    name: 'SO-000001', 
-    partner_name: 'Juan Pérez',
-    order_type: 'sale', 
-    order_state: 'posted', 
-    amount_total: 15499.00, 
-    currency: 'MXN',
-    order_date: '2026-01-15' 
-  },
-  { 
-    id: '550e8400-e29b-41d4-a716-446655440002', 
-    name: 'SO-000002', 
-    partner_name: 'María García',
-    order_type: 'sale', 
-    order_state: 'draft', 
-    amount_total: 8750.50, 
-    currency: 'MXN',
-    order_date: '2026-01-18' 
-  },
-  { 
-    id: '550e8400-e29b-41d4-a716-446655440003', 
-    name: 'PO-000001', 
-    partner_name: 'Proveedor Tech SA',
-    order_type: 'purchase', 
-    order_state: 'posted', 
-    amount_total: 45000.00, 
-    currency: 'MXN',
-    order_date: '2026-01-20' 
-  },
-  { 
-    id: '550e8400-e29b-41d4-a716-446655440004', 
-    name: 'SO-000003', 
-    partner_name: 'Carlos López',
-    order_type: 'sale', 
-    order_state: 'cancel', 
-    amount_total: 3200.00, 
-    currency: 'MXN',
-    order_date: '2026-01-22' 
-  },
-  { 
-    id: '550e8400-e29b-41d4-a716-446655440005', 
-    name: 'PO-000002', 
-    partner_name: 'Distribuidora Norte',
-    order_type: 'purchase', 
-    order_state: 'draft', 
-    amount_total: 28500.00, 
-    currency: 'MXN',
-    order_date: '2026-01-25' 
-  },
-  { 
-    id: '550e8400-e29b-41d4-a716-446655440006', 
-    name: 'SO-000004', 
-    partner_name: 'Ana Martínez',
-    order_type: 'sale', 
-    order_state: 'posted', 
-    amount_total: 12350.75, 
-    currency: 'MXN',
-    order_date: '2026-01-28' 
-  },
-  { 
-    id: '550e8400-e29b-41d4-a716-446655440007', 
-    name: 'SO-000005', 
-    partner_name: 'Roberto Sánchez',
-    order_type: 'sale', 
-    order_state: 'draft', 
-    amount_total: 5680.00, 
-    currency: 'MXN',
-    order_date: '2026-01-30' 
-  },
-  { 
-    id: '550e8400-e29b-41d4-a716-446655440008', 
-    name: 'PO-000003', 
-    partner_name: 'Importaciones Express',
-    order_type: 'purchase', 
-    order_state: 'posted', 
-    amount_total: 89000.00, 
-    currency: 'MXN',
-    order_date: '2026-02-01' 
+const authStore = useAuthStore()
+const { selectedCompanyId } = storeToRefs(authStore)
+
+const { getOrdersByCompany, cancelOrderById } = useOrder()
+
+const orders = ref<Record<string, unknown>[]>([])
+const isLoadingOrders = ref(false)
+
+function mapOrderToTableRow(raw: OrderListRow): Record<string, unknown> {
+  return {
+    id: raw.id,
+    name: raw.name ?? '—',
+    partner_name: raw.partner_name?.trim() || '—',
+    order_type: raw.order_type,
+    order_state: raw.order_state,
+    amount_total: raw.amount_total ?? 0,
+    currency: raw.currency ?? 'MXN',
+    order_date: raw.order_date ?? ''
   }
-]
+}
+
+const loadOrders = async () => {
+  const companyId = selectedCompanyId.value
+  if (!companyId) {
+    orders.value = []
+    return
+  }
+
+  isLoadingOrders.value = true
+  try {
+    const list = await getOrdersByCompany(companyId)
+    orders.value = list.map(mapOrderToTableRow)
+  } finally {
+    isLoadingOrders.value = false
+  }
+}
+
+watch(selectedCompanyId, () => {
+  loadOrders()
+}, { immediate: true })
 
 const create = () => {
   navigateTo('/admin/orders/create')
 }
 
-const edit = (row: Record<string, any>) => {
-  navigateTo(`/admin/orders/${row.id}`)
+const edit = (row: Record<string, unknown>) => {
+  navigateTo(`/admin/orders/${row.id as string}`)
 }
 
-const remove = (row: Record<string, any>) => {
-  console.log('Eliminar:', row)
-  // Aquí puedes mostrar confirmación y eliminar
+const remove = async (row: Record<string, unknown>) => {
+  const ok = await cancelOrderById(row.id as string)
+  if (ok) {
+    await loadOrders()
+  }
 }
 
-const deleteMany = (selected: Record<string, any>[]) => {
-  console.log('Eliminar múltiples:', selected)
-  // Aquí puedes eliminar múltiples registros
+const deleteMany = async (selected: Record<string, unknown>[]) => {
+  for (const row of selected) {
+    await cancelOrderById(row.id as string)
+  }
+  await loadOrders()
 }
 </script>
 
 <template>
   <div class="w-full py-4">
+    <div
+      v-if="!selectedCompanyId"
+      class="rounded-2xl border border-amber-100 bg-amber-50 px-6 py-4 text-amber-900"
+    >
+      <p class="font-semibold">
+        Sin empresa seleccionada
+      </p>
+      <p class="mt-1 text-sm text-amber-800/90">
+        Elige una empresa en el panel superior para ver sus órdenes de venta y compra.
+      </p>
+    </div>
+
+    <div
+      v-else-if="isLoadingOrders"
+      class="flex justify-center rounded-2xl border border-slate-100 bg-white py-16 text-slate-500 shadow-lg shadow-slate-200/50"
+    >
+      Cargando órdenes…
+    </div>
+
     <Datatable
+      v-else
       title="Órdenes"
-      description="Lista de todas las órdenes de venta y compra"
+      description="Órdenes de venta y compra de la empresa seleccionada"
       :data="orders"
       :columns="columns"
+      :search-keys="['name', 'partner_name', 'order_type', 'order_state']"
       :selectable="true"
       :exportable="true"
       :creatable="true"
@@ -156,7 +142,6 @@ const deleteMany = (selected: Record<string, any>[]) => {
       export-filename="ordenes"
       @create="create"
     >
-      <!-- Acciones personalizadas por fila -->
       <template #actions="{ row }">
         <div class="flex items-center justify-center gap-2">
           <BtnApp variant="ghost" size="sm" @click="edit(row)">
@@ -178,7 +163,6 @@ const deleteMany = (selected: Record<string, any>[]) => {
         </div>
       </template>
 
-      <!-- Acciones en lote -->
       <template #bulkActions="{ selected }">
         <BtnDelete @click="deleteMany(selected)" />
       </template>
