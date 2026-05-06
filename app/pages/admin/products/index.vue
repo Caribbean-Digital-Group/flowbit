@@ -3,7 +3,11 @@ definePageMeta({
   layout: 'admin'
 })
 
+import { storeToRefs } from 'pinia'
 import type { Column } from '~/components/Datatable.vue'
+import type { Tables } from '~/types/database.types'
+
+type ProductRow = Tables<'product'>
 
 const columns: Column[] = [
   { 
@@ -43,97 +47,47 @@ const columns: Column[] = [
   { key: 'created_at', label: 'Fecha', type: 'date' }
 ]
 
-// Datos de ejemplo
-const products = [
-  { 
-    id: 1, 
-    name: 'Laptop Dell XPS 15', 
-    sku: 'DELL-XPS-15-001',
-    product_type: 'product', 
-    status: 'active', 
-    sale_price: 25999.00, 
-    stock_quantity: 15,
-    image_url: null,
-    created_at: '2026-01-15' 
-  },
-  { 
-    id: 2, 
-    name: 'Servicio de Soporte Técnico', 
-    sku: 'SRV-SOPORTE-001',
-    product_type: 'service', 
-    status: 'active', 
-    sale_price: 500.00, 
-    stock_quantity: 0,
-    image_url: null,
-    created_at: '2026-01-18' 
-  },
-  { 
-    id: 3, 
-    name: 'Mouse Logitech MX Master 3', 
-    sku: 'LOG-MX3-001',
-    product_type: 'product', 
-    status: 'active', 
-    sale_price: 1899.00, 
-    stock_quantity: 42,
-    image_url: null,
-    created_at: '2026-01-20' 
-  },
-  { 
-    id: 4, 
-    name: 'Teclado Mecánico Keychron K2', 
-    sku: 'KEY-K2-001',
-    product_type: 'product', 
-    status: 'out_of_stock', 
-    sale_price: 2499.00, 
-    stock_quantity: 0,
-    image_url: null,
-    created_at: '2026-01-22' 
-  },
-  { 
-    id: 5, 
-    name: 'Monitor Samsung 27" 4K', 
-    sku: 'SAM-MON27-4K',
-    product_type: 'product', 
-    status: 'active', 
-    sale_price: 8999.00, 
-    stock_quantity: 8,
-    image_url: null,
-    created_at: '2026-01-25' 
-  },
-  { 
-    id: 6, 
-    name: 'Consultoría de Software', 
-    sku: 'SRV-CONSULT-001',
-    product_type: 'service', 
-    status: 'active', 
-    sale_price: 1500.00, 
-    stock_quantity: 0,
-    image_url: null,
-    created_at: '2026-01-28' 
-  },
-  { 
-    id: 7, 
-    name: 'Webcam Logitech C920', 
-    sku: 'LOG-C920-001',
-    product_type: 'product', 
-    status: 'discontinued', 
-    sale_price: 1299.00, 
-    stock_quantity: 3,
-    image_url: null,
-    created_at: '2026-01-30' 
-  },
-  { 
-    id: 8, 
-    name: 'AirPods Pro 2', 
-    sku: 'APL-APP2-001',
-    product_type: 'product', 
-    status: 'coming_soon', 
-    sale_price: 5499.00, 
-    stock_quantity: 0,
-    image_url: null,
-    created_at: '2026-02-01' 
+const authStore = useAuthStore()
+const { selectedCompanyId } = storeToRefs(authStore)
+
+const { getProductsByCompany, archiveProduct } = useProduct()
+
+const products = ref<Record<string, unknown>[]>([])
+const isLoadingProducts = ref(false)
+
+function mapProductToTableRow(raw: ProductRow): Record<string, unknown> {
+  return {
+    id: raw.id,
+    name: raw.display_name?.trim() || raw.name,
+    sku: raw.sku ?? '—',
+    product_type: raw.product_type,
+    status: raw.status ?? 'inactive',
+    sale_price: raw.sale_price ?? 0,
+    stock_quantity: raw.stock_quantity ?? 0,
+    image_url: raw.image_url ?? '',
+    created_at: raw.created_at ?? ''
   }
-]
+}
+
+const loadProducts = async () => {
+  const companyId = selectedCompanyId.value
+  if (!companyId) {
+    products.value = []
+    return
+  }
+
+  isLoadingProducts.value = true
+  try {
+    const list = await getProductsByCompany(companyId)
+    products.value = list.map(mapProductToTableRow)
+  } finally {
+    isLoadingProducts.value = false
+  }
+}
+
+watch(selectedCompanyId, () => {
+  loadProducts()
+}, { immediate: true })
 
 // Funciones de acciones
 const create = () => {
@@ -144,24 +98,55 @@ const edit = (row: Record<string, any>) => {
   navigateTo(`/admin/products/${row.id}`)
 }
 
-const remove = (row: Record<string, any>) => {
-  console.log('Eliminar:', row)
-  // Aquí puedes mostrar confirmación y eliminar
+const remove = async (row: Record<string, any>) => {
+  const companyId = selectedCompanyId.value
+  if (!companyId) return
+
+  const ok = await archiveProduct(row.id as string, companyId)
+  if (ok) {
+    await loadProducts()
+  }
 }
 
-const deleteMany = (selected: Record<string, any>[]) => {
-  console.log('Eliminar múltiples:', selected)
-  // Aquí puedes eliminar múltiples registros
+const deleteMany = async (selected: Record<string, any>[]) => {
+  const companyId = selectedCompanyId.value
+  if (!companyId) return
+
+  for (const row of selected) {
+    await archiveProduct(row.id as string, companyId)
+  }
+  await loadProducts()
 }
 </script>
 
 <template>
   <div class="w-full py-4">
+    <div
+      v-if="!selectedCompanyId"
+      class="rounded-2xl border border-amber-100 bg-amber-50 px-6 py-4 text-amber-900"
+    >
+      <p class="font-semibold">
+        Sin empresa seleccionada
+      </p>
+      <p class="mt-1 text-sm text-amber-800/90">
+        Elige una empresa en el selector del panel superior para ver sus productos.
+      </p>
+    </div>
+
+    <div
+      v-else-if="isLoadingProducts"
+      class="flex justify-center rounded-2xl border border-slate-100 bg-white py-16 text-slate-500 shadow-lg shadow-slate-200/50"
+    >
+      Cargando productos…
+    </div>
+
     <Datatable
+      v-else
       title="Productos"
       description="Lista de todos los productos y servicios registrados"
       :data="products"
       :columns="columns"
+      :search-keys="['name', 'sku', 'product_type', 'status']"
       :selectable="true"
       :exportable="true"
       :creatable="true"

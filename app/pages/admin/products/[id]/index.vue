@@ -1,64 +1,31 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import type { MenuOption } from '~/components/CardSheet.vue'
-import type { ProductFormData } from '~/components/Product/Form.vue'
+import { createEmptyProductForm, type ProductFormData } from '~/components/Product/Form.vue'
+import type { Tables, TablesUpdate } from '~/types/database.types'
 
 definePageMeta({
   layout: 'admin'
 })
 
+type Product = Tables<'product'>
+
 const route = useRoute()
 const router = useRouter()
-const { id } = route.params
+const authStore = useAuthStore()
+const { selectedCompanyId } = storeToRefs(authStore)
+const { getProductById, updateProduct, archiveProduct } = useProduct()
 
 const isEditing = ref(false)
 const isLoading = ref(false)
+const errorMessage = ref<string | null>(null)
+const product = ref<Product | null>(null)
+const formData = ref<ProductFormData>(createEmptyProductForm())
+const initialForm = ref<ProductFormData>(createEmptyProductForm())
 
-const formData = ref<ProductFormData>({
-  name: 'Laptop HP Pavilion 15',
-  display_name: 'HP Pavilion 15',
-  product_type: 'product',
-  description: 'Laptop de alto rendimiento con procesador Intel Core i7, 16GB RAM y 512GB SSD',
-  short_description: 'Laptop HP con Intel i7',
-  sku: 'HP-PAV-15-001',
-  barcode: '7501234567890',
-  internal_ref: 'PROD-001',
-  category_id: null,
-  sale_price: 18999.00,
-  cost_price: 15000.00,
-  list_price: 21999.00,
-  currency: 'MXN',
-  tax_rate: 16.00,
-  tax_included: false,
-  is_stockable: true,
-  stock_quantity: 25,
-  stock_min: 5,
-  stock_max: 100,
-  tracking: 'serial',
-  weight: 2.1,
-  weight_unit: 'kg',
-  length: 36.0,
-  width: 24.0,
-  height: 2.0,
-  volume: 0.0017,
-  can_be_sold: true,
-  can_be_purchased: true,
-  is_published: true,
-  featured: false,
-  default_supplier_id: null,
-  supplier_sku: 'HP-PAV15-7GEN',
-  lead_time: 7,
-  status: 'active',
-  image_url: 'https://example.com/images/laptop.jpg',
-  meta_title: 'Laptop HP Pavilion 15 - Comprar Online',
-  meta_description: 'Compra la mejor laptop HP Pavilion 15 con Intel i7, 16GB RAM',
-  notes: 'Producto importado, verificar disponibilidad'
-})
-
-const metadata = reactive({
-  created_at: '2026-01-20T09:00:00Z',
-  updated_at: '2026-01-30T14:30:00Z',
-  created_by: 'Carlos Martínez',
-  updated_by: 'Ana López'
+const productId = computed(() => {
+  const raw = route.params.id
+  return Array.isArray(raw) ? raw[0] : raw
 })
 
 const productTypeLabels: Record<string, string> = {
@@ -85,31 +52,11 @@ const statusVariants: Record<string, 'success' | 'warning' | 'danger' | 'primary
 
 const menuOptions: MenuOption[] = [
   {
-    id: 'duplicate',
-    label: 'Duplicar',
-    icon: 'M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z',
-    action: () => handleDuplicate()
-  },
-  {
-    id: 'export',
-    label: 'Exportar PDF',
-    icon: 'M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
-    action: () => handleExportPDF()
-  },
-  {
     id: 'archive',
     label: 'Archivar',
     icon: 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4',
-    action: () => handleArchive(),
+    action: () => void handleArchive(),
     variant: 'warning'
-  },
-  {
-    id: 'delete',
-    label: 'Eliminar',
-    icon: 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
-    action: () => handleDelete(),
-    variant: 'danger',
-    divider: true
   }
 ]
 
@@ -117,45 +64,190 @@ const isLowStock = computed(() => {
   return formData.value.is_stockable && formData.value.stock_quantity <= formData.value.stock_min
 })
 
+const metadata = computed(() => {
+  const current = product.value
+  return {
+    createdBy: current?.created_by ?? '—',
+    createdAt: current?.created_at ?? '',
+    updatedBy: current?.updated_by ?? '—',
+    updatedAt: current?.updated_at ?? ''
+  }
+})
+
+const mapProductToForm = (value: Product): ProductFormData => ({
+  name: value.name ?? '',
+  display_name: value.display_name ?? '',
+  product_type: value.product_type,
+  description: value.description ?? '',
+  short_description: value.short_description ?? '',
+  sku: value.sku ?? '',
+  barcode: value.barcode ?? '',
+  internal_ref: value.internal_ref ?? '',
+  category_id: value.category_id,
+  sale_price: value.sale_price ?? 0,
+  cost_price: value.cost_price ?? 0,
+  list_price: value.list_price ?? 0,
+  currency: value.currency ?? 'MXN',
+  tax_rate: value.tax_rate ?? 0,
+  tax_included: value.tax_included ?? false,
+  is_stockable: value.is_stockable ?? true,
+  stock_quantity: value.stock_quantity ?? 0,
+  stock_min: value.stock_min ?? 0,
+  stock_max: value.stock_max ?? 0,
+  tracking: value.tracking ?? 'none',
+  weight: value.weight ?? 0,
+  weight_unit: value.weight_unit ?? 'kg',
+  length: value.length ?? 0,
+  width: value.width ?? 0,
+  height: value.height ?? 0,
+  volume: value.volume ?? 0,
+  can_be_sold: value.can_be_sold ?? true,
+  can_be_purchased: value.can_be_purchased ?? true,
+  is_published: value.is_published ?? false,
+  featured: value.featured ?? false,
+  default_supplier_id: value.default_supplier_id,
+  supplier_sku: value.supplier_sku ?? '',
+  lead_time: value.lead_time ?? 0,
+  status: value.status ?? 'inactive',
+  image_url: value.image_url ?? '',
+  meta_title: value.meta_title ?? '',
+  meta_description: value.meta_description ?? '',
+  notes: value.notes ?? ''
+})
+
+const mapFormToProductUpdate = (value: ProductFormData): TablesUpdate<'product'> => ({
+  name: value.name.trim(),
+  display_name: value.display_name.trim() || null,
+  product_type: value.product_type,
+  description: value.description.trim() || null,
+  short_description: value.short_description.trim() || null,
+  sku: value.sku.trim() || null,
+  barcode: value.barcode.trim() || null,
+  internal_ref: value.internal_ref.trim() || null,
+  category_id: value.category_id,
+  sale_price: value.sale_price,
+  cost_price: value.cost_price,
+  list_price: value.list_price,
+  currency: value.currency.trim() || 'MXN',
+  tax_rate: value.tax_rate,
+  tax_included: value.tax_included,
+  is_stockable: value.is_stockable,
+  stock_quantity: value.stock_quantity,
+  stock_min: value.stock_min,
+  stock_max: value.stock_max,
+  tracking: value.tracking,
+  weight: value.weight,
+  weight_unit: value.weight_unit.trim() || 'kg',
+  length: value.length,
+  width: value.width,
+  height: value.height,
+  volume: value.volume,
+  can_be_sold: value.can_be_sold,
+  can_be_purchased: value.can_be_purchased,
+  is_published: value.is_published,
+  featured: value.featured,
+  default_supplier_id: value.default_supplier_id,
+  supplier_sku: value.supplier_sku.trim() || null,
+  lead_time: value.lead_time,
+  status: value.status,
+  image_url: value.image_url.trim() || null,
+  meta_title: value.meta_title.trim() || null,
+  meta_description: value.meta_description.trim() || null,
+  notes: value.notes.trim() || null
+})
+
+const loadProduct = async (): Promise<void> => {
+  const id = productId.value
+  const companyId = selectedCompanyId.value
+
+  if (!id) {
+    errorMessage.value = 'No se recibió un identificador de producto válido.'
+    return
+  }
+  if (!companyId) {
+    errorMessage.value = 'Selecciona una empresa para ver este producto.'
+    return
+  }
+
+  isLoading.value = true
+  errorMessage.value = null
+  try {
+    const data = await getProductById(id, companyId)
+    if (!data) {
+      errorMessage.value = 'No se encontró el producto solicitado o no tienes acceso.'
+      return
+    }
+
+    product.value = data
+    const mapped = mapProductToForm(data)
+    formData.value = mapped
+    initialForm.value = { ...mapped }
+  } finally {
+    isLoading.value = false
+  }
+}
+
 const handleBack = () => {
   router.push('/admin/products')
 }
 
-const handleDuplicate = () => {
-  console.error('Acción: Duplicar producto', id)
-}
+const handleArchive = async () => {
+  const id = productId.value
+  const companyId = selectedCompanyId.value
+  if (!id || !companyId) return
 
-const handleExportPDF = () => {
-  console.error('Acción: Exportar PDF', id)
-}
-
-const handleArchive = () => {
-  console.error('Acción: Archivar producto', id)
-}
-
-const handleDelete = () => {
-  console.error('Acción: Eliminar producto', id)
+  isLoading.value = true
+  errorMessage.value = null
+  try {
+    const ok = await archiveProduct(id, companyId)
+    if (!ok) {
+      errorMessage.value = 'No se pudo archivar el producto.'
+      return
+    }
+    router.push('/admin/products')
+  } finally {
+    isLoading.value = false
+  }
 }
 
 const handleEdit = () => {
+  errorMessage.value = null
   isEditing.value = true
 }
 
 const handleSave = async () => {
+  const id = productId.value
+  const companyId = selectedCompanyId.value
+  if (!id || !companyId) return
+
+  if (!formData.value.name.trim()) {
+    errorMessage.value = 'El nombre es obligatorio.'
+    return
+  }
+
   isLoading.value = true
+  errorMessage.value = null
 
   try {
-    // TODO: integrate with useProduct composable
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const saved = await updateProduct(id, companyId, mapFormToProductUpdate(formData.value))
+    if (!saved) {
+      errorMessage.value = 'No se pudo guardar el producto. Verifica tus permisos de edición.'
+      return
+    }
+
+    product.value = saved
+    const mapped = mapProductToForm(saved)
+    formData.value = mapped
+    initialForm.value = { ...mapped }
     isEditing.value = false
-  } catch (error) {
-    console.error('Error al guardar:', error)
   } finally {
     isLoading.value = false
   }
 }
 
 const handleCancel = () => {
+  formData.value = { ...initialForm.value }
+  errorMessage.value = null
   isEditing.value = false
 }
 
@@ -170,12 +262,17 @@ const formatDate = (dateString: string): string => {
     minute: '2-digit'
   })
 }
+
+watch([productId, selectedCompanyId], () => {
+  isEditing.value = false
+  void loadProduct()
+}, { immediate: true })
 </script>
 
 <template>
   <div>
     <CardSheet
-      :title="formData.name"
+      :title="formData.name || 'Producto sin nombre'"
       :subtitle="`SKU: ${formData.sku}`"
       :show-back-button="true"
       :show-options-button="true"
@@ -183,10 +280,10 @@ const formatDate = (dateString: string): string => {
       :show-footer="true"
       :is-editing="isEditing"
       :is-loading="isLoading"
-      :created-by="metadata.created_by"
-      :created-at="formatDate(metadata.created_at)"
-      :updated-by="metadata.updated_by"
-      :updated-at="formatDate(metadata.updated_at)"
+      :created-by="metadata.createdBy"
+      :created-at="formatDate(metadata.createdAt)"
+      :updated-by="metadata.updatedBy"
+      :updated-at="formatDate(metadata.updatedAt)"
       :menu-options="menuOptions"
       variant="elevated"
       padding="lg"
@@ -196,6 +293,13 @@ const formatDate = (dateString: string): string => {
       @save="handleSave"
       @cancel="handleCancel"
     >
+      <div
+        v-if="errorMessage"
+        class="mb-6 rounded-2xl border border-red-100 bg-red-50 px-6 py-4 text-red-700"
+      >
+        {{ errorMessage }}
+      </div>
+
       <template #status>
         <div class="flex items-center gap-2">
           <BadgeApp
