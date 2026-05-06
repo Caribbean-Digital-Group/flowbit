@@ -1,8 +1,13 @@
-import type { Tables, TablesInsert, TablesUpdate } from '~/types/database.types'
+import type { Database, Tables, TablesInsert, TablesUpdate } from '~/types/database.types'
 
 type Product = Tables<'product'>
+type OrderKind = Database['public']['Enums']['order_type']
 type ProductInsert = TablesInsert<'product'>
 type ProductUpdate = TablesUpdate<'product'>
+
+/** Escapa `%`, `_` y `\` para usar el término dentro de filtros `.ilike` en PostgREST. */
+const escapeForIlike = (raw: string): string =>
+  raw.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_%')
 
 export const useProduct = () => {
   const supabase = useSupabase()
@@ -64,6 +69,77 @@ export const useProduct = () => {
     return data || []
   }
 
+  const searchProductsByCompany = async (
+    companyId: string,
+    searchTerm: string,
+    limit = 40
+  ): Promise<Product[]> => {
+    if (!companyId) return []
+
+    let query = supabase
+      .from('product')
+      .select('*')
+      .eq('company_id', companyId)
+      .order('name')
+      .limit(limit)
+
+    const termRaw = searchTerm.trim().slice(0, 160)
+    if (termRaw.length > 0) {
+      const pat = `%${escapeForIlike(termRaw)}%`
+      query = query.or(
+        [
+          `name.ilike.${pat}`,
+          `display_name.ilike.${pat}`,
+          `sku.ilike.${pat}`,
+          `internal_ref.ilike.${pat}`,
+          `barcode.ilike.${pat}`
+        ].join(',')
+      )
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error('Error searching products:', error)
+      return []
+    }
+
+    return data || []
+  }
+
+  /** Crea un producto mínimo cuando la línea de orden usa un nombre fuera del catálogo. */
+  const ensureCatalogProductFromOrderLine = async (
+    companyId: string,
+    params: {
+      orderType: OrderKind
+      orderCurrency: string
+      lineName: string
+      unitPrice: number
+      unitCost: number
+      defaultTaxRate: number | null | undefined
+    }
+  ): Promise<Product | null> => {
+    const name = params.lineName.trim().slice(0, 255)
+    if (!name) return null
+
+    return createProduct(companyId, {
+      name,
+      currency: params.orderCurrency.trim().slice(0, 3) || 'MXN',
+      tax_rate: params.defaultTaxRate ?? 0,
+      product_type: 'product',
+      status: 'active',
+      ...(params.orderType === 'sale'
+        ? {
+            sale_price: params.unitPrice,
+            cost_price: params.unitCost
+          }
+        : {
+            sale_price: 0,
+            cost_price: params.unitPrice
+          })
+    })
+  }
+
   const createProduct = async (
     companyId: string,
     product: Omit<ProductInsert, 'company_id'>
@@ -80,7 +156,7 @@ export const useProduct = () => {
         updated_by: user?.id
       })
       .select()
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error('Error creating product:', error)
@@ -137,6 +213,8 @@ export const useProduct = () => {
   return {
     getProductById,
     getProductsByCompany,
+    searchProductsByCompany,
+    ensureCatalogProductFromOrderLine,
     createProduct,
     updateProduct,
     archiveProduct

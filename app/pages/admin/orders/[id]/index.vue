@@ -469,6 +469,7 @@ const formatDate = (dateString: string | null): string => {
         v-model:lines="orderLines"
         :readonly="!isEditing"
         :partner-options="partnerOptions"
+        :company-id="selectedCompanyId"
       />
     </CardSheet>
   </div>

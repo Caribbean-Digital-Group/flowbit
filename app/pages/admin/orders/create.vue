@@ -183,6 +183,7 @@ const handleCancel = () => {
       v-model="formData"
       v-model:lines="orderLines"
       :partner-options="partnerOptions"
+      :company-id="selectedCompanyId"
     />
   </CardSheet>
 </template>
