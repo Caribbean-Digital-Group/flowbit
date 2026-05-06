@@ -1545,6 +1545,50 @@ export type Database = {
         Returns: boolean
       }
       seed_product_uoms: { Args: { p_company_id: string }; Returns: undefined }
+      update_partner_for_company: {
+        Args: { p_partner_id: string; p_updates: Json }
+        Returns: {
+          active: boolean | null
+          avatar_url: string | null
+          barcode: string | null
+          birthdate: string | null
+          city: string | null
+          comment: string | null
+          company_type: Database["public"]["Enums"]["partner_type"] | null
+          country_code: string | null
+          created_at: string | null
+          created_by: string | null
+          credit_limit: number | null
+          display_name: string | null
+          email: string | null
+          function: string | null
+          id: string
+          is_company: boolean | null
+          lang: string | null
+          mobile: string | null
+          name: string
+          parent_id: string | null
+          phone: string | null
+          ref: string | null
+          state: string | null
+          street: string | null
+          street2: string | null
+          title: Database["public"]["Enums"]["partner_title"] | null
+          tz: string | null
+          updated_at: string | null
+          updated_by: string | null
+          user_id: string | null
+          vat: string | null
+          website: string | null
+          zip: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "partner"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       user_belongs_to_company: {
         Args: { p_company_id: string }
         Returns: boolean

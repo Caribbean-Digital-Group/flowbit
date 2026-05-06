@@ -210,17 +210,16 @@ export const usePartner = () => {
    * Update a partner
    */
   const updatePartner = async (id: string, updates: PartnerUpdate): Promise<Partner | null> => {
-    const user = await useSupabaseUser()
-
-    const { data, error } = await supabase
-      .from('partner')
-      .update({
-        ...updates,
-        updated_by: user?.id
-      })
-      .eq('id', id)
-      .select()
-      .single()
+    const { data, error } = await supabase.rpc(
+      'update_partner_for_company' as never,
+      {
+        p_partner_id: id,
+        p_updates: updates
+      } as never
+    ) as {
+      data: Partner | null
+      error: { message: string; code?: string } | null
+    }
 
     if (error) {
       console.error('Error updating partner:', error)
