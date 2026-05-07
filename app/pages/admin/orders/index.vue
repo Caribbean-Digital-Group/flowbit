@@ -50,6 +50,8 @@ const { getOrdersByCompany, cancelOrderById } = useOrder()
 
 const orders = ref<Record<string, unknown>[]>([])
 const isLoadingOrders = ref(false)
+const selectedTypeFilters = ref<Array<'sale' | 'purchase'>>(['sale', 'purchase'])
+const selectedStateFilters = ref<Array<'draft' | 'posted'>>(['draft', 'posted'])
 
 function mapOrderToTableRow(raw: OrderListRow): Record<string, unknown> {
   return {
@@ -83,6 +85,45 @@ const loadOrders = async () => {
 watch(selectedCompanyId, () => {
   loadOrders()
 }, { immediate: true })
+
+const filteredOrders = computed(() => {
+  const typeFilters = selectedTypeFilters.value
+  const stateFilters = selectedStateFilters.value
+
+  if (typeFilters.length === 0 || stateFilters.length === 0) return []
+
+  return orders.value.filter((row) => {
+    const orderType = row.order_type as 'sale' | 'purchase' | null
+    const orderState = row.order_state as 'draft' | 'posted' | 'cancel' | null
+
+    return Boolean(orderType && orderState && typeFilters.includes(orderType) && stateFilters.includes(orderState as 'draft' | 'posted'))
+  })
+})
+
+const selectedFiltersLabel = computed(() => {
+  const typeCount = selectedTypeFilters.value.length
+  const stateCount = selectedStateFilters.value.length
+  return `${typeCount} tipo(s) · ${stateCount} estado(s)`
+})
+
+const toggleTypeFilter = (value: 'sale' | 'purchase') => {
+  const current = selectedTypeFilters.value
+  selectedTypeFilters.value = current.includes(value)
+    ? current.filter((item) => item !== value)
+    : [...current, value]
+}
+
+const toggleStateFilter = (value: 'draft' | 'posted') => {
+  const current = selectedStateFilters.value
+  selectedStateFilters.value = current.includes(value)
+    ? current.filter((item) => item !== value)
+    : [...current, value]
+}
+
+const resetFilters = () => {
+  selectedTypeFilters.value = ['sale', 'purchase']
+  selectedStateFilters.value = ['draft', 'posted']
+}
 
 const create = () => {
   navigateTo('/admin/orders/create')
@@ -132,7 +173,7 @@ const deleteMany = async (selected: Record<string, unknown>[]) => {
       v-else
       title="Órdenes"
       description="Órdenes de venta y compra de la empresa seleccionada"
-      :data="orders"
+      :data="filteredOrders"
       :columns="columns"
       :search-keys="['name', 'partner_name', 'order_type', 'order_state']"
       :selectable="true"
@@ -142,6 +183,83 @@ const deleteMany = async (selected: Record<string, unknown>[]) => {
       export-filename="ordenes"
       @create="create"
     >
+      <template #headerActions>
+        <div class="flex w-full items-center justify-center sm:w-auto sm:justify-end">
+          <details class="relative w-full sm:w-auto">
+            <summary
+              class="flex cursor-pointer list-none items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 sm:min-w-56"
+            >
+              <span>Filtros: {{ selectedFiltersLabel }}</span>
+              <svg class="ml-2 h-4 w-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+
+            <div class="absolute right-0 z-20 mt-2 w-full rounded-xl border border-slate-200 bg-white p-4 shadow-lg sm:w-72">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Tipo de orden
+                </p>
+                <div class="mt-2 space-y-2">
+                  <label class="flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      :checked="selectedTypeFilters.includes('sale')"
+                      class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      @change="toggleTypeFilter('sale')"
+                    >
+                    Ventas
+                  </label>
+                  <label class="flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      :checked="selectedTypeFilters.includes('purchase')"
+                      class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      @change="toggleTypeFilter('purchase')"
+                    >
+                    Compras
+                  </label>
+                </div>
+              </div>
+
+              <div class="mt-4 border-t border-slate-100 pt-4">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Estado
+                </p>
+                <div class="mt-2 space-y-2">
+                  <label class="flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      :checked="selectedStateFilters.includes('draft')"
+                      class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      @change="toggleStateFilter('draft')"
+                    >
+                    Borrador
+                  </label>
+                  <label class="flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      :checked="selectedStateFilters.includes('posted')"
+                      class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      @change="toggleStateFilter('posted')"
+                    >
+                    Confirmada
+                  </label>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                class="mt-4 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                @click="resetFilters"
+              >
+                Restablecer filtros
+              </button>
+            </div>
+          </details>
+        </div>
+      </template>
+
       <template #actions="{ row }">
         <div class="flex items-center justify-center gap-2">
           <BtnApp variant="ghost" size="sm" @click="edit(row)">
