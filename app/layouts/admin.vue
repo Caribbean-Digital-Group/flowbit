@@ -104,6 +104,30 @@ const menuItems = [
     ]
   },
   {
+    title: 'Almacenes',
+    to: '/admin/warehouses',
+    iconPaths: [
+      'M3 7l9-4 9 4-9 4-9-4z',
+      'M3 7v10l9 4 9-4V7'
+    ]
+  },
+  {
+    title: 'Movimientos',
+    to: '/admin/pickings',
+    iconPaths: [
+      'M8 7h12m0 0l-4-4m4 4l-4 4',
+      'M16 17H4m0 0l4-4m-4 4l4 4'
+    ]
+  },
+  {
+    title: 'Líneas de picking',
+    to: '/admin/picking-lines',
+    iconPaths: [
+      'M4 6h16M4 12h16M4 18h16',
+      'M9 6v12M15 6v12'
+    ]
+  },
+  {
     title: 'Líneas de orden',
     to: '/admin/order-lines',
     iconPaths: [
