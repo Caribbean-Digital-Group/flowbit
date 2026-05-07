@@ -52,6 +52,8 @@ const orders = ref<Record<string, unknown>[]>([])
 const isLoadingOrders = ref(false)
 const selectedTypeFilters = ref<Array<'sale' | 'purchase'>>(['sale', 'purchase'])
 const selectedStateFilters = ref<Array<'draft' | 'posted'>>(['draft', 'posted'])
+const selectedFulfillmentFilters = ref<Array<'compliant' | 'invoiced' | 'delivered' | 'paid'>>([])
+const selectedCurrencyFilters = ref<string[]>([])
 
 function mapOrderToTableRow(raw: OrderListRow): Record<string, unknown> {
   return {
@@ -62,7 +64,10 @@ function mapOrderToTableRow(raw: OrderListRow): Record<string, unknown> {
     order_state: raw.order_state,
     amount_total: raw.amount_total ?? 0,
     currency: raw.currency ?? 'MXN',
-    order_date: raw.order_date ?? ''
+    order_date: raw.order_date ?? '',
+    is_invoiced: raw.is_invoiced ?? false,
+    is_delivered: raw.is_delivered ?? false,
+    is_paid: raw.is_paid ?? false
   }
 }
 
@@ -89,21 +94,54 @@ watch(selectedCompanyId, () => {
 const filteredOrders = computed(() => {
   const typeFilters = selectedTypeFilters.value
   const stateFilters = selectedStateFilters.value
+  const fulfillmentFilters = selectedFulfillmentFilters.value
+  const currencyFilters = selectedCurrencyFilters.value
 
   if (typeFilters.length === 0 || stateFilters.length === 0) return []
 
   return orders.value.filter((row) => {
     const orderType = row.order_type as 'sale' | 'purchase' | null
     const orderState = row.order_state as 'draft' | 'posted' | 'cancel' | null
+    const orderCurrency = (String(row.currency ?? 'MXN').trim().toUpperCase()) || 'MXN'
+    const isInvoiced = row.is_invoiced === true
+    const isDelivered = row.is_delivered === true
+    const isPaid = row.is_paid === true
+    const isCompliant = isInvoiced && isDelivered && isPaid
 
-    return Boolean(orderType && orderState && typeFilters.includes(orderType) && stateFilters.includes(orderState as 'draft' | 'posted'))
+    if (!orderType || !orderState) return false
+    if (!typeFilters.includes(orderType)) return false
+    if (!stateFilters.includes(orderState as 'draft' | 'posted')) return false
+    if (currencyFilters.length > 0 && !currencyFilters.includes(orderCurrency)) return false
+
+    if (fulfillmentFilters.includes('compliant') && !isCompliant) return false
+    if (fulfillmentFilters.includes('invoiced') && !isInvoiced) return false
+    if (fulfillmentFilters.includes('delivered') && !isDelivered) return false
+    if (fulfillmentFilters.includes('paid') && !isPaid) return false
+
+    return true
   })
+})
+
+const availableCurrencies = computed(() => {
+  const uniqueCurrencies = new Set<string>()
+  for (const row of orders.value) {
+    const currency = (String(row.currency ?? 'MXN').trim().toUpperCase()) || 'MXN'
+    uniqueCurrencies.add(currency)
+  }
+  return Array.from(uniqueCurrencies).sort()
 })
 
 const selectedFiltersLabel = computed(() => {
   const typeCount = selectedTypeFilters.value.length
   const stateCount = selectedStateFilters.value.length
-  return `${typeCount} tipo(s) · ${stateCount} estado(s)`
+  const fulfillmentCount = selectedFulfillmentFilters.value.length
+  const currencyCount = selectedCurrencyFilters.value.length
+  const currencyTotal = availableCurrencies.value.length
+  const currencyLabel = currencyCount === 0
+    ? `${currencyTotal} moneda(s)`
+    : `${currencyCount} moneda(s)`
+
+  return `${typeCount} tipo(s) · ${stateCount} estado(s) · ${fulfillmentCount} cumplimiento · ${currencyLabel}`
 })
 
 const toggleTypeFilter = (value: 'sale' | 'purchase') => {
@@ -120,9 +158,25 @@ const toggleStateFilter = (value: 'draft' | 'posted') => {
     : [...current, value]
 }
 
+const toggleFulfillmentFilter = (value: 'compliant' | 'invoiced' | 'delivered' | 'paid') => {
+  const current = selectedFulfillmentFilters.value
+  selectedFulfillmentFilters.value = current.includes(value)
+    ? current.filter((item) => item !== value)
+    : [...current, value]
+}
+
+const toggleCurrencyFilter = (value: string) => {
+  const current = selectedCurrencyFilters.value
+  selectedCurrencyFilters.value = current.includes(value)
+    ? current.filter((item) => item !== value)
+    : [...current, value]
+}
+
 const resetFilters = () => {
   selectedTypeFilters.value = ['sale', 'purchase']
   selectedStateFilters.value = ['draft', 'posted']
+  selectedFulfillmentFilters.value = []
+  selectedCurrencyFilters.value = []
 }
 
 const create = () => {
@@ -244,6 +298,71 @@ const deleteMany = async (selected: Record<string, unknown>[]) => {
                       @change="toggleStateFilter('posted')"
                     >
                     Confirmada
+                  </label>
+                </div>
+              </div>
+
+              <div class="mt-4 border-t border-slate-100 pt-4">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Cumplimiento
+                </p>
+                <div class="mt-2 space-y-2">
+                  <label class="flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      :checked="selectedFulfillmentFilters.includes('compliant')"
+                      class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      @change="toggleFulfillmentFilter('compliant')"
+                    >
+                    Cumplimiento total
+                  </label>
+                  <label class="flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      :checked="selectedFulfillmentFilters.includes('invoiced')"
+                      class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      @change="toggleFulfillmentFilter('invoiced')"
+                    >
+                    Facturada
+                  </label>
+                  <label class="flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      :checked="selectedFulfillmentFilters.includes('delivered')"
+                      class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      @change="toggleFulfillmentFilter('delivered')"
+                    >
+                    Entregada
+                  </label>
+                  <label class="flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      :checked="selectedFulfillmentFilters.includes('paid')"
+                      class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      @change="toggleFulfillmentFilter('paid')"
+                    >
+                    Pagada
+                  </label>
+                </div>
+              </div>
+
+              <div class="mt-4 border-t border-slate-100 pt-4">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Moneda
+                </p>
+                <div class="mt-2 space-y-2">
+                  <label
+                    v-for="currency in availableCurrencies"
+                    :key="currency"
+                    class="flex items-center gap-2 text-sm text-slate-700"
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="selectedCurrencyFilters.includes(currency)"
+                      class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      @change="toggleCurrencyFilter(currency)"
+                    >
+                    {{ currency }}
                   </label>
                 </div>
               </div>
