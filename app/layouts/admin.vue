@@ -104,6 +104,13 @@ const menuItems = [
     ]
   },
   {
+    title: 'Líneas de orden',
+    to: '/admin/order-lines',
+    iconPaths: [
+      'M4 6h16M4 10h16M4 14h16M4 18h16'
+    ]
+  },
+  {
     title: 'Almacenes',
     to: '/admin/warehouses',
     iconPaths: [
@@ -125,13 +132,6 @@ const menuItems = [
     iconPaths: [
       'M4 6h16M4 12h16M4 18h16',
       'M9 6v12M15 6v12'
-    ]
-  },
-  {
-    title: 'Líneas de orden',
-    to: '/admin/order-lines',
-    iconPaths: [
-      'M4 6h16M4 10h16M4 14h16M4 18h16'
     ]
   },
   {
