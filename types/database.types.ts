@@ -563,6 +563,189 @@ export type Database = {
           },
         ]
       }
+      picking: {
+        Row: {
+          active: boolean | null
+          cancelled_at: string | null
+          company_id: string
+          confirmed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_return: boolean | null
+          name: string | null
+          notes: string | null
+          order_id: string
+          published_at: string | null
+          status: Database["public"]["Enums"]["picking_status"]
+          type: Database["public"]["Enums"]["picking_type"]
+          updated_at: string | null
+          updated_by: string | null
+          warehouse_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          cancelled_at?: string | null
+          company_id: string
+          confirmed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_return?: boolean | null
+          name?: string | null
+          notes?: string | null
+          order_id: string
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["picking_status"]
+          type: Database["public"]["Enums"]["picking_type"]
+          updated_at?: string | null
+          updated_by?: string | null
+          warehouse_id: string
+        }
+        Update: {
+          active?: boolean | null
+          cancelled_at?: string | null
+          company_id?: string
+          confirmed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_return?: boolean | null
+          name?: string | null
+          notes?: string | null
+          order_id?: string
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["picking_status"]
+          type?: Database["public"]["Enums"]["picking_type"]
+          updated_at?: string | null
+          updated_by?: string | null
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "picking_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "order"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "v_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouse"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      picking_line: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          lot_name: string | null
+          picking_id: string
+          product_id: string
+          quantity: number
+          sequence: number | null
+          serial_number: string | null
+          tracking_type: Database["public"]["Enums"]["product_tracking"]
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          lot_name?: string | null
+          picking_id: string
+          product_id: string
+          quantity?: number
+          sequence?: number | null
+          serial_number?: string | null
+          tracking_type?: Database["public"]["Enums"]["product_tracking"]
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          lot_name?: string | null
+          picking_id?: string
+          product_id?: string
+          quantity?: number
+          sequence?: number | null
+          serial_number?: string | null
+          tracking_type?: Database["public"]["Enums"]["product_tracking"]
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "picking_line_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_line_picking_id_fkey"
+            columns: ["picking_id"]
+            isOneToOne: false
+            referencedRelation: "picking"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_line_picking_id_fkey"
+            columns: ["picking_id"]
+            isOneToOne: false
+            referencedRelation: "v_pickings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_line_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_line_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_low_stock_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_line_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product: {
         Row: {
           attributes: Json | null
@@ -1062,6 +1245,56 @@ export type Database = {
           },
         ]
       }
+      warehouse: {
+        Row: {
+          active: boolean | null
+          code: string
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          code: string
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          code?: string
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warehouse_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       v_low_stock_products: {
@@ -1296,6 +1529,155 @@ export type Database = {
           },
         ]
       }
+      v_picking_lines: {
+        Row: {
+          active: boolean | null
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string | null
+          lot_name: string | null
+          order_id: string | null
+          order_name: string | null
+          picking_id: string | null
+          picking_name: string | null
+          picking_status: Database["public"]["Enums"]["picking_status"] | null
+          picking_type: Database["public"]["Enums"]["picking_type"] | null
+          product_id: string | null
+          product_name: string | null
+          product_sku: string | null
+          quantity: number | null
+          sequence: number | null
+          serial_number: string | null
+          tracking_type: Database["public"]["Enums"]["product_tracking"] | null
+          updated_at: string | null
+          updated_by: string | null
+          warehouse_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "picking_line_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_line_picking_id_fkey"
+            columns: ["picking_id"]
+            isOneToOne: false
+            referencedRelation: "picking"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_line_picking_id_fkey"
+            columns: ["picking_id"]
+            isOneToOne: false
+            referencedRelation: "v_pickings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_line_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_line_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_low_stock_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_line_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "order"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "v_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouse"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_pickings: {
+        Row: {
+          active: boolean | null
+          cancelled_at: string | null
+          company_id: string | null
+          confirmed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string | null
+          is_return: boolean | null
+          line_count: number | null
+          name: string | null
+          notes: string | null
+          order_id: string | null
+          order_name: string | null
+          order_state: Database["public"]["Enums"]["order_state"] | null
+          order_type: Database["public"]["Enums"]["order_type"] | null
+          published_at: string | null
+          status: Database["public"]["Enums"]["picking_status"] | null
+          total_quantity: number | null
+          type: Database["public"]["Enums"]["picking_type"] | null
+          updated_at: string | null
+          updated_by: string | null
+          warehouse_code: string | null
+          warehouse_id: string | null
+          warehouse_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "picking_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "order"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "v_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "picking_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouse"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_products: {
         Row: {
           attributes: Json | null
@@ -1463,6 +1845,10 @@ export type Database = {
         }
         Returns: string
       }
+      apply_picking_inventory: {
+        Args: { p_picking_id: string }
+        Returns: boolean
+      }
       cancel_order: { Args: { p_order_id: string }; Returns: boolean }
       create_order: {
         Args: {
@@ -1518,6 +1904,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_or_create_default_warehouse: {
+        Args: { p_company_id: string }
+        Returns: string
+      }
       get_partner_companies: {
         Args: { p_partner_id: string }
         Returns: {
@@ -1554,6 +1944,17 @@ export type Database = {
         Returns: boolean
       }
       seed_product_uoms: { Args: { p_company_id: string }; Returns: undefined }
+      set_picking_status: {
+        Args: {
+          p_new_status: Database["public"]["Enums"]["picking_status"]
+          p_picking_id: string
+        }
+        Returns: boolean
+      }
+      sync_order_to_draft_picking: {
+        Args: { p_is_return?: boolean; p_order_id: string }
+        Returns: string
+      }
       update_partner_for_company: {
         Args: { p_partner_id: string; p_updates: Json }
         Returns: {
@@ -1621,6 +2022,8 @@ export type Database = {
       partner_company_role: "owner" | "admin" | "member" | "viewer" | "guest"
       partner_title: "mr" | "mrs" | "ms" | "dr" | "prof" | "other"
       partner_type: "person" | "company"
+      picking_status: "borrador" | "publicado" | "confirmado" | "cancelado"
+      picking_type: "entrada" | "salida"
       product_status:
         | "active"
         | "inactive"
@@ -1775,6 +2178,8 @@ export const Constants = {
       partner_company_role: ["owner", "admin", "member", "viewer", "guest"],
       partner_title: ["mr", "mrs", "ms", "dr", "prof", "other"],
       partner_type: ["person", "company"],
+      picking_status: ["borrador", "publicado", "confirmado", "cancelado"],
+      picking_type: ["entrada", "salida"],
       product_status: [
         "active",
         "inactive",
