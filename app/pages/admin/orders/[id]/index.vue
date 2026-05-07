@@ -98,6 +98,13 @@ const canCancel = computed(
 
 const menuOptions = computed<MenuOption[]>(() => {
   const opts: MenuOption[] = []
+  opts.push({
+    id: 'print-order',
+    label: 'Imprimir orden',
+    icon: 'M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z',
+    action: () => handlePrintOrder(),
+    variant: 'primary'
+  })
   if (canPost.value) {
     opts.push({
       id: 'post',
@@ -333,6 +340,150 @@ const handleEdit = () => {
     errorMessage.value = null
     isEditing.value = true
   }
+}
+
+const formatCurrency = (value: number, currency: string): string => {
+  return new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: currency || 'MXN'
+  }).format(value || 0)
+}
+
+const buildPrintableHtml = () => {
+  const lineRows = orderLines.value
+    .map((line) => {
+      const trackingMeta = [
+        line.product_name?.trim() ? `Producto: ${line.product_name}` : '',
+        line.description?.trim() ? `Descripción: ${line.description}` : ''
+      ]
+        .filter(Boolean)
+        .join(' · ')
+
+      return `
+        <tr>
+          <td>${trackingMeta || '—'}</td>
+          <td style="text-align:right;">${line.quantity}</td>
+          <td style="text-align:right;">${formatCurrency(line.unit_price, formData.value.currency)}</td>
+          <td style="text-align:right;">${line.discount_percent}%</td>
+          <td style="text-align:right;">${line.tax_rate}%</td>
+          <td style="text-align:right;">${formatCurrency(line.subtotal, formData.value.currency)}</td>
+          <td style="text-align:right;">${formatCurrency(line.total, formData.value.currency)}</td>
+        </tr>
+      `
+    })
+    .join('')
+
+  return `
+    <!doctype html>
+    <html lang="es">
+      <head>
+        <meta charset="utf-8" />
+        <title>Orden ${formData.value.name || ''}</title>
+        <style>
+          body { font-family: Arial, sans-serif; color: #0f172a; padding: 24px; }
+          h1 { margin: 0 0 6px 0; font-size: 22px; }
+          h2 { margin: 0; font-size: 14px; color: #475569; font-weight: 500; }
+          .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin-top: 20px; }
+          .label { color: #64748b; font-size: 12px; text-transform: uppercase; }
+          .value { font-size: 14px; margin-top: 2px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th, td { border: 1px solid #e2e8f0; padding: 8px; font-size: 12px; vertical-align: top; }
+          th { background: #f8fafc; text-align: left; }
+          .totals { margin-top: 16px; margin-left: auto; width: 320px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; }
+          .totals-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+          .totals-total { font-weight: bold; font-size: 15px; border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 8px; }
+        </style>
+      </head>
+      <body>
+        <h1>Orden ${formData.value.name || '—'}</h1>
+        <h2>${orderTypeLabels[formData.value.order_type] || formData.value.order_type} · ${stateLabels[formData.value.order_state] || formData.value.order_state}</h2>
+
+        <div class="grid">
+          <div>
+            <div class="label">Cliente / Proveedor</div>
+            <div class="value">${formData.value.partner_name || '—'}</div>
+          </div>
+          <div>
+            <div class="label">Referencia</div>
+            <div class="value">${formData.value.reference || '—'}</div>
+          </div>
+          <div>
+            <div class="label">Fecha orden</div>
+            <div class="value">${formData.value.order_date || '—'}</div>
+          </div>
+          <div>
+            <div class="label">Fecha entrega</div>
+            <div class="value">${formData.value.delivery_date || '—'}</div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Detalle</th>
+              <th style="text-align:right;">Cant.</th>
+              <th style="text-align:right;">P. Unitario</th>
+              <th style="text-align:right;">Desc.</th>
+              <th style="text-align:right;">IVA</th>
+              <th style="text-align:right;">Subtotal</th>
+              <th style="text-align:right;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${lineRows || '<tr><td colspan="7" style="text-align:center;">Sin líneas</td></tr>'}
+          </tbody>
+        </table>
+
+        <div class="totals">
+          <div class="totals-row"><span>Subtotal</span><span>${formatCurrency(formData.value.amount_untaxed, formData.value.currency)}</span></div>
+          <div class="totals-row"><span>Impuestos</span><span>${formatCurrency(formData.value.amount_tax, formData.value.currency)}</span></div>
+          <div class="totals-row"><span>Descuento</span><span>${formatCurrency(formData.value.amount_discount, formData.value.currency)}</span></div>
+          <div class="totals-row totals-total"><span>Total</span><span>${formatCurrency(formData.value.amount_total, formData.value.currency)}</span></div>
+        </div>
+      </body>
+    </html>
+  `
+}
+
+const handlePrintOrder = () => {
+  if (typeof window === 'undefined') return
+  const printable = buildPrintableHtml()
+
+  // Usa un iframe temporal para evitar bloqueos de popups en navegadores.
+  const iframe = document.createElement('iframe')
+  iframe.style.position = 'fixed'
+  iframe.style.right = '0'
+  iframe.style.bottom = '0'
+  iframe.style.width = '0'
+  iframe.style.height = '0'
+  iframe.style.border = '0'
+  iframe.setAttribute('aria-hidden', 'true')
+  document.body.appendChild(iframe)
+
+  const iframeDoc = iframe.contentWindow?.document
+  if (!iframeDoc || !iframe.contentWindow) {
+    document.body.removeChild(iframe)
+    errorMessage.value = 'No se pudo inicializar la impresión en este navegador.'
+    return
+  }
+
+  iframeDoc.open()
+  iframeDoc.write(printable)
+  iframeDoc.close()
+
+  const printAndCleanup = () => {
+    iframe.contentWindow?.focus()
+    iframe.contentWindow?.print()
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe)
+      }
+    }, 1000)
+  }
+
+  // Espera carga para mejorar compatibilidad (Safari/Firefox).
+  iframe.onload = printAndCleanup
+  setTimeout(printAndCleanup, 250)
 }
 
 const syncLines = async (id: string, companyId: string): Promise<boolean> => {

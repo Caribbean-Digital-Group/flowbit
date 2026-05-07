@@ -51,7 +51,7 @@ const { getOrdersByCompany, cancelOrderById } = useOrder()
 const orders = ref<Record<string, unknown>[]>([])
 const isLoadingOrders = ref(false)
 const selectedTypeFilters = ref<Array<'sale' | 'purchase'>>(['sale', 'purchase'])
-const selectedStateFilters = ref<Array<'draft' | 'posted'>>(['draft', 'posted'])
+const selectedStateFilters = ref<Array<'draft' | 'posted' | 'cancel'>>(['draft', 'posted', 'cancel'])
 const selectedFulfillmentFilters = ref<Array<'compliant' | 'invoiced' | 'delivered' | 'paid'>>([])
 const selectedCurrencyFilters = ref<string[]>([])
 
@@ -110,7 +110,7 @@ const filteredOrders = computed(() => {
 
     if (!orderType || !orderState) return false
     if (!typeFilters.includes(orderType)) return false
-    if (!stateFilters.includes(orderState as 'draft' | 'posted')) return false
+    if (!stateFilters.includes(orderState)) return false
     if (currencyFilters.length > 0 && !currencyFilters.includes(orderCurrency)) return false
 
     if (fulfillmentFilters.includes('compliant') && !isCompliant) return false
@@ -151,7 +151,7 @@ const toggleTypeFilter = (value: 'sale' | 'purchase') => {
     : [...current, value]
 }
 
-const toggleStateFilter = (value: 'draft' | 'posted') => {
+const toggleStateFilter = (value: 'draft' | 'posted' | 'cancel') => {
   const current = selectedStateFilters.value
   selectedStateFilters.value = current.includes(value)
     ? current.filter((item) => item !== value)
@@ -174,7 +174,7 @@ const toggleCurrencyFilter = (value: string) => {
 
 const resetFilters = () => {
   selectedTypeFilters.value = ['sale', 'purchase']
-  selectedStateFilters.value = ['draft', 'posted']
+  selectedStateFilters.value = ['draft', 'posted', 'cancel']
   selectedFulfillmentFilters.value = []
   selectedCurrencyFilters.value = []
 }
@@ -298,6 +298,15 @@ const deleteMany = async (selected: Record<string, unknown>[]) => {
                       @change="toggleStateFilter('posted')"
                     >
                     Confirmada
+                  </label>
+                  <label class="flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      :checked="selectedStateFilters.includes('cancel')"
+                      class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      @change="toggleStateFilter('cancel')"
+                    >
+                    Cancelada
                   </label>
                 </div>
               </div>
