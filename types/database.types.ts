@@ -1169,6 +1169,263 @@ export type Database = {
           },
         ]
       }
+      project: {
+        Row: {
+          active: boolean | null
+          budget_actual: number | null
+          budget_estimated: number | null
+          code: string | null
+          color: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_date_actual: string | null
+          end_date_estimated: string | null
+          id: string
+          name: string
+          notes: string | null
+          priority: Database["public"]["Enums"]["project_priority"]
+          progress: number | null
+          project_type_id: string | null
+          responsible_partner_id: string
+          start_date: string | null
+          status: Database["public"]["Enums"]["project_status"]
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          budget_actual?: number | null
+          budget_estimated?: number | null
+          code?: string | null
+          color?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date_actual?: string | null
+          end_date_estimated?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          priority?: Database["public"]["Enums"]["project_priority"]
+          progress?: number | null
+          project_type_id?: string | null
+          responsible_partner_id: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["project_status"]
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          budget_actual?: number | null
+          budget_estimated?: number | null
+          code?: string | null
+          color?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date_actual?: string | null
+          end_date_estimated?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          priority?: Database["public"]["Enums"]["project_priority"]
+          progress?: number | null
+          project_type_id?: string | null
+          responsible_partner_id?: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["project_status"]
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_project_type_id_fkey"
+            columns: ["project_type_id"]
+            isOneToOne: false
+            referencedRelation: "project_type"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_responsible_partner_id_fkey"
+            columns: ["responsible_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_task: {
+        Row: {
+          active: boolean | null
+          actual_cost: number | null
+          actual_hours: number | null
+          code: string | null
+          company_id: string
+          completed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          estimated_cost: number | null
+          estimated_hours: number | null
+          id: string
+          name: string
+          notes: string | null
+          order_index: number | null
+          priority: Database["public"]["Enums"]["project_priority"]
+          progress: number | null
+          project_id: string
+          responsible_partner_id: string | null
+          start_date: string | null
+          status: Database["public"]["Enums"]["project_task_status"]
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          actual_cost?: number | null
+          actual_hours?: number | null
+          code?: string | null
+          company_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          estimated_cost?: number | null
+          estimated_hours?: number | null
+          id?: string
+          name: string
+          notes?: string | null
+          order_index?: number | null
+          priority?: Database["public"]["Enums"]["project_priority"]
+          progress?: number | null
+          project_id: string
+          responsible_partner_id?: string | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["project_task_status"]
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          actual_cost?: number | null
+          actual_hours?: number | null
+          code?: string | null
+          company_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          estimated_cost?: number | null
+          estimated_hours?: number | null
+          id?: string
+          name?: string
+          notes?: string | null
+          order_index?: number | null
+          priority?: Database["public"]["Enums"]["project_priority"]
+          progress?: number | null
+          project_id?: string
+          responsible_partner_id?: string | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["project_task_status"]
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_task_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_task_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_task_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_task_responsible_partner_id_fkey"
+            columns: ["responsible_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_type: {
+        Row: {
+          active: boolean | null
+          code: string
+          color: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          code: string
+          color?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          code?: string
+          color?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_type_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rel_partner_company: {
         Row: {
           accepted_at: string | null
@@ -1776,6 +2033,139 @@ export type Database = {
           },
         ]
       }
+      v_project_tasks: {
+        Row: {
+          active: boolean | null
+          actual_cost: number | null
+          actual_hours: number | null
+          code: string | null
+          company_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          days_until_due: number | null
+          description: string | null
+          due_date: string | null
+          estimated_cost: number | null
+          estimated_hours: number | null
+          id: string | null
+          is_overdue: boolean | null
+          name: string | null
+          notes: string | null
+          order_index: number | null
+          priority: Database["public"]["Enums"]["project_priority"] | null
+          progress: number | null
+          project_code: string | null
+          project_id: string | null
+          project_name: string | null
+          project_status: Database["public"]["Enums"]["project_status"] | null
+          responsible_avatar_url: string | null
+          responsible_display_name: string | null
+          responsible_email: string | null
+          responsible_name: string | null
+          responsible_partner_id: string | null
+          start_date: string | null
+          status: Database["public"]["Enums"]["project_task_status"] | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_task_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_task_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_task_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_task_responsible_partner_id_fkey"
+            columns: ["responsible_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_projects: {
+        Row: {
+          active: boolean | null
+          budget_actual: number | null
+          budget_estimated: number | null
+          code: string | null
+          color: string | null
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          days_remaining: number | null
+          description: string | null
+          end_date_actual: string | null
+          end_date_estimated: string | null
+          id: string | null
+          is_overdue: boolean | null
+          name: string | null
+          notes: string | null
+          overdue_task_count: number | null
+          priority: Database["public"]["Enums"]["project_priority"] | null
+          progress: number | null
+          project_type_code: string | null
+          project_type_color: string | null
+          project_type_id: string | null
+          project_type_name: string | null
+          responsible_avatar_url: string | null
+          responsible_display_name: string | null
+          responsible_email: string | null
+          responsible_name: string | null
+          responsible_partner_id: string | null
+          start_date: string | null
+          status: Database["public"]["Enums"]["project_status"] | null
+          task_cancelled_count: number | null
+          task_completed_count: number | null
+          task_count: number | null
+          task_in_progress_count: number | null
+          task_pending_count: number | null
+          total_actual_hours: number | null
+          total_estimated_hours: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_project_type_id_fkey"
+            columns: ["project_type_id"]
+            isOneToOne: false
+            referencedRelation: "project_type"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_responsible_partner_id_fkey"
+            columns: ["responsible_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_purchases_by_supplier: {
         Row: {
           company_id: string | null
@@ -1939,6 +2329,10 @@ export type Database = {
           requested: number
         }[]
       }
+      recompute_project_metrics: {
+        Args: { p_project_id: string }
+        Returns: undefined
+      }
       respond_to_invitation: {
         Args: { p_accept: boolean; p_rel_id: string }
         Returns: boolean
@@ -1948,6 +2342,20 @@ export type Database = {
         Args: {
           p_new_status: Database["public"]["Enums"]["picking_status"]
           p_picking_id: string
+        }
+        Returns: boolean
+      }
+      set_project_status: {
+        Args: {
+          p_new_status: Database["public"]["Enums"]["project_status"]
+          p_project_id: string
+        }
+        Returns: boolean
+      }
+      set_project_task_status: {
+        Args: {
+          p_new_status: Database["public"]["Enums"]["project_task_status"]
+          p_task_id: string
         }
         Returns: boolean
       }
@@ -2032,6 +2440,14 @@ export type Database = {
         | "coming_soon"
       product_tracking: "none" | "lot" | "serial"
       product_type: "product" | "service" | "others"
+      project_priority: "low" | "medium" | "high" | "urgent"
+      project_status:
+        | "pending"
+        | "in_progress"
+        | "completed"
+        | "paused"
+        | "cancelled"
+      project_task_status: "pending" | "in_progress" | "completed" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2189,6 +2605,15 @@ export const Constants = {
       ],
       product_tracking: ["none", "lot", "serial"],
       product_type: ["product", "service", "others"],
+      project_priority: ["low", "medium", "high", "urgent"],
+      project_status: [
+        "pending",
+        "in_progress",
+        "completed",
+        "paused",
+        "cancelled",
+      ],
+      project_task_status: ["pending", "in_progress", "completed", "cancelled"],
     },
   },
 } as const
