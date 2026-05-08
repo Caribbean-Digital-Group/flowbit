@@ -11,7 +11,7 @@ type ProjectTaskStatus = Database['public']['Enums']['project_task_status']
 type ProjectPriority = Database['public']['Enums']['project_priority']
 
 const authStore = useAuthStore()
-const { selectedCompanyId } = storeToRefs(authStore)
+const { selectedCompanyId, partner } = storeToRefs(authStore)
 
 const { getTasksByCompany, setTaskStatus, computeAggregatedMetrics } = useProjectTask()
 const { getProjectsByCompany } = useProject()
@@ -75,6 +75,9 @@ const selectedStatuses = ref<ProjectTaskStatus[]>([...ALL_STATUSES])
 const selectedPriorities = ref<ProjectPriority[]>([])
 const overdueOnly = ref(false)
 const hideDone = ref(false)
+const myTasksOnly = ref(false)
+
+const canFilterMyTasks = computed(() => Boolean(partner.value?.id))
 
 const projectOptions = ref<{ id: string; label: string; code: string }[]>([])
 
@@ -111,6 +114,11 @@ const filteredTasks = computed(() =>
     if (hideDone.value) {
       const st = task.status ?? 'pending'
       if (st === 'completed' || st === 'cancelled') return false
+    }
+
+    if (myTasksOnly.value) {
+      const pid = partner.value?.id
+      if (!pid || task.responsible_partner_id !== pid) return false
     }
 
     return true
@@ -155,6 +163,10 @@ async function loadData() {
 
 watch(selectedCompanyId, () => void loadData(), { immediate: true })
 
+watch(canFilterMyTasks, (ok) => {
+  if (!ok) myTasksOnly.value = false
+})
+
 function toggleProject(id: string) {
   selectedProjectIds.value = selectedProjectIds.value.includes(id)
     ? selectedProjectIds.value.filter((x) => x !== id)
@@ -184,6 +196,12 @@ function resetFilters() {
   selectedPriorities.value = []
   overdueOnly.value = false
   hideDone.value = false
+  myTasksOnly.value = false
+}
+
+function toggleMyTasksFilter() {
+  if (!canFilterMyTasks.value) return
+  myTasksOnly.value = !myTasksOnly.value
 }
 
 const activeFilterCount = computed(() => {
@@ -194,6 +212,7 @@ const activeFilterCount = computed(() => {
   if (selectedPriorities.value.length > 0) n += 1
   if (overdueOnly.value) n += 1
   if (hideDone.value) n += 1
+  if (myTasksOnly.value) n += 1
   return n
 })
 
@@ -253,6 +272,7 @@ const filtersSummary = computed(() => {
   if (selectedProjectIds.value.length > 0) {
     parts.push(`${selectedProjectIds.value.length} proyecto(s)`)
   }
+  if (myTasksOnly.value) parts.push('solo mis tareas')
   return parts.join(' · ')
 })
 </script>
@@ -376,6 +396,29 @@ const filtersSummary = computed(() => {
                   class="w-full rounded-xl border border-slate-200 bg-slate-50 py-3.5 pl-12 pr-4 text-slate-800 placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/40 focus:bg-white outline-none transition-all"
                 >
               </div>
+              <div class="flex flex-wrap items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-semibold transition-all"
+                  :disabled="!canFilterMyTasks"
+                  :class="[
+                    myTasksOnly
+                      ? 'border-indigo-300 bg-indigo-50 text-indigo-900 shadow-sm'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-200 hover:bg-slate-50',
+                    !canFilterMyTasks ? 'opacity-50 cursor-not-allowed' : ''
+                  ]"
+                  :title="canFilterMyTasks ? 'Solo tareas donde eres el responsable' : 'Tu usuario no tiene partner vinculado'"
+                  @click="toggleMyTasksFilter"
+                >
+                  <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Mis tareas
+                </button>
+                <p v-if="!canFilterMyTasks" class="text-[11px] text-amber-700 max-w-xs">
+                  Vincula tu usuario a un partner para usar este filtro.
+                </p>
+              </div>
             </div>
 
             <details class="group relative z-50 w-full lg:w-auto lg:min-w-[220px]">
@@ -395,6 +438,21 @@ const filtersSummary = computed(() => {
                 class="absolute right-0 left-0 z-[60] mt-2 w-full min-w-0 sm:left-auto sm:w-[min(100vw-2rem,28rem)] max-h-[min(70vh,480px)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl ring-1 ring-slate-900/5"
               >
                 <div class="space-y-5">
+                  <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-3">
+                    <label
+                      class="flex cursor-pointer items-center gap-2 text-sm"
+                      :class="!canFilterMyTasks ? 'opacity-50 cursor-not-allowed' : 'text-slate-700'"
+                    >
+                      <input
+                        v-model="myTasksOnly"
+                        type="checkbox"
+                        class="h-4 w-4 rounded border-slate-300 text-indigo-600"
+                        :disabled="!canFilterMyTasks"
+                      >
+                      Solo tareas asignadas a mí (responsable = mi partner)
+                    </label>
+                  </div>
+
                   <div>
                     <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
                       Proyectos

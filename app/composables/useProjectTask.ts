@@ -54,6 +54,30 @@ export const useProjectTask = () => {
     return data ?? []
   }
 
+  /** Tareas activas donde el responsable es el partner vinculado al usuario (partner.user_id). */
+  const getAssignedTasksForPartner = async (
+    partnerId: string,
+    companyId: string
+  ): Promise<ProjectTaskView[]> => {
+    if (!partnerId || !companyId) return []
+
+    const { data, error } = await supabase
+      .from('v_project_tasks')
+      .select('*')
+      .eq('company_id', companyId)
+      .eq('responsible_partner_id', partnerId)
+      .eq('active', true)
+      .order('due_date', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching assigned tasks for partner:', error)
+      return []
+    }
+
+    return data ?? []
+  }
+
   const getTaskViewById = async (
     id: string,
     companyId: string
@@ -263,6 +287,7 @@ export const useProjectTask = () => {
   return {
     getTasksByProject,
     getTasksByCompany,
+    getAssignedTasksForPartner,
     getTaskViewById,
     getTaskById,
     createTask,
