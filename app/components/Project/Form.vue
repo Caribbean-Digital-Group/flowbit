@@ -18,6 +18,8 @@ export interface ProjectFormData {
   end_date_actual: string
   budget_estimated: number
   budget_actual: number
+  requisition_amount: number
+  income_amount: number
   progress: number
   color: string
   notes: string
@@ -37,6 +39,8 @@ export const createEmptyProjectForm = (): ProjectFormData => ({
   end_date_actual: '',
   budget_estimated: 0,
   budget_actual: 0,
+  requisition_amount: 0,
+  income_amount: 0,
   progress: 0,
   color: '#6366F1',
   notes: ''
@@ -259,6 +263,26 @@ const formatCurrency = (value: number): string => {
               size="md"
             />
 
+            <FormInput
+              v-model="formData.requisition_amount"
+              type="number"
+              label="Monto requisiciones"
+              placeholder="0.00"
+              hint="Suma de órdenes de compra confirmadas"
+              readonly
+              size="md"
+            />
+
+            <FormInput
+              v-model="formData.income_amount"
+              type="number"
+              label="Monto ingreso"
+              placeholder="0.00"
+              hint="Suma de órdenes de venta confirmadas"
+              readonly
+              size="md"
+            />
+
             <div class="sm:col-span-2">
               <label class="block text-base font-medium text-slate-700 mb-2">
                 Avance del proyecto: {{ formData.progress }}%
@@ -274,7 +298,7 @@ const formatCurrency = (value: number): string => {
               </p>
             </div>
 
-            <div class="sm:col-span-2 grid grid-cols-2 gap-3">
+            <div class="sm:col-span-2 grid grid-cols-2 lg:grid-cols-4 gap-3">
               <div class="bg-white border border-slate-200 rounded-lg p-3 text-center">
                 <p class="text-lg font-bold text-indigo-600">{{ formatCurrency(formData.budget_estimated) }}</p>
                 <p class="text-xs text-slate-500">Estimado</p>
@@ -284,6 +308,14 @@ const formatCurrency = (value: number): string => {
                   {{ formatCurrency(formData.budget_actual) }}
                 </p>
                 <p class="text-xs text-slate-500">Real</p>
+              </div>
+              <div class="bg-white border border-slate-200 rounded-lg p-3 text-center">
+                <p class="text-lg font-bold text-amber-600">{{ formatCurrency(formData.requisition_amount) }}</p>
+                <p class="text-xs text-slate-500">Compras</p>
+              </div>
+              <div class="bg-white border border-slate-200 rounded-lg p-3 text-center">
+                <p class="text-lg font-bold text-emerald-600">{{ formatCurrency(formData.income_amount) }}</p>
+                <p class="text-xs text-slate-500">Ingresos</p>
               </div>
             </div>
           </div>

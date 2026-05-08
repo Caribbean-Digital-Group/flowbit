@@ -25,6 +25,8 @@ export interface OrderFormData {
   order_type: 'sale' | 'purchase'
   reference: string
   order_state: 'draft' | 'posted' | 'cancel'
+  project_id: string | null
+  project_name: string
   partner_id: string | null
   partner_name: string
   created_by_partner_id: string | null
@@ -60,6 +62,8 @@ export const createEmptyOrderForm = (): OrderFormData => ({
   order_type: 'sale',
   reference: '',
   order_state: 'draft',
+  project_id: null,
+  project_name: '',
   partner_id: null,
   partner_name: '',
   created_by_partner_id: null,
@@ -118,6 +122,7 @@ import { createEmptyOrderLineForm, type OrderLineFormData } from '~/components/O
 interface Props {
   readonly?: boolean
   partnerOptions?: { value: string; label: string }[]
+  projectOptions?: { value: string; label: string }[]
   /** Permite catálogo, autocompletado y alta de productos al guardar la línea. */
   companyId?: string | null
 }
@@ -125,6 +130,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   readonly: false,
   partnerOptions: () => [],
+  projectOptions: () => [],
   companyId: null
 })
 
@@ -139,6 +145,15 @@ const partnerSelectModel = computed({
     formData.value.partner_id = v ? v : null
     const opt = props.partnerOptions.find(o => o.value === v)
     if (opt) formData.value.partner_name = opt.label
+  }
+})
+
+const projectSelectModel = computed({
+  get: () => formData.value.project_id ?? '',
+  set: (v: string) => {
+    formData.value.project_id = v ? v : null
+    const opt = props.projectOptions.find(o => o.value === v)
+    formData.value.project_name = opt?.label ?? ''
   }
 })
 
@@ -385,6 +400,26 @@ const formatCurrency = (value: number): string => {
           :options="orderTypeOptions"
           :readonly="readonly"
           required
+          size="md"
+        />
+      </div>
+
+      <div>
+        <FormSelect
+          v-if="projectOptions.length > 0 && isEditing"
+          v-model="projectSelectModel"
+          label="Proyecto"
+          :options="projectOptions"
+          :readonly="readonly"
+          placeholder="Sin proyecto"
+          size="md"
+        />
+        <FormInput
+          v-else
+          v-model="formData.project_name"
+          label="Proyecto"
+          placeholder="Sin proyecto vinculado"
+          readonly
           size="md"
         />
       </div>

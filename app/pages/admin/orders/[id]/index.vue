@@ -31,6 +31,7 @@ const {
 } = useOrder()
 
 const { getPartnersByCompany } = usePartner()
+const { getProjectsByCompany } = useProject()
 const {
   getOrderLineViewsByOrderId,
   deleteOrderLine,
@@ -54,6 +55,7 @@ const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
 const stockShortageLines = ref<StockShortageRow[]>([])
 const partnerOptions = ref<{ value: string; label: string }[]>([])
+const projectOptions = ref<{ value: string; label: string }[]>([])
 
 const formData = ref<OrderFormData>(createEmptyOrderForm())
 const orderLines = ref<OrderLine[]>([])
@@ -103,7 +105,7 @@ const menuOptions = computed<MenuOption[]>(() => {
     label: 'Imprimir orden',
     icon: 'M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z',
     action: () => handlePrintOrder(),
-    variant: 'primary'
+    variant: 'default'
   })
   if (canPost.value) {
     opts.push({
@@ -147,6 +149,8 @@ const mapViewToForm = (v: OrderViewRow): OrderFormData => ({
   order_type: v.order_type ?? 'sale',
   reference: v.reference ?? '',
   order_state: v.order_state ?? 'draft',
+  project_id: v.project_id ?? null,
+  project_name: v.project_name ?? '',
   partner_id: v.partner_id ?? null,
   partner_name: v.partner_name ?? '',
   created_by_partner_id: v.created_by_partner_id ?? null,
@@ -200,6 +204,7 @@ const mapViewLineToUi = (row: OrderLineViewRow): OrderLine => ({
 
 const mapFormToOrderUpdate = (value: OrderFormData): TablesUpdate<'order'> => ({
   partner_id: value.partner_id ?? undefined,
+  project_id: value.project_id ?? null,
   reference: value.reference.trim() || null,
   order_date: value.order_date,
   delivery_date: value.delivery_date.trim() || null,
@@ -226,13 +231,21 @@ const mapFormToOrderUpdate = (value: OrderFormData): TablesUpdate<'order'> => ({
 const loadPartners = async () => {
   const companyId = selectedCompanyId.value
   partnerOptions.value = []
+  projectOptions.value = []
   if (!companyId) return
 
-  const partners = await getPartnersByCompany(companyId)
+  const [partners, projects] = await Promise.all([
+    getPartnersByCompany(companyId),
+    getProjectsByCompany(companyId)
+  ])
   partnerOptions.value = partners.map((p) => ({
     value: p.id,
     label: (p.display_name?.trim() || p.name)?.trim() || p.id
   }))
+  projectOptions.value = projects.map((p) => ({
+    value: p.id ?? '',
+    label: [p.code, p.name].filter(Boolean).join(' · ') || 'Proyecto'
+  })).filter((p) => p.value)
 }
 
 const loadOrder = async () => {
@@ -688,6 +701,7 @@ const formatDate = (dateString: string | null): string => {
         v-model:lines="orderLines"
         :readonly="!isEditing"
         :partner-options="partnerOptions"
+          :project-options="projectOptions"
         :company-id="selectedCompanyId"
       />
     </CardSheet>

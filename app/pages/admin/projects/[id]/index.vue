@@ -20,6 +20,7 @@ type ProjectStatus = Database['public']['Enums']['project_status']
 type ProjectTaskStatus = Database['public']['Enums']['project_task_status']
 type ProjectRow = Database['public']['Views']['v_projects']['Row']
 type TaskViewRow = Database['public']['Views']['v_project_tasks']['Row']
+type OrderViewRow = Database['public']['Views']['v_orders']['Row']
 
 const route = useRoute()
 const router = useRouter()
@@ -46,6 +47,7 @@ const {
 
 const { getProjectTypesByCompany } = useProjectType()
 const { getPartnersByCompany } = usePartner()
+const { getOrdersByProject } = useOrder()
 
 const projectId = computed(() => {
   const raw = route.params.id
@@ -71,6 +73,8 @@ const auditFooter = reactive({
 })
 
 const tasks = ref<TaskViewRow[]>([])
+const purchaseOrders = ref<OrderViewRow[]>([])
+const saleOrders = ref<OrderViewRow[]>([])
 
 const kanbanStatuses: ProjectTaskStatus[] = ['pending', 'in_progress', 'completed', 'cancelled']
 const kanbanLabels: Record<ProjectTaskStatus, string> = {
@@ -119,6 +123,8 @@ const mapViewToProjectForm = (v: ProjectRow): ProjectFormData => ({
   end_date_actual: v.end_date_actual ?? '',
   budget_estimated: v.budget_estimated ?? 0,
   budget_actual: v.budget_actual ?? 0,
+  requisition_amount: v.requisition_amount ?? 0,
+  income_amount: v.income_amount ?? 0,
   progress: v.progress ?? 0,
   color: v.color ?? '#6366F1',
   notes: v.notes ?? ''
@@ -184,6 +190,19 @@ const reloadTasksOnly = async () => {
   tasks.value = await getTasksByProject(id)
 }
 
+const reloadOrdersOnly = async () => {
+  const id = projectId.value
+  const companyId = selectedCompanyId.value
+  if (!id || !companyId) {
+    purchaseOrders.value = []
+    saleOrders.value = []
+    return
+  }
+  const orders = await getOrdersByProject(id, companyId)
+  purchaseOrders.value = orders.filter((o) => o.order_type === 'purchase')
+  saleOrders.value = orders.filter((o) => o.order_type === 'sale')
+}
+
 const loadProject = async () => {
   const id = projectId.value
   const companyId = selectedCompanyId.value
@@ -217,7 +236,7 @@ const loadProject = async () => {
     auditFooter.updatedBy = view.updated_by ?? '—'
     auditFooter.updatedAt = view.updated_at ?? ''
 
-    await reloadTasksOnly()
+    await Promise.all([reloadTasksOnly(), reloadOrdersOnly()])
   } finally {
     isLoading.value = false
   }
@@ -264,9 +283,47 @@ const metricStats = computed<StatItem[]>(() => {
       change: `${m.totalActualHours}h reales`,
       trend:
         m.totalActualHours <= m.totalEstimatedHours ? 'up' : 'down'
+    },
+    {
+      label: 'OC confirmadas',
+      value: formatMoney(projectViewData.value?.requisition_amount ?? 0),
+      change: `${purchaseOrders.value.filter(o => o.order_state === 'posted').length} confirmadas`,
+      trend: 'neutral'
+    },
+    {
+      label: 'OV confirmadas',
+      value: formatMoney(projectViewData.value?.income_amount ?? 0),
+      change: `${saleOrders.value.filter(o => o.order_state === 'posted').length} confirmadas`,
+      trend: 'up'
     }
   ]
 })
+
+const orderStateLabel: Record<string, string> = {
+  draft: 'Borrador',
+  posted: 'Confirmada',
+  cancel: 'Cancelada'
+}
+
+const formatMoney = (value: number): string =>
+  new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value || 0)
+
+const postedPurchaseAmount = computed(() =>
+  purchaseOrders.value
+    .filter(o => o.order_state === 'posted')
+    .reduce((sum, o) => sum + Number(o.amount_total ?? 0), 0)
+)
+
+const postedSaleAmount = computed(() =>
+  saleOrders.value
+    .filter(o => o.order_state === 'posted')
+    .reduce((sum, o) => sum + Number(o.amount_total ?? 0), 0)
+)
+
+const openOrder = (orderId: string | null) => {
+  if (!orderId) return
+  router.push(`/admin/orders/${orderId}`)
+}
 
 function tasksForStatus(status: ProjectTaskStatus): TaskViewRow[] {
   return tasks.value.filter(
@@ -283,12 +340,17 @@ async function refreshAfterTaskMutation() {
     if (refreshed) {
       projectViewData.value = refreshed
       formData.value.budget_actual = refreshed.budget_actual ?? 0
+      formData.value.requisition_amount = refreshed.requisition_amount ?? 0
+      formData.value.income_amount = refreshed.income_amount ?? 0
       formData.value.progress = refreshed.progress ?? 0
       initialForm.value.budget_actual = refreshed.budget_actual ?? 0
+      initialForm.value.requisition_amount = refreshed.requisition_amount ?? 0
+      initialForm.value.income_amount = refreshed.income_amount ?? 0
       initialForm.value.progress = refreshed.progress ?? 0
       initialForm.value.end_date_actual = refreshed.end_date_actual ?? ''
       formData.value.end_date_actual = refreshed.end_date_actual ?? ''
     }
+    await reloadOrdersOnly()
   }
 }
 
@@ -838,6 +900,90 @@ const handleArchiveProject = async () => {
                 </tr>
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div class="rounded-2xl border border-slate-200 overflow-hidden">
+            <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+              <h3 class="text-sm font-semibold text-slate-700">
+                Órdenes de compra
+              </h3>
+              <span class="text-xs font-medium text-slate-500">
+                Confirmadas: {{ formatMoney(postedPurchaseAmount) }}
+              </span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50">
+                  <tr>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Orden</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Estado</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Socio</th>
+                    <th class="px-4 py-2 text-right text-xs font-medium text-slate-500 uppercase">Total</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-slate-200">
+                  <tr
+                    v-for="order in purchaseOrders"
+                    :key="order.id ?? ''"
+                    class="hover:bg-slate-50 cursor-pointer"
+                    @click="openOrder(order.id)"
+                  >
+                    <td class="px-4 py-2 text-sm font-medium text-indigo-700">{{ order.name ?? '—' }}</td>
+                    <td class="px-4 py-2 text-sm text-slate-600">{{ orderStateLabel[order.order_state ?? 'draft'] ?? order.order_state }}</td>
+                    <td class="px-4 py-2 text-sm text-slate-600">{{ order.partner_name ?? '—' }}</td>
+                    <td class="px-4 py-2 text-sm text-right font-medium">{{ formatMoney(Number(order.amount_total ?? 0)) }}</td>
+                  </tr>
+                  <tr v-if="purchaseOrders.length === 0">
+                    <td colspan="4" class="px-4 py-8 text-center text-sm text-slate-500">
+                      No hay órdenes de compra vinculadas al proyecto.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 overflow-hidden">
+            <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+              <h3 class="text-sm font-semibold text-slate-700">
+                Órdenes de venta
+              </h3>
+              <span class="text-xs font-medium text-slate-500">
+                Confirmadas: {{ formatMoney(postedSaleAmount) }}
+              </span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50">
+                  <tr>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Orden</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Estado</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Socio</th>
+                    <th class="px-4 py-2 text-right text-xs font-medium text-slate-500 uppercase">Total</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-slate-200">
+                  <tr
+                    v-for="order in saleOrders"
+                    :key="order.id ?? ''"
+                    class="hover:bg-slate-50 cursor-pointer"
+                    @click="openOrder(order.id)"
+                  >
+                    <td class="px-4 py-2 text-sm font-medium text-indigo-700">{{ order.name ?? '—' }}</td>
+                    <td class="px-4 py-2 text-sm text-slate-600">{{ orderStateLabel[order.order_state ?? 'draft'] ?? order.order_state }}</td>
+                    <td class="px-4 py-2 text-sm text-slate-600">{{ order.partner_name ?? '—' }}</td>
+                    <td class="px-4 py-2 text-sm text-right font-medium">{{ formatMoney(Number(order.amount_total ?? 0)) }}</td>
+                  </tr>
+                  <tr v-if="saleOrders.length === 0">
+                    <td colspan="4" class="px-4 py-8 text-center text-sm text-slate-500">
+                      No hay órdenes de venta vinculadas al proyecto.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

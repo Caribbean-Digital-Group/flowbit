@@ -151,6 +151,7 @@ export type Database = {
           partner_id: string
           payment_due_date: string | null
           payment_term: string | null
+          project_id: string | null
           reference: string | null
           shipping_city: string | null
           shipping_country_code: string | null
@@ -189,6 +190,7 @@ export type Database = {
           partner_id: string
           payment_due_date?: string | null
           payment_term?: string | null
+          project_id?: string | null
           reference?: string | null
           shipping_city?: string | null
           shipping_country_code?: string | null
@@ -227,6 +229,7 @@ export type Database = {
           partner_id?: string
           payment_due_date?: string | null
           payment_term?: string | null
+          project_id?: string | null
           reference?: string | null
           shipping_city?: string | null
           shipping_country_code?: string | null
@@ -260,6 +263,20 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_projects"
             referencedColumns: ["id"]
           },
         ]
@@ -1183,11 +1200,13 @@ export type Database = {
           end_date_actual: string | null
           end_date_estimated: string | null
           id: string
+          income_amount: number
           name: string
           notes: string | null
           priority: Database["public"]["Enums"]["project_priority"]
           progress: number | null
           project_type_id: string | null
+          requisition_amount: number
           responsible_partner_id: string
           start_date: string | null
           status: Database["public"]["Enums"]["project_status"]
@@ -1207,11 +1226,13 @@ export type Database = {
           end_date_actual?: string | null
           end_date_estimated?: string | null
           id?: string
+          income_amount?: number
           name: string
           notes?: string | null
           priority?: Database["public"]["Enums"]["project_priority"]
           progress?: number | null
           project_type_id?: string | null
+          requisition_amount?: number
           responsible_partner_id: string
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
@@ -1231,11 +1252,13 @@ export type Database = {
           end_date_actual?: string | null
           end_date_estimated?: string | null
           id?: string
+          income_amount?: number
           name?: string
           notes?: string | null
           priority?: Database["public"]["Enums"]["project_priority"]
           progress?: number | null
           project_type_id?: string | null
+          requisition_amount?: number
           responsible_partner_id?: string
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
@@ -1712,6 +1735,9 @@ export type Database = {
           partner_vat: string | null
           payment_due_date: string | null
           payment_term: string | null
+          project_code: string | null
+          project_id: string | null
+          project_name: string | null
           reference: string | null
           shipping_city: string | null
           shipping_country_code: string | null
@@ -1745,6 +1771,20 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_projects"
             referencedColumns: ["id"]
           },
         ]
@@ -2115,6 +2155,7 @@ export type Database = {
           end_date_actual: string | null
           end_date_estimated: string | null
           id: string | null
+          income_amount: number | null
           is_overdue: boolean | null
           name: string | null
           notes: string | null
@@ -2125,6 +2166,7 @@ export type Database = {
           project_type_color: string | null
           project_type_id: string | null
           project_type_name: string | null
+          requisition_amount: number | null
           responsible_avatar_url: string | null
           responsible_display_name: string | null
           responsible_email: string | null
@@ -2332,6 +2374,10 @@ export type Database = {
       recompute_project_metrics: {
         Args: { p_project_id: string }
         Returns: undefined
+      }
+      recompute_project_order_amounts: {
+        Args: { p_project_id: string }
+        Returns: boolean
       }
       respond_to_invitation: {
         Args: { p_accept: boolean; p_rel_id: string }

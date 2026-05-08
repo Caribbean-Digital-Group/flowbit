@@ -18,15 +18,18 @@ const { selectedCompanyId } = storeToRefs(authStore)
 
 const { createDraftOrder, updateOrder, addOrderLineRpc } = useOrder()
 const { getPartnersByCompany } = usePartner()
+const { getProjectsByCompany } = useProject()
 
 const formData = ref<OrderFormData>(createEmptyOrderForm())
 const orderLines = ref<OrderLine[]>([])
 const partnerOptions = ref<{ value: string; label: string }[]>([])
+const projectOptions = ref<{ value: string; label: string }[]>([])
 const isSaving = ref(false)
 const errorMessage = ref<string | null>(null)
 
 const mapFormToOrderUpdate = (value: OrderFormData): TablesUpdate<'order'> => ({
   partner_id: value.partner_id ?? undefined,
+  project_id: value.project_id ?? null,
   reference: value.reference.trim() || null,
   order_date: value.order_date,
   delivery_date: value.delivery_date.trim() || null,
@@ -53,16 +56,26 @@ const mapFormToOrderUpdate = (value: OrderFormData): TablesUpdate<'order'> => ({
 const loadPartners = async () => {
   const companyId = selectedCompanyId.value
   partnerOptions.value = []
+  projectOptions.value = []
   formData.value.partner_id = null
   formData.value.partner_name = ''
+  formData.value.project_id = null
+  formData.value.project_name = ''
 
   if (!companyId) return
 
-  const partners = await getPartnersByCompany(companyId)
+  const [partners, projects] = await Promise.all([
+    getPartnersByCompany(companyId),
+    getProjectsByCompany(companyId)
+  ])
   partnerOptions.value = partners.map((p) => ({
     value: p.id,
     label: (p.display_name?.trim() || p.name)?.trim() || p.id
   }))
+  projectOptions.value = projects.map((p) => ({
+    value: p.id ?? '',
+    label: [p.code, p.name].filter(Boolean).join(' · ') || 'Proyecto'
+  })).filter((p) => p.value)
 }
 
 watch(selectedCompanyId, () => {
@@ -182,6 +195,7 @@ const handleCancel = () => {
       v-model="formData"
       v-model:lines="orderLines"
       :partner-options="partnerOptions"
+      :project-options="projectOptions"
       :company-id="selectedCompanyId"
     />
   </CardSheet>

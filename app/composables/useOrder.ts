@@ -61,6 +61,27 @@ export const useOrder = () => {
     return data
   }
 
+  const getOrdersByProject = async (
+    projectId: string,
+    companyId: string
+  ): Promise<OrderRowView[]> => {
+    if (!projectId || !companyId) return []
+
+    const { data, error } = await supabase
+      .from('v_orders')
+      .select('*')
+      .eq('company_id', companyId)
+      .eq('project_id', projectId)
+      .order('order_date', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching orders by project:', error)
+      return []
+    }
+
+    return data || []
+  }
+
   const updateOrder = async (
     id: string,
     companyId: string,
@@ -174,7 +195,7 @@ export const useOrder = () => {
   }): Promise<string | null> => {
     const { data, error } = await supabase.rpc('add_order_line', {
       p_order_id: params.orderId,
-      p_product_id: params.productId || null,
+      p_product_id: params.productId ?? undefined,
       p_description: params.description ?? undefined,
       p_quantity: params.quantity ?? 1,
       p_unit_price: params.unitPrice ?? 0,
@@ -195,6 +216,7 @@ export const useOrder = () => {
     getOrdersByCompany,
     getOrderById,
     getOrderViewById,
+    getOrdersByProject,
     updateOrder,
     createDraftOrder,
     previewOrderStockShortages,
