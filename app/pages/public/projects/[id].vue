@@ -78,6 +78,12 @@ const formatUpdatedAt = (value: string | null | undefined): string => {
   }
 }
 
+const maskResponsibleName = (name: string | null | undefined): string => {
+  const trimmed = name?.trim()
+  if (!trimmed) return '—'
+  return `@${trimmed.slice(0, 2)}`
+}
+
 const isPublicResult = computed(() => result.value?.status === 'public')
 
 const ganttTasks = computed<GanttTask[]>(() => {
@@ -91,7 +97,7 @@ const ganttTasks = computed<GanttTask[]>(() => {
     due_date: task.due_date,
     completed_at: task.completed_at,
     progress: task.progress,
-    responsible_name: task.responsible_name,
+    responsible_name: maskResponsibleName(task.responsible_name),
     is_overdue: task.is_overdue
   }))
 })
@@ -245,7 +251,7 @@ const completionRate = computed(() => {
                   </div>
                   <div>
                     <dt class="font-semibold text-slate-500">Responsable</dt>
-                    <dd class="mt-0.5 text-slate-800 font-medium truncate">{{ result.project.responsible_name || '—' }}</dd>
+                    <dd class="mt-0.5 text-slate-800 font-medium">{{ maskResponsibleName(result.project.responsible_name) }}</dd>
                   </div>
                 </dl>
               </div>
@@ -254,31 +260,49 @@ const completionRate = computed(() => {
         </div>
 
         <!-- Resumen de tareas -->
-        <div class="grid grid-cols-2 md:grid-cols-5 divide-x divide-slate-100 border-t border-slate-200">
-          <div class="px-6 py-4 text-center">
-            <p class="text-2xl font-bold text-slate-900 tabular-nums">{{ result.summary.total_tasks }}</p>
-            <p class="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tareas</p>
-          </div>
-          <div class="px-6 py-4 text-center">
-            <p class="text-2xl font-bold text-slate-400 tabular-nums">{{ result.summary.pending_tasks }}</p>
-            <p class="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Por iniciar</p>
-          </div>
-          <div class="px-6 py-4 text-center">
-            <p class="text-2xl font-bold text-indigo-600 tabular-nums">{{ result.summary.in_progress_tasks }}</p>
-            <p class="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">En proceso</p>
-          </div>
-          <div class="px-6 py-4 text-center">
-            <p class="text-2xl font-bold text-emerald-600 tabular-nums">{{ result.summary.completed_tasks }}</p>
-            <p class="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Terminadas</p>
-          </div>
-          <div class="px-6 py-4 text-center col-span-2 md:col-span-1">
-            <p
-              class="text-2xl font-bold tabular-nums"
-              :class="result.summary.overdue_tasks > 0 ? 'text-rose-600' : 'text-slate-400'"
-            >
-              {{ result.summary.overdue_tasks }}
-            </p>
-            <p class="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Vencidas</p>
+        <div class="border-t border-slate-200 bg-slate-50/70 px-4 sm:px-8 py-2.5">
+          <div class="flex items-center gap-3 overflow-x-auto">
+            <span class="shrink-0 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Resumen
+            </span>
+            <div class="flex min-w-0 flex-1 items-center divide-x divide-slate-200">
+              <div class="flex flex-1 items-center justify-center gap-2 px-3 sm:px-4 first:pl-0">
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
+                <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">Total</span>
+                <span class="text-sm font-bold tabular-nums text-slate-900">{{ result.summary.total_tasks }}</span>
+              </div>
+              <div class="flex flex-1 items-center justify-center gap-2 px-3 sm:px-4">
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-300" />
+                <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">Por iniciar</span>
+                <span class="text-sm font-bold tabular-nums text-slate-500">{{ result.summary.pending_tasks }}</span>
+              </div>
+              <div class="flex flex-1 items-center justify-center gap-2 px-3 sm:px-4">
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" />
+                <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">En proceso</span>
+                <span class="text-sm font-bold tabular-nums text-indigo-600">{{ result.summary.in_progress_tasks }}</span>
+              </div>
+              <div class="flex flex-1 items-center justify-center gap-2 px-3 sm:px-4">
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">Terminadas</span>
+                <span class="text-sm font-bold tabular-nums text-emerald-600">{{ result.summary.completed_tasks }}</span>
+              </div>
+              <div class="flex flex-1 items-center justify-center gap-2 px-3 sm:px-4 last:pr-0">
+                <span
+                  class="h-1.5 w-1.5 shrink-0 rounded-full"
+                  :class="result.summary.overdue_tasks > 0 ? 'bg-rose-500' : 'bg-slate-300'"
+                />
+                <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">Vencidas</span>
+                <span
+                  class="text-sm font-bold tabular-nums"
+                  :class="result.summary.overdue_tasks > 0 ? 'text-rose-600' : 'text-slate-500'"
+                >
+                  {{ result.summary.overdue_tasks }}
+                </span>
+              </div>
+            </div>
+            <span class="hidden sm:inline shrink-0 rounded-full bg-white border border-slate-200 px-2.5 py-1 text-[10px] font-semibold text-slate-600 tabular-nums">
+              {{ completionRate }}% avance
+            </span>
           </div>
         </div>
       </div>
@@ -332,7 +356,7 @@ const completionRate = computed(() => {
                     {{ task.description }}
                   </p>
                 </td>
-                <td class="px-4 py-3 text-sm text-slate-600">{{ task.responsible_name || '—' }}</td>
+                <td class="px-4 py-3 text-sm text-slate-600">{{ maskResponsibleName(task.responsible_name) }}</td>
                 <td class="px-4 py-3">
                   <div class="flex items-center gap-1.5">
                     <BadgeApp
