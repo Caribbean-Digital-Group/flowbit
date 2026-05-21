@@ -127,7 +127,8 @@ const mapViewToProjectForm = (v: ProjectRow): ProjectFormData => ({
   income_amount: v.income_amount ?? 0,
   progress: v.progress ?? 0,
   color: v.color ?? '#6366F1',
-  notes: v.notes ?? ''
+  notes: v.notes ?? '',
+  is_public: Boolean((v as ProjectRow & { is_public?: boolean | null }).is_public)
 })
 
 const mapFormToProjectUpdate = (
@@ -145,8 +146,9 @@ const mapFormToProjectUpdate = (
     end_date_estimated: value.end_date_estimated || null,
     budget_estimated: Number.isFinite(budget) ? budget : 0,
     color: value.color.trim() || '#6366F1',
-    notes: value.notes.trim() || null
-  }
+    notes: value.notes.trim() || null,
+    is_public: Boolean(value.is_public)
+  } as TablesUpdate<'project'>
 }
 
 const formatDateShort = (s: string | null): string => {
@@ -613,6 +615,22 @@ const menuOptions = computed<MenuOption[]>(() => [
   }
 ])
 
+const publicShareUrl = computed(() => {
+  const id = projectId.value
+  if (!id) return ''
+  if (typeof window === 'undefined') return `/public/projects/${id}`
+  return `${window.location.origin}/public/projects/${id}`
+})
+
+const openPublicView = () => {
+  if (!publicShareUrl.value) return
+  if (typeof window === 'undefined') {
+    router.push(`/public/projects/${projectId.value}`)
+    return
+  }
+  window.open(publicShareUrl.value, '_blank', 'noopener,noreferrer')
+}
+
 const handleArchiveProject = async () => {
   const id = projectId.value
   if (!id) return
@@ -666,6 +684,11 @@ const handleArchiveProject = async () => {
             :variant="projectStatusVariants[formData.status] || 'secondary'"
           />
           <BadgeApp
+            v-if="formData.is_public"
+            label="Público"
+            variant="info"
+          />
+          <BadgeApp
             v-if="projectViewData?.is_overdue"
             label="Fuera de plazo"
             variant="danger"
@@ -675,6 +698,19 @@ const handleArchiveProject = async () => {
             :label="budgetVariance > 0 ? `Sobre presupuesto: +${budgetVariance.toFixed(0)}` : 'Bajo presupuesto'"
             :variant="budgetVariance > 0 ? 'danger' : 'success'"
           />
+          <button
+            v-if="formData.is_public && !isEditing"
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 px-3 py-1 text-xs font-semibold text-white shadow-sm shadow-indigo-500/25 transition-all hover:from-indigo-700 hover:to-violet-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            title="Abrir vista pública en una nueva pestaña"
+            @click="openPublicView"
+          >
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            Vista pública
+          </button>
         </div>
       </template>
 
@@ -688,6 +724,7 @@ const handleArchiveProject = async () => {
         :readonly="!isEditing"
         :partner-options="partnerOptions"
         :type-options="typeOptions"
+        :share-project-id="projectId ?? null"
       />
 
       <!-- Métricas de tareas y Tablero -->

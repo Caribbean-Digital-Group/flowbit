@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       company: {
@@ -1201,6 +1226,7 @@ export type Database = {
           end_date_estimated: string | null
           id: string
           income_amount: number
+          is_public: boolean
           name: string
           notes: string | null
           priority: Database["public"]["Enums"]["project_priority"]
@@ -1227,6 +1253,7 @@ export type Database = {
           end_date_estimated?: string | null
           id?: string
           income_amount?: number
+          is_public?: boolean
           name: string
           notes?: string | null
           priority?: Database["public"]["Enums"]["project_priority"]
@@ -1253,6 +1280,7 @@ export type Database = {
           end_date_estimated?: string | null
           id?: string
           income_amount?: number
+          is_public?: boolean
           name?: string
           notes?: string | null
           priority?: Database["public"]["Enums"]["project_priority"]
@@ -2157,6 +2185,7 @@ export type Database = {
           id: string | null
           income_amount: number | null
           is_overdue: boolean | null
+          is_public: boolean | null
           name: string | null
           notes: string | null
           overdue_task_count: number | null
@@ -2349,6 +2378,7 @@ export type Database = {
           role: string
         }[]
       }
+      get_public_project_view: { Args: { p_project_id: string }; Returns: Json }
       invite_partner_to_company: {
         Args: {
           p_company_id: string
@@ -2619,6 +2649,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       company_size: ["micro", "small", "medium", "large", "enterprise"],

@@ -33,6 +33,8 @@ interface ActivityItem {
   href: string
 }
 
+type ProjectViewRow = Database['public']['Views']['v_projects']['Row']
+
 const authStore = useAuthStore()
 const { selectedCompanyId } = storeToRefs(authStore)
 
@@ -40,12 +42,26 @@ const { getPartnersByCompany } = usePartner()
 const { getProductsByCompany } = useProduct()
 const { getOrdersByCompany } = useOrder()
 const { getOrderLinesByCompany } = useOrderLine()
+const { getProjectsByCompany } = useProject()
 
 const isLoading = ref(false)
 const partners = ref<PartnerRow[]>([])
 const products = ref<ProductRow[]>([])
 const orders = ref<OrderRow[]>([])
 const orderLines = ref<OrderLineRow[]>([])
+const projects = ref<ProjectViewRow[]>([])
+
+const publicProjects = computed(() =>
+  projects.value.filter(
+    (p) => Boolean((p as ProjectViewRow & { is_public?: boolean | null }).is_public)
+  )
+)
+
+const openPublicProjectView = (projectId: string | null) => {
+  if (!projectId) return
+  if (typeof window === 'undefined') return
+  window.open(`${window.location.origin}/public/projects/${projectId}`, '_blank', 'noopener,noreferrer')
+}
 
 const normalizeCurrency = (value: string | null | undefined): string =>
   value?.trim().toUpperCase() || 'MXN'
@@ -235,22 +251,25 @@ const loadDashboard = async () => {
     products.value = []
     orders.value = []
     orderLines.value = []
+    projects.value = []
     return
   }
 
   isLoading.value = true
   try {
-    const [partnerList, productList, orderList, lineList] = await Promise.all([
+    const [partnerList, productList, orderList, lineList, projectList] = await Promise.all([
       getPartnersByCompany(companyId),
       getProductsByCompany(companyId),
       getOrdersByCompany(companyId),
-      getOrderLinesByCompany(companyId)
+      getOrderLinesByCompany(companyId),
+      getProjectsByCompany(companyId)
     ])
 
     partners.value = partnerList
     products.value = productList
     orders.value = orderList
     orderLines.value = lineList
+    projects.value = projectList
   } finally {
     isLoading.value = false
   }
@@ -381,6 +400,90 @@ watch(selectedCompanyId, () => {
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 bg-white p-6">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-semibold text-slate-900">
+              Proyectos con vista pública
+            </h2>
+            <p class="mt-1 text-sm text-slate-500">
+              Accede rápidamente al diagrama de seguimiento que ven las personas externas mediante el enlace compartido.
+            </p>
+          </div>
+          <NuxtLink
+            to="/admin/projects"
+            class="text-sm font-semibold text-indigo-700 hover:text-indigo-900"
+          >
+            Ver todos los proyectos →
+          </NuxtLink>
+        </div>
+
+        <div v-if="isLoading" class="mt-6 text-sm text-slate-500">
+          Cargando proyectos…
+        </div>
+
+        <div
+          v-else-if="publicProjects.length === 0"
+          class="mt-6 rounded-xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500"
+        >
+          Aún no hay proyectos marcados como públicos. Activa la opción «Permitir vista pública» dentro del proyecto para compartirlo.
+        </div>
+
+        <div v-else class="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div
+            v-for="project in publicProjects"
+            :key="project.id ?? ''"
+            class="group rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-500/10"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0 flex-1">
+                <p class="text-xs font-mono text-slate-400">{{ project.code }}</p>
+                <p class="mt-0.5 text-sm font-semibold text-slate-800 truncate">
+                  {{ project.name }}
+                </p>
+                <p class="mt-1 text-xs text-slate-500">
+                  {{ project.responsible_display_name?.trim() || project.responsible_name?.trim() || 'Sin responsable' }}
+                </p>
+              </div>
+              <span class="rounded-full bg-indigo-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-indigo-700">
+                Público
+              </span>
+            </div>
+            <div class="mt-3">
+              <div class="flex items-center justify-between text-xs text-slate-500">
+                <span>Avance</span>
+                <span class="font-semibold tabular-nums text-slate-700">{{ project.progress ?? 0 }}%</span>
+              </div>
+              <div class="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                <div
+                  class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-600 to-fuchsia-600 transition-all"
+                  :style="{ width: `${Math.min(Math.max(project.progress ?? 0, 0), 100)}%` }"
+                />
+              </div>
+            </div>
+            <div class="mt-4 flex items-center justify-between gap-2">
+              <NuxtLink
+                :to="`/admin/projects/${project.id}`"
+                class="text-xs font-semibold text-indigo-700 hover:text-indigo-900"
+              >
+                Editar proyecto
+              </NuxtLink>
+              <button
+                type="button"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-indigo-500/25 transition-all hover:from-indigo-700 hover:to-violet-700"
+                @click="openPublicProjectView(project.id)"
+              >
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                Vista pública
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

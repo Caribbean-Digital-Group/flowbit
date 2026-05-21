@@ -23,6 +23,7 @@ export interface ProjectFormData {
   progress: number
   color: string
   notes: string
+  is_public: boolean
 }
 
 export const createEmptyProjectForm = (): ProjectFormData => ({
@@ -43,7 +44,8 @@ export const createEmptyProjectForm = (): ProjectFormData => ({
   income_amount: 0,
   progress: 0,
   color: '#6366F1',
-  notes: ''
+  notes: '',
+  is_public: false
 })
 
 export const projectStatusOptions: Array<{ value: ProjectStatus; label: string }> = [
@@ -67,12 +69,16 @@ interface Props {
   readonly?: boolean
   partnerOptions?: { value: string; label: string }[]
   typeOptions?: { value: string; label: string }[]
+  /** ID del proyecto actual; cuando se proporciona se habilita el panel de
+   *  compartido público y se construye la URL externa. */
+  shareProjectId?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
   readonly: false,
   partnerOptions: () => [],
-  typeOptions: () => []
+  typeOptions: () => [],
+  shareProjectId: null
 })
 
 const formData = defineModel<ProjectFormData>({ required: true })
@@ -100,6 +106,37 @@ const formatCurrency = (value: number): string => {
     style: 'currency',
     currency: 'MXN'
   }).format(value || 0)
+}
+
+const buildPublicShareUrl = (projectId: string): string => {
+  if (typeof window === 'undefined') return `/public/projects/${projectId}`
+  return `${window.location.origin}/public/projects/${projectId}`
+}
+
+const publicShareLink = computed(() => {
+  if (!props.shareProjectId) return ''
+  return buildPublicShareUrl(props.shareProjectId)
+})
+
+const copyState = ref<'idle' | 'copied'>('idle')
+
+const handleCopyLink = async () => {
+  if (!publicShareLink.value) return
+  try {
+    await navigator.clipboard.writeText(publicShareLink.value)
+    copyState.value = 'copied'
+    setTimeout(() => {
+      copyState.value = 'idle'
+    }, 1800)
+  } catch (error) {
+    console.error('Error copying public link:', error)
+  }
+}
+
+const openPublicView = () => {
+  if (!publicShareLink.value) return
+  if (typeof window === 'undefined') return
+  window.open(publicShareLink.value, '_blank', 'noopener,noreferrer')
 }
 </script>
 
@@ -318,6 +355,90 @@ const formatCurrency = (value: number): string => {
                 <p class="text-xs text-slate-500">Ingresos</p>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VISIBILIDAD PÚBLICA -->
+    <div class="border-t border-slate-200 pt-6 mt-6">
+      <div class="space-y-4">
+        <h4 class="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 015.656 0l1.414 1.414a4 4 0 010 5.656l-3.535 3.535a4 4 0 01-5.657 0l-1.414-1.414M10.172 13.828a4 4 0 01-5.656 0L3.1 12.414a4 4 0 010-5.656l3.536-3.536a4 4 0 015.656 0l1.414 1.414" />
+          </svg>
+          Compartir vista pública
+        </h4>
+
+        <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 space-y-4">
+          <label
+            class="flex items-start gap-3 cursor-pointer select-none"
+            :class="{ 'pointer-events-none opacity-70': readonly }"
+          >
+            <input
+              v-model="formData.is_public"
+              type="checkbox"
+              class="mt-1 h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              :disabled="readonly"
+            >
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-slate-800">
+                Permitir vista pública del proyecto
+              </p>
+              <p class="mt-1 text-xs text-slate-500 leading-relaxed">
+                Cualquier persona con el enlace podrá consultar el resumen del proyecto, su diagrama de Gantt y el avance
+                de las tareas. <span class="font-medium text-slate-600">No</span> se expone información financiera, costos
+                ni datos contables.
+              </p>
+            </div>
+          </label>
+
+          <div
+            v-if="formData.is_public && publicShareLink"
+            class="rounded-xl border border-indigo-100 bg-white p-4 space-y-3"
+          >
+            <p class="text-xs font-semibold uppercase tracking-wide text-indigo-700">
+              Enlace público
+            </p>
+            <div class="flex flex-col gap-2 sm:flex-row">
+              <div class="flex-1 min-w-0 flex items-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                <span class="block w-full truncate text-sm font-mono text-slate-700">
+                  {{ publicShareLink }}
+                </span>
+              </div>
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                  @click="handleCopyLink"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  {{ copyState === 'copied' ? '¡Copiado!' : 'Copiar' }}
+                </button>
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-3 py-2 text-sm font-semibold text-white shadow-sm shadow-indigo-500/25 transition-colors hover:from-indigo-700 hover:to-violet-700"
+                  @click="openPublicView"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  Abrir vista
+                </button>
+              </div>
+            </div>
+            <p class="text-xs text-slate-500">
+              Comparte este enlace con clientes o personas externas para que vean el seguimiento del proyecto sin acceder al dashboard.
+            </p>
+          </div>
+
+          <div
+            v-else-if="formData.is_public && !publicShareLink"
+            class="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+          >
+            Guarda el proyecto para generar el enlace público.
           </div>
         </div>
       </div>

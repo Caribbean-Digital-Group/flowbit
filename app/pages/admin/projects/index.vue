@@ -88,6 +88,7 @@ const formatCurrency = (value: number): string =>
 
 const mapToTableRow = (raw: ProjectListRow): Record<string, unknown> => {
   const responsible = raw.responsible_display_name?.trim() || raw.responsible_name?.trim() || '—'
+  const isPublic = Boolean((raw as ProjectListRow & { is_public?: boolean | null }).is_public)
   return {
     id: raw.id,
     name: raw.name ?? '—',
@@ -101,8 +102,16 @@ const mapToTableRow = (raw: ProjectListRow): Record<string, unknown> => {
     end_date_estimated: raw.end_date_estimated ?? '',
     is_overdue: raw.is_overdue ?? false,
     overdue_task_count: raw.overdue_task_count ?? 0,
-    days_remaining: raw.days_remaining ?? null
+    days_remaining: raw.days_remaining ?? null,
+    is_public: isPublic
   }
+}
+
+const openPublicView = (row: Record<string, unknown>) => {
+  const id = row.id as string | undefined
+  if (!id) return
+  if (typeof window === 'undefined') return
+  window.open(`${window.location.origin}/public/projects/${id}`, '_blank', 'noopener,noreferrer')
 }
 
 const filteredProjects = computed(() => {
@@ -341,6 +350,20 @@ const filtersLabel = computed(() => {
 
         <template #actions="{ row }">
           <div class="flex items-center justify-center gap-2">
+            <BtnApp
+              v-if="row.is_public"
+              variant="ghost"
+              size="sm"
+              title="Abrir vista pública en una nueva pestaña"
+              @click="openPublicView(row)"
+            >
+              <template #iconLeft>
+                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </template>
+            </BtnApp>
             <BtnApp variant="ghost" size="sm" @click="edit(row)">
               <template #iconLeft>
                 <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
