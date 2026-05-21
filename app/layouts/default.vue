@@ -34,10 +34,8 @@ const handleLogout = () => {
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <slot />
-      </div>
+    <main class="flex-1 w-full">
+      <slot />
     </main>
 
     <!-- Footer -->

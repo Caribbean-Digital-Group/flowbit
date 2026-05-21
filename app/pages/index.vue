@@ -19,7 +19,7 @@ const workflow = [
 </script>
 
 <template>
-  <div class="space-y-0 -mx-4 sm:-mx-6 lg:-mx-8 overflow-hidden">
+  <div class="w-full overflow-hidden">
     <!-- ============================================ -->
     <!-- HERO SECTION -->
     <!-- ============================================ -->
