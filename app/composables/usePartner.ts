@@ -89,6 +89,11 @@ export const usePartner = () => {
   /**
    * Obtiene los partners asociados a una company a través de rel_partner_company.
    *
+   * Por defecto sólo retorna las relaciones de tipo `partner` (contactos de
+   * negocio), nunca los miembros del equipo. Esto evita que al desactivar a
+   * un colaborador desde "Equipo" también desaparezca un cliente con el mismo
+   * partner_id, y viceversa.
+   *
    * Implementación en dos pasos (en lugar de un inner join embebido) para evitar
    * que un row de la relación oculto por RLS excluya silenciosamente al partner
    * del resultado:
@@ -102,14 +107,16 @@ export const usePartner = () => {
       relationActive?: boolean
       role?: PartnerCompanyRole
       companyType?: 'person' | 'company'
+      relationshipType?: 'team' | 'partner'
       limit?: number
       offset?: number
     }
   ): Promise<Partner[]> => {
     let relQuery = supabase
       .from('rel_partner_company')
-      .select('partner_id, is_active, role')
+      .select('partner_id, is_active, role, relationship_type')
       .eq('company_id', companyId)
+      .eq('relationship_type', options?.relationshipType ?? 'partner')
 
     relQuery = relQuery.eq('is_active', options?.relationActive ?? true)
 

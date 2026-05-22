@@ -1492,6 +1492,7 @@ export type Database = {
           is_default: boolean | null
           partner_id: string
           permissions: Json | null
+          relationship_type: Database["public"]["Enums"]["partner_relationship_type"]
           role: Database["public"]["Enums"]["partner_company_role"] | null
           updated_at: string | null
         }
@@ -1509,6 +1510,7 @@ export type Database = {
           is_default?: boolean | null
           partner_id: string
           permissions?: Json | null
+          relationship_type?: Database["public"]["Enums"]["partner_relationship_type"]
           role?: Database["public"]["Enums"]["partner_company_role"] | null
           updated_at?: string | null
         }
@@ -1526,6 +1528,7 @@ export type Database = {
           is_default?: boolean | null
           partner_id?: string
           permissions?: Json | null
+          relationship_type?: Database["public"]["Enums"]["partner_relationship_type"]
           role?: Database["public"]["Enums"]["partner_company_role"] | null
           updated_at?: string | null
         }
@@ -1835,6 +1838,9 @@ export type Database = {
           partner_id: string | null
           partner_name: string | null
           relationship_id: string | null
+          relationship_type:
+            | Database["public"]["Enums"]["partner_relationship_type"]
+            | null
           role: Database["public"]["Enums"]["partner_company_role"] | null
         }
         Relationships: [
@@ -2366,7 +2372,10 @@ export type Database = {
         }
       }
       get_company_members: {
-        Args: { p_company_id: string }
+        Args: {
+          p_company_id: string
+          p_relationship_type?: Database["public"]["Enums"]["partner_relationship_type"]
+        }
         Returns: {
           accepted_at: string
           company_id: string
@@ -2385,6 +2394,7 @@ export type Database = {
           partner_name: string
           partner_user_id: string
           relationship_id: string
+          relationship_type: string
           role: string
         }[]
       }
@@ -2564,6 +2574,7 @@ export type Database = {
       order_state: "draft" | "posted" | "cancel"
       order_type: "purchase" | "sale"
       partner_company_role: "owner" | "admin" | "member" | "viewer" | "guest"
+      partner_relationship_type: "team" | "partner"
       partner_title: "mr" | "mrs" | "ms" | "dr" | "prof" | "other"
       partner_type: "person" | "company"
       picking_status: "borrador" | "publicado" | "confirmado" | "cancelado"
@@ -2731,6 +2742,7 @@ export const Constants = {
       order_state: ["draft", "posted", "cancel"],
       order_type: ["purchase", "sale"],
       partner_company_role: ["owner", "admin", "member", "viewer", "guest"],
+      partner_relationship_type: ["team", "partner"],
       partner_title: ["mr", "mrs", "ms", "dr", "prof", "other"],
       partner_type: ["person", "company"],
       picking_status: ["borrador", "publicado", "confirmado", "cancelado"],

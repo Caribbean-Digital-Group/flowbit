@@ -3,6 +3,8 @@ import type { Database } from '~/types/database.types'
 type PartnerCompanyRole = Database['public']['Enums']['partner_company_role']
 type InvitationStatus = Database['public']['Enums']['invitation_status']
 
+export type RelationshipType = 'team' | 'partner'
+
 export interface CompanyMember {
   relationship_id: string
   partner_id: string
@@ -14,6 +16,7 @@ export interface CompanyMember {
   invited_at: string | null
   accepted_at: string | null
   created_at: string | null
+  relationship_type: RelationshipType
   partner_name: string
   partner_display_name: string | null
   partner_email: string | null
@@ -79,12 +82,18 @@ export const useMembership = () => {
     return message || 'Error al procesar la solicitud'
   }
 
-  const getCompanyMembers = async (companyId: string): Promise<CompanyMember[]> => {
+  const getCompanyMembers = async (
+    companyId: string,
+    relationshipType: RelationshipType = 'team'
+  ): Promise<CompanyMember[]> => {
     if (!companyId) return []
 
     const { data, error } = await supabase.rpc(
       'get_company_members' as never,
-      { p_company_id: companyId } as never
+      {
+        p_company_id: companyId,
+        p_relationship_type: relationshipType
+      } as never
     ) as {
       data: CompanyMember[] | null
       error: { message: string; code?: string } | null
