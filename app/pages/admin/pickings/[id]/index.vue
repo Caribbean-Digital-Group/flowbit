@@ -18,7 +18,7 @@ type PickingType = Database['public']['Enums']['picking_type']
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-const { selectedCompanyId } = storeToRefs(authStore)
+const { selectedCompanyId, selectedCompany } = storeToRefs(authStore)
 
 const { getPickingViewById, updatePicking, setPickingStatus } = usePicking()
 const { getWarehousesByCompany } = useWarehouse()
@@ -77,7 +77,14 @@ const menuOptions = computed<MenuOption[]>(() => {
     label: 'Imprimir picking',
     icon: 'M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z',
     action: () => handlePrintPicking(),
-    variant: 'primary'
+    variant: 'default'
+  })
+  options.push({
+    id: 'print-ticket',
+    label: 'Imprimir ticket',
+    icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+    action: () => handlePrintTicket(),
+    variant: 'default'
   })
   if (status.value === 'borrador') {
     options.push({
@@ -85,7 +92,7 @@ const menuOptions = computed<MenuOption[]>(() => {
       label: 'Publicar',
       icon: 'M5 13l4 4L19 7',
       action: () => void transition('publicado'),
-      variant: 'primary'
+      variant: 'default'
     })
     options.push({
       id: 'cancel',
@@ -282,123 +289,11 @@ const cancelEdit = () => {
   loadPicking()
 }
 
-const formatPrintableDate = (raw: string | null | undefined): string => {
-  if (!raw) return '—'
-  const date = new Date(raw)
-  return date.toLocaleString('es-MX', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
 
-const buildPickingPrintableHtml = () => {
-  const bodyRows = lines.value
-    .map((line) => {
-      const product = productOptions.value.find((item) => item.value === line.product_id)
-      const productLabel = product?.label || line.product_id || '—'
-      const lot = line.tracking_type === 'lot' ? (line.lot_name || '—') : 'N/A'
-      const serial = line.tracking_type === 'serial' ? (line.serial_number || '—') : 'N/A'
-      return `
-        <tr>
-          <td>${productLabel}</td>
-          <td style="text-align:center;">${line.tracking_type}</td>
-          <td style="text-align:right;">${line.quantity}</td>
-          <td style="text-align:center;">${lot}</td>
-          <td style="text-align:center;">${serial}</td>
-        </tr>
-      `
-    })
-    .join('')
-
-  const now = formatPrintableDate(new Date().toISOString())
-
-  return `
-    <!doctype html>
-    <html lang="es">
-      <head>
-        <meta charset="utf-8" />
-        <title>Picking ${pickName.value}</title>
-        <style>
-          body { font-family: Arial, sans-serif; color: #0f172a; padding: 24px; }
-          h1 { margin: 0 0 4px 0; font-size: 24px; }
-          h2 { margin: 0; font-size: 14px; color: #475569; font-weight: 500; }
-          .meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; margin-top: 20px; }
-          .card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; }
-          .label { font-size: 11px; color: #64748b; text-transform: uppercase; }
-          .value { margin-top: 4px; font-size: 14px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          th, td { border: 1px solid #e2e8f0; padding: 8px; font-size: 12px; }
-          th { background: #f8fafc; text-align: left; }
-          .footer-grid { margin-top: 28px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
-          .sign-box { border-top: 1px solid #94a3b8; padding-top: 8px; text-align: center; font-size: 12px; color: #334155; }
-          .notes { margin-top: 14px; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 10px; font-size: 12px; min-height: 52px; }
-        </style>
-      </head>
-      <body>
-        <h1>Orden de Almacén - ${pickName.value || 'Picking'}</h1>
-        <h2>${typeLabel[pickType.value]} · Estado: ${statusLabel[status.value]}</h2>
-
-        <div class="meta">
-          <div class="card">
-            <div class="label">Orden origen</div>
-            <div class="value">${orderName.value || '—'}</div>
-          </div>
-          <div class="card">
-            <div class="label">Fecha impresión</div>
-            <div class="value">${now}</div>
-          </div>
-          <div class="card">
-            <div class="label">Almacén</div>
-            <div class="value">${warehouseOptions.value.find((w) => w.value === formData.value.warehouse_id)?.label || '—'}</div>
-          </div>
-          <div class="card">
-            <div class="label">Líneas</div>
-            <div class="value">${lines.value.length}</div>
-          </div>
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Producto</th>
-              <th style="text-align:center;">Tracking</th>
-              <th style="text-align:right;">Cantidad</th>
-              <th style="text-align:center;">Lote</th>
-              <th style="text-align:center;">Serie</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${bodyRows || '<tr><td colspan="5" style="text-align:center;">Sin líneas</td></tr>'}
-          </tbody>
-        </table>
-
-        <div class="notes"><strong>Notas:</strong> ${formData.value.notes || 'Sin notas'}</div>
-
-        <div class="footer-grid">
-          <div class="sign-box">Preparó</div>
-          <div class="sign-box">Validó</div>
-          <div class="sign-box">Recibió</div>
-        </div>
-      </body>
-    </html>
-  `
-}
-
-const handlePrintPicking = () => {
+const printHtml = (html: string) => {
   if (typeof window === 'undefined') return
-  errorMessage.value = null
-  const printable = buildPickingPrintableHtml()
-
   const iframe = document.createElement('iframe')
-  iframe.style.position = 'fixed'
-  iframe.style.right = '0'
-  iframe.style.bottom = '0'
-  iframe.style.width = '0'
-  iframe.style.height = '0'
-  iframe.style.border = '0'
+  iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0'
   iframe.setAttribute('aria-hidden', 'true')
   document.body.appendChild(iframe)
 
@@ -410,25 +305,303 @@ const handlePrintPicking = () => {
   }
 
   iframeDoc.open()
-  iframeDoc.write(printable)
+  iframeDoc.write(html)
   iframeDoc.close()
 
-  let printed = false
+  let triggered = false
   const printAndCleanup = () => {
-    if (printed) return
-    printed = true
+    if (triggered) return
+    triggered = true
     iframe.contentWindow?.focus()
     iframe.contentWindow?.print()
     setTimeout(() => {
-      if (document.body.contains(iframe)) {
-        document.body.removeChild(iframe)
-      }
+      if (document.body.contains(iframe)) document.body.removeChild(iframe)
     }, 1000)
   }
 
   iframe.onload = printAndCleanup
-  setTimeout(printAndCleanup, 250)
+  setTimeout(printAndCleanup, 400)
 }
+
+const buildPickingPrintableHtml = () => {
+  const co = selectedCompany.value
+  const accentColor = co?.primary_color || '#2563eb'
+  const companyName = co?.display_name || co?.name || ''
+  const legalName = co?.legal_name && co.legal_name !== companyName ? co.legal_name : ''
+  const companyAddress = [co?.street, co?.city, co?.state].filter(Boolean).join(' · ')
+
+  const typeColor = pickType.value === 'entrada' ? '#16a34a' : '#d97706'
+
+  const statusBadgeStyle: Record<string, string> = {
+    borrador:   'background:#e2e8f0;color:#475569',
+    publicado:  'background:#dbeafe;color:#1d4ed8',
+    confirmado: 'background:#dcfce7;color:#15803d',
+    cancelado:  'background:#fee2e2;color:#b91c1c'
+  }
+  const badgeStyle = statusBadgeStyle[status.value] ?? statusBadgeStyle.borrador
+
+  const warehouseLabel = warehouseOptions.value.find(w => w.value === formData.value.warehouse_id)?.label || '—'
+  const totalUnits = lines.value.reduce((acc, l) => acc + l.quantity, 0)
+
+  const logoInitial = (companyName[0] || 'F').toUpperCase()
+  const logoHtml = co?.logo_url
+    ? `<img src="${co.logo_url}" alt="${companyName}" style="width:64px;height:64px;object-fit:contain;border-radius:8px;display:block" />`
+    : `<div style="width:64px;height:64px;border-radius:8px;background:${accentColor}20;font-size:24px;font-weight:800;color:${accentColor};line-height:64px;text-align:center">${logoInitial}</div>`
+
+  const lineRows = lines.value.map((line, idx) => {
+    const product = productOptions.value.find(p => p.value === line.product_id)
+    const productLabel = product?.label || line.product_id || '—'
+    const lot = line.tracking_type === 'lot' ? (line.lot_name || '—') : '—'
+    const serial = line.tracking_type === 'serial' ? (line.serial_number || '—') : '—'
+    const trackingBadge = line.tracking_type === 'lot'
+      ? `<span style="background:#dbeafe;color:#1d4ed8;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">Lote</span>`
+      : line.tracking_type === 'serial'
+        ? `<span style="background:#fce7f3;color:#9d174d;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">Serie</span>`
+        : `<span style="background:#f1f5f9;color:#64748b;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">Ninguno</span>`
+    const rowBg = idx % 2 === 0 ? '#ffffff' : '#f8fafc'
+    return `
+      <tr style="background:${rowBg}">
+        <td style="padding:10px 14px;font-size:12px;font-weight:500;color:#0f172a">${productLabel}</td>
+        <td style="padding:10px 14px;text-align:center">${trackingBadge}</td>
+        <td style="padding:10px 14px;text-align:center;font-size:12px;color:#475569">${lot}</td>
+        <td style="padding:10px 14px;text-align:center;font-size:12px;color:#475569">${serial}</td>
+        <td style="padding:10px 14px;text-align:right;font-size:12px;font-weight:700;color:#0f172a">${line.quantity}</td>
+      </tr>`
+  }).join('')
+
+  const today = new Date().toLocaleString('es-MX', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+
+  return `<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>${typeLabel[pickType.value]} ${pickName.value}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #0f172a; background: #fff; }
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      @page { margin: 14mm 16mm; size: A4; }
+    }
+    .page { max-width: 860px; margin: 0 auto; padding: 32px; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:20px;border-bottom:3px solid ${accentColor};margin-bottom:28px">
+    <div style="display:flex;gap:16px;align-items:flex-start">
+      ${logoHtml}
+      <div>
+        <div style="font-size:20px;font-weight:800;color:#0f172a;line-height:1.2">${companyName}</div>
+        ${legalName ? `<div style="font-size:11px;color:#64748b;margin-top:2px">${legalName}</div>` : ''}
+        ${co?.vat ? `<div style="font-size:11px;color:#64748b;margin-top:2px">RFC: ${co.vat}</div>` : ''}
+        ${companyAddress ? `<div style="font-size:11px;color:#64748b;margin-top:2px">${companyAddress}</div>` : ''}
+        ${co?.phone ? `<div style="font-size:11px;color:#64748b;margin-top:1px">Tel: ${co.phone}</div>` : ''}
+        ${co?.email ? `<div style="font-size:11px;color:#64748b;margin-top:1px">${co.email}</div>` : ''}
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${accentColor};margin-bottom:4px">Orden de Almacén</div>
+      <div style="font-size:28px;font-weight:800;letter-spacing:-0.5px;line-height:1;color:${typeColor}">${typeLabel[pickType.value].toUpperCase()}</div>
+      <div style="font-size:16px;font-weight:600;color:#0f172a;margin-top:4px">${pickName.value}</div>
+      <span style="display:inline-block;margin-top:8px;padding:3px 12px;border-radius:999px;font-size:11px;font-weight:700;${badgeStyle}">${statusLabel[status.value]}</span>
+    </div>
+  </div>
+
+  <!-- INFO CARDS -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:28px">
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:${accentColor};margin-bottom:8px">Orden Origen</div>
+      <div style="font-size:13px;font-weight:600;color:#0f172a">${orderName.value || '—'}</div>
+      <div style="font-size:11px;color:#64748b;margin-top:4px">Orden vinculada</div>
+    </div>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:${accentColor};margin-bottom:8px">Almacén</div>
+      <div style="font-size:13px;font-weight:600;color:#0f172a">${warehouseLabel}</div>
+      <div style="font-size:11px;color:#64748b;margin-top:4px">Destino del movimiento</div>
+    </div>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:${accentColor};margin-bottom:8px">Resumen</div>
+      <div style="font-size:13px;font-weight:600;color:#0f172a">${lines.value.length} ${lines.value.length === 1 ? 'línea' : 'líneas'}</div>
+      <div style="font-size:11px;color:#64748b;margin-top:4px">${totalUnits} unidades en total</div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <table style="width:100%;border-collapse:collapse;margin-bottom:24px;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
+    <thead>
+      <tr style="background:${accentColor}">
+        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:left">Producto</th>
+        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:center">Tracking</th>
+        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:center">Lote</th>
+        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:center">Serie</th>
+        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:right">Cantidad</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${lineRows || `<tr><td colspan="5" style="text-align:center;padding:24px;color:#94a3b8;font-size:13px">Sin líneas de picking</td></tr>`}
+    </tbody>
+  </table>
+
+  ${formData.value.notes ? `
+  <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:24px">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:${accentColor};margin-bottom:8px">Notas</div>
+    <div style="font-size:12px;color:#475569;line-height:1.6;white-space:pre-line">${formData.value.notes}</div>
+  </div>` : ''}
+
+  <!-- SIGNATURES -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:32px;margin-bottom:24px">
+    ${['Preparó', 'Validó', 'Recibió'].map(label => `
+    <div>
+      <div style="height:56px;border-bottom:1.5px solid #94a3b8;margin-bottom:8px"></div>
+      <div style="text-align:center;font-size:11px;color:#64748b;font-weight:600">${label}</div>
+    </div>`).join('')}
+  </div>
+
+  <!-- FOOTER -->
+  <div style="border-top:1px solid #e2e8f0;padding-top:14px;display:flex;justify-content:space-between;align-items:center">
+    <div style="font-size:10px;color:#94a3b8">${companyName}${pickName.value ? ' · ' + pickName.value : ''}</div>
+    <div style="font-size:10px;color:#94a3b8">Impreso el ${today}</div>
+  </div>
+
+</div>
+</body>
+</html>`
+}
+
+const buildPickingTicketHtml = () => {
+  const co = selectedCompany.value
+  const accentColor = co?.primary_color || '#2563eb'
+  const companyName = co?.display_name || co?.name || ''
+  const legalName = co?.legal_name && co.legal_name !== companyName ? co.legal_name : ''
+  const companyAddress = [co?.street, co?.city, co?.state].filter(Boolean).join(', ')
+  const typeColor = pickType.value === 'entrada' ? '#16a34a' : '#d97706'
+  const warehouseLabel = warehouseOptions.value.find(w => w.value === formData.value.warehouse_id)?.label || '—'
+  const totalUnits = lines.value.reduce((acc, l) => acc + l.quantity, 0)
+
+  const logoInitial = (companyName[0] || 'F').toUpperCase()
+  const logoHtml = co?.logo_url
+    ? `<img src="${co.logo_url}" alt="${companyName}" style="width:52px;height:52px;object-fit:contain;border-radius:6px;display:block;margin:0 auto 8px" />`
+    : `<div style="width:52px;height:52px;border-radius:50%;background:${accentColor};color:#fff;font-size:22px;font-weight:800;line-height:52px;text-align:center;margin:0 auto 8px">${logoInitial}</div>`
+
+  const sep = `<div style="border-top:1px dashed #cbd5e1;margin:12px 0"></div>`
+  const today = new Date().toLocaleString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+
+  const lineRows = lines.value.map((line) => {
+    const product = productOptions.value.find(p => p.value === line.product_id)
+    const productLabel = product?.label || line.product_id || '—'
+    const trackingInfo = line.tracking_type === 'lot' && line.lot_name
+      ? `Lote: ${line.lot_name}`
+      : line.tracking_type === 'serial' && line.serial_number
+        ? `Serie: ${line.serial_number}`
+        : ''
+    return `
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="font-size:12px;font-weight:600;color:#0f172a;flex:1;padding-right:8px">${productLabel}</div>
+          <div style="font-size:13px;font-weight:700;color:#0f172a;white-space:nowrap">${line.quantity} uds.</div>
+        </div>
+        ${trackingInfo ? `<div style="font-size:10px;color:#64748b;margin-top:2px">${trackingInfo}</div>` : ''}
+      </div>`
+  }).join('')
+
+  return `<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Ticket ${pickName.value}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Courier New', Courier, monospace; color: #0f172a; background: #fff; }
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      @page { size: 80mm auto; margin: 4mm 5mm; }
+    }
+    .ticket { max-width: 80mm; margin: 0 auto; padding: 16px 14px; }
+  </style>
+</head>
+<body>
+<div class="ticket">
+
+  <!-- Logo + empresa -->
+  <div style="text-align:center;margin-bottom:12px">
+    ${logoHtml}
+    <div style="font-size:14px;font-weight:800;color:#0f172a;line-height:1.2">${companyName}</div>
+    ${legalName ? `<div style="font-size:10px;color:#64748b;margin-top:1px">${legalName}</div>` : ''}
+    ${co?.vat ? `<div style="font-size:10px;color:#64748b;margin-top:1px">RFC: ${co.vat}</div>` : ''}
+    ${companyAddress ? `<div style="font-size:10px;color:#64748b;margin-top:1px">${companyAddress}</div>` : ''}
+    ${co?.phone ? `<div style="font-size:10px;color:#64748b;margin-top:1px">${co.phone}</div>` : ''}
+  </div>
+
+  ${sep}
+
+  <!-- Tipo y nombre -->
+  <div style="text-align:center;margin-bottom:8px">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${accentColor}">Orden de Almacén</div>
+    <div style="font-size:20px;font-weight:800;color:${typeColor};margin-top:2px;text-transform:uppercase">${typeLabel[pickType.value]}</div>
+    <div style="font-size:16px;font-weight:700;color:#0f172a;margin-top:2px">${pickName.value}</div>
+    <span style="display:inline-block;margin-top:5px;padding:2px 10px;border-radius:999px;font-size:10px;font-weight:700;background:${accentColor};color:#fff">${statusLabel[status.value]}</span>
+  </div>
+
+  ${sep}
+
+  <!-- Datos -->
+  <div style="font-size:11px;margin-bottom:4px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+      <span style="color:#64748b">Orden origen</span>
+      <span style="font-weight:600">${orderName.value || '—'}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+      <span style="color:#64748b">Almacén</span>
+      <span style="font-weight:600;text-align:right;max-width:60%">${warehouseLabel}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+      <span style="color:#64748b">Líneas</span>
+      <span style="font-weight:600">${lines.value.length}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+      <span style="color:#64748b">Total unidades</span>
+      <span style="font-weight:700">${totalUnits}</span>
+    </div>
+  </div>
+
+  ${sep}
+
+  <!-- Líneas -->
+  ${lineRows || `<div style="text-align:center;font-size:11px;color:#94a3b8;padding:8px 0">Sin líneas</div>`}
+
+  ${sep}
+
+  ${formData.value.notes ? `
+  <div style="font-size:10px;color:#475569;line-height:1.5;margin-bottom:10px;white-space:pre-line">${formData.value.notes}</div>
+  ${sep}` : ''}
+
+  <!-- Firmas -->
+  <div style="margin-bottom:12px">
+    ${['Preparó', 'Validó', 'Recibió'].map(label => `
+    <div style="margin-bottom:16px">
+      <div style="height:36px;border-bottom:1px solid #94a3b8"></div>
+      <div style="text-align:center;font-size:10px;color:#64748b;margin-top:4px">${label}</div>
+    </div>`).join('')}
+  </div>
+
+  ${sep}
+
+  <!-- Footer -->
+  <div style="text-align:center;font-size:10px;color:#94a3b8;line-height:1.6">
+    <div>${companyName}</div>
+    <div>${today}</div>
+  </div>
+
+</div>
+</body>
+</html>`
+}
+
+const handlePrintPicking = () => printHtml(buildPickingPrintableHtml())
+const handlePrintTicket = () => printHtml(buildPickingTicketHtml())
 </script>
 
 <template>
