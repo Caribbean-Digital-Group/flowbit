@@ -107,6 +107,13 @@ const menuOptions = computed<MenuOption[]>(() => {
     action: () => handlePrintOrder(),
     variant: 'default'
   })
+  opts.push({
+    id: 'print-ticket',
+    label: 'Imprimir ticket',
+    icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+    action: () => handlePrintTicket(),
+    variant: 'default'
+  })
   if (canPost.value) {
     opts.push({
       id: 'post',
@@ -603,18 +610,10 @@ const buildPrintableHtml = () => {
 </html>`
 }
 
-const handlePrintOrder = () => {
+const printHtml = (html: string) => {
   if (typeof window === 'undefined') return
-  const printable = buildPrintableHtml()
-
-  // Usa un iframe temporal para evitar bloqueos de popups en navegadores.
   const iframe = document.createElement('iframe')
-  iframe.style.position = 'fixed'
-  iframe.style.right = '0'
-  iframe.style.bottom = '0'
-  iframe.style.width = '0'
-  iframe.style.height = '0'
-  iframe.style.border = '0'
+  iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0'
   iframe.setAttribute('aria-hidden', 'true')
   document.body.appendChild(iframe)
 
@@ -626,23 +625,182 @@ const handlePrintOrder = () => {
   }
 
   iframeDoc.open()
-  iframeDoc.write(printable)
+  iframeDoc.write(html)
   iframeDoc.close()
 
+  let triggered = false
   const printAndCleanup = () => {
+    if (triggered) return
+    triggered = true
     iframe.contentWindow?.focus()
     iframe.contentWindow?.print()
     setTimeout(() => {
-      if (document.body.contains(iframe)) {
-        document.body.removeChild(iframe)
-      }
+      if (document.body.contains(iframe)) document.body.removeChild(iframe)
     }, 1000)
   }
 
-  // Espera carga para mejorar compatibilidad (Safari/Firefox).
   iframe.onload = printAndCleanup
-  setTimeout(printAndCleanup, 250)
+  setTimeout(printAndCleanup, 400)
 }
+
+const handlePrintOrder = () => printHtml(buildPrintableHtml())
+
+const buildTicketHtml = () => {
+  const co = selectedCompany.value
+  const accentColor = co?.primary_color || '#2563eb'
+  const companyName = co?.display_name || co?.name || ''
+  const legalName = co?.legal_name && co.legal_name !== companyName ? co.legal_name : ''
+  const companyAddress = [co?.street, co?.city, co?.state].filter(Boolean).join(', ')
+  const cur = formData.value.currency
+  const orderTypeLabel = orderTypeLabels[formData.value.order_type] || formData.value.order_type
+  const stateLabel = stateLabels[formData.value.order_state] || formData.value.order_state
+
+  const fmtDate = (d: string | null) =>
+    d ? new Date(d).toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '—'
+
+  const logoInitial = (companyName[0] || 'F').toUpperCase()
+  const logoHtml = co?.logo_url
+    ? `<img src="${co.logo_url}" alt="${companyName}" style="width:52px;height:52px;object-fit:contain;border-radius:6px;display:block;margin:0 auto 8px" />`
+    : `<div style="width:52px;height:52px;border-radius:50%;background:${accentColor};color:#fff;font-size:22px;font-weight:800;line-height:52px;text-align:center;margin:0 auto 8px">${logoInitial}</div>`
+
+  const lineRows = orderLines.value.map((line) => {
+    const name = line.product_name?.trim() || line.description?.trim() || '—'
+    const desc = line.description?.trim() && line.description.trim() !== name ? line.description.trim() : ''
+    const lineTotal = formatCurrency(line.total, cur)
+    const unitInfo = `${line.quantity} × ${formatCurrency(line.unit_price, cur)}`
+    const discountInfo = line.discount_percent > 0 ? ` (−${line.discount_percent}%)` : ''
+    return `
+      <div style="margin-bottom:10px">
+        <div style="font-size:12px;font-weight:600;color:#0f172a">${name}</div>
+        ${desc ? `<div style="font-size:10px;color:#64748b;margin-top:1px">${desc}</div>` : ''}
+        <div style="display:flex;justify-content:space-between;margin-top:3px">
+          <span style="font-size:11px;color:#64748b">${unitInfo}${discountInfo}</span>
+          <span style="font-size:12px;font-weight:600;color:#0f172a">${lineTotal}</span>
+        </div>
+      </div>`
+  }).join('')
+
+  const sep = `<div style="border-top:1px dashed #cbd5e1;margin:12px 0"></div>`
+  const today = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+
+  return `<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Ticket ${formData.value.name || ''}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Courier New', Courier, monospace; color: #0f172a; background: #fff; }
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      @page { size: 80mm auto; margin: 4mm 5mm; }
+    }
+    .ticket { max-width: 80mm; margin: 0 auto; padding: 16px 14px; }
+  </style>
+</head>
+<body>
+<div class="ticket">
+
+  <!-- Logo + empresa -->
+  <div style="text-align:center;margin-bottom:12px">
+    ${logoHtml}
+    <div style="font-size:14px;font-weight:800;color:#0f172a;line-height:1.2">${companyName}</div>
+    ${legalName ? `<div style="font-size:10px;color:#64748b;margin-top:1px">${legalName}</div>` : ''}
+    ${co?.vat ? `<div style="font-size:10px;color:#64748b;margin-top:1px">RFC: ${co.vat}</div>` : ''}
+    ${companyAddress ? `<div style="font-size:10px;color:#64748b;margin-top:1px">${companyAddress}</div>` : ''}
+    ${co?.phone ? `<div style="font-size:10px;color:#64748b;margin-top:1px">${co.phone}</div>` : ''}
+  </div>
+
+  ${sep}
+
+  <!-- Tipo y número -->
+  <div style="text-align:center;margin-bottom:8px">
+    <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:${accentColor}">${orderTypeLabel}</div>
+    <div style="font-size:18px;font-weight:800;color:#0f172a;margin-top:2px">${formData.value.name || '—'}</div>
+    <div style="display:inline-block;margin-top:5px;padding:2px 10px;border-radius:999px;font-size:10px;font-weight:700;background:${accentColor};color:#fff">${stateLabel}</div>
+  </div>
+
+  ${sep}
+
+  <!-- Datos -->
+  <div style="font-size:11px;margin-bottom:4px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+      <span style="color:#64748b">${formData.value.order_type === 'sale' ? 'Cliente' : 'Proveedor'}</span>
+      <span style="font-weight:600;text-align:right;max-width:55%">${formData.value.partner_name || '—'}</span>
+    </div>
+    ${formData.value.reference ? `
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+      <span style="color:#64748b">Referencia</span>
+      <span style="font-weight:600">${formData.value.reference}</span>
+    </div>` : ''}
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+      <span style="color:#64748b">Fecha</span>
+      <span style="font-weight:600">${fmtDate(formData.value.order_date)}</span>
+    </div>
+    ${formData.value.delivery_date ? `
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+      <span style="color:#64748b">Entrega</span>
+      <span style="font-weight:600">${fmtDate(formData.value.delivery_date)}</span>
+    </div>` : ''}
+    ${formData.value.payment_term ? `
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+      <span style="color:#64748b">Pago</span>
+      <span style="font-weight:600">${formData.value.payment_term}</span>
+    </div>` : ''}
+  </div>
+
+  ${sep}
+
+  <!-- Líneas -->
+  ${lineRows || `<div style="text-align:center;font-size:11px;color:#94a3b8;padding:8px 0">Sin líneas</div>`}
+
+  ${sep}
+
+  <!-- Totales -->
+  <div style="font-size:12px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+      <span style="color:#64748b">Subtotal</span>
+      <span>${formatCurrency(formData.value.amount_untaxed, cur)}</span>
+    </div>
+    ${formData.value.amount_discount > 0 ? `
+    <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+      <span style="color:#64748b">Descuento</span>
+      <span style="color:#dc2626">− ${formatCurrency(formData.value.amount_discount, cur)}</span>
+    </div>` : ''}
+    ${formData.value.amount_tax > 0 ? `
+    <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+      <span style="color:#64748b">IVA (${formData.value.tax_rate}%)</span>
+      <span>${formatCurrency(formData.value.amount_tax, cur)}</span>
+    </div>` : ''}
+  </div>
+
+  <div style="display:flex;justify-content:space-between;margin-top:8px;padding:10px 0;border-top:2px solid #0f172a;border-bottom:2px solid #0f172a">
+    <span style="font-size:14px;font-weight:800">TOTAL</span>
+    <span style="font-size:14px;font-weight:800">${formatCurrency(formData.value.amount_total, cur)}</span>
+  </div>
+
+  ${formData.value.notes || formData.value.terms ? sep : ''}
+
+  ${formData.value.notes ? `
+  <div style="font-size:10px;color:#475569;line-height:1.5;margin-bottom:8px;text-align:center;white-space:pre-line">${formData.value.notes}</div>` : ''}
+
+  ${formData.value.terms ? `
+  <div style="font-size:9px;color:#94a3b8;line-height:1.4;text-align:center;white-space:pre-line">${formData.value.terms}</div>` : ''}
+
+  ${sep}
+
+  <!-- Footer -->
+  <div style="text-align:center;font-size:10px;color:#94a3b8;line-height:1.6">
+    <div>${companyName}</div>
+    <div>${today}</div>
+  </div>
+
+</div>
+</body>
+</html>`
+}
+
+const handlePrintTicket = () => printHtml(buildTicketHtml())
 
 const syncLines = async (id: string, companyId: string): Promise<boolean> => {
   const currentIds = new Set(orderLines.value.map((l) => l.id))
