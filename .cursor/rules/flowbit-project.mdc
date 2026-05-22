@@ -44,6 +44,8 @@ supabase/
 | Partners   | `/admin/partners`      | `usePartner`       | En progreso  |
 | Products   | `/admin/products`      | (pendiente)        | Scaffolding  |
 | Orders     | `/admin/orders`        | (pendiente)        | Scaffolding  |
+| Projects   | `/admin/projects`       | `useProject`, `useProjectTask`, `useProjectType` | Activo |
+| Tasks      | `/admin/tasks`           | `useProjectTask`                                 | Activo |
 | Reports    | `/admin/reports`       | (pendiente)        | Scaffolding  |
 | Settings   | `/admin/settings`      | (pendiente)        | Scaffolding  |
 

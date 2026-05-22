@@ -23,19 +23,194 @@ export const createEmptyOrderLineForm = (taxRate = 16.00): OrderLineFormData => 
 </script>
 
 <script setup lang="ts">
+import type { Tables } from '~/types/database.types'
+
+type Product = Tables<'product'>
+
 interface Props {
   readonly?: boolean
   currency?: string
+  companyId?: string | null
+  orderType?: 'sale' | 'purchase'
+  /** Tasa fiscal por defecto de la orden para nuevas líneas al elegir catálogo. */
+  catalogTaxFallback?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
   readonly: false,
-  currency: 'MXN'
+  currency: 'MXN',
+  companyId: null,
+  orderType: 'sale',
+  catalogTaxFallback: 16
 })
 
 const formData = defineModel<OrderLineFormData>({ required: true })
 
+const { searchProductsByCompany } = useProduct()
+
+const productHits = shallowRef<Product[]>([])
+const showProductDropdown = ref(false)
+const loadingProducts = ref(false)
+const productHitActive = ref(-1)
+
+let debounceFetch: ReturnType<typeof setTimeout> | undefined
+/** Texto enlazado al catálogo: si cambia manualmente sin coincidencias, limpiamos product_id */
+const catalogLabelSnapshot = ref('')
+
 const isEditing = computed(() => !props.readonly)
+
+watch(
+  () => props.companyId,
+  () => {
+    productHits.value = []
+    showProductDropdown.value = false
+    catalogLabelSnapshot.value = ''
+  }
+)
+
+onMounted(() => {
+  const pid = formData.value.product_id?.trim()
+  if (pid && formData.value.product_name.trim()) {
+    catalogLabelSnapshot.value = formData.value.product_name.trim()
+  }
+})
+
+const catalogLabelPrimary = (p: Product): string =>
+  (p.display_name ?? p.name ?? '').trim() || ''
+
+const catalogLabelSubtitle = (p: Product): string => {
+  const bits = [
+    p.sku ? `SKU ${p.sku}` : '',
+    p.barcode ? p.barcode : ''
+  ].filter(Boolean)
+  return bits.join(' · ')
+}
+
+function applyPricesFromCatalog(p: Product): void {
+  const salePrice = Number(p.sale_price ?? 0)
+  const costPrice = Number(p.cost_price ?? 0)
+
+  if (props.orderType === 'sale') {
+    formData.value.unit_price = salePrice || costPrice
+    formData.value.unit_cost = costPrice
+  } else {
+    formData.value.unit_price = costPrice || salePrice
+    formData.value.unit_cost = costPrice
+  }
+
+  const tr = Number(p.tax_rate ?? props.catalogTaxFallback ?? 16)
+  if (!Number.isNaN(tr)) {
+    formData.value.tax_rate = tr
+  }
+}
+
+function chooseCatalogProduct(p: Product): void {
+  formData.value.product_id = p.id
+  formData.value.product_name = catalogLabelPrimary(p)
+  if (!formData.value.description.trim()) {
+    formData.value.description =
+      catalogLabelPrimary(p)
+      || p.description?.trim?.()
+      || ''
+  }
+
+  applyPricesFromCatalog(p)
+  catalogLabelSnapshot.value = catalogLabelPrimary(p).trim()
+  showProductDropdown.value = false
+  productHitActive.value = -1
+}
+
+async function runProductSearch(trigger: string): Promise<void> {
+  const cid = props.companyId
+  if (!cid || props.readonly) return
+
+  loadingProducts.value = true
+  try {
+    productHits.value = await searchProductsByCompany(cid, trigger || '', 40)
+  } finally {
+    loadingProducts.value = false
+  }
+}
+
+function scheduleProductSearch(): void {
+  if (!props.companyId || props.readonly) return
+
+  if (debounceFetch) clearTimeout(debounceFetch)
+  debounceFetch = setTimeout(() => {
+    void runProductSearch(formData.value.product_name)
+  }, 220)
+
+  productHitActive.value = -1
+  showProductDropdown.value = true
+}
+
+function openProductDropdown(): void {
+  if (!props.companyId || props.readonly) return
+  showProductDropdown.value = true
+  void runProductSearch(formData.value.product_name.trim())
+}
+
+function onProductLabelInput(): void {
+  const snap = catalogLabelSnapshot.value.trim()
+  if (formData.value.product_id.trim() && snap) {
+    if (formData.value.product_name.trim() !== snap) {
+      formData.value.product_id = ''
+      catalogLabelSnapshot.value = ''
+    }
+  }
+
+  scheduleProductSearch()
+}
+
+function onProductBlur(): void {
+  window.setTimeout(() => {
+    showProductDropdown.value = false
+    productHitActive.value = -1
+  }, 180)
+}
+
+function cycleActiveHit(delta: number): void {
+  if (!productHits.value.length) return
+  productHitActive.value = Math.max(
+    0,
+    Math.min(productHitActive.value + delta, productHits.value.length - 1)
+  )
+}
+
+function onCatalogKeydown(e: KeyboardEvent): void {
+  if (!showProductDropdown.value || !productHits.value.length) return
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    cycleActiveHit(1)
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    cycleActiveHit(-1)
+  } else if (e.key === 'Enter' && productHitActive.value >= 0) {
+    e.preventDefault()
+    const picked = productHits.value[productHitActive.value]
+    if (picked) chooseCatalogProduct(picked)
+  } else if (e.key === 'Escape') {
+    showProductDropdown.value = false
+  }
+}
+
+const unitPriceLabel = computed(() =>
+  props.orderType === 'purchase' ? 'Precio unitario de compra' : 'Precio unitario de venta'
+)
+
+const catalogHintMessage = computed(() => {
+  if (!props.companyId) {
+    return 'Selecciona una empresa para buscar productos del catálogo.'
+  }
+
+  const name = formData.value.product_name.trim()
+  const needCreate = !!name.length && !formData.value.product_id
+
+  return needCreate
+    ? 'Al guardar esta línea se creará automáticamente un producto en el catálogo con el nombre indicado.'
+    : 'Filtra por nombre, SKU u otro código. Si no encuentras coincidencias, puedes escribir un nombre nuevo; se creará el producto al guardar.'
+})
 
 const discountAmount = computed(() => {
   return Math.round(formData.value.quantity * formData.value.unit_price * formData.value.discount_percent / 100 * 100) / 100
@@ -84,15 +259,74 @@ const formatCurrency = (value: number): string => {
         Producto
       </h4>
 
-      <div class="space-y-4 bg-slate-50 rounded-lg p-4">
-        <FormInput
-          v-model="formData.product_name"
-          label="Nombre del Producto"
-          placeholder="Ej: Laptop HP Pavilion 15"
-          :readonly="readonly"
-          required
-          size="md"
-        />
+      <div class="relative space-y-4 bg-slate-50 rounded-lg p-4">
+        <label class="block text-base font-medium text-slate-700 mb-2">
+          Buscar producto en catálogo
+          <span class="text-red-500 ml-1">*</span>
+        </label>
+        <div class="relative">
+          <input
+            v-if="isEditing && companyId"
+            v-model="formData.product_name"
+            type="text"
+            autocomplete="off"
+            placeholder="Nombre, SKU, código interno..."
+            required
+            class="w-full px-4 py-3 text-base border border-slate-300 rounded-xl bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+            @focus="openProductDropdown"
+            @blur="onProductBlur"
+            @input="onProductLabelInput"
+            @keydown="onCatalogKeydown"
+          >
+          <FormInput
+            v-else
+            v-model="formData.product_name"
+            label="Nombre del Producto"
+            placeholder="Ej: Laptop HP Pavilion 15"
+            :readonly="readonly"
+            required
+            size="md"
+          />
+
+          <div
+            v-if="companyId && isEditing && showProductDropdown && (loadingProducts || productHits.length)"
+            class="absolute z-30 mt-2 w-full rounded-xl border border-slate-200 bg-white shadow-lg shadow-slate-200/50 max-h-64 overflow-auto"
+          >
+            <div
+              v-if="loadingProducts"
+              class="px-4 py-3 text-sm text-slate-500"
+            >
+              Buscando…
+            </div>
+            <button
+              v-for="(p, idx) in productHits"
+              v-else
+              :key="p.id"
+              type="button"
+              class="w-full px-4 py-2.5 text-left text-sm hover:bg-indigo-50 border-b border-slate-50 last:border-0"
+              :class="[
+                idx === productHitActive
+                  ? 'bg-indigo-50 text-indigo-900 ring-2 ring-indigo-200'
+                  : 'text-slate-800'
+              ]"
+              @mousedown.prevent="chooseCatalogProduct(p)"
+            >
+              <div class="font-medium truncate">
+                {{ catalogLabelPrimary(p) || '—' }}
+              </div>
+              <div
+                v-if="catalogLabelSubtitle(p)"
+                class="text-xs text-slate-500 truncate"
+              >
+                {{ catalogLabelSubtitle(p) }}
+              </div>
+            </button>
+          </div>
+
+          <p class="mt-2 text-xs text-slate-500 leading-relaxed">
+            {{ catalogHintMessage }}
+          </p>
+        </div>
 
         <div class="w-full">
           <label class="block text-base font-medium text-slate-700 mb-2">
@@ -136,7 +370,7 @@ const formatCurrency = (value: number): string => {
           <FormInput
             v-model="formData.unit_price"
             type="number"
-            label="Precio Unitario"
+            :label="unitPriceLabel"
             placeholder="0.00"
             :readonly="readonly"
             required

@@ -25,6 +25,8 @@ export interface OrderFormData {
   order_type: 'sale' | 'purchase'
   reference: string
   order_state: 'draft' | 'posted' | 'cancel'
+  project_id: string | null
+  project_name: string
   partner_id: string | null
   partner_name: string
   created_by_partner_id: string | null
@@ -60,6 +62,8 @@ export const createEmptyOrderForm = (): OrderFormData => ({
   order_type: 'sale',
   reference: '',
   order_state: 'draft',
+  project_id: null,
+  project_name: '',
   partner_id: null,
   partner_name: '',
   created_by_partner_id: null,
@@ -117,14 +121,46 @@ import { createEmptyOrderLineForm, type OrderLineFormData } from '~/components/O
 
 interface Props {
   readonly?: boolean
+  partnerOptions?: { value: string; label: string }[]
+  projectOptions?: { value: string; label: string }[]
+  /** Permite catálogo, autocompletado y alta de productos al guardar la línea. */
+  companyId?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  readonly: false
+  readonly: false,
+  partnerOptions: () => [],
+  projectOptions: () => [],
+  companyId: null
+})
+
+const orderTypeOptions = [
+  { value: 'sale', label: 'Venta' },
+  { value: 'purchase', label: 'Compra' }
+]
+
+const partnerSelectModel = computed({
+  get: () => formData.value.partner_id ?? '',
+  set: (v: string) => {
+    formData.value.partner_id = v ? v : null
+    const opt = props.partnerOptions.find(o => o.value === v)
+    if (opt) formData.value.partner_name = opt.label
+  }
+})
+
+const projectSelectModel = computed({
+  get: () => formData.value.project_id ?? '',
+  set: (v: string) => {
+    formData.value.project_id = v ? v : null
+    const opt = props.projectOptions.find(o => o.value === v)
+    formData.value.project_name = opt?.label ?? ''
+  }
 })
 
 const formData = defineModel<OrderFormData>({ required: true })
 const lines = defineModel<OrderLine[]>('lines', { default: () => [] })
+
+const { ensureCatalogProductFromOrderLine } = useProduct()
 
 const activeTab = ref('other_info')
 
@@ -146,12 +182,16 @@ const isEditing = computed(() => !props.readonly)
 const showLinePanel = ref(false)
 const editingLineId = ref<string | null>(null)
 const lineFormData = ref<OrderLineFormData>(createEmptyOrderLineForm())
+const linePanelKey = ref(0)
+const lineFormError = ref<string | null>(null)
 
 const linePanelTitle = computed(() =>
   editingLineId.value ? 'Editar Línea' : 'Agregar Línea'
 )
 
 const openAddLine = () => {
+  linePanelKey.value += 1
+  lineFormError.value = null
   editingLineId.value = null
   lineFormData.value = createEmptyOrderLineForm(formData.value.tax_rate)
   showLinePanel.value = true
@@ -161,6 +201,8 @@ const openEditLine = (lineId: string) => {
   const line = lines.value.find(l => l.id === lineId)
   if (!line) return
 
+  linePanelKey.value += 1
+  lineFormError.value = null
   editingLineId.value = lineId
   lineFormData.value = {
     product_id: line.product_id,
@@ -208,10 +250,49 @@ const recalculateOrderTotals = () => {
   formData.value.amount_discount = lines.value.reduce((sum, l) => sum + l.discount_amount, 0)
 }
 
-const saveLine = () => {
-  if (!lineFormData.value.product_name.trim() && !lineFormData.value.description.trim()) return
+const saveLine = async () => {
+  lineFormError.value = null
 
-  const calculated = calculateLineFields(lineFormData.value)
+  const nameOrDesc =
+    lineFormData.value.product_name.trim() || lineFormData.value.description.trim()
+  if (!nameOrDesc) return
+
+  let draft: OrderLineFormData = { ...lineFormData.value }
+
+  if (!draft.product_id.trim()) {
+    const cid = props.companyId?.trim()
+    if (!cid) {
+      lineFormError.value =
+        'Selecciona una empresa en el panel superior para crear el producto en el catálogo.'
+      return
+    }
+
+    const lineName =
+      draft.product_name.trim() || draft.description.trim()
+    const created = await ensureCatalogProductFromOrderLine(cid, {
+      orderType: formData.value.order_type,
+      orderCurrency: formData.value.currency,
+      lineName,
+      unitPrice: draft.unit_price,
+      unitCost: draft.unit_cost,
+      defaultTaxRate: formData.value.tax_rate
+    })
+
+    if (!created) {
+      lineFormError.value =
+        'No se pudo crear el producto en el catálogo. Revisa permisos o los datos de la línea.'
+      return
+    }
+
+    draft = {
+      ...draft,
+      product_id: created.id,
+      product_name: (created.display_name ?? created.name).trim() || draft.product_name
+    }
+    lineFormData.value = draft
+  }
+
+  const calculated = calculateLineFields(draft)
 
   if (editingLineId.value) {
     const idx = lines.value.findIndex(l => l.id === editingLineId.value)
@@ -244,6 +325,7 @@ const saveLine = () => {
 }
 
 const cancelLineForm = () => {
+  lineFormError.value = null
   showLinePanel.value = false
 }
 
@@ -290,12 +372,54 @@ const formatCurrency = (value: number): string => {
     <!-- HEADER: Información principal de la orden -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pb-6">
       <div class="lg:col-span-2">
+        <FormSelect
+          v-if="partnerOptions.length > 0 && isEditing"
+          v-model="partnerSelectModel"
+          :label="formData.order_type === 'sale' ? 'Cliente' : 'Proveedor'"
+          :options="partnerOptions"
+          :readonly="readonly"
+          placeholder="Selecciona…"
+          required
+          size="md"
+        />
         <FormInput
+          v-else
           v-model="formData.partner_name"
           :label="formData.order_type === 'sale' ? 'Cliente' : 'Proveedor'"
-          placeholder="Seleccionar..."
+          placeholder="Seleccionar cliente o proveedor…"
           :readonly="readonly"
           required
+          size="md"
+        />
+      </div>
+
+      <div>
+        <FormSelect
+          v-model="formData.order_type"
+          label="Tipo"
+          :options="orderTypeOptions"
+          :readonly="readonly"
+          required
+          size="md"
+        />
+      </div>
+
+      <div>
+        <FormSelect
+          v-if="projectOptions.length > 0 && isEditing"
+          v-model="projectSelectModel"
+          label="Proyecto"
+          :options="projectOptions"
+          :readonly="readonly"
+          placeholder="Sin proyecto"
+          size="md"
+        />
+        <FormInput
+          v-else
+          v-model="formData.project_name"
+          label="Proyecto"
+          placeholder="Sin proyecto vinculado"
+          readonly
           size="md"
         />
       </div>
@@ -841,9 +965,16 @@ const formatCurrency = (value: number): string => {
 
               <!-- Body -->
               <div class="flex-1 overflow-y-auto px-6 py-6">
+                <p v-if="lineFormError" class="mb-4 text-sm text-red-600">
+                  {{ lineFormError }}
+                </p>
                 <OrderLineForm
+                  :key="linePanelKey"
                   v-model="lineFormData"
                   :currency="formData.currency"
+                  :company-id="companyId"
+                  :order-type="formData.order_type"
+                  :catalog-tax-fallback="formData.tax_rate"
                 />
               </div>
 

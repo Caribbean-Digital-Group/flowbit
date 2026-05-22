@@ -229,7 +229,7 @@
                 <!-- Currency type -->
                 <template v-else-if="column.type === 'currency'">
                   <span class="font-semibold text-slate-800">
-                    {{ formatCurrency(getCellValue(row, column.key), column.currency || 'USD') }}
+                    {{ formatCurrency(getCellValue(row, column.key), getCurrencyCode(row, column)) }}
                   </span>
                 </template>
 
@@ -398,8 +398,9 @@ export interface Column {
   // Avatar config
   avatarKey?: string
   subtitleKey?: string
-  // Currency config
+  // Currency: código ISO fijo, o campo por fila (p. ej. "currency")
   currency?: string
+  currencyKey?: string
   // Date config
   dateFormat?: string
 }
@@ -679,6 +680,22 @@ const getProgressColor = (value: number): string => {
   if (value >= 80) return 'bg-gradient-to-r from-emerald-500 to-teal-500'
   if (value >= 50) return 'bg-gradient-to-r from-amber-500 to-orange-500'
   return 'bg-gradient-to-r from-red-500 to-rose-500'
+}
+
+const DEFAULT_TABLE_CURRENCY = 'MXN'
+
+/** Código ISO 4217: por fila (currencyKey), columna fija (currency), o MXN. */
+const getCurrencyCode = (row: Record<string, any>, column: Column): string => {
+  if (column.currencyKey) {
+    const fromRow = getCellValue(row, column.currencyKey)
+    if (fromRow != null && String(fromRow).trim() !== '') {
+      return String(fromRow).trim().toUpperCase()
+    }
+  }
+  if (column.currency?.trim()) {
+    return column.currency.trim().toUpperCase()
+  }
+  return DEFAULT_TABLE_CURRENCY
 }
 
 // Format helpers

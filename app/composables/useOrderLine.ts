@@ -1,4 +1,9 @@
-import type { OrderLineRow, OrderLineInsert, OrderLineUpdate } from '~/types/database.types'
+import type { Database, Tables, TablesInsert, TablesUpdate } from '~/types/database.types'
+
+type OrderLineRow = Tables<'order_line'>
+type OrderLineInsert = TablesInsert<'order_line'>
+type OrderLineUpdate = TablesUpdate<'order_line'>
+type OrderLineViewRow = Database['public']['Views']['v_order_lines']['Row']
 
 export const useOrderLine = () => {
   const supabase = useSupabase()
@@ -8,7 +13,7 @@ export const useOrderLine = () => {
       .from('order_line')
       .select('*')
       .eq('id', id)
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error('Error fetching order line:', error)
@@ -16,6 +21,23 @@ export const useOrderLine = () => {
     }
 
     return data
+  }
+
+  const getOrderLinesByCompany = async (companyId: string): Promise<OrderLineViewRow[]> => {
+    if (!companyId) return []
+
+    const { data, error } = await supabase
+      .from('v_order_lines')
+      .select('*')
+      .eq('company_id', companyId)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching order lines by company:', error)
+      return []
+    }
+
+    return data || []
   }
 
   const getOrderLinesByOrderId = async (orderId: string): Promise<OrderLineRow[]> => {
@@ -27,6 +49,25 @@ export const useOrderLine = () => {
 
     if (error) {
       console.error('Error fetching order lines:', error)
+      return []
+    }
+
+    return data || []
+  }
+
+  const getOrderLineViewsByOrderId = async (
+    orderId: string,
+    companyId: string
+  ): Promise<OrderLineViewRow[]> => {
+    const { data, error } = await supabase
+      .from('v_order_lines')
+      .select('*')
+      .eq('order_id', orderId)
+      .eq('company_id', companyId)
+      .order('sequence', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching order line views:', error)
       return []
     }
 
@@ -69,7 +110,7 @@ export const useOrderLine = () => {
       .from('order_line')
       .insert(line)
       .select()
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error('Error creating order line:', error)
@@ -85,7 +126,7 @@ export const useOrderLine = () => {
       .update(updates)
       .eq('id', id)
       .select()
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error('Error updating order line:', error)
@@ -125,7 +166,9 @@ export const useOrderLine = () => {
 
   return {
     getOrderLineById,
+    getOrderLinesByCompany,
     getOrderLinesByOrderId,
+    getOrderLineViewsByOrderId,
     getOrderLines,
     createOrderLine,
     updateOrderLine,
