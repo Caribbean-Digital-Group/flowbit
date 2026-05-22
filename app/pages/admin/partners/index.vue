@@ -126,7 +126,7 @@ const createPartner = () => {
 
     <Datatable
       v-else
-      title="Clientes"
+      title="Contactos"
       description="Socios vinculados a la empresa seleccionada"
       :data="partners"
       :columns="columns"
@@ -134,10 +134,10 @@ const createPartner = () => {
       :selectable="true"
       :exportable="true"
       :creatable="true"
-      create-label="Nuevo Cliente"
-      export-filename="clientes"
-      empty-title="Sin socios"
-      empty-message="No hay socios asociados a esta empresa o aún no se han registrado."
+      create-label="Nuevo Contacto"
+      export-filename="contactos"
+      empty-title="Sin contactos"
+      empty-message="No hay contactos asociados a esta empresa o aún no se han registrado."
       @create="createPartner"
     >
       <!-- Acciones personalizadas por fila -->

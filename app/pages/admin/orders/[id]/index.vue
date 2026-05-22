@@ -19,7 +19,7 @@ const route = useRoute()
 const router = useRouter()
 
 const authStore = useAuthStore()
-const { selectedCompanyId } = storeToRefs(authStore)
+const { selectedCompanyId, selectedCompany } = storeToRefs(authStore)
 
 const {
   getOrderViewById,
@@ -363,99 +363,244 @@ const formatCurrency = (value: number, currency: string): string => {
 }
 
 const buildPrintableHtml = () => {
-  const lineRows = orderLines.value
-    .map((line) => {
-      const trackingMeta = [
-        line.product_name?.trim() ? `Producto: ${line.product_name}` : '',
-        line.description?.trim() ? `Descripción: ${line.description}` : ''
-      ]
-        .filter(Boolean)
-        .join(' · ')
+  const co = selectedCompany.value
+  const accentColor = co?.primary_color || '#2563eb'
 
+  const companyName = co?.display_name || co?.name || ''
+  const legalName = co?.legal_name && co.legal_name !== companyName ? co.legal_name : ''
+  const companyAddress = [
+    co?.street,
+    co?.street2,
+    [co?.city, co?.state].filter(Boolean).join(', '),
+    [co?.zip, co?.country_code].filter(Boolean).join(' ')
+  ].filter(Boolean).join(' · ')
+
+  const orderTypeLabel = orderTypeLabels[formData.value.order_type] || formData.value.order_type
+  const stateLabel = stateLabels[formData.value.order_state] || formData.value.order_state
+
+  const stateBadgeStyle: Record<string, string> = {
+    draft: 'background:#e2e8f0;color:#475569',
+    posted: 'background:#dcfce7;color:#15803d',
+    cancel: 'background:#fee2e2;color:#b91c1c'
+  }
+  const badgeStyle = stateBadgeStyle[formData.value.order_state] || stateBadgeStyle.draft
+
+  const fmtDate = (d: string | null) =>
+    d ? new Date(d).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'
+
+  const orderDate = fmtDate(formData.value.order_date)
+  const deliveryDate = fmtDate(formData.value.delivery_date)
+
+  const shippingAddress = [
+    formData.value.shipping_street,
+    formData.value.shipping_street2,
+    [formData.value.shipping_city, formData.value.shipping_state].filter(Boolean).join(', '),
+    [formData.value.shipping_zip, formData.value.shipping_country_code].filter(Boolean).join(' ')
+  ].filter(Boolean).join(', ')
+
+  const cur = formData.value.currency
+
+  const lineRows = orderLines.value
+    .map((line, idx) => {
+      const name = line.product_name?.trim() || line.description?.trim() || '—'
+      const desc = line.description?.trim() && line.description.trim() !== name ? line.description.trim() : ''
+      const rowBg = idx % 2 === 0 ? '#ffffff' : '#f8fafc'
       return `
-        <tr>
-          <td>${trackingMeta || '—'}</td>
-          <td style="text-align:right;">${line.quantity}</td>
-          <td style="text-align:right;">${formatCurrency(line.unit_price, formData.value.currency)}</td>
-          <td style="text-align:right;">${line.discount_percent}%</td>
-          <td style="text-align:right;">${line.tax_rate}%</td>
-          <td style="text-align:right;">${formatCurrency(line.subtotal, formData.value.currency)}</td>
-          <td style="text-align:right;">${formatCurrency(line.total, formData.value.currency)}</td>
-        </tr>
-      `
+        <tr style="background:${rowBg}">
+          <td style="padding:10px 14px;">
+            <div style="font-weight:500;color:#0f172a;font-size:12px">${name}</div>
+            ${desc ? `<div style="font-size:11px;color:#64748b;margin-top:3px">${desc}</div>` : ''}
+          </td>
+          <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap">${line.quantity}</td>
+          <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap">${formatCurrency(line.unit_price, cur)}</td>
+          <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap">${line.discount_percent > 0 ? line.discount_percent + '%' : '—'}</td>
+          <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap">${line.tax_rate > 0 ? line.tax_rate + '%' : '—'}</td>
+          <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap">${formatCurrency(line.subtotal, cur)}</td>
+          <td style="text-align:right;padding:10px 14px;font-size:12px;font-weight:600;white-space:nowrap">${formatCurrency(line.total, cur)}</td>
+        </tr>`
     })
     .join('')
 
-  return `
-    <!doctype html>
-    <html lang="es">
-      <head>
-        <meta charset="utf-8" />
-        <title>Orden ${formData.value.name || ''}</title>
-        <style>
-          body { font-family: Arial, sans-serif; color: #0f172a; padding: 24px; }
-          h1 { margin: 0 0 6px 0; font-size: 22px; }
-          h2 { margin: 0; font-size: 14px; color: #475569; font-weight: 500; }
-          .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin-top: 20px; }
-          .label { color: #64748b; font-size: 12px; text-transform: uppercase; }
-          .value { font-size: 14px; margin-top: 2px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          th, td { border: 1px solid #e2e8f0; padding: 8px; font-size: 12px; vertical-align: top; }
-          th { background: #f8fafc; text-align: left; }
-          .totals { margin-top: 16px; margin-left: auto; width: 320px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; }
-          .totals-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
-          .totals-total { font-weight: bold; font-size: 15px; border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 8px; }
-        </style>
-      </head>
-      <body>
-        <h1>Orden ${formData.value.name || '—'}</h1>
-        <h2>${orderTypeLabels[formData.value.order_type] || formData.value.order_type} · ${stateLabels[formData.value.order_state] || formData.value.order_state}</h2>
+  const notesHtml = formData.value.notes
+    ? `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;flex:1">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:${accentColor};margin-bottom:8px">Notas</div>
+        <div style="font-size:11px;color:#475569;line-height:1.6;white-space:pre-line">${formData.value.notes}</div>
+       </div>`
+    : ''
 
-        <div class="grid">
-          <div>
-            <div class="label">Cliente / Proveedor</div>
-            <div class="value">${formData.value.partner_name || '—'}</div>
-          </div>
-          <div>
-            <div class="label">Referencia</div>
-            <div class="value">${formData.value.reference || '—'}</div>
-          </div>
-          <div>
-            <div class="label">Fecha orden</div>
-            <div class="value">${formData.value.order_date || '—'}</div>
-          </div>
-          <div>
-            <div class="label">Fecha entrega</div>
-            <div class="value">${formData.value.delivery_date || '—'}</div>
-          </div>
-        </div>
+  const termsHtml = formData.value.terms
+    ? `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;flex:1">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:${accentColor};margin-bottom:8px">Términos y Condiciones</div>
+        <div style="font-size:11px;color:#475569;line-height:1.6;white-space:pre-line">${formData.value.terms}</div>
+       </div>`
+    : ''
 
-        <table>
-          <thead>
-            <tr>
-              <th>Detalle</th>
-              <th style="text-align:right;">Cant.</th>
-              <th style="text-align:right;">P. Unitario</th>
-              <th style="text-align:right;">Desc.</th>
-              <th style="text-align:right;">IVA</th>
-              <th style="text-align:right;">Subtotal</th>
-              <th style="text-align:right;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${lineRows || '<tr><td colspan="7" style="text-align:center;">Sin líneas</td></tr>'}
-          </tbody>
-        </table>
+  const extrasHtml = notesHtml || termsHtml
+    ? `<div style="display:flex;gap:16px;margin-bottom:24px">${notesHtml}${termsHtml}</div>`
+    : ''
 
-        <div class="totals">
-          <div class="totals-row"><span>Subtotal</span><span>${formatCurrency(formData.value.amount_untaxed, formData.value.currency)}</span></div>
-          <div class="totals-row"><span>Impuestos</span><span>${formatCurrency(formData.value.amount_tax, formData.value.currency)}</span></div>
-          <div class="totals-row"><span>Descuento</span><span>${formatCurrency(formData.value.amount_discount, formData.value.currency)}</span></div>
-          <div class="totals-row totals-total"><span>Total</span><span>${formatCurrency(formData.value.amount_total, formData.value.currency)}</span></div>
-        </div>
-      </body>
-    </html>
-  `
+  const logoInitial = (companyName[0] || 'F').toUpperCase()
+  const logoHtml = co?.logo_url
+    ? `<img src="${co.logo_url}" alt="${companyName}" style="width:64px;height:64px;object-fit:contain;border-radius:8px;display:block" />`
+    : `<div style="width:64px;height:64px;border-radius:8px;background:${accentColor}20;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:${accentColor};line-height:64px;text-align:center">${logoInitial}</div>`
+
+  const today = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })
+
+  return `<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>${orderTypeLabel} ${formData.value.name || ''}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #0f172a; background: #fff; }
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      @page { margin: 14mm 16mm; size: A4; }
+    }
+    .page { max-width: 860px; margin: 0 auto; padding: 32px; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── HEADER ── -->
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:20px;border-bottom:3px solid ${accentColor};margin-bottom:28px">
+
+    <!-- Company info -->
+    <div style="display:flex;gap:16px;align-items:flex-start">
+      ${logoHtml}
+      <div>
+        <div style="font-size:20px;font-weight:800;color:#0f172a;line-height:1.2">${companyName}</div>
+        ${legalName ? `<div style="font-size:11px;color:#64748b;margin-top:2px">${legalName}</div>` : ''}
+        ${co?.vat ? `<div style="font-size:11px;color:#64748b;margin-top:2px">RFC: ${co.vat}</div>` : ''}
+        ${companyAddress ? `<div style="font-size:11px;color:#64748b;margin-top:2px">${companyAddress}</div>` : ''}
+        ${co?.phone ? `<div style="font-size:11px;color:#64748b;margin-top:1px">Tel: ${co.phone}</div>` : ''}
+        ${co?.email ? `<div style="font-size:11px;color:#64748b;margin-top:1px">${co.email}</div>` : ''}
+        ${co?.website ? `<div style="font-size:11px;color:#64748b;margin-top:1px">${co.website}</div>` : ''}
+      </div>
+    </div>
+
+    <!-- Order title -->
+    <div style="text-align:right">
+      <div style="font-size:28px;font-weight:800;color:${accentColor};letter-spacing:-0.5px;line-height:1">${orderTypeLabel.toUpperCase()}</div>
+      <div style="font-size:16px;font-weight:600;color:#0f172a;margin-top:4px">${formData.value.name || '—'}</div>
+      ${formData.value.reference ? `<div style="font-size:12px;color:#64748b;margin-top:2px">Ref: ${formData.value.reference}</div>` : ''}
+      <span style="display:inline-block;margin-top:8px;padding:3px 12px;border-radius:999px;font-size:11px;font-weight:700;${badgeStyle}">${stateLabel}</span>
+    </div>
+  </div>
+
+  <!-- ── INFO CARDS ── -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px">
+
+    <!-- Card: Partner -->
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:${accentColor};margin-bottom:10px">${formData.value.order_type === 'sale' ? 'Cliente' : 'Proveedor'}</div>
+      <div style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:8px">${formData.value.partner_name || '—'}</div>
+      ${shippingAddress ? `
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:11px;color:#94a3b8">Dirección de envío</span>
+        <span style="font-size:11px;font-weight:500;color:#0f172a;text-align:right;max-width:55%">${shippingAddress}</span>
+      </div>` : ''}
+      ${formData.value.project_name ? `
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:11px;color:#94a3b8">Proyecto</span>
+        <span style="font-size:11px;font-weight:500;color:#0f172a">${formData.value.project_name}</span>
+      </div>` : ''}
+      ${formData.value.created_by_partner_name ? `
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:11px;color:#94a3b8">Elaborado por</span>
+        <span style="font-size:11px;font-weight:500;color:#0f172a">${formData.value.created_by_partner_name}</span>
+      </div>` : ''}
+    </div>
+
+    <!-- Card: Order details -->
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:${accentColor};margin-bottom:10px">Detalles de Orden</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:11px;color:#94a3b8">Fecha de orden</span>
+        <span style="font-size:11px;font-weight:500;color:#0f172a">${orderDate}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:11px;color:#94a3b8">Fecha de entrega</span>
+        <span style="font-size:11px;font-weight:500;color:#0f172a">${deliveryDate}</span>
+      </div>
+      ${formData.value.payment_term ? `
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:11px;color:#94a3b8">Condición de pago</span>
+        <span style="font-size:11px;font-weight:500;color:#0f172a">${formData.value.payment_term}</span>
+      </div>` : ''}
+      ${formData.value.payment_due_date ? `
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:11px;color:#94a3b8">Vencimiento</span>
+        <span style="font-size:11px;font-weight:500;color:#0f172a">${formData.value.payment_due_date}</span>
+      </div>` : ''}
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:11px;color:#94a3b8">Moneda</span>
+        <span style="font-size:11px;font-weight:500;color:#0f172a">${cur}${formData.value.exchange_rate !== 1 ? ` · T.C. ${formData.value.exchange_rate}` : ''}</span>
+      </div>
+      ${formData.value.tax_included ? `
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:11px;color:#94a3b8">IVA</span>
+        <span style="font-size:11px;font-weight:500;color:#0f172a">Incluido en precios</span>
+      </div>` : ''}
+    </div>
+  </div>
+
+  <!-- ── LINES TABLE ── -->
+  <table style="width:100%;border-collapse:collapse;margin-bottom:20px;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
+    <thead>
+      <tr style="background:${accentColor}">
+        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:left">Descripción</th>
+        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:right">Cant.</th>
+        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:right">P. Unitario</th>
+        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:right">Desc.</th>
+        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:right">IVA</th>
+        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:right">Subtotal</th>
+        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:right">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${lineRows || `<tr><td colspan="7" style="text-align:center;padding:24px;color:#94a3b8;font-size:13px">Sin líneas de orden</td></tr>`}
+    </tbody>
+  </table>
+
+  <!-- ── TOTALS ── -->
+  <div style="display:flex;justify-content:flex-end;margin-bottom:28px">
+    <div style="width:300px;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;padding:10px 16px;font-size:13px;border-bottom:1px solid #f1f5f9">
+        <span style="color:#64748b">Subtotal</span>
+        <span style="font-weight:500">${formatCurrency(formData.value.amount_untaxed, cur)}</span>
+      </div>
+      ${formData.value.amount_discount > 0 ? `
+      <div style="display:flex;justify-content:space-between;padding:10px 16px;font-size:13px;border-bottom:1px solid #f1f5f9">
+        <span style="color:#64748b">Descuento</span>
+        <span style="font-weight:500;color:#dc2626">− ${formatCurrency(formData.value.amount_discount, cur)}</span>
+      </div>` : ''}
+      ${formData.value.amount_tax > 0 ? `
+      <div style="display:flex;justify-content:space-between;padding:10px 16px;font-size:13px;border-bottom:1px solid #f1f5f9">
+        <span style="color:#64748b">IVA (${formData.value.tax_rate}%)</span>
+        <span style="font-weight:500">${formatCurrency(formData.value.amount_tax, cur)}</span>
+      </div>` : ''}
+      <div style="display:flex;justify-content:space-between;padding:13px 16px;font-size:15px;font-weight:700;background:${accentColor};color:#fff">
+        <span style="color:rgba(255,255,255,0.85)">Total</span>
+        <span>${formatCurrency(formData.value.amount_total, cur)}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── NOTES & TERMS ── -->
+  ${extrasHtml}
+
+  <!-- ── FOOTER ── -->
+  <div style="border-top:1px solid #e2e8f0;padding-top:14px;display:flex;justify-content:space-between;align-items:center">
+    <div style="font-size:10px;color:#94a3b8">${companyName}${formData.value.name ? ' · ' + formData.value.name : ''}</div>
+    <div style="font-size:10px;color:#94a3b8">Generado el ${today}</div>
+  </div>
+
+</div>
+</body>
+</html>`
 }
 
 const handlePrintOrder = () => {

@@ -17,6 +17,30 @@ interface UserCompany {
   isDefault: boolean
 }
 
+const SELECTED_COMPANY_STORAGE_KEY = 'flowbit:selected-company-id'
+
+const readPersistedCompanyId = (): string | null => {
+  if (typeof window === 'undefined') return null
+  try {
+    return window.localStorage.getItem(SELECTED_COMPANY_STORAGE_KEY)
+  } catch {
+    return null
+  }
+}
+
+const writePersistedCompanyId = (companyId: string | null): void => {
+  if (typeof window === 'undefined') return
+  try {
+    if (companyId) {
+      window.localStorage.setItem(SELECTED_COMPANY_STORAGE_KEY, companyId)
+    } else {
+      window.localStorage.removeItem(SELECTED_COMPANY_STORAGE_KEY)
+    }
+  } catch {
+    // ignore quota / privacy mode errors
+  }
+}
+
 export const useAuthStore = defineStore('auth', () => {
   const supabase = useSupabase()
 
@@ -119,12 +143,28 @@ export const useAuthStore = defineStore('auth', () => {
       }))
     }
 
-    const defaultCompany = companies.value.find(c => c.isDefault)
-    if (defaultCompany) {
-      selectedCompanyId.value = defaultCompany.company.id
-    } else if (companies.value.length > 0) {
-      selectedCompanyId.value = companies.value[0]!.company.id
+    // Prefer the previously persisted company (e.g. after a reload), but only
+    // if it still belongs to the current user. Otherwise fall back to the
+    // default workspace and finally to the first available company.
+    const persistedId = readPersistedCompanyId()
+    const persistedMatch = persistedId
+      ? companies.value.find(c => c.company.id === persistedId)
+      : undefined
+
+    if (persistedMatch) {
+      selectedCompanyId.value = persistedMatch.company.id
+    } else {
+      const defaultCompany = companies.value.find(c => c.isDefault)
+      if (defaultCompany) {
+        selectedCompanyId.value = defaultCompany.company.id
+      } else if (companies.value.length > 0) {
+        selectedCompanyId.value = companies.value[0]!.company.id
+      } else {
+        selectedCompanyId.value = null
+      }
     }
+
+    writePersistedCompanyId(selectedCompanyId.value)
   }
 
   async function fetchPendingInvitationCount(): Promise<void> {
@@ -188,6 +228,7 @@ export const useAuthStore = defineStore('auth', () => {
     const exists = companies.value.some(c => c.company.id === companyId)
     if (exists) {
       selectedCompanyId.value = companyId
+      writePersistedCompanyId(companyId)
     }
   }
 
@@ -198,6 +239,7 @@ export const useAuthStore = defineStore('auth', () => {
     companies.value = []
     selectedCompanyId.value = null
     pendingInvitationCount.value = 0
+    writePersistedCompanyId(null)
   }
 
   return {
