@@ -122,6 +122,8 @@ const menuOptions = computed<MenuOption[]>(() => {
 })
 
 const canEdit = computed(() => status.value === 'borrador' || status.value === 'publicado')
+const isConfirmed = computed(() => status.value === 'confirmado')
+const isFormReadonly = computed(() => !canEdit.value || !isEditing.value)
 
 const loadCatalogs = async (companyId: string) => {
   const [warehouses, products] = await Promise.all([
@@ -183,6 +185,10 @@ const loadPicking = async () => {
       sequence: line.sequence || 10
     }))
     initialLineIds.value = new Set(lines.value.map((line) => line.id))
+
+    if (!canEdit.value) {
+      isEditing.value = false
+    }
   } finally {
     isLoading.value = false
   }
@@ -192,6 +198,10 @@ watch([rowId, selectedCompanyId], () => {
   isEditing.value = false
   loadPicking()
 }, { immediate: true })
+
+watch(canEdit, (editable) => {
+  if (!editable) isEditing.value = false
+})
 
 const transition = async (nextStatus: PickingStatus) => {
   const id = rowId.value
@@ -252,6 +262,12 @@ const handleSave = async () => {
   const companyId = selectedCompanyId.value
   const id = rowId.value
   if (!companyId || !id) return
+
+  if (!canEdit.value) {
+    errorMessage.value = 'Este picking no puede modificarse en su estado actual.'
+    isEditing.value = false
+    return
+  }
 
   if (!formData.value.warehouse_id) {
     errorMessage.value = 'Selecciona un almacén.'
@@ -626,6 +642,20 @@ const handlePrintTicket = () => printHtml(buildPickingTicketHtml())
         {{ errorMessage }}
       </div>
 
+      <div
+        v-if="isConfirmed"
+        class="mb-6 rounded-2xl border border-emerald-100 bg-emerald-50 px-6 py-4 text-emerald-800"
+      >
+        Este picking está confirmado. Los datos y las líneas son de solo lectura.
+      </div>
+
+      <div
+        v-else-if="!canEdit"
+        class="mb-6 rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-slate-600"
+      >
+        Este picking está cancelado y no puede modificarse.
+      </div>
+
       <template #status>
         <div class="flex items-center gap-2">
           <BadgeApp :label="typeLabel[pickType]" :variant="pickType === 'entrada' ? 'success' : 'warning'" />
@@ -636,7 +666,7 @@ const handlePrintTicket = () => printHtml(buildPickingTicketHtml())
       <PickingForm
         v-model="formData"
         v-model:lines="lines"
-        :readonly="!isEditing || !canEdit"
+        :readonly="isFormReadonly"
         :product-options="productOptions"
         :warehouse-options="warehouseOptions"
       />

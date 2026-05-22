@@ -85,7 +85,7 @@ const handleProductChange = (line: PickingLineFormData) => {
         v-model="formData.warehouse_id"
         label="Almacén"
         :options="warehouseOptions"
-        :readonly="readonly"
+        :disabled="readonly"
         required
       />
 
@@ -100,7 +100,7 @@ const handleProductChange = (line: PickingLineFormData) => {
       v-model="formData.notes"
       label="Notas"
       placeholder="Observaciones del movimiento"
-      :readonly="readonly"
+      :disabled="readonly"
       :rows="3"
     />
 
@@ -128,7 +128,7 @@ const handleProductChange = (line: PickingLineFormData) => {
                 v-model="line.product_id"
                 label="Producto"
                 :options="productOptions.map(item => ({ value: item.value, label: item.label }))"
-                :readonly="readonly"
+                :disabled="readonly"
                 @update:model-value="handleProductChange(line)"
               />
             </div>
@@ -138,7 +138,7 @@ const handleProductChange = (line: PickingLineFormData) => {
                 v-model="line.quantity"
                 type="number"
                 label="Cantidad"
-                :readonly="readonly"
+                :disabled="readonly"
               />
             </div>
 
@@ -155,7 +155,7 @@ const handleProductChange = (line: PickingLineFormData) => {
                 v-model="line.lot_name"
                 label="Lote"
                 placeholder="LOTE-001"
-                :readonly="readonly || line.tracking_type !== 'lot'"
+                :disabled="readonly || line.tracking_type !== 'lot'"
               />
             </div>
 
@@ -164,7 +164,7 @@ const handleProductChange = (line: PickingLineFormData) => {
                 v-model="line.serial_number"
                 label="Serie"
                 placeholder="SER-0001"
-                :readonly="readonly || line.tracking_type !== 'serial'"
+                :disabled="readonly || line.tracking_type !== 'serial'"
               />
             </div>
           </div>
