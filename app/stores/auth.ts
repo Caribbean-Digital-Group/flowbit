@@ -26,6 +26,7 @@ export const useAuthStore = defineStore('auth', () => {
   const companies = shallowRef<UserCompany[]>([])
   const selectedCompanyId = ref<string | null>(null)
   const loading = ref(false)
+  const pendingInvitationCount = ref(0)
 
   const isAuthenticated = computed(() => !!session.value)
 
@@ -126,6 +127,29 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function fetchPendingInvitationCount(): Promise<void> {
+    if (!user.value) {
+      pendingInvitationCount.value = 0
+      return
+    }
+
+    const { data, error } = await supabase.rpc(
+      'get_my_invitations' as never,
+      {} as never
+    ) as {
+      data: { relationship_id: string }[] | null
+      error: { message: string } | null
+    }
+
+    if (error) {
+      console.error('Error fetching pending invitation count:', error)
+      pendingInvitationCount.value = 0
+      return
+    }
+
+    pendingInvitationCount.value = data?.length ?? 0
+  }
+
   async function loadSession(): Promise<void> {
     loading.value = true
 
@@ -142,6 +166,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       await fetchPartner()
       await fetchCompanies()
+      await fetchPendingInvitationCount()
     } catch (err) {
       console.error('Error loading session:', err)
       clearSession()
@@ -156,6 +181,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     await fetchPartner()
     await fetchCompanies()
+    await fetchPendingInvitationCount()
   }
 
   function selectCompany(companyId: string): void {
@@ -171,6 +197,7 @@ export const useAuthStore = defineStore('auth', () => {
     partner.value = null
     companies.value = []
     selectedCompanyId.value = null
+    pendingInvitationCount.value = 0
   }
 
   return {
@@ -180,6 +207,7 @@ export const useAuthStore = defineStore('auth', () => {
     companies,
     selectedCompanyId,
     loading,
+    pendingInvitationCount,
     isAuthenticated,
     selectedCompany,
     partnerDisplayName,
@@ -190,5 +218,6 @@ export const useAuthStore = defineStore('auth', () => {
     clearSession,
     fetchPartner,
     fetchCompanies,
+    fetchPendingInvitationCount,
   }
 })

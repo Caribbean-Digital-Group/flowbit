@@ -2365,6 +2365,46 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_company_members: {
+        Args: { p_company_id: string }
+        Returns: {
+          accepted_at: string
+          company_id: string
+          created_at: string
+          invitation_status: string
+          invited_at: string
+          invited_by_email: string
+          invited_by_name: string
+          invited_by_partner_id: string
+          is_active: boolean
+          is_default: boolean
+          partner_avatar_url: string
+          partner_display_name: string
+          partner_email: string
+          partner_id: string
+          partner_name: string
+          partner_user_id: string
+          relationship_id: string
+          role: string
+        }[]
+      }
+      get_my_invitations: {
+        Args: never
+        Returns: {
+          company_display_name: string
+          company_id: string
+          company_is_personal: boolean
+          company_logo_url: string
+          company_name: string
+          invitation_status: string
+          invited_at: string
+          invited_by_email: string
+          invited_by_name: string
+          invited_by_partner_id: string
+          relationship_id: string
+          role: string
+        }[]
+      }
       get_or_create_default_warehouse: {
         Args: { p_company_id: string }
         Returns: string
@@ -2379,6 +2419,14 @@ export type Database = {
         }[]
       }
       get_public_project_view: { Args: { p_project_id: string }; Returns: Json }
+      invite_partner_by_email: {
+        Args: {
+          p_company_id: string
+          p_email: string
+          p_role?: Database["public"]["Enums"]["partner_company_role"]
+        }
+        Returns: string
+      }
       invite_partner_to_company: {
         Args: {
           p_company_id: string
@@ -2390,6 +2438,10 @@ export type Database = {
       }
       is_company_admin: { Args: { p_company_id: string }; Returns: boolean }
       is_company_member: { Args: { p_company_id: string }; Returns: boolean }
+      is_invited_to_company: {
+        Args: { p_company_id: string }
+        Returns: boolean
+      }
       is_own_partner: { Args: { p_partner_id: string }; Returns: boolean }
       post_order: { Args: { p_order_id: string }; Returns: boolean }
       preview_order_stock_shortages: {
@@ -2409,6 +2461,7 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: boolean
       }
+      remove_company_member: { Args: { p_rel_id: string }; Returns: boolean }
       respond_to_invitation: {
         Args: { p_accept: boolean; p_rel_id: string }
         Returns: boolean
@@ -2438,6 +2491,13 @@ export type Database = {
       sync_order_to_draft_picking: {
         Args: { p_is_return?: boolean; p_order_id: string }
         Returns: string
+      }
+      update_member_role: {
+        Args: {
+          p_rel_id: string
+          p_role: Database["public"]["Enums"]["partner_company_role"]
+        }
+        Returns: boolean
       }
       update_partner_for_company: {
         Args: { p_partner_id: string; p_updates: Json }

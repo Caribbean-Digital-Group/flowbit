@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import type { Database } from '~/types/database.types'
+import type { PendingInvitation } from '~/composables/useMembership'
 
 type TaskViewRow = Database['public']['Views']['v_project_tasks']['Row']
+type PartnerCompanyRole = Database['public']['Enums']['partner_company_role']
 
 // Estado del sidebar
 const isSidebarOpen = ref(true)
@@ -35,8 +37,9 @@ const isMenuItemActive = (item: { to: string; exact?: boolean }) => {
 
 // Auth Store
 const authStore = useAuthStore()
-const { partner, selectedCompanyId: selectedCompanyIdRef } = storeToRefs(authStore)
+const { partner, selectedCompanyId: selectedCompanyIdRef, pendingInvitationCount } = storeToRefs(authStore)
 const { getAssignedTasksForPartner } = useProjectTask()
+const { getMyInvitations, respondInvitation } = useMembership()
 
 const assignedTasksPreview = ref<TaskViewRow[]>([])
 const isTaskNotifOpen = ref(false)
@@ -104,8 +107,77 @@ function openTaskDetailFromNotif(task: TaskViewRow) {
   navigateTo(`/admin/tasks/${task.id}`)
 }
 
+// ============================================================================
+// Invitaciones recibidas (dropdown)
+// ============================================================================
+const invitationsPreview = ref<PendingInvitation[]>([])
+const isInvitationsOpen = ref(false)
+const isLoadingInvitations = ref(false)
+const respondingInvitationId = ref<string | null>(null)
+const invitationsRef = ref<HTMLElement | null>(null)
+
+const invitationRoleLabels: Record<PartnerCompanyRole, string> = {
+  owner: 'Owner',
+  admin: 'Administrador',
+  member: 'Miembro',
+  viewer: 'Lector',
+  guest: 'Invitado'
+}
+
+const invitationsBadgeLabel = computed(() => {
+  const n = pendingInvitationCount.value
+  if (n > 99) return '99+'
+  return String(n)
+})
+
+async function refreshInvitationsPreview() {
+  if (!partner.value) {
+    invitationsPreview.value = []
+    return
+  }
+  isLoadingInvitations.value = true
+  try {
+    invitationsPreview.value = await getMyInvitations()
+    await authStore.fetchPendingInvitationCount()
+  } finally {
+    isLoadingInvitations.value = false
+  }
+}
+
+function toggleInvitationsDropdown() {
+  isInvitationsOpen.value = !isInvitationsOpen.value
+  if (isInvitationsOpen.value) {
+    void refreshInvitationsPreview()
+  }
+}
+
+function closeInvitations() {
+  isInvitationsOpen.value = false
+}
+
+async function respondInvitationFromHeader(relationshipId: string, accept: boolean) {
+  respondingInvitationId.value = relationshipId
+  try {
+    const result = await respondInvitation(relationshipId, accept)
+    if (!result.success) return
+    invitationsPreview.value = invitationsPreview.value.filter(i => i.relationship_id !== relationshipId)
+    await authStore.fetchPendingInvitationCount()
+    if (accept) {
+      await authStore.fetchCompanies()
+    }
+  } finally {
+    respondingInvitationId.value = null
+  }
+}
+
 watch([selectedCompanyIdRef, partner], () => {
   void refreshAssignedTasksPreview()
+}, { immediate: true })
+
+watch(partner, (current) => {
+  if (current) {
+    void authStore.fetchPendingInvitationCount()
+  }
 }, { immediate: true })
 
 const availableCompanies = computed(() =>
@@ -150,6 +222,9 @@ const handleClickOutside = (event: MouseEvent) => {
   }
   if (taskNotifRef.value && !taskNotifRef.value.contains(target)) {
     isTaskNotifOpen.value = false
+  }
+  if (invitationsRef.value && !invitationsRef.value.contains(target)) {
+    isInvitationsOpen.value = false
   }
 }
 
@@ -229,6 +304,13 @@ const menuItems = [
     iconPaths: [
       'M4 6h16M4 12h16M4 18h16',
       'M9 6v12M15 6v12'
+    ]
+  },
+  {
+    title: 'Equipo',
+    to: '/admin/team',
+    iconPaths: [
+      'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-7a4 4 0 11-8 0 4 4 0 018 0zm6 3a3 3 0 11-6 0 3 3 0 016 0z'
     ]
   },
   {
@@ -533,6 +615,131 @@ const handleLogout = async () => {
                       @click="closeTaskNotif"
                     >
                       Ver todas las tareas
+                    </NuxtLink>
+                  </div>
+                </div>
+              </Transition>
+            </div>
+
+            <!-- Invitaciones recibidas -->
+            <div ref="invitationsRef" class="relative">
+              <button
+                type="button"
+                class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-all hover:border-fuchsia-200 hover:bg-fuchsia-50 hover:text-fuchsia-700 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:ring-offset-2"
+                :title="'Invitaciones recibidas'"
+                :aria-expanded="isInvitationsOpen"
+                aria-haspopup="true"
+                aria-label="Invitaciones recibidas"
+                @click.stop="toggleInvitationsDropdown"
+              >
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span
+                  v-if="pendingInvitationCount > 0"
+                  class="absolute -right-0.5 -top-0.5 min-h-[1.125rem] min-w-[1.125rem] rounded-full bg-gradient-to-br from-fuchsia-500 to-violet-600 px-1 text-[10px] font-bold leading-none text-white shadow-sm flex items-center justify-center tabular-nums"
+                >
+                  {{ invitationsBadgeLabel }}
+                </span>
+              </button>
+
+              <Transition
+                enter-active-class="transition duration-200 ease-out"
+                enter-from-class="opacity-0 scale-95 -translate-y-1"
+                enter-to-class="opacity-100 scale-100 translate-y-0"
+                leave-active-class="transition duration-150 ease-in"
+                leave-from-class="opacity-100 scale-100 translate-y-0"
+                leave-to-class="opacity-0 scale-95 -translate-y-1"
+              >
+                <div
+                  v-if="isInvitationsOpen"
+                  class="absolute right-0 mt-2 w-[min(100vw-2rem,22rem)] max-h-[min(70vh,28rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 z-50 flex flex-col"
+                >
+                  <div class="border-b border-slate-100 bg-gradient-to-r from-fuchsia-50/80 to-violet-50/60 px-4 py-3">
+                    <p class="text-sm font-semibold text-slate-800">
+                      Invitaciones recibidas
+                    </p>
+                    <p class="mt-0.5 text-xs text-slate-500">
+                      Empresas que te invitaron a unirte.
+                    </p>
+                  </div>
+
+                  <div class="flex-1 overflow-y-auto p-2">
+                    <template v-if="!partner">
+                      <p class="px-3 py-6 text-center text-sm text-slate-500 leading-relaxed">
+                        No hay un partner vinculado a tu cuenta.
+                      </p>
+                    </template>
+                    <template v-else-if="isLoadingInvitations && invitationsPreview.length === 0">
+                      <div class="flex justify-center py-10">
+                        <div class="h-8 w-8 animate-spin rounded-full border-2 border-fuchsia-500 border-t-transparent" />
+                      </div>
+                    </template>
+                    <template v-else-if="invitationsPreview.length === 0">
+                      <p class="px-3 py-8 text-center text-sm text-slate-500">
+                        No tienes invitaciones pendientes.
+                      </p>
+                    </template>
+                    <ul v-else class="space-y-2">
+                      <li
+                        v-for="inv in invitationsPreview"
+                        :key="inv.relationship_id"
+                        class="rounded-lg border border-slate-100 px-3 py-2.5 hover:border-fuchsia-100 hover:bg-fuchsia-50/40 transition-colors"
+                      >
+                        <div class="flex items-start gap-2.5">
+                          <div class="flex-shrink-0 mt-0.5">
+                            <img
+                              v-if="inv.company_logo_url"
+                              :src="inv.company_logo_url"
+                              :alt="inv.company_name"
+                              class="w-9 h-9 rounded-lg object-cover ring-1 ring-slate-200"
+                            />
+                            <div
+                              v-else
+                              class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-fuchsia-600 flex items-center justify-center text-white font-bold text-sm"
+                            >
+                              {{ (inv.company_display_name || inv.company_name).charAt(0).toUpperCase() }}
+                            </div>
+                          </div>
+                          <div class="min-w-0 flex-1">
+                            <p class="text-sm font-semibold text-slate-900 truncate">
+                              {{ inv.company_display_name || inv.company_name }}
+                            </p>
+                            <p class="mt-0.5 text-xs text-slate-500 truncate">
+                              Rol: {{ invitationRoleLabels[inv.role] }}
+                              <span v-if="inv.invited_by_name"> · {{ inv.invited_by_name }}</span>
+                            </p>
+                            <div class="mt-2 flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold text-white bg-gradient-to-r from-indigo-500 to-fuchsia-600 hover:from-indigo-600 hover:to-fuchsia-700 transition-all disabled:opacity-60"
+                                :disabled="respondingInvitationId === inv.relationship_id"
+                                @click="respondInvitationFromHeader(inv.relationship_id, true)"
+                              >
+                                Aceptar
+                              </button>
+                              <button
+                                type="button"
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-60"
+                                :disabled="respondingInvitationId === inv.relationship_id"
+                                @click="respondInvitationFromHeader(inv.relationship_id, false)"
+                              >
+                                Rechazar
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div class="border-t border-slate-100 px-3 py-2 bg-slate-50/80">
+                    <NuxtLink
+                      to="/admin/invitations"
+                      class="block text-center text-xs font-semibold text-fuchsia-700 hover:text-fuchsia-900 py-1.5 rounded-lg hover:bg-white"
+                      @click="closeInvitations"
+                    >
+                      Ver todas las invitaciones
                     </NuxtLink>
                   </div>
                 </div>
