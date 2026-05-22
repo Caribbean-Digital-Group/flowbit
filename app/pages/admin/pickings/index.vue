@@ -36,8 +36,8 @@ const columns: Column[] = [
     }
   },
   { key: 'warehouse_name', label: 'Almacén', type: 'text' },
-  { key: 'line_count', label: 'Líneas', type: 'number' },
-  { key: 'total_quantity', label: 'Cantidad total', type: 'number' }
+  { key: 'line_count', label: 'Líneas', type: 'text', align: 'right' },
+  { key: 'total_quantity', label: 'Cantidad total', type: 'text', align: 'right' }
 ]
 
 const authStore = useAuthStore()
@@ -79,7 +79,12 @@ const loadData = async () => {
     ])
     rows.value = pickings.map(mapRow)
     syncOptions.value = orders
-      .filter((order) => order.order_state === 'posted' && order.is_delivered === true)
+      .filter(
+        (order): order is typeof order & { id: string } =>
+          order.id != null &&
+          order.order_state === 'posted' &&
+          order.is_delivered === true
+      )
       .map((order) => ({
         value: order.id,
         label: `${order.name ?? 'Orden'} - ${order.partner_name ?? 'Sin partner'}`
@@ -131,7 +136,7 @@ const handleSync = async () => {
         <div class="lg:col-span-3">
           <FormSelect
             v-model="orderToSync"
-            label="Generar picking desde orden entregada"
+            label="Generar picking desde orden"
             :options="syncOptions"
             placeholder="Selecciona una orden"
           />
