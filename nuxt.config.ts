@@ -7,6 +7,7 @@ export default defineNuxtConfig({
   future: {
     compatibilityVersion: 4,
   },
+  modules: ['@pinia/nuxt'],
   runtimeConfig: {
     public: {
       supabaseUrl: process.env.SUPABASE_URL,

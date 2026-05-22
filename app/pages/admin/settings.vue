@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { createEmptyCompanyForm, type CompanyFormData } from '~/components/Company/Form.vue'
-import type { CompanyUpdate } from '~/types/database.types'
+import type { TablesUpdate } from '~/types/database.types'
 
 definePageMeta({
   layout: 'admin'
@@ -79,7 +79,7 @@ const handleSave = async () => {
   errorMessage.value = ''
   successMessage.value = ''
 
-  const updates: CompanyUpdate = {
+  const updates: TablesUpdate<'company'> = {
     name: formData.value.name,
     display_name: formData.value.display_name || null,
     legal_name: formData.value.legal_name || null,

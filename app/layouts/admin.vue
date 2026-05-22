@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
+import type { Database } from '~/types/database.types'
+import type { PendingInvitation } from '~/composables/useMembership'
+
+type TaskViewRow = Database['public']['Views']['v_project_tasks']['Row']
+type PartnerCompanyRole = Database['public']['Enums']['partner_company_role']
+
 // Estado del sidebar
 const isSidebarOpen = ref(true)
 const isSidebarCollapsed = ref(false)
@@ -28,34 +35,177 @@ const isMenuItemActive = (item: { to: string; exact?: boolean }) => {
   return route.path === item.to || route.path.startsWith(item.to + '/')
 }
 
-// Company Selector
-interface Company {
-  id: string
-  name: string
-  logo?: string
+// Auth Store
+const authStore = useAuthStore()
+const { partner, selectedCompanyId: selectedCompanyIdRef, pendingInvitationCount } = storeToRefs(authStore)
+const { getAssignedTasksForPartner } = useProjectTask()
+const { getMyInvitations, respondInvitation } = useMembership()
+
+const assignedTasksPreview = ref<TaskViewRow[]>([])
+const isTaskNotifOpen = ref(false)
+const isLoadingAssignedTasks = ref(false)
+const taskNotifRef = ref<HTMLElement | null>(null)
+
+const taskStatusLabels: Record<string, string> = {
+  pending: 'Inicio',
+  in_progress: 'En proceso',
+  completed: 'Terminada',
+  cancelled: 'Cancelada'
 }
 
-const availableCompanies = ref<Company[]>([
-  { id: '1', name: 'Acme Corporation', logo: undefined },
-  { id: '2', name: 'TechStart Inc.', logo: undefined },
-  { id: '3', name: 'Global Services', logo: undefined },
-])
-
-const selectedCompanyId = ref<string>(availableCompanies.value[0]?.id || '')
-const isCompanySelectorOpen = ref(false)
-
-const selectedCompany = computed(() => 
-  availableCompanies.value.find(c => c.id === selectedCompanyId.value)
+const openAssignedTaskCount = computed(() =>
+  assignedTasksPreview.value.filter((t) => {
+    const st = t.status ?? 'pending'
+    return st !== 'completed' && st !== 'cancelled'
+  }).length
 )
 
+const notificationBadgeLabel = computed(() => {
+  const n = openAssignedTaskCount.value
+  if (n > 99) return '99+'
+  return String(n)
+})
+
+async function refreshAssignedTasksPreview() {
+  const companyId = selectedCompanyIdRef.value
+  const partnerId = partner.value?.id
+  if (!companyId || !partnerId) {
+    assignedTasksPreview.value = []
+    return
+  }
+  isLoadingAssignedTasks.value = true
+  try {
+    assignedTasksPreview.value = await getAssignedTasksForPartner(partnerId, companyId)
+  } finally {
+    isLoadingAssignedTasks.value = false
+  }
+}
+
+function toggleTaskNotif() {
+  isTaskNotifOpen.value = !isTaskNotifOpen.value
+  if (isTaskNotifOpen.value) {
+    void refreshAssignedTasksPreview()
+  }
+}
+
+function closeTaskNotif() {
+  isTaskNotifOpen.value = false
+}
+
+function formatTaskDueShort(d: string | null): string {
+  if (!d) return ''
+  try {
+    return new Intl.DateTimeFormat('es-MX', { month: 'short', day: 'numeric' }).format(new Date(d))
+  } catch {
+    return d
+  }
+}
+
+function openTaskDetailFromNotif(task: TaskViewRow) {
+  if (!task.id) return
+  closeTaskNotif()
+  navigateTo(`/admin/tasks/${task.id}`)
+}
+
+// ============================================================================
+// Invitaciones recibidas (dropdown)
+// ============================================================================
+const invitationsPreview = ref<PendingInvitation[]>([])
+const isInvitationsOpen = ref(false)
+const isLoadingInvitations = ref(false)
+const respondingInvitationId = ref<string | null>(null)
+const invitationsRef = ref<HTMLElement | null>(null)
+
+const invitationRoleLabels: Record<PartnerCompanyRole, string> = {
+  owner: 'Owner',
+  admin: 'Administrador',
+  member: 'Miembro',
+  viewer: 'Lector',
+  guest: 'Invitado'
+}
+
+const invitationsBadgeLabel = computed(() => {
+  const n = pendingInvitationCount.value
+  if (n > 99) return '99+'
+  return String(n)
+})
+
+async function refreshInvitationsPreview() {
+  if (!partner.value) {
+    invitationsPreview.value = []
+    return
+  }
+  isLoadingInvitations.value = true
+  try {
+    invitationsPreview.value = await getMyInvitations()
+    await authStore.fetchPendingInvitationCount()
+  } finally {
+    isLoadingInvitations.value = false
+  }
+}
+
+function toggleInvitationsDropdown() {
+  isInvitationsOpen.value = !isInvitationsOpen.value
+  if (isInvitationsOpen.value) {
+    void refreshInvitationsPreview()
+  }
+}
+
+function closeInvitations() {
+  isInvitationsOpen.value = false
+}
+
+async function respondInvitationFromHeader(relationshipId: string, accept: boolean) {
+  respondingInvitationId.value = relationshipId
+  try {
+    const result = await respondInvitation(relationshipId, accept)
+    if (!result.success) return
+    invitationsPreview.value = invitationsPreview.value.filter(i => i.relationship_id !== relationshipId)
+    await authStore.fetchPendingInvitationCount()
+    if (accept) {
+      await authStore.fetchCompanies()
+    }
+  } finally {
+    respondingInvitationId.value = null
+  }
+}
+
+watch([selectedCompanyIdRef, partner], () => {
+  void refreshAssignedTasksPreview()
+}, { immediate: true })
+
+watch(partner, (current) => {
+  if (current) {
+    void authStore.fetchPendingInvitationCount()
+  }
+}, { immediate: true })
+
+const availableCompanies = computed(() =>
+  authStore.companies.map(c => c.company)
+)
+
+const selectedCompanyId = computed(() => authStore.selectedCompanyId ?? '')
+const isCompanySelectorOpen = ref(false)
+
+const selectedCompany = computed(() => authStore.selectedCompany)
+
 const selectCompany = (companyId: string) => {
-  selectedCompanyId.value = companyId
+  authStore.selectCompany(companyId)
   isCompanySelectorOpen.value = false
 }
 
 const toggleCompanySelector = () => {
   isCompanySelectorOpen.value = !isCompanySelectorOpen.value
 }
+
+onMounted(async () => {
+  if (!authStore.isAuthenticated) {
+    await authStore.loadSession()
+  }
+  if (!authStore.isAuthenticated) {
+    await navigateTo('/')
+  }
+})
 
 // Cerrar selector al hacer click fuera
 const companySelectorRef = ref<HTMLElement | null>(null)
@@ -66,8 +216,15 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 const handleClickOutside = (event: MouseEvent) => {
-  if (companySelectorRef.value && !companySelectorRef.value.contains(event.target as Node)) {
+  const target = event.target as Node
+  if (companySelectorRef.value && !companySelectorRef.value.contains(target)) {
     isCompanySelectorOpen.value = false
+  }
+  if (taskNotifRef.value && !taskNotifRef.value.contains(target)) {
+    isTaskNotifOpen.value = false
+  }
+  if (invitationsRef.value && !invitationsRef.value.contains(target)) {
+    isInvitationsOpen.value = false
   }
 }
 
@@ -82,7 +239,7 @@ const menuItems = [
     ]
   },
   {
-    title: 'Partners',
+    title: 'Contactos',
     to: '/admin/partners',
     iconPaths: [
       'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'
@@ -110,6 +267,53 @@ const menuItems = [
     ]
   },
   {
+    title: 'Proyectos',
+    to: '/admin/projects',
+    iconPaths: [
+      'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z',
+      'M12 11v6m-3-3h6'
+    ]
+  },
+  {
+    title: 'Tareas',
+    to: '/admin/tasks',
+    iconPaths: [
+      'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2',
+      'M9 14l2 2 4-4'
+    ]
+  },
+  {
+    title: 'Almacenes',
+    to: '/admin/warehouses',
+    iconPaths: [
+      'M3 7l9-4 9 4-9 4-9-4z',
+      'M3 7v10l9 4 9-4V7'
+    ]
+  },
+  {
+    title: 'Movimientos',
+    to: '/admin/pickings',
+    iconPaths: [
+      'M8 7h12m0 0l-4-4m4 4l-4 4',
+      'M16 17H4m0 0l4-4m-4 4l4 4'
+    ]
+  },
+  {
+    title: 'Líneas de picking',
+    to: '/admin/picking-lines',
+    iconPaths: [
+      'M4 6h16M4 12h16M4 18h16',
+      'M9 6v12M15 6v12'
+    ]
+  },
+  {
+    title: 'Equipo',
+    to: '/admin/team',
+    iconPaths: [
+      'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-7a4 4 0 11-8 0 4 4 0 018 0zm6 3a3 3 0 11-6 0 3 3 0 016 0z'
+    ]
+  },
+  {
     title: 'Configuración',
     to: '/admin/settings',
     iconPaths: [
@@ -124,9 +328,11 @@ const handleProfile = () => {
   navigateTo('/admin/profile')
 }
 
-const handleLogout = () => {
-  console.log('Cerrando sesión...')
-  // Aquí puedes agregar la lógica de logout con Supabase
+const { signOut } = useSupabaseAuth()
+
+const handleLogout = async () => {
+  await signOut()
+  await navigateTo('/')
 }
 </script>
 
@@ -309,8 +515,237 @@ const handleLogout = () => {
             </div>
           </div>
 
-          <!-- Right: Selected Company + Avatar -->
+          <!-- Right: Notificaciones (tareas) + empresa + Avatar -->
           <div class="flex items-center gap-3">
+            <!-- Tareas asignadas al partner del usuario -->
+            <div ref="taskNotifRef" class="relative">
+              <button
+                type="button"
+                class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                :title="'Tareas asignadas a ti'"
+                :aria-expanded="isTaskNotifOpen"
+                aria-haspopup="true"
+                aria-label="Notificaciones y tareas asignadas"
+                @click.stop="toggleTaskNotif"
+              >
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <span
+                  v-if="openAssignedTaskCount > 0"
+                  class="absolute -right-0.5 -top-0.5 min-h-[1.125rem] min-w-[1.125rem] rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-600 px-1 text-[10px] font-bold leading-none text-white shadow-sm flex items-center justify-center tabular-nums"
+                >
+                  {{ notificationBadgeLabel }}
+                </span>
+              </button>
+
+              <Transition
+                enter-active-class="transition duration-200 ease-out"
+                enter-from-class="opacity-0 scale-95 -translate-y-1"
+                enter-to-class="opacity-100 scale-100 translate-y-0"
+                leave-active-class="transition duration-150 ease-in"
+                leave-from-class="opacity-100 scale-100 translate-y-0"
+                leave-to-class="opacity-0 scale-95 -translate-y-1"
+              >
+                <div
+                  v-if="isTaskNotifOpen"
+                  class="absolute right-0 mt-2 w-[min(100vw-2rem,22rem)] max-h-[min(70vh,26rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 z-50 flex flex-col"
+                >
+                  <div class="border-b border-slate-100 bg-gradient-to-r from-indigo-50/80 to-violet-50/60 px-4 py-3">
+                    <p class="text-sm font-semibold text-slate-800">
+                      Tus tareas en esta empresa
+                    </p>
+                    <p class="mt-0.5 text-xs text-slate-500">
+                      Responsable asignado vinculado a tu usuario (partner).
+                    </p>
+                  </div>
+
+                  <div class="flex-1 overflow-y-auto p-2">
+                    <template v-if="!partner">
+                      <p class="px-3 py-6 text-center text-sm text-slate-500 leading-relaxed">
+                        No hay un partner vinculado a tu cuenta. Asignaciones no disponibles hasta vincular tu usuario.
+                      </p>
+                    </template>
+                    <template v-else-if="isLoadingAssignedTasks">
+                      <div class="flex justify-center py-10">
+                        <div class="h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+                      </div>
+                    </template>
+                    <template v-else-if="assignedTasksPreview.length === 0">
+                      <p class="px-3 py-8 text-center text-sm text-slate-500">
+                        No tienes tareas asignadas en esta empresa.
+                      </p>
+                    </template>
+                    <ul v-else class="space-y-1">
+                      <li v-for="task in assignedTasksPreview" :key="task.id ?? ''">
+                        <button
+                          type="button"
+                          class="w-full rounded-lg border border-transparent px-3 py-2.5 text-left transition hover:border-indigo-100 hover:bg-indigo-50/60"
+                          @click="openTaskDetailFromNotif(task)"
+                        >
+                          <p class="text-sm font-medium text-slate-900 line-clamp-2">
+                            {{ task.name }}
+                          </p>
+                          <p class="mt-0.5 text-xs text-slate-500 truncate">
+                            {{ task.project_code ? `${task.project_code} · ` : '' }}{{ task.project_name ?? 'Proyecto' }}
+                          </p>
+                          <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                            <span class="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-600">
+                              {{ taskStatusLabels[task.status ?? 'pending'] ?? task.status }}
+                            </span>
+                            <span
+                              v-if="task.is_overdue && task.status !== 'completed' && task.status !== 'cancelled'"
+                              class="rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700"
+                            >
+                              Atrasada
+                            </span>
+                            <span v-if="task.due_date" class="text-[10px] text-slate-400">
+                              Vence {{ formatTaskDueShort(task.due_date) }}
+                            </span>
+                          </div>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div class="border-t border-slate-100 px-3 py-2 bg-slate-50/80">
+                    <NuxtLink
+                      to="/admin/tasks"
+                      class="block text-center text-xs font-semibold text-indigo-700 hover:text-indigo-900 py-1.5 rounded-lg hover:bg-white"
+                      @click="closeTaskNotif"
+                    >
+                      Ver todas las tareas
+                    </NuxtLink>
+                  </div>
+                </div>
+              </Transition>
+            </div>
+
+            <!-- Invitaciones recibidas -->
+            <div ref="invitationsRef" class="relative">
+              <button
+                type="button"
+                class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-all hover:border-fuchsia-200 hover:bg-fuchsia-50 hover:text-fuchsia-700 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:ring-offset-2"
+                :title="'Invitaciones recibidas'"
+                :aria-expanded="isInvitationsOpen"
+                aria-haspopup="true"
+                aria-label="Invitaciones recibidas"
+                @click.stop="toggleInvitationsDropdown"
+              >
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span
+                  v-if="pendingInvitationCount > 0"
+                  class="absolute -right-0.5 -top-0.5 min-h-[1.125rem] min-w-[1.125rem] rounded-full bg-gradient-to-br from-fuchsia-500 to-violet-600 px-1 text-[10px] font-bold leading-none text-white shadow-sm flex items-center justify-center tabular-nums"
+                >
+                  {{ invitationsBadgeLabel }}
+                </span>
+              </button>
+
+              <Transition
+                enter-active-class="transition duration-200 ease-out"
+                enter-from-class="opacity-0 scale-95 -translate-y-1"
+                enter-to-class="opacity-100 scale-100 translate-y-0"
+                leave-active-class="transition duration-150 ease-in"
+                leave-from-class="opacity-100 scale-100 translate-y-0"
+                leave-to-class="opacity-0 scale-95 -translate-y-1"
+              >
+                <div
+                  v-if="isInvitationsOpen"
+                  class="absolute right-0 mt-2 w-[min(100vw-2rem,22rem)] max-h-[min(70vh,28rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 z-50 flex flex-col"
+                >
+                  <div class="border-b border-slate-100 bg-gradient-to-r from-fuchsia-50/80 to-violet-50/60 px-4 py-3">
+                    <p class="text-sm font-semibold text-slate-800">
+                      Invitaciones recibidas
+                    </p>
+                    <p class="mt-0.5 text-xs text-slate-500">
+                      Empresas que te invitaron a unirte.
+                    </p>
+                  </div>
+
+                  <div class="flex-1 overflow-y-auto p-2">
+                    <template v-if="!partner">
+                      <p class="px-3 py-6 text-center text-sm text-slate-500 leading-relaxed">
+                        No hay un partner vinculado a tu cuenta.
+                      </p>
+                    </template>
+                    <template v-else-if="isLoadingInvitations && invitationsPreview.length === 0">
+                      <div class="flex justify-center py-10">
+                        <div class="h-8 w-8 animate-spin rounded-full border-2 border-fuchsia-500 border-t-transparent" />
+                      </div>
+                    </template>
+                    <template v-else-if="invitationsPreview.length === 0">
+                      <p class="px-3 py-8 text-center text-sm text-slate-500">
+                        No tienes invitaciones pendientes.
+                      </p>
+                    </template>
+                    <ul v-else class="space-y-2">
+                      <li
+                        v-for="inv in invitationsPreview"
+                        :key="inv.relationship_id"
+                        class="rounded-lg border border-slate-100 px-3 py-2.5 hover:border-fuchsia-100 hover:bg-fuchsia-50/40 transition-colors"
+                      >
+                        <div class="flex items-start gap-2.5">
+                          <div class="flex-shrink-0 mt-0.5">
+                            <img
+                              v-if="inv.company_logo_url"
+                              :src="inv.company_logo_url"
+                              :alt="inv.company_name"
+                              class="w-9 h-9 rounded-lg object-cover ring-1 ring-slate-200"
+                            />
+                            <div
+                              v-else
+                              class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-fuchsia-600 flex items-center justify-center text-white font-bold text-sm"
+                            >
+                              {{ (inv.company_display_name || inv.company_name).charAt(0).toUpperCase() }}
+                            </div>
+                          </div>
+                          <div class="min-w-0 flex-1">
+                            <p class="text-sm font-semibold text-slate-900 truncate">
+                              {{ inv.company_display_name || inv.company_name }}
+                            </p>
+                            <p class="mt-0.5 text-xs text-slate-500 truncate">
+                              Rol: {{ invitationRoleLabels[inv.role] }}
+                              <span v-if="inv.invited_by_name"> · {{ inv.invited_by_name }}</span>
+                            </p>
+                            <div class="mt-2 flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold text-white bg-gradient-to-r from-indigo-500 to-fuchsia-600 hover:from-indigo-600 hover:to-fuchsia-700 transition-all disabled:opacity-60"
+                                :disabled="respondingInvitationId === inv.relationship_id"
+                                @click="respondInvitationFromHeader(inv.relationship_id, true)"
+                              >
+                                Aceptar
+                              </button>
+                              <button
+                                type="button"
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-60"
+                                :disabled="respondingInvitationId === inv.relationship_id"
+                                @click="respondInvitationFromHeader(inv.relationship_id, false)"
+                              >
+                                Rechazar
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div class="border-t border-slate-100 px-3 py-2 bg-slate-50/80">
+                    <NuxtLink
+                      to="/admin/invitations"
+                      class="block text-center text-xs font-semibold text-fuchsia-700 hover:text-fuchsia-900 py-1.5 rounded-lg hover:bg-white"
+                      @click="closeInvitations"
+                    >
+                      Ver todas las invitaciones
+                    </NuxtLink>
+                  </div>
+                </div>
+              </Transition>
+            </div>
+
             <!-- Company Selector -->
             <div ref="companySelectorRef" class="relative">
               <button
@@ -432,8 +867,8 @@ const handleLogout = () => {
 
             <!-- Avatar Dropdown -->
             <Avatar
-              name="Juan Pérez"
-              email="juan@ejemplo.com"
+              :name="authStore.partnerDisplayName"
+              :email="authStore.partnerEmail"
               size="md"
               @profile="handleProfile"
               @logout="handleLogout"

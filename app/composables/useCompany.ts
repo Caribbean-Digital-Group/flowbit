@@ -1,4 +1,7 @@
-import type { Company, CompanyUpdate } from '~/types/database.types'
+import type { Tables, TablesUpdate } from '~/types/database.types'
+
+type Company = Tables<'company'>
+type CompanyUpdate = TablesUpdate<'company'>
 
 export const useCompany = () => {
   const supabase = useSupabase()

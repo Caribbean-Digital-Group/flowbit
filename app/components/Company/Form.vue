@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { CompanySize } from '~/types/database.types'
+import type { Enums } from '~/types/database.types'
 
 export interface CompanyFormData {
   name: string
@@ -20,7 +20,7 @@ export interface CompanyFormData {
   fiscal_regime: string
   legal_representative: string
   industry: string
-  company_size: CompanySize
+  company_size: Enums<'company_size'>
   founded_date: string
   description: string
   lang: string
@@ -237,7 +237,7 @@ const tzOptions = [
               placeholder="#6366f1"
               :readonly="readonly"
               size="md"
-              maxlength="7"
+              :maxlength="7"
             />
           </div>
         </div>
@@ -334,7 +334,7 @@ const tzOptions = [
           placeholder="MX"
           :readonly="readonly"
           size="md"
-          maxlength="2"
+          :maxlength="2"
         />
       </div>
 

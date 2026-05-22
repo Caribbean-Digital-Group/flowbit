@@ -1,95 +1,533 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
+import type { StatItem } from '~/components/StatGrid.vue'
+import type { Database, Tables } from '~/types/database.types'
+
 definePageMeta({
   layout: 'admin'
 })
 
-import type { StatItem } from '~/components/StatGrid.vue'
+type OrderRow = Database['public']['Views']['v_orders']['Row']
+type OrderLineRow = Database['public']['Views']['v_order_lines']['Row']
+type PartnerRow = Tables<'partner'>
+type ProductRow = Tables<'product'>
 
-// Estadísticas de ejemplo
-const stats: StatItem[] = [
-  { label: 'Partners', value: '2,345', change: '+12%', trend: 'up' },
-  { label: 'Productos', value: '1,234', change: '+23%', trend: 'up' },
-  { label: 'Compras', value: '456', change: '+8%', trend: 'down' },
-  { label: 'Ventas', value: '891', change: '-3%', trend: 'up' },
-]
+interface CurrencyMetrics {
+  currency: string
+  saleDraft: number
+  salePosted: number
+  purchaseDraft: number
+  purchasePosted: number
+  saleDraftCount: number
+  salePostedCount: number
+  purchaseDraftCount: number
+  purchasePostedCount: number
+}
+
+interface ActivityItem {
+  id: string
+  typeLabel: string
+  title: string
+  detail: string
+  dateIso: string | null
+  href: string
+}
+
+type ProjectViewRow = Database['public']['Views']['v_projects']['Row']
+
+const authStore = useAuthStore()
+const { selectedCompanyId } = storeToRefs(authStore)
+
+const { getPartnersByCompany } = usePartner()
+const { getProductsByCompany } = useProduct()
+const { getOrdersByCompany } = useOrder()
+const { getOrderLinesByCompany } = useOrderLine()
+const { getProjectsByCompany } = useProject()
+
+const isLoading = ref(false)
+const partners = ref<PartnerRow[]>([])
+const products = ref<ProductRow[]>([])
+const orders = ref<OrderRow[]>([])
+const orderLines = ref<OrderLineRow[]>([])
+const projects = ref<ProjectViewRow[]>([])
+
+const publicProjects = computed(() =>
+  projects.value.filter(
+    (p) => Boolean((p as ProjectViewRow & { is_public?: boolean | null }).is_public)
+  )
+)
+
+const openPublicProjectView = (projectId: string | null) => {
+  if (!projectId) return
+  if (typeof window === 'undefined') return
+  window.open(`${window.location.origin}/public/projects/${projectId}`, '_blank', 'noopener,noreferrer')
+}
+
+const normalizeCurrency = (value: string | null | undefined): string =>
+  value?.trim().toUpperCase() || 'MXN'
+
+const formatCurrency = (amount: number, currency: string): string =>
+  new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount)
+
+const formatDateTime = (iso: string | null): string => {
+  if (!iso) return 'Fecha no disponible'
+  return new Intl.DateTimeFormat('es-MX', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  }).format(new Date(iso))
+}
+
+const activePartnersCount = computed(() =>
+  partners.value.filter((partner) => partner.active !== false).length
+)
+
+const activeProductsCount = computed(() => {
+  let count = 0
+  for (const product of products.value) {
+    if (product.status === 'active') count += 1
+  }
+  return count
+})
+
+const draftOrdersCount = computed(() =>
+  orders.value.filter((order) => order.order_state === 'draft').length
+)
+
+const postedOrdersCount = computed(() =>
+  orders.value.filter((order) => order.order_state === 'posted').length
+)
+
+const activeCurrencies = computed(() => {
+  const currencies = new Set<string>()
+
+  for (const order of orders.value) {
+    currencies.add(normalizeCurrency(order.currency))
+  }
+
+  return Array.from(currencies).sort()
+})
+
+const stats = computed<StatItem[]>(() => [
+  {
+    label: 'Partners activos',
+    value: activePartnersCount.value
+  },
+  {
+    label: 'Productos activos',
+    value: activeProductsCount.value
+  },
+  {
+    label: 'Órdenes borrador',
+    value: draftOrdersCount.value
+  },
+  {
+    label: 'Órdenes confirmadas',
+    value: postedOrdersCount.value
+  }
+])
+
+const metricsByCurrency = computed<CurrencyMetrics[]>(() => {
+  const summary = new Map<string, CurrencyMetrics>()
+
+  const ensureCurrencyBucket = (currency: string): CurrencyMetrics => {
+    const current = summary.get(currency)
+    if (current) return current
+
+    const initial: CurrencyMetrics = {
+      currency,
+      saleDraft: 0,
+      salePosted: 0,
+      purchaseDraft: 0,
+      purchasePosted: 0,
+      saleDraftCount: 0,
+      salePostedCount: 0,
+      purchaseDraftCount: 0,
+      purchasePostedCount: 0
+    }
+    summary.set(currency, initial)
+    return initial
+  }
+
+  for (const order of orders.value) {
+    if (!order.order_type || !order.order_state) continue
+    if (order.order_state !== 'draft' && order.order_state !== 'posted') continue
+
+    const amount = order.amount_total ?? 0
+    const bucket = ensureCurrencyBucket(normalizeCurrency(order.currency))
+
+    if (order.order_type === 'sale' && order.order_state === 'draft') {
+      bucket.saleDraft += amount
+      bucket.saleDraftCount += 1
+      continue
+    }
+
+    if (order.order_type === 'sale' && order.order_state === 'posted') {
+      bucket.salePosted += amount
+      bucket.salePostedCount += 1
+      continue
+    }
+
+    if (order.order_type === 'purchase' && order.order_state === 'draft') {
+      bucket.purchaseDraft += amount
+      bucket.purchaseDraftCount += 1
+      continue
+    }
+
+    if (order.order_type === 'purchase' && order.order_state === 'posted') {
+      bucket.purchasePosted += amount
+      bucket.purchasePostedCount += 1
+    }
+  }
+
+  return Array.from(summary.values()).sort((a, b) => a.currency.localeCompare(b.currency))
+})
+
+const recentActivity = computed<ActivityItem[]>(() => {
+  const events: ActivityItem[] = []
+
+  for (const order of orders.value.slice(0, 8)) {
+    events.push({
+      id: `order-${order.id}`,
+      typeLabel: order.order_type === 'sale' ? 'Venta' : 'Compra',
+      title: order.name || 'Orden sin nombre',
+      detail: `${order.order_state === 'posted' ? 'Confirmada' : order.order_state === 'draft' ? 'Borrador' : 'Cancelada'} • ${normalizeCurrency(order.currency)} ${formatCurrency(order.amount_total ?? 0, normalizeCurrency(order.currency))}`,
+      dateIso: order.order_date ?? order.created_at,
+      href: order.id ? `/admin/orders/${order.id}` : '/admin/orders'
+    })
+  }
+
+  for (const line of orderLines.value.slice(0, 5)) {
+    events.push({
+      id: `order-line-${line.id}`,
+      typeLabel: 'Línea',
+      title: line.description?.trim() || line.product_name?.trim() || 'Línea de orden',
+      detail: `${line.order_name || 'Orden'} • ${formatCurrency(line.total ?? 0, normalizeCurrency(line.currency))}`,
+      dateIso: line.created_at,
+      href: line.order_id ? `/admin/orders/${line.order_id}` : '/admin/order-lines'
+    })
+  }
+
+  for (const partner of partners.value.slice(0, 5)) {
+    events.push({
+      id: `partner-${partner.id}`,
+      typeLabel: 'Partner',
+      title: partner.display_name?.trim() || partner.name,
+      detail: partner.active === false ? 'Inactivo' : 'Activo',
+      dateIso: partner.created_at,
+      href: `/admin/partners/${partner.id}`
+    })
+  }
+
+  for (const product of products.value.slice(0, 5)) {
+    events.push({
+      id: `product-${product.id}`,
+      typeLabel: 'Producto',
+      title: product.display_name?.trim() || product.name,
+      detail: product.status === 'active' ? 'Activo' : 'No activo',
+      dateIso: product.created_at,
+      href: `/admin/products/${product.id}`
+    })
+  }
+
+  return events
+    .filter((event) => Boolean(event.dateIso))
+    .sort((a, b) => {
+      const aTime = a.dateIso ? new Date(a.dateIso).getTime() : 0
+      const bTime = b.dateIso ? new Date(b.dateIso).getTime() : 0
+      return bTime - aTime
+    })
+    .slice(0, 10)
+})
+
+const loadDashboard = async () => {
+  const companyId = selectedCompanyId.value
+  if (!companyId) {
+    partners.value = []
+    products.value = []
+    orders.value = []
+    orderLines.value = []
+    projects.value = []
+    return
+  }
+
+  isLoading.value = true
+  try {
+    const [partnerList, productList, orderList, lineList, projectList] = await Promise.all([
+      getPartnersByCompany(companyId),
+      getProductsByCompany(companyId),
+      getOrdersByCompany(companyId),
+      getOrderLinesByCompany(companyId),
+      getProjectsByCompany(companyId)
+    ])
+
+    partners.value = partnerList
+    products.value = productList
+    orders.value = orderList
+    orderLines.value = lineList
+    projects.value = projectList
+  } finally {
+    isLoading.value = false
+  }
+}
+
+watch(selectedCompanyId, () => {
+  loadDashboard()
+}, { immediate: true })
 </script>
 
 <template>
   <div class="space-y-6">
-    <!-- Page Header -->
     <div>
       <h1 class="text-2xl font-bold text-slate-900">Dashboard</h1>
       <p class="mt-1 text-sm text-slate-500">
-        Bienvenido al panel de administración de Flowbit
+        Métricas de partners, productos y operaciones de compra/venta de la empresa seleccionada.
       </p>
     </div>
 
-    <!-- Stats Grid -->
-    <StatGrid :stats="stats" :columns="4" />
-
-    <!-- Quick Actions -->
-    <div class="bg-white rounded-2xl p-6 border border-slate-200">
-      <h2 class="text-lg font-semibold text-slate-900 mb-4">Acciones rápidas</h2>
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <NuxtLink
-          to="/admin/partners"
-          class="flex flex-col items-center gap-2 p-4 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 transition-colors group"
-        >
-          <div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          </div>
-          <span class="text-sm font-medium">Nuevo Partner</span>
-        </NuxtLink>
-
-        <NuxtLink
-          to="/admin/products"
-          class="flex flex-col items-center gap-2 p-4 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:text-emerald-600 transition-colors group"
-        >
-          <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
-            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-          </div>
-          <span class="text-sm font-medium">Nuevo Producto</span>
-        </NuxtLink>
-
-        <NuxtLink
-          to="/admin/orders"
-          class="flex flex-col items-center gap-2 p-4 rounded-xl bg-slate-50 hover:bg-amber-50 hover:text-amber-600 transition-colors group"
-        >
-          <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
-            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-            </svg>
-          </div>
-          <span class="text-sm font-medium">Nueva Compra</span>
-        </NuxtLink>
-
-        <NuxtLink
-          to="/admin/orders"
-          class="flex flex-col items-center gap-2 p-4 rounded-xl bg-slate-50 hover:bg-green-50 hover:text-green-600 transition-colors group"
-        >
-          <div class="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
-            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-            </svg>
-          </div>
-          <span class="text-sm font-medium">Nueva Venta</span>
-        </NuxtLink>
-      </div>
+    <div
+      v-if="!selectedCompanyId"
+      class="rounded-2xl border border-amber-100 bg-amber-50 px-6 py-4 text-amber-900"
+    >
+      <p class="font-semibold">
+        Sin empresa seleccionada
+      </p>
+      <p class="mt-1 text-sm text-amber-800/90">
+        Elige una empresa en el panel superior para visualizar el dashboard con sus métricas.
+      </p>
     </div>
 
-    <!-- Recent Activity Placeholder -->
-    <div class="bg-white rounded-2xl p-6 border border-slate-200">
-      <h2 class="text-lg font-semibold text-slate-900 mb-4">Actividad reciente</h2>
-      <div class="text-center py-8 text-slate-500">
-        <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-        </svg>
-        <p class="text-sm">No hay actividad reciente para mostrar</p>
+    <template v-else>
+      <StatGrid :stats="stats" :columns="4" :loading="isLoading" />
+
+      <div class="rounded-2xl border border-slate-200 bg-white p-6">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-semibold text-slate-900">
+              Resumen financiero por moneda
+            </h2>
+            <p class="mt-1 text-sm text-slate-500">
+              Ingresos y gastos segmentados por estado de orden (borrador y confirmada).
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-medium text-slate-500">Monedas activas:</span>
+            <span
+              v-for="currency in activeCurrencies"
+              :key="currency"
+              class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"
+            >
+              {{ currency }}
+            </span>
+          </div>
+        </div>
+
+        <div v-if="isLoading" class="mt-6 text-sm text-slate-500">
+          Cargando resumen financiero…
+        </div>
+
+        <div
+          v-else-if="metricsByCurrency.length === 0"
+          class="mt-6 rounded-xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500"
+        >
+          No hay órdenes para calcular métricas financieras.
+        </div>
+
+        <div v-else class="mt-6 overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-slate-50">
+              <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <th class="px-4 py-3">Moneda</th>
+                <th class="px-4 py-3">Ingresos borrador</th>
+                <th class="px-4 py-3">Ingresos confirmados</th>
+                <th class="px-4 py-3">Gastos borrador</th>
+                <th class="px-4 py-3">Gastos confirmados</th>
+                <th class="px-4 py-3">Balance confirmado</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+              <tr
+                v-for="currencyMetric in metricsByCurrency"
+                :key="currencyMetric.currency"
+                class="hover:bg-slate-50/60"
+              >
+                <td class="px-4 py-3 font-semibold text-slate-900">
+                  {{ currencyMetric.currency }}
+                </td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-amber-700">
+                    {{ formatCurrency(currencyMetric.saleDraft, currencyMetric.currency) }}
+                  </div>
+                  <div class="text-xs text-slate-500">
+                    {{ currencyMetric.saleDraftCount }} órdenes
+                  </div>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-emerald-700">
+                    {{ formatCurrency(currencyMetric.salePosted, currencyMetric.currency) }}
+                  </div>
+                  <div class="text-xs text-slate-500">
+                    {{ currencyMetric.salePostedCount }} órdenes
+                  </div>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-amber-700">
+                    {{ formatCurrency(currencyMetric.purchaseDraft, currencyMetric.currency) }}
+                  </div>
+                  <div class="text-xs text-slate-500">
+                    {{ currencyMetric.purchaseDraftCount }} órdenes
+                  </div>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-rose-700">
+                    {{ formatCurrency(currencyMetric.purchasePosted, currencyMetric.currency) }}
+                  </div>
+                  <div class="text-xs text-slate-500">
+                    {{ currencyMetric.purchasePostedCount }} órdenes
+                  </div>
+                </td>
+                <td class="px-4 py-3 font-semibold">
+                  <span
+                    :class="currencyMetric.salePosted - currencyMetric.purchasePosted >= 0 ? 'text-emerald-700' : 'text-red-700'"
+                  >
+                    {{ formatCurrency(currencyMetric.salePosted - currencyMetric.purchasePosted, currencyMetric.currency) }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+
+      <div class="rounded-2xl border border-slate-200 bg-white p-6">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-semibold text-slate-900">
+              Proyectos con vista pública
+            </h2>
+            <p class="mt-1 text-sm text-slate-500">
+              Accede rápidamente al diagrama de seguimiento que ven las personas externas mediante el enlace compartido.
+            </p>
+          </div>
+          <NuxtLink
+            to="/admin/projects"
+            class="text-sm font-semibold text-indigo-700 hover:text-indigo-900"
+          >
+            Ver todos los proyectos →
+          </NuxtLink>
+        </div>
+
+        <div v-if="isLoading" class="mt-6 text-sm text-slate-500">
+          Cargando proyectos…
+        </div>
+
+        <div
+          v-else-if="publicProjects.length === 0"
+          class="mt-6 rounded-xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500"
+        >
+          Aún no hay proyectos marcados como públicos. Activa la opción «Permitir vista pública» dentro del proyecto para compartirlo.
+        </div>
+
+        <div v-else class="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div
+            v-for="project in publicProjects"
+            :key="project.id ?? ''"
+            class="group rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-500/10"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0 flex-1">
+                <p class="text-xs font-mono text-slate-400">{{ project.code }}</p>
+                <p class="mt-0.5 text-sm font-semibold text-slate-800 truncate">
+                  {{ project.name }}
+                </p>
+                <p class="mt-1 text-xs text-slate-500">
+                  {{ project.responsible_display_name?.trim() || project.responsible_name?.trim() || 'Sin responsable' }}
+                </p>
+              </div>
+              <span class="rounded-full bg-indigo-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-indigo-700">
+                Público
+              </span>
+            </div>
+            <div class="mt-3">
+              <div class="flex items-center justify-between text-xs text-slate-500">
+                <span>Avance</span>
+                <span class="font-semibold tabular-nums text-slate-700">{{ project.progress ?? 0 }}%</span>
+              </div>
+              <div class="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                <div
+                  class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-600 to-fuchsia-600 transition-all"
+                  :style="{ width: `${Math.min(Math.max(project.progress ?? 0, 0), 100)}%` }"
+                />
+              </div>
+            </div>
+            <div class="mt-4 flex items-center justify-between gap-2">
+              <NuxtLink
+                :to="`/admin/projects/${project.id}`"
+                class="text-xs font-semibold text-indigo-700 hover:text-indigo-900"
+              >
+                Editar proyecto
+              </NuxtLink>
+              <button
+                type="button"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-indigo-500/25 transition-all hover:from-indigo-700 hover:to-violet-700"
+                @click="openPublicProjectView(project.id)"
+              >
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                Vista pública
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 bg-white p-6">
+        <h2 class="text-lg font-semibold text-slate-900">
+          Actividad reciente
+        </h2>
+        <p class="mt-1 text-sm text-slate-500">
+          Últimos movimientos en órdenes, líneas, partners y productos.
+        </p>
+
+        <div v-if="isLoading" class="mt-6 text-sm text-slate-500">
+          Cargando actividad reciente…
+        </div>
+
+        <div
+          v-else-if="recentActivity.length === 0"
+          class="mt-6 rounded-xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500"
+        >
+          No hay actividad reciente para mostrar.
+        </div>
+
+        <div v-else class="mt-6 space-y-3">
+          <NuxtLink
+            v-for="item in recentActivity"
+            :key="item.id"
+            :to="item.href"
+            class="flex items-start justify-between gap-4 rounded-xl border border-slate-100 px-4 py-3 transition-colors hover:bg-slate-50"
+          >
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700">
+                  {{ item.typeLabel }}
+                </span>
+                <p class="text-sm font-semibold text-slate-900">{{ item.title }}</p>
+              </div>
+              <p class="mt-1 text-sm text-slate-600">{{ item.detail }}</p>
+            </div>
+            <span class="text-xs font-medium text-slate-500">
+              {{ formatDateTime(item.dateIso) }}
+            </span>
+          </NuxtLink>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
