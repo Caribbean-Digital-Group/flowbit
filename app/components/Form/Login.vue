@@ -69,7 +69,7 @@
       <p class="text-base text-slate-500">
         ¿No tienes una cuenta?
         <span class="text-indigo-600 hover:text-indigo-700 font-medium cursor-pointer transition-colors">
-          Regístrate gratis
+          Ingresa tu correo y contraseña para crear tu cuenta gratis.
         </span>
       </p>
     </div>
