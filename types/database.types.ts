@@ -402,6 +402,356 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_activity: {
+        Row: {
+          active: boolean
+          company_id: string
+          created_at: string
+          created_by: string | null
+          done_at: string | null
+          id: string
+          lead_id: string
+          notes: string | null
+          responsible_partner_id: string | null
+          scheduled_at: string | null
+          status: Database["public"]["Enums"]["crm_activity_status"]
+          title: string
+          type: Database["public"]["Enums"]["crm_activity_type"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          done_at?: string | null
+          id?: string
+          lead_id: string
+          notes?: string | null
+          responsible_partner_id?: string | null
+          scheduled_at?: string | null
+          status?: Database["public"]["Enums"]["crm_activity_status"]
+          title: string
+          type?: Database["public"]["Enums"]["crm_activity_type"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          done_at?: string | null
+          id?: string
+          lead_id?: string
+          notes?: string | null
+          responsible_partner_id?: string | null
+          scheduled_at?: string | null
+          status?: Database["public"]["Enums"]["crm_activity_status"]
+          title?: string
+          type?: Database["public"]["Enums"]["crm_activity_type"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_activity_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activity_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_lead"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activity_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "v_crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activity_responsible_partner_id_fkey"
+            columns: ["responsible_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_history: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          event: Database["public"]["Enums"]["crm_history_event"]
+          id: string
+          lead_id: string
+          new_value: string | null
+          notes: string | null
+          old_value: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          event: Database["public"]["Enums"]["crm_history_event"]
+          id?: string
+          lead_id: string
+          new_value?: string | null
+          notes?: string | null
+          old_value?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          event?: Database["public"]["Enums"]["crm_history_event"]
+          id?: string
+          lead_id?: string
+          new_value?: string | null
+          notes?: string | null
+          old_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_lead"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "v_crm_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_lead: {
+        Row: {
+          active: boolean
+          actual_close_date: string | null
+          amount: number | null
+          company_id: string
+          contact_company: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          expected_close_date: string | null
+          id: string
+          lead_number: number | null
+          name: string
+          origin: Database["public"]["Enums"]["crm_lead_origin"]
+          partner_id: string | null
+          priority: Database["public"]["Enums"]["crm_lead_priority"]
+          probability: number
+          responsible_partner_id: string | null
+          stage_id: string
+          tags: string[]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          actual_close_date?: string | null
+          amount?: number | null
+          company_id: string
+          contact_company?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          expected_close_date?: string | null
+          id?: string
+          lead_number?: number | null
+          name: string
+          origin?: Database["public"]["Enums"]["crm_lead_origin"]
+          partner_id?: string | null
+          priority?: Database["public"]["Enums"]["crm_lead_priority"]
+          probability?: number
+          responsible_partner_id?: string | null
+          stage_id: string
+          tags?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          actual_close_date?: string | null
+          amount?: number | null
+          company_id?: string
+          contact_company?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          expected_close_date?: string | null
+          id?: string
+          lead_number?: number | null
+          name?: string
+          origin?: Database["public"]["Enums"]["crm_lead_origin"]
+          partner_id?: string | null
+          priority?: Database["public"]["Enums"]["crm_lead_priority"]
+          probability?: number
+          responsible_partner_id?: string | null
+          stage_id?: string
+          tags?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_lead_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_responsible_partner_id_fkey"
+            columns: ["responsible_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "crm_lead_stage"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_lead_order: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          lead_id: string
+          order_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lead_id: string
+          order_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lead_id?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_lead_order_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_lead"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_order_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "v_crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_order_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "order"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_order_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "v_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_lead_stage: {
+        Row: {
+          active: boolean
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_lost: boolean
+          is_won: boolean
+          name: string
+          sequence: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_lost?: boolean
+          is_won?: boolean
+          name: string
+          sequence?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_lost?: boolean
+          is_won?: boolean
+          name?: string
+          sequence?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_lead_stage_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order: {
         Row: {
           amount_discount: number | null
@@ -1914,6 +2264,177 @@ export type Database = {
           },
         ]
       }
+      v_crm_activities: {
+        Row: {
+          active: boolean | null
+          company_id: string | null
+          computed_status: string | null
+          created_at: string | null
+          created_by: string | null
+          done_at: string | null
+          id: string | null
+          lead_company_id: string | null
+          lead_id: string | null
+          lead_name: string | null
+          lead_number: number | null
+          notes: string | null
+          responsible_display_name: string | null
+          responsible_name: string | null
+          responsible_partner_id: string | null
+          scheduled_at: string | null
+          status: Database["public"]["Enums"]["crm_activity_status"] | null
+          title: string | null
+          type: Database["public"]["Enums"]["crm_activity_type"] | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_activity_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activity_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_lead"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activity_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "v_crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activity_responsible_partner_id_fkey"
+            columns: ["responsible_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_company_id_fkey"
+            columns: ["lead_company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_crm_history: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          created_by_display_name: string | null
+          event: Database["public"]["Enums"]["crm_history_event"] | null
+          id: string | null
+          lead_company_id: string | null
+          lead_id: string | null
+          lead_name: string | null
+          new_value: string | null
+          notes: string | null
+          old_value: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_lead"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "v_crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_company_id_fkey"
+            columns: ["lead_company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_crm_leads: {
+        Row: {
+          active: boolean | null
+          actual_close_date: string | null
+          amount: number | null
+          company_id: string | null
+          contact_company: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          description: string | null
+          expected_close_date: string | null
+          id: string | null
+          is_lost: boolean | null
+          is_won: boolean | null
+          lead_number: number | null
+          name: string | null
+          open_activity_count: number | null
+          order_count: number | null
+          orders_total: number | null
+          origin: Database["public"]["Enums"]["crm_lead_origin"] | null
+          overdue_activity_count: number | null
+          partner_display_name: string | null
+          partner_id: string | null
+          partner_name: string | null
+          priority: Database["public"]["Enums"]["crm_lead_priority"] | null
+          probability: number | null
+          responsible_display_name: string | null
+          responsible_name: string | null
+          responsible_partner_id: string | null
+          stage_id: string | null
+          stage_name: string | null
+          stage_sequence: number | null
+          tags: string[] | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_lead_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_responsible_partner_id_fkey"
+            columns: ["responsible_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "crm_lead_stage"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_low_stock_products: {
         Row: {
           company_id: string | null
@@ -2962,6 +3483,7 @@ export type Database = {
         Args: { p_accept: boolean; p_rel_id: string }
         Returns: boolean
       }
+      seed_crm_stages: { Args: { p_company_id: string }; Returns: undefined }
       seed_product_uoms: { Args: { p_company_id: string }; Returns: undefined }
       set_picking_status: {
         Args: {
@@ -3057,6 +3579,33 @@ export type Database = {
         | "inactive"
         | "suspended"
         | "pending_verification"
+      crm_activity_status: "pending" | "done" | "overdue"
+      crm_activity_type:
+        | "call"
+        | "meeting"
+        | "email"
+        | "demo"
+        | "followup"
+        | "task"
+      crm_history_event:
+        | "created"
+        | "stage_changed"
+        | "responsible_changed"
+        | "order_linked"
+        | "order_unlinked"
+        | "priority_changed"
+        | "closed_won"
+        | "closed_lost"
+        | "reopened"
+      crm_lead_origin:
+        | "web"
+        | "referral"
+        | "campaign"
+        | "call"
+        | "email"
+        | "event"
+        | "other"
+      crm_lead_priority: "low" | "medium" | "high"
       invitation_status:
         | "pending"
         | "accepted"
@@ -3231,6 +3780,36 @@ export const Constants = {
         "suspended",
         "pending_verification",
       ],
+      crm_activity_status: ["pending", "done", "overdue"],
+      crm_activity_type: [
+        "call",
+        "meeting",
+        "email",
+        "demo",
+        "followup",
+        "task",
+      ],
+      crm_history_event: [
+        "created",
+        "stage_changed",
+        "responsible_changed",
+        "order_linked",
+        "order_unlinked",
+        "priority_changed",
+        "closed_won",
+        "closed_lost",
+        "reopened",
+      ],
+      crm_lead_origin: [
+        "web",
+        "referral",
+        "campaign",
+        "call",
+        "email",
+        "event",
+        "other",
+      ],
+      crm_lead_priority: ["low", "medium", "high"],
       invitation_status: [
         "pending",
         "accepted",
