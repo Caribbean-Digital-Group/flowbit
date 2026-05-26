@@ -29,7 +29,7 @@ const { selectedCompanyId } = storeToRefs(authStore)
 const { getLeadViewById, updateLead, archiveLead, getLinkedOrders, linkOrder, unlinkOrder } = useCrmLead()
 const { getStagesByCompany } = useCrmStage()
 const { getActivitiesByLead, createActivity, updateActivity, markAsDone, archiveActivity, getHistoryByLead } = useCrmActivity()
-const { getPartnersByCompany } = usePartner()
+const { getPartnersByCompany, createPartner } = usePartner()
 const { getCompanyMembers } = useMembership()
 const { getOrdersByCompany } = useOrder()
 
@@ -40,6 +40,7 @@ const leadId = computed(() => {
 
 const isEditing = ref(false)
 const isLoading = ref(false)
+const isCreatingPartner = ref(false)
 const errorMessage = ref<string | null>(null)
 
 const leadView = ref<CrmLeadView | null>(null)
@@ -260,6 +261,30 @@ watch([selectedCompanyId, leadId], () => {
 const handleEdit = () => { isEditing.value = true }
 const handleCancel = () => { formData.value = { ...initialForm.value }; isEditing.value = false; errorMessage.value = null }
 const handleBack = () => router.push('/admin/crm/leads')
+
+const handleCreatePartner = async () => {
+  const companyId = selectedCompanyId.value
+  if (!companyId) return
+  const rawName = (formData.value.contact_name || formData.value.contact_company).trim()
+  if (!rawName) { errorMessage.value = 'Ingresa el nombre del contacto o empresa antes de crear el partner.'; return }
+
+  const duplicate = partnerOptions.value.some(p => p.label.toLowerCase() === rawName.toLowerCase())
+  if (duplicate) { errorMessage.value = `Ya existe un partner con el nombre "${rawName}".`; return }
+
+  isCreatingPartner.value = true
+  errorMessage.value = null
+  try {
+    const created = await createPartner(companyId, {
+      name: rawName,
+      display_name: formData.value.contact_name.trim() || null
+    })
+    if (!created) { errorMessage.value = 'No se pudo crear el contacto. Verifica tus permisos.'; return }
+    partnerOptions.value = [...partnerOptions.value, { value: created.id, label: created.display_name?.trim() || created.name }]
+    formData.value.partner_id = created.id
+  } finally {
+    isCreatingPartner.value = false
+  }
+}
 
 const handleSave = async () => {
   errorMessage.value = null
@@ -509,6 +534,8 @@ const handleUnlinkOrder = async (orderId: string) => {
         :stage-options="stageOptions"
         :partner-options="partnerOptions"
         :responsible-options="memberOptions"
+        :is-creating-partner="isCreatingPartner"
+        @create-partner="handleCreatePartner"
       />
 
       <!-- METADATA FOOTER -->

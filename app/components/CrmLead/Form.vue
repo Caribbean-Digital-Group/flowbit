@@ -71,14 +71,18 @@ interface Props {
   stageOptions?: { value: string; label: string }[]
   partnerOptions?: { value: string; label: string }[]
   responsibleOptions?: { value: string; label: string }[]
+  isCreatingPartner?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   readonly: false,
   stageOptions: () => [],
   partnerOptions: () => [],
-  responsibleOptions: () => []
+  responsibleOptions: () => [],
+  isCreatingPartner: false
 })
+
+const emit = defineEmits<{ 'create-partner': [] }>()
 
 const formData = defineModel<CrmLeadFormData>({ required: true })
 
@@ -196,6 +200,23 @@ const formatCurrency = (value: number): string =>
               placeholder="Buscar partner existente…"
               size="md"
             />
+            <div v-if="!formData.partner_id && !readonly" class="mt-2">
+              <button
+                type="button"
+                :disabled="isCreatingPartner"
+                class="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                @click="emit('create-partner')"
+              >
+                <svg v-if="!isCreatingPartner" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <svg v-else class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                {{ isCreatingPartner ? 'Creando contacto…' : 'Crear nuevo contacto' }}
+              </button>
+            </div>
           </div>
 
           <div>
