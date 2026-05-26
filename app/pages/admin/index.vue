@@ -34,6 +34,14 @@ interface ActivityItem {
 }
 
 type ProjectViewRow = Database['public']['Views']['v_projects']['Row']
+type PickingViewRow = Database['public']['Views']['v_pickings']['Row']
+type ApprovalRequestViewRow = Database['public']['Views']['v_approval_requests']['Row']
+type ProjectTaskViewRow = Database['public']['Views']['v_project_tasks']['Row']
+type ApprovalRequestStatus = Database['public']['Enums']['approval_request_status']
+type PickingStatus = Database['public']['Enums']['picking_status']
+type PickingType = Database['public']['Enums']['picking_type']
+type ProjectTaskStatusEnum = Database['public']['Enums']['project_task_status']
+type ProjectStatusEnum = Database['public']['Enums']['project_status']
 
 const authStore = useAuthStore()
 const { selectedCompanyId } = storeToRefs(authStore)
@@ -43,6 +51,9 @@ const { getProductsByCompany } = useProduct()
 const { getOrdersByCompany } = useOrder()
 const { getOrderLinesByCompany } = useOrderLine()
 const { getProjectsByCompany } = useProject()
+const { getPickingsByCompany } = usePicking()
+const { getRequestsByCompany } = useApprovalRequest()
+const { getTasksByCompany } = useProjectTask()
 
 const isLoading = ref(false)
 const partners = ref<PartnerRow[]>([])
@@ -50,6 +61,9 @@ const products = ref<ProductRow[]>([])
 const orders = ref<OrderRow[]>([])
 const orderLines = ref<OrderLineRow[]>([])
 const projects = ref<ProjectViewRow[]>([])
+const pickings = ref<PickingViewRow[]>([])
+const approvalRequests = ref<ApprovalRequestViewRow[]>([])
+const projectTasks = ref<ProjectTaskViewRow[]>([])
 
 const publicProjects = computed(() =>
   projects.value.filter(
@@ -80,6 +94,70 @@ const formatDateTime = (iso: string | null): string => {
     dateStyle: 'medium',
     timeStyle: 'short'
   }).format(new Date(iso))
+}
+
+const approvalRequestStatusLabels: Record<ApprovalRequestStatus, string> = {
+  draft: 'Borrador',
+  published: 'Publicada',
+  approved: 'Aprobada',
+  rejected: 'Rechazada',
+  cancelled: 'Cancelada'
+}
+
+const pickingStatusLabels: Record<PickingStatus, string> = {
+  borrador: 'Borrador',
+  publicado: 'Publicado',
+  confirmado: 'Confirmado',
+  cancelado: 'Cancelado'
+}
+
+const pickingTypeLabels: Record<PickingType, string> = {
+  entrada: 'Entrada',
+  salida: 'Salida'
+}
+
+const projectTaskStatusLabels: Record<ProjectTaskStatusEnum, string> = {
+  pending: 'Pendiente',
+  in_progress: 'En progreso',
+  completed: 'Completada',
+  cancelled: 'Cancelada'
+}
+
+const projectStatusLabels: Record<ProjectStatusEnum, string> = {
+  pending: 'Pendiente',
+  in_progress: 'En progreso',
+  completed: 'Completado',
+  paused: 'Pausado',
+  cancelled: 'Cancelado'
+}
+
+const formatApprovalDetail = (request: ApprovalRequestViewRow): string => {
+  const rawStatus = request.status
+  const statusLabel = rawStatus
+    ? approvalRequestStatusLabels[rawStatus]
+    : 'Sin estado'
+
+  const cur = normalizeCurrency(request.currency ?? null)
+  const amountNum = Number(request.amount ?? 0)
+
+  let amountPart = ''
+  if ((request.amount ?? null) !== null && !Number.isNaN(amountNum)) {
+    amountPart = ` • ${formatCurrency(amountNum, cur)}`
+  }
+
+  const refPart = request.reference?.trim()
+    ? ` • Ref. ${request.reference.trim()}`
+    : ''
+
+  const partnerPart = request.requesting_partner_display?.trim()
+    ? ` • ${request.requesting_partner_display.trim()}`
+    : ''
+
+  const categoryPart = request.category_name?.trim()
+    ? ` • ${request.category_name.trim()}`
+    : ''
+
+  return `${statusLabel}${partnerPart}${categoryPart}${amountPart}${refPart}`
 }
 
 const activePartnersCount = computed(() =>
@@ -234,6 +312,83 @@ const recentActivity = computed<ActivityItem[]>(() => {
     })
   }
 
+  for (const picking of pickings.value.slice(0, 6)) {
+    const pid = picking.id
+    if (!pid) continue
+    const st = picking.status
+    const statusLabel = st ? pickingStatusLabels[st] : 'Sin estado'
+    const typ = picking.type
+    const typeLabel = typ ? pickingTypeLabels[typ] : 'Picking'
+
+    events.push({
+      id: `picking-${pid}`,
+      typeLabel: `Picking · ${typeLabel}`,
+      title: picking.name?.trim() || 'Picking sin nombre',
+      detail: `${statusLabel}${picking.order_name?.trim()
+        ? ` • Orden ${picking.order_name.trim()}`
+        : ''}${typeof picking.line_count === 'number'
+          ? ` • ${picking.line_count} líneas`
+          : ''}`,
+      dateIso: picking.created_at ?? picking.updated_at,
+      href: `/admin/pickings/${pid}`
+    })
+  }
+
+  for (const request of approvalRequests.value.slice(0, 6)) {
+    const rid = request.id
+    if (!rid) continue
+    const titleBase = request.title?.trim()
+    const numLabel = typeof request.request_number === 'number'
+      ? `#${request.request_number}`
+      : ''
+
+    events.push({
+      id: `approval-${rid}`,
+      typeLabel: 'Aprobación',
+      title:
+        titleBase
+        ?? (numLabel ? `Solicitud ${numLabel}` : 'Solicitud de aprobación'),
+      detail: formatApprovalDetail(request),
+      dateIso: request.created_at
+        ?? request.approved_at
+        ?? request.rejected_at,
+      href: `/admin/approval-requests/${rid}`
+    })
+  }
+
+  for (const proj of projects.value.slice(0, 6)) {
+    const projectId = proj.id
+    if (!projectId) continue
+    const statusKey = proj.status
+    const statusLabel = statusKey ? projectStatusLabels[statusKey] : 'Sin estado'
+
+    events.push({
+      id: `project-${projectId}`,
+      typeLabel: 'Proyecto',
+      title: proj.name?.trim() || proj.code || 'Proyecto',
+      detail: `${statusLabel} • Avance ${proj.progress ?? 0}%`,
+      dateIso: proj.created_at ?? proj.updated_at,
+      href: `/admin/projects/${projectId}`
+    })
+  }
+
+  for (const task of projectTasks.value.slice(0, 6)) {
+    const taskId = task.id
+    if (!taskId) continue
+    const st = task.status
+    const statusLabel = st ? projectTaskStatusLabels[st] : 'Sin estado'
+    const projectLabel = task.project_name?.trim() || task.project_code?.trim()
+
+    events.push({
+      id: `task-${taskId}`,
+      typeLabel: 'Tarea',
+      title: task.name?.trim() || task.code || 'Tarea',
+      detail: `${statusLabel}${projectLabel ? ` • ${projectLabel}` : ''}`,
+      dateIso: task.created_at ?? task.updated_at ?? task.completed_at,
+      href: `/admin/tasks/${taskId}`
+    })
+  }
+
   return events
     .filter((event) => Boolean(event.dateIso))
     .sort((a, b) => {
@@ -252,17 +407,35 @@ const loadDashboard = async () => {
     orders.value = []
     orderLines.value = []
     projects.value = []
+    pickings.value = []
+    approvalRequests.value = []
+    projectTasks.value = []
     return
   }
 
   isLoading.value = true
   try {
-    const [partnerList, productList, orderList, lineList, projectList] = await Promise.all([
+    const [
+      partnerList,
+      productList,
+      orderList,
+      lineList,
+      projectList,
+      pickingList,
+      approvalList,
+      recentTaskList
+    ] = await Promise.all([
       getPartnersByCompany(companyId),
       getProductsByCompany(companyId),
       getOrdersByCompany(companyId),
       getOrderLinesByCompany(companyId),
-      getProjectsByCompany(companyId)
+      getProjectsByCompany(companyId),
+      getPickingsByCompany(companyId),
+      getRequestsByCompany(companyId),
+      getTasksByCompany(companyId, {
+        orderByCreatedDesc: true,
+        limit: 12
+      })
     ])
 
     partners.value = partnerList
@@ -270,6 +443,9 @@ const loadDashboard = async () => {
     orders.value = orderList
     orderLines.value = lineList
     projects.value = projectList
+    pickings.value = pickingList
+    approvalRequests.value = approvalList
+    projectTasks.value = recentTaskList
   } finally {
     isLoading.value = false
   }
@@ -492,7 +668,7 @@ watch(selectedCompanyId, () => {
           Actividad reciente
         </h2>
         <p class="mt-1 text-sm text-slate-500">
-          Últimos movimientos en órdenes, líneas, partners y productos.
+          Órdenes, pickings, aprobaciones, proyectos, tareas, partners y productos recientes en la empresa.
         </p>
 
         <div v-if="isLoading" class="mt-6 text-sm text-slate-500">
