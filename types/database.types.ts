@@ -39,6 +39,258 @@ export type Database = {
   }
   public: {
     Tables: {
+      approval_category: {
+        Row: {
+          active: boolean
+          archived: boolean
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          internal_code: string
+          name: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          archived?: boolean
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          internal_code: string
+          name: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          archived?: boolean
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          internal_code?: string
+          name?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_category_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_manager: {
+        Row: {
+          active: boolean
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          partner_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          partner_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          partner_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_manager_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_manager_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_manager_category: {
+        Row: {
+          approval_category_id: string
+          approval_manager_id: string
+        }
+        Insert: {
+          approval_category_id: string
+          approval_manager_id: string
+        }
+        Update: {
+          approval_category_id?: string
+          approval_manager_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_manager_category_approval_category_id_fkey"
+            columns: ["approval_category_id"]
+            isOneToOne: false
+            referencedRelation: "approval_category"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_manager_category_approval_manager_id_fkey"
+            columns: ["approval_manager_id"]
+            isOneToOne: false
+            referencedRelation: "approval_manager"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_request: {
+        Row: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          id: string
+          reference: string | null
+          rejected_at: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          status: Database["public"]["Enums"]["approval_request_status"]
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          amount?: number | null
+          approved_at?: string | null
+          assigned_approval_manager_id?: string | null
+          category_id: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          reference?: string | null
+          rejected_at?: string | null
+          request_date?: string
+          request_number: number
+          requesting_partner_id: string
+          status?: Database["public"]["Enums"]["approval_request_status"]
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          amount?: number | null
+          approved_at?: string | null
+          assigned_approval_manager_id?: string | null
+          category_id?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          reference?: string | null
+          rejected_at?: string | null
+          request_date?: string
+          request_number?: number
+          requesting_partner_id?: string
+          status?: Database["public"]["Enums"]["approval_request_status"]
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_request_assigned_approval_manager_id_fkey"
+            columns: ["assigned_approval_manager_id"]
+            isOneToOne: false
+            referencedRelation: "approval_manager"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "approval_category"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_requesting_partner_id_fkey"
+            columns: ["requesting_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_request_serial: {
+        Row: {
+          company_id: string
+          last_value: number
+        }
+        Insert: {
+          company_id: string
+          last_value?: number
+        }
+        Update: {
+          company_id?: string
+          last_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_request_serial_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company: {
         Row: {
           banner_url: string | null
@@ -1608,6 +1860,60 @@ export type Database = {
       }
     }
     Views: {
+      v_approval_requests: {
+        Row: {
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          assigned_approver_display: string | null
+          category_code: string | null
+          category_id: string | null
+          category_name: string | null
+          company_id: string | null
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          id: string | null
+          reference: string | null
+          rejected_at: string | null
+          request_date: string | null
+          request_number: number | null
+          requesting_partner_display: string | null
+          requesting_partner_id: string | null
+          status: Database["public"]["Enums"]["approval_request_status"] | null
+          title: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_request_assigned_approval_manager_id_fkey"
+            columns: ["assigned_approval_manager_id"]
+            isOneToOne: false
+            referencedRelation: "approval_manager"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "approval_category"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_requesting_partner_id_fkey"
+            columns: ["requesting_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_low_stock_products: {
         Row: {
           company_id: string | null
@@ -2316,6 +2622,181 @@ export type Database = {
         Args: { p_picking_id: string }
         Returns: boolean
       }
+      approval_approve_request: {
+        Args: { p_request_id: string }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          id: string
+          reference: string | null
+          rejected_at: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          status: Database["public"]["Enums"]["approval_request_status"]
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_cancel_request: {
+        Args: { p_request_id: string }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          id: string
+          reference: string | null
+          rejected_at: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          status: Database["public"]["Enums"]["approval_request_status"]
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_publish_request: {
+        Args: { p_request_id: string }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          id: string
+          reference: string | null
+          rejected_at: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          status: Database["public"]["Enums"]["approval_request_status"]
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_reject_request: {
+        Args: { p_request_id: string }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          id: string
+          reference: string | null
+          rejected_at: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          status: Database["public"]["Enums"]["approval_request_status"]
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_reset_request_to_draft: {
+        Args: { p_request_id: string }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          id: string
+          reference: string | null
+          rejected_at: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          status: Database["public"]["Enums"]["approval_request_status"]
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approver_can_act_on_category: {
+        Args: { p_category_id: string; p_manager_id: string }
+        Returns: boolean
+      }
+      assert_category_available_for_request: {
+        Args: { p_category_id: string }
+        Returns: undefined
+      }
+      assert_manager_assignable_for_request: {
+        Args: {
+          p_category_id: string
+          p_company_id: string
+          p_manager_id: string
+        }
+        Returns: undefined
+      }
+      assert_user_is_assigned_approver: {
+        Args: { p_request: Record<string, unknown> }
+        Returns: undefined
+      }
       cancel_order: { Args: { p_order_id: string }; Returns: boolean }
       create_order: {
         Args: {
@@ -2371,6 +2852,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      current_user_partner_row_id: { Args: never; Returns: string }
       get_company_members: {
         Args: {
           p_company_id: string
@@ -2445,6 +2927,10 @@ export type Database = {
           p_role?: Database["public"]["Enums"]["partner_company_role"]
         }
         Returns: string
+      }
+      is_active_approver_for_company: {
+        Args: { p_company_id: string }
+        Returns: boolean
       }
       is_company_admin: { Args: { p_company_id: string }; Returns: boolean }
       is_company_member: { Args: { p_company_id: string }; Returns: boolean }
@@ -2559,6 +3045,12 @@ export type Database = {
       }
     }
     Enums: {
+      approval_request_status:
+        | "draft"
+        | "published"
+        | "approved"
+        | "rejected"
+        | "cancelled"
       company_size: "micro" | "small" | "medium" | "large" | "enterprise"
       company_status:
         | "active"
@@ -2725,6 +3217,13 @@ export const Constants = {
   },
   public: {
     Enums: {
+      approval_request_status: [
+        "draft",
+        "published",
+        "approved",
+        "rejected",
+        "cancelled",
+      ],
       company_size: ["micro", "small", "medium", "large", "enterprise"],
       company_status: [
         "active",

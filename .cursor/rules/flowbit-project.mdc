@@ -46,6 +46,9 @@ supabase/
 | Orders     | `/admin/orders`        | (pendiente)        | Scaffolding  |
 | Projects   | `/admin/projects`       | `useProject`, `useProjectTask`, `useProjectType` | Activo |
 | Tasks      | `/admin/tasks`           | `useProjectTask`                                 | Activo |
+| Aprobaciones (solicitudes) | `/admin/approval-requests` | `useApprovalRequest` (+ categorías y gerentes) | Activo |
+| Aprobaciones (categorías) | `/admin/approval-categories` | `useApprovalCategory` | Activo |
+| Aprobaciones (gerentes) | `/admin/approval-managers` | `useApprovalManager` | Activo |
 | Reports    | `/admin/reports`       | (pendiente)        | Scaffolding  |
 | Settings   | `/admin/settings`      | (pendiente)        | Scaffolding  |
 
