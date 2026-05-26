@@ -344,13 +344,6 @@ const menuItems = [
     ]
   },
   {
-    title: 'Equipo',
-    to: '/admin/team',
-    iconPaths: [
-      'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-7a4 4 0 11-8 0 4 4 0 018 0zm6 3a3 3 0 11-6 0 3 3 0 016 0z'
-    ]
-  },
-  {
     title: 'Solicitudes de aprobación',
     to: '/admin/approval-requests',
     iconPaths: [
@@ -371,6 +364,13 @@ const menuItems = [
     iconPaths: [
       'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V8m8 0V6',
       'M12 12a3 3 0 110-6 3 3 0 010 6z'
+    ]
+  },
+  {
+    title: 'Equipo',
+    to: '/admin/team',
+    iconPaths: [
+      'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-7a4 4 0 11-8 0 4 4 0 018 0zm6 3a3 3 0 11-6 0 3 3 0 016 0z'
     ]
   },
   {
