@@ -8,6 +8,7 @@ definePageMeta({
 })
 
 type PickingRow = Database['public']['Views']['v_pickings']['Row']
+type PickingType = Database['public']['Enums']['picking_type']
 
 const columns: Column[] = [
   { key: 'name', label: 'Picking', type: 'avatar', subtitleKey: 'order_name' },
@@ -42,7 +43,7 @@ const columns: Column[] = [
 
 const authStore = useAuthStore()
 const { selectedCompanyId } = storeToRefs(authStore)
-const { getPickingsByCompany, syncOrderToDraftPicking } = usePicking()
+const { getPickingsByCompany, syncOrderToDraftPicking, createPicking } = usePicking()
 const { getOrdersByCompany } = useOrder()
 
 const rows = ref<Record<string, unknown>[]>([])
@@ -117,6 +118,35 @@ const handleSync = async () => {
   await loadData()
   navigateTo(`/admin/pickings/${pickingId}`)
 }
+
+const handleCreateManual = async (type: PickingType) => {
+  const companyId = selectedCompanyId.value
+  errorMessage.value = null
+
+  if (!companyId) {
+    errorMessage.value = 'Selecciona una empresa para crear movimientos.'
+    return
+  }
+
+  isLoading.value = true
+  try {
+    const picking = await createPicking(companyId, {
+      type,
+      status: 'borrador',
+      warehouse_id: undefined
+    })
+
+    if (!picking) {
+      errorMessage.value = 'No se pudo crear el movimiento manual.'
+      return
+    }
+
+    await loadData()
+    navigateTo(`/admin/pickings/${picking.id}`)
+  } finally {
+    isLoading.value = false
+  }
+}
 </script>
 
 <template>
@@ -130,18 +160,56 @@ const handleSync = async () => {
 
     <div
       v-if="selectedCompanyId"
-      class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+      class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-4"
     >
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
-        <div class="lg:col-span-3">
-          <FormSelect
-            v-model="orderToSync"
-            label="Generar picking desde orden"
-            :options="syncOptions"
-            placeholder="Selecciona una orden"
-          />
+      <!-- Generar desde orden existente -->
+      <div>
+        <p class="text-sm font-medium text-slate-700 mb-3">Desde orden de compra/venta</p>
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
+          <div class="lg:col-span-3">
+            <FormSelect
+              v-model="orderToSync"
+              label="Orden entregada"
+              :options="syncOptions"
+              placeholder="Selecciona una orden"
+            />
+          </div>
+          <BtnApp label="Generar picking" variant="primary" @click="handleSync" />
         </div>
-        <BtnApp label="Generar" variant="primary" @click="handleSync" />
+      </div>
+
+      <!-- Crear movimiento manual -->
+      <div class="border-t border-slate-100 pt-4">
+        <p class="text-sm font-medium text-slate-700 mb-3">Movimiento manual de almacén</p>
+        <div class="flex flex-wrap gap-3">
+          <BtnApp
+            label="Nueva entrada"
+            variant="secondary"
+            @click="handleCreateManual('entrada')"
+          >
+            <template #iconLeft>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 16v-4a9 9 0 0118 0v4M12 3v9m0 0l-3-3m3 3l3-3" />
+              </svg>
+            </template>
+          </BtnApp>
+          <BtnApp
+            label="Nueva salida"
+            variant="secondary"
+            @click="handleCreateManual('salida')"
+          >
+            <template #iconLeft>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 8v4a9 9 0 0018 0V8M12 21v-9m0 0l-3 3m3-3l3 3" />
+              </svg>
+            </template>
+          </BtnApp>
+        </div>
+        <p class="mt-2 text-xs text-slate-400">
+          Crea entradas o salidas de almacén sin necesidad de una orden de compra o venta vinculada.
+        </p>
       </div>
     </div>
 
@@ -162,7 +230,7 @@ const handleSync = async () => {
     <Datatable
       v-else
       title="Movimientos de Inventario"
-      description="Entradas y salidas de almacén vinculadas a órdenes"
+      description="Entradas y salidas de almacén"
       :data="rows"
       :columns="columns"
       :search-keys="['name', 'order_name', 'warehouse_name', 'status', 'type']"

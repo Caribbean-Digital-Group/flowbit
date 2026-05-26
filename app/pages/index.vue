@@ -1,4 +1,64 @@
 <script setup lang="ts">
+const config = useRuntimeConfig()
+const siteUrl = config.public.siteUrl as string
+
+const pageTitle = 'Flowbit — ERP gratuito y open source para gestionar tu empresa'
+const pageDescription = 'Plataforma todo-en-uno para gestionar clientes, proyectos, órdenes, inventario y almacenes. Gratis para siempre, código abierto con licencia MIT. Sin límites, sin fricciones.'
+const ogImage = `${siteUrl}/og-image.png`
+
+useSeoMeta({
+  title: pageTitle,
+  description: pageDescription,
+  keywords: 'ERP gratuito, gestión operativa, open source, proyectos, inventario, órdenes, clientes, almacén, picking, MIT, Nuxt, Supabase',
+  ogTitle: pageTitle,
+  ogDescription: pageDescription,
+  ogImage,
+  ogUrl: siteUrl,
+  twitterTitle: pageTitle,
+  twitterDescription: 'Gestiona clientes, proyectos, órdenes, inventario y almacenes — gratis y sin límites. Open source MIT.',
+  twitterImage: ogImage,
+})
+
+useHead({
+  link: [{ rel: 'canonical', href: siteUrl }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'Organization',
+            '@id': `${siteUrl}/#organization`,
+            name: 'Flowbit',
+            url: siteUrl,
+            sameAs: ['https://github.com/Caribbean-Digital-Group/flowbit'],
+          },
+          {
+            '@type': 'WebSite',
+            '@id': `${siteUrl}/#website`,
+            url: siteUrl,
+            name: 'Flowbit',
+            description: pageDescription,
+            publisher: { '@id': `${siteUrl}/#organization` },
+            inLanguage: 'es-ES',
+          },
+          {
+            '@type': 'SoftwareApplication',
+            name: 'Flowbit',
+            operatingSystem: 'Web',
+            applicationCategory: 'BusinessApplication',
+            offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+            description: pageDescription,
+            url: siteUrl,
+            license: 'https://opensource.org/licenses/MIT',
+          },
+        ],
+      }),
+    },
+  ],
+})
+
 const modules = [
   { name: 'Partners', label: 'Clientes', icon: 'users' },
   { name: 'Products', label: 'Productos', icon: 'box' },

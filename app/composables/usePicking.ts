@@ -64,7 +64,7 @@ export const usePicking = () => {
 
   const createPicking = async (
     companyId: string,
-    payload: Omit<PickingInsert, 'company_id'>
+    payload: Omit<PickingInsert, 'company_id' | 'warehouse_id'> & { warehouse_id?: string }
   ): Promise<Picking | null> => {
     const user = await useSupabaseUser()
     if (!companyId) return null

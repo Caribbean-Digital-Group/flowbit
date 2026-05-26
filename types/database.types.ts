@@ -617,13 +617,13 @@ export type Database = {
           is_return: boolean | null
           name: string | null
           notes: string | null
-          order_id: string
+          order_id: string | null
           published_at: string | null
           status: Database["public"]["Enums"]["picking_status"]
           type: Database["public"]["Enums"]["picking_type"]
           updated_at: string | null
           updated_by: string | null
-          warehouse_id: string
+          warehouse_id: string | null
         }
         Insert: {
           active?: boolean | null
@@ -636,13 +636,13 @@ export type Database = {
           is_return?: boolean | null
           name?: string | null
           notes?: string | null
-          order_id: string
+          order_id?: string | null
           published_at?: string | null
           status?: Database["public"]["Enums"]["picking_status"]
           type: Database["public"]["Enums"]["picking_type"]
           updated_at?: string | null
           updated_by?: string | null
-          warehouse_id: string
+          warehouse_id?: string | null
         }
         Update: {
           active?: boolean | null
@@ -655,13 +655,13 @@ export type Database = {
           is_return?: boolean | null
           name?: string | null
           notes?: string | null
-          order_id?: string
+          order_id?: string | null
           published_at?: string | null
           status?: Database["public"]["Enums"]["picking_status"]
           type?: Database["public"]["Enums"]["picking_type"]
           updated_at?: string | null
           updated_by?: string | null
-          warehouse_id?: string
+          warehouse_id?: string | null
         }
         Relationships: [
           {
