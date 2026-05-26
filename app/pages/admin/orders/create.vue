@@ -12,9 +12,15 @@ definePageMeta({
 })
 
 const router = useRouter()
+const route = useRoute()
 
 const authStore = useAuthStore()
 const { selectedCompanyId } = storeToRefs(authStore)
+
+const preselectedPartnerId = computed(() => {
+  const v = route.query.partner_id
+  return typeof v === 'string' && v ? v : null
+})
 
 const { createDraftOrder, updateOrder, addOrderLineRpc } = useOrder()
 const { getPartnersByCompany } = usePartner()
@@ -76,6 +82,12 @@ const loadPartners = async () => {
     value: p.id ?? '',
     label: [p.code, p.name].filter(Boolean).join(' · ') || 'Proyecto'
   })).filter((p) => p.value)
+
+  const pid = preselectedPartnerId.value
+  if (pid && partnerOptions.value.some(p => p.value === pid)) {
+    formData.value.partner_id = pid
+    formData.value.partner_name = partnerOptions.value.find(p => p.value === pid)?.label ?? ''
+  }
 }
 
 watch(selectedCompanyId, () => {

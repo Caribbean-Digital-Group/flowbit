@@ -92,13 +92,26 @@ const linkedOrders = computed(() =>
   allOrders.value.filter(o => o.id && linkedOrderIds.value.includes(o.id))
 )
 
-const unlinkableOrders = computed(() =>
-  allOrders.value.filter(o => o.id && !linkedOrderIds.value.includes(o.id))
-)
+const unlinkableOrders = computed(() => {
+  const partnerId = leadView.value?.partner_id ?? null
+  return allOrders.value.filter(o => {
+    if (!o.id || linkedOrderIds.value.includes(o.id)) return false
+    if (partnerId && o.partner_id !== partnerId) return false
+    return true
+  })
+})
 
 const ordersTotal = computed(() =>
   linkedOrders.value.reduce((sum, o) => sum + Number(o.amount_total ?? 0), 0)
 )
+
+const orderStateLabel = (state: string | null): string =>
+  ({ draft: 'Borrador', posted: 'Confirmada', cancel: 'Cancelada' }[state ?? ''] ?? '—')
+
+const orderStateClass = (state: string | null): string =>
+  state === 'posted' ? 'bg-indigo-100 text-indigo-700'
+  : state === 'cancel' ? 'bg-red-100 text-red-700'
+  : 'bg-amber-100 text-amber-700'
 
 const activityTypeLabel = (type: string): string =>
   crmActivityTypeOptions.find(o => o.value === type)?.label ?? type
@@ -705,32 +718,61 @@ const handleUnlinkOrder = async (orderId: string) => {
               Total: {{ formatCurrency(ordersTotal) }}
             </p>
           </div>
-          <BtnApp variant="secondary" size="sm" @click="showLinkOrderPanel = !showLinkOrderPanel">
-            <template #iconLeft>
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-              </svg>
-            </template>
-            Vincular orden
-          </BtnApp>
+          <div class="flex items-center gap-2">
+            <BtnApp
+              variant="primary"
+              size="sm"
+              @click="navigateTo({ path: '/admin/orders/create', query: leadView?.partner_id ? { partner_id: leadView.partner_id } : {} })"
+            >
+              <template #iconLeft>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+              </template>
+              Nueva orden
+            </BtnApp>
+            <BtnApp variant="secondary" size="sm" @click="showLinkOrderPanel = !showLinkOrderPanel">
+              <template #iconLeft>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+              </template>
+              Vincular orden
+            </BtnApp>
+          </div>
         </div>
 
         <!-- Link order panel -->
         <div v-if="showLinkOrderPanel" class="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4">
-          <p class="text-xs font-semibold text-indigo-700 mb-3 uppercase tracking-wide">Órdenes disponibles para vincular</p>
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-xs font-semibold text-indigo-700 uppercase tracking-wide">Órdenes disponibles para vincular</p>
+            <span v-if="leadView?.partner_id" class="text-xs text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">
+              Filtradas por partner del lead
+            </span>
+          </div>
           <div v-if="isLoadingOrders" class="text-sm text-slate-500">Cargando órdenes…</div>
           <div v-else-if="unlinkableOrders.length === 0" class="text-sm text-slate-500">
-            No hay órdenes disponibles para vincular.
+            No hay órdenes disponibles{{ leadView?.partner_id ? ' para el partner de este lead' : '' }}.
           </div>
-          <ul v-else class="space-y-2 max-h-64 overflow-y-auto">
+          <ul v-else class="space-y-2 max-h-72 overflow-y-auto">
             <li
               v-for="order in unlinkableOrders"
               :key="order.id ?? ''"
-              class="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2"
+              class="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2.5"
             >
-              <div class="min-w-0">
-                <p class="text-sm font-medium text-slate-900 truncate">{{ order.name ?? `Orden ${order.id?.slice(0, 8)}` }}</p>
-                <p class="text-xs text-slate-500">{{ formatCurrency(Number(order.amount_total ?? 0)) }}</p>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <p class="text-sm font-medium text-slate-900 truncate">{{ order.name ?? `Orden ${order.id?.slice(0, 8)}` }}</p>
+                  <span :class="['text-xs px-1.5 py-0.5 rounded font-medium', orderStateClass(order.order_state)]">
+                    {{ orderStateLabel(order.order_state) }}
+                  </span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">
+                  <span v-if="order.partner_name" class="font-medium text-slate-700">{{ order.partner_name }} · </span>
+                  {{ formatCurrency(Number(order.amount_total ?? 0)) }}
+                  <span v-if="order.line_count"> · {{ order.line_count }} línea{{ order.line_count === 1 ? '' : 's' }}</span>
+                  <span v-if="order.order_date"> · {{ formatDate(order.order_date) }}</span>
+                </p>
               </div>
               <button
                 type="button"
@@ -748,40 +790,81 @@ const handleUnlinkOrder = async (orderId: string) => {
           No hay órdenes vinculadas a este lead.
         </div>
 
-        <ul v-else class="space-y-2">
+        <ul v-else class="space-y-3">
           <li
             v-for="order in linkedOrders"
             :key="order.id ?? ''"
-            class="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 hover:border-indigo-200 transition-colors"
+            class="rounded-xl border border-slate-200 bg-white px-4 py-3 hover:border-indigo-200 transition-colors"
           >
-            <div class="min-w-0 flex-1">
-              <p class="text-sm font-semibold text-slate-900">{{ order.name ?? `Orden ${order.id?.slice(0, 8)}` }}</p>
-              <p class="text-xs text-slate-500 mt-0.5">
-                {{ formatCurrency(Number(order.amount_total ?? 0)) }}
-                <span v-if="order.order_date"> · {{ formatDate(order.order_date) }}</span>
-              </p>
-            </div>
-            <div class="flex items-center gap-2 ml-3 flex-shrink-0">
-              <NuxtLink
-                :to="`/admin/orders/${order.id}`"
-                class="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 transition-colors"
-                title="Ver orden"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </NuxtLink>
-              <button
-                type="button"
-                :disabled="linkingOrderId === order.id"
-                title="Desvincular orden"
-                class="p-1.5 rounded-lg text-red-500 hover:bg-red-50 disabled:opacity-60 transition-colors"
-                @click="handleUnlinkOrder(order.id ?? '')"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                </svg>
-              </button>
+            <div class="flex items-start justify-between gap-3">
+              <!-- Order info -->
+              <div class="min-w-0 flex-1">
+                <!-- Name + state + reference -->
+                <div class="flex items-center gap-2 flex-wrap">
+                  <p class="text-sm font-semibold text-slate-900">{{ order.name ?? `Orden ${order.id?.slice(0, 8)}` }}</p>
+                  <span :class="['text-xs px-1.5 py-0.5 rounded font-medium', orderStateClass(order.order_state)]">
+                    {{ orderStateLabel(order.order_state) }}
+                  </span>
+                  <span v-if="order.reference" class="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                    Ref: {{ order.reference }}
+                  </span>
+                </div>
+
+                <!-- Partner + amount + date -->
+                <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-500">
+                  <span v-if="order.partner_name" class="font-medium text-slate-700">{{ order.partner_name }}</span>
+                  <span class="font-semibold text-slate-800">{{ formatCurrency(Number(order.amount_total ?? 0)) }}</span>
+                  <span v-if="order.line_count">{{ order.line_count }} línea{{ order.line_count === 1 ? '' : 's' }}</span>
+                  <span v-if="order.order_date">{{ formatDate(order.order_date) }}</span>
+                  <span v-if="order.project_name" class="text-violet-600">{{ order.project_name }}</span>
+                </div>
+
+                <!-- Status pills -->
+                <div class="mt-2 flex items-center gap-1.5 flex-wrap">
+                  <span :class="['inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium', order.is_delivered ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500']">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Entregada
+                  </span>
+                  <span :class="['inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium', order.is_invoiced ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500']">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Facturada
+                  </span>
+                  <span :class="['inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium', order.is_paid ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500']">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Pagada
+                  </span>
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <div class="flex items-center gap-1 flex-shrink-0">
+                <NuxtLink
+                  :to="`/admin/orders/${order.id}`"
+                  class="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 transition-colors"
+                  title="Ver orden"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </NuxtLink>
+                <button
+                  type="button"
+                  :disabled="linkingOrderId === order.id"
+                  title="Desvincular orden"
+                  class="p-1.5 rounded-lg text-red-500 hover:bg-red-50 disabled:opacity-60 transition-colors"
+                  @click="handleUnlinkOrder(order.id ?? '')"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </li>
         </ul>
