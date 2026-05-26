@@ -9,6 +9,19 @@ definePageMeta({
 
 type PickingRow = Database['public']['Views']['v_pickings']['Row']
 type PickingType = Database['public']['Enums']['picking_type']
+type PickingStatus = Database['public']['Enums']['picking_status']
+
+const typeLabels: Record<PickingType, string> = {
+  entrada: 'Entrada',
+  salida: 'Salida'
+}
+
+const statusLabels: Record<PickingStatus, string> = {
+  borrador: 'Borrador',
+  publicado: 'Publicado',
+  confirmado: 'Confirmado',
+  cancelado: 'Cancelado'
+}
 
 const columns: Column[] = [
   { key: 'name', label: 'Picking', type: 'avatar', subtitleKey: 'order_name' },
@@ -17,10 +30,7 @@ const columns: Column[] = [
     label: 'Tipo',
     type: 'badge',
     badgeConfig: {
-      labels: {
-        entrada: 'Entrada',
-        salida: 'Salida'
-      }
+      labels: typeLabels
     }
   },
   {
@@ -28,12 +38,7 @@ const columns: Column[] = [
     label: 'Estado',
     type: 'badge',
     badgeConfig: {
-      labels: {
-        borrador: 'Borrador',
-        publicado: 'Publicado',
-        confirmado: 'Confirmado',
-        cancelado: 'Cancelado'
-      }
+      labels: statusLabels
     }
   },
   { key: 'warehouse_name', label: 'Almacén', type: 'text' },
@@ -46,7 +51,9 @@ const { selectedCompanyId } = storeToRefs(authStore)
 const { getPickingsByCompany, syncOrderToDraftPicking, createPicking } = usePicking()
 const { getOrdersByCompany } = useOrder()
 
-const rows = ref<Record<string, unknown>[]>([])
+const pickingsRaw = ref<PickingRow[]>([])
+const selectedTypeFilters = ref<PickingType[]>(['entrada', 'salida'])
+const selectedStatusFilters = ref<PickingStatus[]>(['borrador', 'publicado', 'confirmado'])
 const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
 const orderToSync = ref('')
@@ -63,10 +70,49 @@ const mapRow = (row: PickingRow): Record<string, unknown> => ({
   total_quantity: row.total_quantity ?? 0
 })
 
+const filteredPickings = computed(() =>
+  pickingsRaw.value.filter((row) => {
+    const type = (row.type ?? 'salida') as PickingType
+    const status = (row.status ?? 'borrador') as PickingStatus
+    if (selectedTypeFilters.value.length > 0 && !selectedTypeFilters.value.includes(type)) {
+      return false
+    }
+    if (selectedStatusFilters.value.length > 0 && !selectedStatusFilters.value.includes(status)) {
+      return false
+    }
+    return true
+  })
+)
+
+const filteredRows = computed(() => filteredPickings.value.map(mapRow))
+
+const toggleTypeFilter = (value: PickingType) => {
+  selectedTypeFilters.value = selectedTypeFilters.value.includes(value)
+    ? selectedTypeFilters.value.filter((v) => v !== value)
+    : [...selectedTypeFilters.value, value]
+}
+
+const toggleStatusFilter = (value: PickingStatus) => {
+  selectedStatusFilters.value = selectedStatusFilters.value.includes(value)
+    ? selectedStatusFilters.value.filter((v) => v !== value)
+    : [...selectedStatusFilters.value, value]
+}
+
+const resetFilters = () => {
+  selectedTypeFilters.value = ['entrada', 'salida']
+  selectedStatusFilters.value = ['borrador', 'publicado', 'confirmado']
+}
+
+const filtersLabel = computed(() => {
+  const types = selectedTypeFilters.value.length
+  const statuses = selectedStatusFilters.value.length
+  return `${types} tipo(s) · ${statuses} estado(s)`
+})
+
 const loadData = async () => {
   const companyId = selectedCompanyId.value
   if (!companyId) {
-    rows.value = []
+    pickingsRaw.value = []
     syncOptions.value = []
     return
   }
@@ -78,7 +124,7 @@ const loadData = async () => {
       getPickingsByCompany(companyId),
       getOrdersByCompany(companyId)
     ])
-    rows.value = pickings.map(mapRow)
+    pickingsRaw.value = pickings
     syncOptions.value = orders
       .filter(
         (order): order is typeof order & { id: string } =>
@@ -231,13 +277,82 @@ const handleCreateManual = async (type: PickingType) => {
       v-else
       title="Movimientos de Inventario"
       description="Entradas y salidas de almacén"
-      :data="rows"
+      :data="filteredRows"
       :columns="columns"
       :search-keys="['name', 'order_name', 'warehouse_name', 'status', 'type']"
       :creatable="false"
       :exportable="true"
       export-filename="pickings"
+      empty-title="Sin movimientos"
+      empty-message="No hay pickings que coincidan con los filtros seleccionados."
     >
+      <template #headerActions>
+        <div class="flex w-full items-center justify-center sm:w-auto sm:justify-end">
+          <details class="relative w-full sm:w-auto">
+            <summary
+              class="flex cursor-pointer list-none items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 sm:min-w-56"
+            >
+              <span>Filtros: {{ filtersLabel }}</span>
+              <svg class="ml-2 h-4 w-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+
+            <div class="absolute right-0 z-20 mt-2 w-full rounded-xl border border-slate-200 bg-white p-4 shadow-lg sm:w-72">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Tipo
+                </p>
+                <div class="mt-2 space-y-2">
+                  <label
+                    v-for="(label, key) in typeLabels"
+                    :key="key"
+                    class="flex items-center gap-2 text-sm text-slate-700"
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="selectedTypeFilters.includes(key as PickingType)"
+                      class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      @change="toggleTypeFilter(key as PickingType)"
+                    >
+                    {{ label }}
+                  </label>
+                </div>
+              </div>
+
+              <div class="mt-4 border-t border-slate-100 pt-4">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Estado
+                </p>
+                <div class="mt-2 space-y-2">
+                  <label
+                    v-for="(label, key) in statusLabels"
+                    :key="key"
+                    class="flex items-center gap-2 text-sm text-slate-700"
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="selectedStatusFilters.includes(key as PickingStatus)"
+                      class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      @change="toggleStatusFilter(key as PickingStatus)"
+                    >
+                    {{ label }}
+                  </label>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                class="mt-4 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                @click="resetFilters"
+              >
+                Restablecer filtros
+              </button>
+            </div>
+          </details>
+        </div>
+      </template>
+
       <template #actions="{ row }">
         <BtnApp variant="ghost" size="sm" @click="goDetail(row)">
           <template #iconLeft>
