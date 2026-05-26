@@ -142,7 +142,7 @@ const handleCreateManual = async (type: PickingType) => {
     }
 
     await loadData()
-    navigateTo(`/admin/pickings/${picking.id}`)
+    navigateTo(`/admin/pickings/${picking.id}?edit=1`)
   } finally {
     isLoading.value = false
   }
