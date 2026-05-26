@@ -71,6 +71,9 @@ interface Props {
   categoryOptions: CatOption[]
   managerOptions: ManagerOption[]
   requestNumberDisplay?: string | null
+  /** Fechas de resolución (vista detalle); la creación se muestra en el pie del CardSheet */
+  previewApprovedAt?: string | null
+  previewRejectedAt?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -78,7 +81,9 @@ const props = withDefaults(defineProps<Props>(), {
   readonlyStatus: null,
   categoryOptions: () => [],
   managerOptions: () => [],
-  requestNumberDisplay: null
+  requestNumberDisplay: null,
+  previewApprovedAt: null,
+  previewRejectedAt: null
 })
 
 const formData = defineModel<ApprovalRequestFormData>({ required: true })
@@ -87,103 +92,185 @@ const statusLabel = computed(() => {
   if (!props.readonlyStatus) return null
   return approvalRequestStatusLabels[props.readonlyStatus] ?? props.readonlyStatus
 })
+
+const fmtDateTime = (iso: string | null | undefined): string => {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return '—'
+  return new Intl.DateTimeFormat('es-MX', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  }).format(d)
+}
+
+const sectionClass =
+  'rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-lg shadow-slate-200/40'
+const headingClass =
+  'text-xs font-semibold uppercase tracking-wide text-slate-500 mb-4 border-b border-slate-100 pb-2'
 </script>
 
 <template>
   <div class="space-y-6">
+    <!-- Identificación + estado (principalmente detalle con folio) -->
     <div
-      v-if="requestNumberDisplay"
-      class="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-violet-50 px-4 py-3"
+      v-if="requestNumberDisplay || (readonlyStatus && statusLabel)"
+      class="grid grid-cols-1 gap-4 sm:grid-cols-2"
     >
-      <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600 mb-1">
-        Folio interno
-      </p>
-      <p class="text-xl font-semibold text-slate-900">
-        #{{ requestNumberDisplay }}
-      </p>
+      <div
+        v-if="requestNumberDisplay"
+        class="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-violet-50 px-5 py-4 shadow-sm"
+      >
+        <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+          Folio interno
+        </p>
+        <p class="mt-1 text-2xl font-bold text-slate-900 tabular-nums">
+          #{{ requestNumberDisplay }}
+        </p>
+      </div>
+      <div
+        v-if="readonlyStatus && statusLabel"
+        class="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm"
+      >
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Estado
+        </p>
+        <p class="mt-1 text-lg font-semibold text-slate-800">
+          {{ statusLabel }}
+        </p>
+      </div>
     </div>
 
-    <div
-      v-if="readonlyStatus && statusLabel"
-      class="rounded-xl border border-slate-200 bg-white px-4 py-3"
+    <!-- Resolución (evita repetir fecha de alta; esa va en el pie del CardSheet) -->
+    <section
+      v-if="previewApprovedAt || previewRejectedAt"
+      :class="sectionClass"
     >
-      <p class="text-xs uppercase tracking-wide text-slate-500 mb-1">
-        Estado actual
-      </p>
-      <p class="text-base font-semibold text-slate-800">
-        {{ statusLabel }}
-      </p>
-    </div>
+      <h3 :class="headingClass">
+        Resolución
+      </h3>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 text-sm">
+        <div class="rounded-xl bg-emerald-50/60 px-3 py-2.5 border border-emerald-100/80">
+          <p class="text-[11px] font-medium uppercase tracking-wide text-emerald-700">
+            Fecha de aprobación
+          </p>
+          <p class="mt-0.5 font-medium text-emerald-900">
+            {{ fmtDateTime(previewApprovedAt) }}
+          </p>
+        </div>
+        <div class="rounded-xl bg-rose-50/60 px-3 py-2.5 border border-rose-100/80">
+          <p class="text-[11px] font-medium uppercase tracking-wide text-rose-700">
+            Fecha de rechazo
+          </p>
+          <p class="mt-0.5 font-medium text-rose-900">
+            {{ fmtDateTime(previewRejectedAt) }}
+          </p>
+        </div>
+      </div>
+    </section>
 
-    <FormInput
-      v-model="formData.title"
-      label="Asunto / título"
-      placeholder="Describe brevemente la solicitud"
-      required
-      :readonly="readonly"
-    />
-
-    <FormSelect
-      v-model="formData.category_id"
-      label="Categoría de aprobación"
-      placeholder="Selecciona un tipo"
-      :options="categoryOptions"
-      :disabled="readonly"
-      searchable
-      required
-    />
-
-    <FormInput
-      v-model="formData.request_date"
-      label="Fecha de solicitud"
-      type="date"
-      required
-      :readonly="readonly"
-    />
-
-    <FormTextArea
-      v-model="formData.description"
-      label="Descripción detallada"
-      placeholder="Contexto necesario para el aprobador"
-      :rows="5"
-      :readonly="readonly"
-    />
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <!-- Asunto -->
+    <section :class="sectionClass">
+      <h3 :class="headingClass">
+        Información general
+      </h3>
       <FormInput
-        v-model="formData.amount"
-        label="Importe"
-        type="number"
-        min="0"
-        step="0.01"
-        placeholder="Opcional"
+        v-model="formData.title"
+        label="Asunto / título"
+        placeholder="Describe brevemente la solicitud"
+        required
         :readonly="readonly"
       />
+    </section>
 
+    <!-- Categoría + fecha en fila en desktop -->
+    <section :class="sectionClass">
+      <h3 :class="headingClass">
+        Clasificación y fechas
+      </h3>
+      <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
+        <FormSelect
+          v-model="formData.category_id"
+          label="Categoría de aprobación"
+          placeholder="Selecciona un tipo"
+          :options="categoryOptions"
+          :disabled="readonly"
+          searchable
+          required
+        />
+        <FormInput
+          v-model="formData.request_date"
+          label="Fecha de solicitud"
+          type="date"
+          required
+          :readonly="readonly"
+        />
+      </div>
+    </section>
+
+    <!-- Aprobador -->
+    <section :class="sectionClass">
+      <h3 :class="headingClass">
+        Asignación
+      </h3>
       <FormSelect
-        v-model="formData.currency"
-        label="Moneda"
-        placeholder="Selecciona"
-        :options="approvalRequestCurrencyOptions"
+        v-model="formData.assigned_approval_manager_id"
+        label="Aprobador asignado"
+        placeholder="Opcional en borrador; obligatorio al publicar"
+        :options="managerOptions"
         :disabled="readonly"
-        required
+        searchable
       />
-    </div>
+      <p class="mt-2 text-xs text-slate-500">
+        Solo aparecen gerentes activos autorizados para la categoría elegida.
+      </p>
+    </section>
 
-    <FormInput
-      v-model="formData.reference"
-      label="Referencia"
-      placeholder="Número de contrato, ticket, proyecto…"
-      :readonly="readonly"
-    />
+    <!-- Monto + referencia -->
+    <section :class="sectionClass">
+      <h3 :class="headingClass">
+        Importe y referencia
+      </h3>
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:items-end">
+        <FormInput
+          v-model="formData.amount"
+          label="Importe"
+          type="number"
+          min="0"
+          step="0.01"
+          placeholder="Opcional"
+          :readonly="readonly"
+        />
+        <FormSelect
+          v-model="formData.currency"
+          label="Moneda"
+          placeholder="Selecciona"
+          :options="approvalRequestCurrencyOptions"
+          :disabled="readonly"
+          required
+        />
+      </div>
+      <div class="mt-5">
+        <FormInput
+          v-model="formData.reference"
+          label="Referencia externa"
+          placeholder="Contrato, ticket, proyecto…"
+          :readonly="readonly"
+        />
+      </div>
+    </section>
 
-    <FormSelect
-      v-model="formData.assigned_approval_manager_id"
-      label="Aprobador asignado"
-      placeholder="Puedes dejarlo vacío como borrador y asignarlo antes de publicar"
-      :options="managerOptions"
-      :disabled="readonly"
-      searchable
-    />
+    <!-- Descripción amplia -->
+    <section :class="sectionClass">
+      <h3 :class="headingClass">
+        Descripción del trámite
+      </h3>
+      <FormTextArea
+        v-model="formData.description"
+        label="Detalle para el aprobador"
+        placeholder="Contexto, alcance y documentación relevante para la decisión"
+        :rows="6"
+        :readonly="readonly"
+      />
+    </section>
   </div>
 </template>

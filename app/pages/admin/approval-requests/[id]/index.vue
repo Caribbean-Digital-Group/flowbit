@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
+import type { MenuOption } from '~/components/CardSheet.vue'
 import type { Tables, TablesUpdate } from '~/types/database.types'
 import type { ApprovalRequestStatus } from '~/components/ApprovalRequest/Form.vue'
 import {
@@ -110,6 +111,107 @@ const canEditDraftFields = computed(() => {
   if (!entity.value || entity.value.status !== 'draft') return false
   return isWorkspaceAdmin.value || isRequestOwner.value
 })
+
+const canPublishOrCancelDraft = computed(
+  () => isRequestOwner.value || isWorkspaceAdmin.value
+)
+
+/** Acciones de flujo (órdenes de trabajo), mismo patrón que órdenes: menú del CardSheet */
+const workflowMenuOptions = computed<MenuOption[]>(() => {
+  const e = entity.value
+  if (!e) return []
+
+  if (e.status === 'draft' && canPublishOrCancelDraft.value) {
+    return [
+      {
+        id: 'publish-request',
+        label: 'Publicar solicitud',
+        icon:
+          'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+        action: () => void runTransition(publishRequest),
+        variant: 'success'
+      },
+      {
+        id: 'cancel-draft',
+        label: 'Cancelar solicitud',
+        icon:
+          'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z',
+        action: () => void runTransition(cancelRequest),
+        variant: 'warning'
+      }
+    ]
+  }
+
+  if (e.status === 'published') {
+    const items: MenuOption[] = []
+
+    if (isAssignedApprover.value) {
+      items.push(
+        {
+          id: 'approve-request',
+          label: 'Aprobar solicitud',
+          icon:
+            'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+          action: () => void runTransition(approveRequest),
+          variant: 'success'
+        },
+        {
+          id: 'reject-request',
+          label: 'Rechazar solicitud',
+          icon:
+            'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z',
+          action: () => void runTransition(rejectRequest),
+          variant: 'danger'
+        }
+      )
+    }
+
+    if (isRequestOwner.value || isWorkspaceAdmin.value) {
+      items.push({
+        id: 'cancel-published',
+        label: 'Cancelar solicitud',
+        icon:
+          'M6 18L18 6M6 6l12 12',
+        action: () => void runTransition(cancelRequest),
+        variant: 'warning',
+        divider: items.length > 0
+      })
+    }
+
+    return items
+  }
+
+  if (
+    (e.status === 'rejected' || e.status === 'cancelled')
+    && (isRequestOwner.value || isWorkspaceAdmin.value)
+  ) {
+    return [
+      {
+        id: 'reset-to-draft',
+        label: 'Volver a borrador',
+        icon:
+          'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15',
+        action: () => void runTransition(resetRequestToDraft),
+        variant: 'default'
+      }
+    ]
+  }
+
+  return []
+})
+
+const formatAuditDate = (dateString: string | null | undefined): string => {
+  if (!dateString) return '—'
+  const date = new Date(dateString)
+  if (Number.isNaN(date.getTime())) return '—'
+  return date.toLocaleDateString('es-MX', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
 
 const load = async (): Promise<void> => {
   const cid = selectedCompanyId.value
@@ -316,10 +418,19 @@ const statusBadgeMeta = computed(() => {
         v-else-if="entity"
         :title="form.title || 'Solicitud'"
         :subtitle="`Folio interno #${entity.request_number}`"
+        :show-back-button="true"
+        :show-options-button="workflowMenuOptions.length > 0"
+        :show-edit-button="canEditDraftFields"
+        :show-footer="true"
         :is-editing="isEditing"
         :is-loading="isLoading"
-        :show-edit-button="canEditDraftFields"
-        :show-options-button="false"
+        :created-by="entity.created_by ?? '—'"
+        :created-at="formatAuditDate(entity.created_at)"
+        :updated-by="entity.updated_by ?? '—'"
+        :updated-at="formatAuditDate(entity.updated_at)"
+        :menu-options="workflowMenuOptions"
+        variant="elevated"
+        padding="lg"
         @back="handleBack"
         @edit="handleEdit"
         @save="handleSave"
@@ -340,99 +451,16 @@ const statusBadgeMeta = computed(() => {
           {{ errorMessage }}
         </p>
 
-        <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-slate-600">
-          <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-            <p class="text-xs uppercase text-slate-500">
-              Fecha de creación
-            </p>
-            <p class="font-medium text-slate-800">
-              {{ entity.created_at ? new Date(entity.created_at).toLocaleString('es-MX') : '—' }}
-            </p>
-          </div>
-          <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-            <p class="text-xs uppercase text-slate-500">
-              Resolución
-            </p>
-            <p class="font-medium text-slate-800">
-              <span v-if="entity.approved_at">Aprobada: {{ new Date(entity.approved_at).toLocaleString('es-MX') }}</span>
-              <span v-else-if="entity.rejected_at">Rechazada: {{ new Date(entity.rejected_at).toLocaleString('es-MX') }}</span>
-              <span v-else>—</span>
-            </p>
-          </div>
-        </div>
-
         <ApprovalRequestForm
           v-model="form"
           :readonly="!isEditing"
           :readonly-status="status"
           :request-number-display="String(entity.request_number)"
+          :preview-approved-at="entity.approved_at"
+          :preview-rejected-at="entity.rejected_at"
           :category-options="categoryOptionsRef"
           :manager-options="managerOptions"
         />
-
-        <div
-          v-if="entity.status === 'draft'"
-          class="mt-8 flex flex-wrap gap-3"
-        >
-          <BtnApp
-            variant="primary"
-            :disabled="isLoading"
-            @click="runTransition(publishRequest)"
-          >
-            Publicar solicitud
-          </BtnApp>
-          <BtnApp
-            variant="secondary"
-            :disabled="isLoading"
-            @click="runTransition(cancelRequest)"
-          >
-            Cancelar
-          </BtnApp>
-        </div>
-
-        <div
-          v-else-if="entity.status === 'published'"
-          class="mt-8 flex flex-wrap gap-3"
-        >
-          <BtnApp
-            v-if="isAssignedApprover"
-            variant="primary"
-            :disabled="isLoading"
-            @click="runTransition(approveRequest)"
-          >
-            Aprobar
-          </BtnApp>
-          <BtnApp
-            v-if="isAssignedApprover"
-            variant="danger"
-            :disabled="isLoading"
-            @click="runTransition(rejectRequest)"
-          >
-            Rechazar
-          </BtnApp>
-          <BtnApp
-            v-if="isRequestOwner || isWorkspaceAdmin"
-            variant="secondary"
-            :disabled="isLoading"
-            @click="runTransition(cancelRequest)"
-          >
-            Cancelar solicitud
-          </BtnApp>
-        </div>
-
-        <div
-          v-else-if="entity.status === 'rejected' || entity.status === 'cancelled'"
-          class="mt-8 flex flex-wrap gap-3"
-        >
-          <BtnApp
-            v-if="isRequestOwner || isWorkspaceAdmin"
-            variant="primary"
-            :disabled="isLoading"
-            @click="runTransition(resetRequestToDraft)"
-          >
-            Volver a borrador
-          </BtnApp>
-        </div>
       </CardSheet>
     </template>
   </div>

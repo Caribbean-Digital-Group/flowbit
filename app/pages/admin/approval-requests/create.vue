@@ -158,11 +158,13 @@ const handleSave = async (): Promise<void> => {
     <CardSheet
       v-else
       title="Nueva solicitud"
-      subtitle="Las solicitudes se crean como borrador; publícalas cuando estén completas."
+      subtitle="Las solicitudes se crean como borrador; en el detalle usa el menú de opciones para publicar cuando esté lista."
       :is-editing="true"
       :show-edit-button="false"
       :show-options-button="false"
       :show-footer="false"
+      variant="elevated"
+      padding="lg"
       :is-loading="isSaving"
       @back="handleBack"
       @save="handleSave"
