@@ -23,6 +23,36 @@ export const useApprovalRequest = () => {
     return (data ?? []) as ApprovalRequestView[]
   }
 
+  /**
+   * Solicitudes publicadas cuyo aprobador asignado es el registro de gerente
+   * activo vinculado al partner en la empresa (bandeja del aprobador).
+   */
+  const getPublishedRequestsForMyManager = async (
+    companyId: string,
+    partnerId: string
+  ): Promise<ApprovalRequestView[]> => {
+    if (!companyId || !partnerId) return []
+
+    const { getActiveManagerForPartner } = useApprovalManager()
+    const manager = await getActiveManagerForPartner(companyId, partnerId)
+    if (!manager?.id) return []
+
+    const { data, error } = await supabase
+      .from('v_approval_requests')
+      .select('*')
+      .eq('company_id', companyId)
+      .eq('status', 'published')
+      .eq('assigned_approval_manager_id', manager.id)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching approval requests for manager:', error)
+      return []
+    }
+
+    return (data ?? []) as ApprovalRequestView[]
+  }
+
   const getRequestById = async (
     id: string,
     companyId: string
@@ -207,6 +237,7 @@ export const useApprovalRequest = () => {
 
   return {
     getRequestsByCompany,
+    getPublishedRequestsForMyManager,
     getRequestById,
     getRequestViewById,
     createRequest,
