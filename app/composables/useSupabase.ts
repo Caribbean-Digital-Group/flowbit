@@ -50,6 +50,7 @@ interface LoginCredentials {
 interface AuthResult {
   success: boolean
   error: string | null
+  requiresConfirmation?: boolean
 }
 
 export const useSupabaseAuth = () => {
@@ -98,7 +99,7 @@ export const useSupabaseAuth = () => {
     }
 
     if (data.user && !data.session) {
-      return { success: false, error: 'Se envió un correo de confirmación. Revisa tu bandeja de entrada.' }
+      return { success: true, error: null, requiresConfirmation: true }
     }
 
     if (data.session) {
@@ -126,6 +127,27 @@ export const useSupabaseAuth = () => {
       return { success: false, error: signInError.message }
     }
 
+    return { success: false, error: 'Correo electrónico o contraseña incorrectos.' }
+  }
+
+  const signInOrCreate = async (credentials: LoginCredentials): Promise<AuthResult> => {
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email: credentials.email,
+      password: credentials.password,
+    })
+
+    if (!signInError) {
+      if (signInData.session) {
+        await authStore.setSession(signInData.session)
+      }
+      return { success: true, error: null }
+    }
+
+    if (!isInvalidCredentialsError(signInError)) {
+      console.error('Error signing in:', signInError)
+      return { success: false, error: signInError.message }
+    }
+
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email: credentials.email,
       password: credentials.password,
@@ -133,7 +155,7 @@ export const useSupabaseAuth = () => {
 
     if (signUpError) {
       if (isUserAlreadyRegisteredError(signUpError)) {
-        return { success: false, error: 'La contraseña es incorrecta. Verifica tus credenciales.' }
+        return { success: false, error: 'Correo electrónico o contraseña incorrectos.' }
       }
       console.error('Error signing up:', signUpError)
       return { success: false, error: signUpError.message }
@@ -186,5 +208,5 @@ export const useSupabaseAuth = () => {
     return { success: true, error: null }
   }
 
-  return { signIn, signUp, signInOrSignUp, signOut, requestPasswordReset, updatePassword }
+  return { signIn, signUp, signInOrSignUp, signInOrCreate, signOut, requestPasswordReset, updatePassword }
 }
