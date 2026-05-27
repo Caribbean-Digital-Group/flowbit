@@ -163,5 +163,28 @@ export const useSupabaseAuth = () => {
     return { success: true, error: null }
   }
 
-  return { signIn, signUp, signInOrSignUp, signOut }
+  const requestPasswordReset = async (email: string): Promise<AuthResult> => {
+    const redirectTo = `${window.location.origin}/reset-password`
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+
+    if (error) {
+      console.error('Error requesting password reset:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, error: null }
+  }
+
+  const updatePassword = async (password: string): Promise<AuthResult> => {
+    const { error } = await supabase.auth.updateUser({ password })
+
+    if (error) {
+      console.error('Error updating password:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, error: null }
+  }
+
+  return { signIn, signUp, signInOrSignUp, signOut, requestPasswordReset, updatePassword }
 }

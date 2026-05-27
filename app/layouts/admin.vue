@@ -4,6 +4,8 @@ import type { Database } from '~/types/database.types'
 import type { PendingInvitation } from '~/composables/useMembership'
 
 type TaskViewRow = Database['public']['Views']['v_project_tasks']['Row']
+type ApprovalRequestViewRow = Database['public']['Views']['v_approval_requests']['Row']
+type CrmActivityViewRow = Database['public']['Views']['v_crm_activities']['Row']
 type PartnerCompanyRole = Database['public']['Enums']['partner_company_role']
 
 // Estado del sidebar
@@ -39,9 +41,13 @@ const isMenuItemActive = (item: { to: string; exact?: boolean }) => {
 const authStore = useAuthStore()
 const { partner, selectedCompanyId: selectedCompanyIdRef, pendingInvitationCount } = storeToRefs(authStore)
 const { getAssignedTasksForPartner } = useProjectTask()
+const { getPublishedRequestsForMyManager } = useApprovalRequest()
+const { getActivitiesByCompany } = useCrmActivity()
 const { getMyInvitations, respondInvitation } = useMembership()
 
 const assignedTasksPreview = ref<TaskViewRow[]>([])
+const pendingApprovalsPreview = ref<ApprovalRequestViewRow[]>([])
+const crmActivitiesPreview = ref<CrmActivityViewRow[]>([])
 const isTaskNotifOpen = ref(false)
 const isLoadingAssignedTasks = ref(false)
 const taskNotifRef = ref<HTMLElement | null>(null)
@@ -53,6 +59,15 @@ const taskStatusLabels: Record<string, string> = {
   cancelled: 'Cancelada'
 }
 
+const activityTypeLabels: Record<string, string> = {
+  call: 'Llamada',
+  meeting: 'Reunión',
+  email: 'Correo',
+  demo: 'Demo',
+  followup: 'Seguimiento',
+  task: 'Tarea'
+}
+
 const openAssignedTaskCount = computed(() =>
   assignedTasksPreview.value.filter((t) => {
     const st = t.status ?? 'pending'
@@ -60,22 +75,46 @@ const openAssignedTaskCount = computed(() =>
   }).length
 )
 
+const pendingApprovalCount = computed(() => pendingApprovalsPreview.value.length)
+const openCrmActivityCount = computed(() =>
+  crmActivitiesPreview.value.filter((a) => {
+    const st = (a.status ?? 'pending').toLowerCase()
+    return st !== 'done'
+  }).length
+)
+
+const taskNotifBadgeTotal = computed(
+  () => openAssignedTaskCount.value + pendingApprovalCount.value + openCrmActivityCount.value
+)
+
 const notificationBadgeLabel = computed(() => {
-  const n = openAssignedTaskCount.value
+  const n = taskNotifBadgeTotal.value
   if (n > 99) return '99+'
   return String(n)
 })
 
-async function refreshAssignedTasksPreview() {
+async function refreshTaskNotifPanel() {
   const companyId = selectedCompanyIdRef.value
   const partnerId = partner.value?.id
   if (!companyId || !partnerId) {
     assignedTasksPreview.value = []
+    pendingApprovalsPreview.value = []
+    crmActivitiesPreview.value = []
     return
   }
   isLoadingAssignedTasks.value = true
   try {
-    assignedTasksPreview.value = await getAssignedTasksForPartner(partnerId, companyId)
+    const [tasks, approvals, activities] = await Promise.all([
+      getAssignedTasksForPartner(partnerId, companyId),
+      getPublishedRequestsForMyManager(companyId, partnerId),
+      getActivitiesByCompany(companyId)
+    ])
+    assignedTasksPreview.value = tasks
+    pendingApprovalsPreview.value = approvals
+    crmActivitiesPreview.value = activities.filter((activity) => {
+      if (!activity.responsible_partner_id) return false
+      return activity.responsible_partner_id === partnerId
+    })
   } finally {
     isLoadingAssignedTasks.value = false
   }
@@ -84,7 +123,7 @@ async function refreshAssignedTasksPreview() {
 function toggleTaskNotif() {
   isTaskNotifOpen.value = !isTaskNotifOpen.value
   if (isTaskNotifOpen.value) {
-    void refreshAssignedTasksPreview()
+    void refreshTaskNotifPanel()
   }
 }
 
@@ -105,6 +144,48 @@ function openTaskDetailFromNotif(task: TaskViewRow) {
   if (!task.id) return
   closeTaskNotif()
   navigateTo(`/admin/tasks/${task.id}`)
+}
+
+function formatApprovalAmountShort(
+  amount: number | null,
+  currency: string | null
+): string {
+  if (amount == null) return ''
+  try {
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: currency && currency.length === 3 ? currency : 'MXN',
+      maximumFractionDigits: 2
+    }).format(amount)
+  } catch {
+    return String(amount)
+  }
+}
+
+function openApprovalDetailFromNotif(req: ApprovalRequestViewRow) {
+  if (!req.id) return
+  closeTaskNotif()
+  navigateTo(`/admin/approval-requests/${req.id}`)
+}
+
+function formatActivityScheduleShort(date: string | null): string {
+  if (!date) return ''
+  try {
+    return new Intl.DateTimeFormat('es-MX', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(new Date(date))
+  } catch {
+    return date
+  }
+}
+
+function openCrmActivityFromNotif(activity: CrmActivityViewRow) {
+  if (!activity.lead_id) return
+  closeTaskNotif()
+  navigateTo(`/admin/crm/leads/${activity.lead_id}`)
 }
 
 // ============================================================================
@@ -171,7 +252,7 @@ async function respondInvitationFromHeader(relationshipId: string, accept: boole
 }
 
 watch([selectedCompanyIdRef, partner], () => {
-  void refreshAssignedTasksPreview()
+  void refreshTaskNotifPanel()
 }, { immediate: true })
 
 watch(partner, (current) => {
@@ -239,10 +320,33 @@ const menuItems = [
     ]
   },
   {
+    title: 'Agenda',
+    to: '/admin/agenda',
+    iconPaths: [
+      'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+      'M10 15h4'
+    ]
+  },
+  {
     title: 'Contactos',
     to: '/admin/partners',
     iconPaths: [
       'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'
+    ]
+  },
+  {
+    title: 'Leads / CRM',
+    to: '/admin/crm/leads',
+    iconPaths: [
+      'M17 20h5v-2a4 4 0 00-3-3.87',
+      'M9 20H4v-2a4 4 0 013-3.87m6-1a4 4 0 100-8 4 4 0 000 8zm6 3a3 3 0 11-6 0 3 3 0 016 0zM3 7l2 2 4-4'
+    ]
+  },
+  {
+    title: 'Pipeline CRM',
+    to: '/admin/crm/stages',
+    iconPaths: [
+      'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
     ]
   },
   {
@@ -307,6 +411,29 @@ const menuItems = [
     ]
   },
   {
+    title: 'Solicitudes de aprobación',
+    to: '/admin/approval-requests',
+    iconPaths: [
+      'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+      'M12 8v4l3 3'
+    ]
+  },
+  {
+    title: 'Categorías de aprobación',
+    to: '/admin/approval-categories',
+    iconPaths: [
+      'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z'
+    ]
+  },
+  {
+    title: 'Gerentes / aprobadores',
+    to: '/admin/approval-managers',
+    iconPaths: [
+      'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V8m8 0V6',
+      'M12 12a3 3 0 110-6 3 3 0 010 6z'
+    ]
+  },
+  {
     title: 'Equipo',
     to: '/admin/team',
     iconPaths: [
@@ -357,11 +484,11 @@ const handleLogout = async () => {
     <!-- Sidebar -->
     <aside
       :class="[
-        'fixed top-0 left-0 z-50 h-screen bg-white border-r border-slate-200 transition-all duration-300 ease-in-out',
+        'fixed top-0 left-0 z-50 h-screen flex flex-col bg-white border-r border-slate-200 transition-all duration-300 ease-in-out',
         // Desktop: colapsado o expandido
         isSidebarCollapsed ? 'lg:w-20' : 'lg:w-64',
         // Mobile: mostrar/ocultar
-        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        isMobileMenuOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'
       ]"
     >
       <!-- Logo Header -->
@@ -403,7 +530,7 @@ const handleLogout = async () => {
       </div>
 
       <!-- Navigation Menu -->
-      <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav class="flex-1 min-h-0 px-3 py-4 space-y-1 overflow-y-auto">
         <NuxtLink
           v-for="item in menuItems"
           :key="item.to"
@@ -517,22 +644,22 @@ const handleLogout = async () => {
 
           <!-- Right: Notificaciones (tareas) + empresa + Avatar -->
           <div class="flex items-center gap-3">
-            <!-- Tareas asignadas al partner del usuario -->
+            <!-- Tareas asignadas + solicitudes por aprobar -->
             <div ref="taskNotifRef" class="relative">
               <button
                 type="button"
                 class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                :title="'Tareas asignadas a ti'"
+                :title="'Tareas, seguimientos y solicitudes pendientes'"
                 :aria-expanded="isTaskNotifOpen"
                 aria-haspopup="true"
-                aria-label="Notificaciones y tareas asignadas"
+                aria-label="Tareas asignadas, actividades de seguimiento y solicitudes de aprobación pendientes"
                 @click.stop="toggleTaskNotif"
               >
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 <span
-                  v-if="openAssignedTaskCount > 0"
+                  v-if="taskNotifBadgeTotal > 0"
                   class="absolute -right-0.5 -top-0.5 min-h-[1.125rem] min-w-[1.125rem] rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-600 px-1 text-[10px] font-bold leading-none text-white shadow-sm flex items-center justify-center tabular-nums"
                 >
                   {{ notificationBadgeLabel }}
@@ -549,18 +676,18 @@ const handleLogout = async () => {
               >
                 <div
                   v-if="isTaskNotifOpen"
-                  class="absolute right-0 mt-2 w-[min(100vw-2rem,22rem)] max-h-[min(70vh,26rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 z-50 flex flex-col"
+                  class="fixed top-16 left-2 right-2 sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:mt-2 sm:w-[min(100vw-2rem,22rem)] max-h-[min(70vh,30rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 z-50 flex flex-col"
                 >
                   <div class="border-b border-slate-100 bg-gradient-to-r from-indigo-50/80 to-violet-50/60 px-4 py-3">
                     <p class="text-sm font-semibold text-slate-800">
-                      Tus tareas en esta empresa
+                      Tu bandeja en esta empresa
                     </p>
                     <p class="mt-0.5 text-xs text-slate-500">
-                      Responsable asignado vinculado a tu usuario (partner).
+                      Tareas y actividades de seguimiento donde eres responsable, y solicitudes donde eres aprobador asignado.
                     </p>
                   </div>
 
-                  <div class="flex-1 overflow-y-auto p-2">
+                  <div class="flex-1 overflow-y-auto p-2 space-y-4">
                     <template v-if="!partner">
                       <p class="px-3 py-6 text-center text-sm text-slate-500 leading-relaxed">
                         No hay un partner vinculado a tu cuenta. Asignaciones no disponibles hasta vincular tu usuario.
@@ -571,50 +698,138 @@ const handleLogout = async () => {
                         <div class="h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
                       </div>
                     </template>
-                    <template v-else-if="assignedTasksPreview.length === 0">
-                      <p class="px-3 py-8 text-center text-sm text-slate-500">
-                        No tienes tareas asignadas en esta empresa.
-                      </p>
-                    </template>
-                    <ul v-else class="space-y-1">
-                      <li v-for="task in assignedTasksPreview" :key="task.id ?? ''">
-                        <button
-                          type="button"
-                          class="w-full rounded-lg border border-transparent px-3 py-2.5 text-left transition hover:border-indigo-100 hover:bg-indigo-50/60"
-                          @click="openTaskDetailFromNotif(task)"
-                        >
-                          <p class="text-sm font-medium text-slate-900 line-clamp-2">
-                            {{ task.name }}
+                    <template v-else>
+                      <div>
+                        <p class="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                          Tareas
+                        </p>
+                        <template v-if="assignedTasksPreview.length === 0">
+                          <p class="px-3 py-4 text-center text-sm text-slate-500">
+                            No tienes tareas asignadas en esta empresa.
                           </p>
-                          <p class="mt-0.5 text-xs text-slate-500 truncate">
-                            {{ task.project_code ? `${task.project_code} · ` : '' }}{{ task.project_name ?? 'Proyecto' }}
-                          </p>
-                          <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
-                            <span class="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-600">
-                              {{ taskStatusLabels[task.status ?? 'pending'] ?? task.status }}
-                            </span>
-                            <span
-                              v-if="task.is_overdue && task.status !== 'completed' && task.status !== 'cancelled'"
-                              class="rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700"
+                        </template>
+                        <ul v-else class="space-y-1">
+                          <li v-for="task in assignedTasksPreview" :key="task.id ?? ''">
+                            <button
+                              type="button"
+                              class="w-full rounded-lg border border-transparent px-3 py-2.5 text-left transition hover:border-indigo-100 hover:bg-indigo-50/60"
+                              @click="openTaskDetailFromNotif(task)"
                             >
-                              Atrasada
-                            </span>
-                            <span v-if="task.due_date" class="text-[10px] text-slate-400">
-                              Vence {{ formatTaskDueShort(task.due_date) }}
-                            </span>
-                          </div>
-                        </button>
-                      </li>
-                    </ul>
+                              <p class="text-sm font-medium text-slate-900 line-clamp-2">
+                                {{ task.name }}
+                              </p>
+                              <p class="mt-0.5 text-xs text-slate-500 truncate">
+                                {{ task.project_code ? `${task.project_code} · ` : '' }}{{ task.project_name ?? 'Proyecto' }}
+                              </p>
+                              <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                <span class="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-600">
+                                  {{ taskStatusLabels[task.status ?? 'pending'] ?? task.status }}
+                                </span>
+                                <span
+                                  v-if="task.is_overdue && task.status !== 'completed' && task.status !== 'cancelled'"
+                                  class="rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700"
+                                >
+                                  Atrasada
+                                </span>
+                                <span v-if="task.due_date" class="text-[10px] text-slate-400">
+                                  Vence {{ formatTaskDueShort(task.due_date) }}
+                                </span>
+                              </div>
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+
+                      <div class="border-t border-slate-100 pt-3">
+                        <p class="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                          Seguimientos CRM
+                        </p>
+                        <template v-if="crmActivitiesPreview.length === 0">
+                          <p class="px-3 py-4 text-center text-sm text-slate-500">
+                            No tienes actividades de seguimiento asignadas.
+                          </p>
+                        </template>
+                        <ul v-else class="space-y-1">
+                          <li v-for="activity in crmActivitiesPreview" :key="activity.id ?? ''">
+                            <button
+                              type="button"
+                              class="w-full rounded-lg border border-transparent px-3 py-2.5 text-left transition hover:border-sky-100 hover:bg-sky-50/60"
+                              @click="openCrmActivityFromNotif(activity)"
+                            >
+                              <p class="text-sm font-medium text-slate-900 line-clamp-2">
+                                {{ activity.title ?? 'Actividad CRM' }}
+                              </p>
+                              <p class="mt-0.5 text-xs text-slate-500 truncate">
+                                {{ activity.lead_name ?? 'Lead' }}
+                              </p>
+                              <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                <span class="rounded-md bg-sky-100 px-1.5 py-0.5 text-[10px] font-semibold text-sky-800">
+                                  {{ activityTypeLabels[activity.type ?? 'task'] ?? activity.type ?? 'Actividad' }}
+                                </span>
+                                <span
+                                  v-if="activity.status === 'overdue'"
+                                  class="rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700"
+                                >
+                                  Atrasada
+                                </span>
+                                <span v-if="activity.scheduled_at" class="text-[10px] text-slate-400">
+                                  Programada {{ formatActivityScheduleShort(activity.scheduled_at) }}
+                                </span>
+                              </div>
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+
+                      <div class="border-t border-slate-100 pt-3">
+                        <p class="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                          Por aprobar
+                        </p>
+                        <template v-if="pendingApprovalsPreview.length === 0">
+                          <p class="px-3 py-4 text-center text-sm text-slate-500">
+                            No tienes solicitudes pendientes por aprobar.
+                          </p>
+                        </template>
+                        <ul v-else class="space-y-1">
+                          <li v-for="req in pendingApprovalsPreview" :key="req.id ?? ''">
+                            <button
+                              type="button"
+                              class="w-full rounded-lg border border-transparent px-3 py-2.5 text-left transition hover:border-violet-100 hover:bg-violet-50/60"
+                              @click="openApprovalDetailFromNotif(req)"
+                            >
+                              <p class="text-sm font-medium text-slate-900 line-clamp-2">
+                                {{ req.title ?? 'Sin título' }}
+                              </p>
+                              <p class="mt-0.5 text-xs text-slate-500 truncate">
+                                <span v-if="req.request_number != null">#{{ req.request_number }}</span>
+                                <span v-if="req.category_name"> · {{ req.category_name }}</span>
+                                <span v-if="req.request_number == null && !req.category_name">Solicitud</span>
+                              </p>
+                              <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                <span class="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                                  Publicada
+                                </span>
+                                <span
+                                  v-if="req.amount != null"
+                                  class="text-[10px] text-slate-500"
+                                >
+                                  {{ formatApprovalAmountShort(req.amount, req.currency) }}
+                                </span>
+                              </div>
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+                    </template>
                   </div>
 
                   <div class="border-t border-slate-100 px-3 py-2 bg-slate-50/80">
                     <NuxtLink
-                      to="/admin/tasks"
+                      to="/admin/agenda"
                       class="block text-center text-xs font-semibold text-indigo-700 hover:text-indigo-900 py-1.5 rounded-lg hover:bg-white"
                       @click="closeTaskNotif"
                     >
-                      Ver todas las tareas
+                      Ver agenda
                     </NuxtLink>
                   </div>
                 </div>
@@ -653,7 +868,7 @@ const handleLogout = async () => {
               >
                 <div
                   v-if="isInvitationsOpen"
-                  class="absolute right-0 mt-2 w-[min(100vw-2rem,22rem)] max-h-[min(70vh,28rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 z-50 flex flex-col"
+                  class="fixed top-16 left-2 right-2 sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:mt-2 sm:w-[min(100vw-2rem,22rem)] max-h-[min(70vh,28rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 z-50 flex flex-col"
                 >
                   <div class="border-b border-slate-100 bg-gradient-to-r from-fuchsia-50/80 to-violet-50/60 px-4 py-3">
                     <p class="text-sm font-semibold text-slate-800">
@@ -788,7 +1003,7 @@ const handleLogout = async () => {
               >
                 <div
                   v-if="isCompanySelectorOpen"
-                  class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50"
+                  class="fixed top-16 left-2 right-2 sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:mt-2 sm:w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50"
                 >
                   <!-- Header -->
                   <div class="px-3 py-2 border-b border-slate-100">

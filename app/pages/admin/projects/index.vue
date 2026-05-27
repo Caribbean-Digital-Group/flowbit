@@ -35,11 +35,6 @@ const columns: Column[] = [
     subtitleKey: 'code'
   },
   {
-    key: 'project_type_name',
-    label: 'Tipo',
-    type: 'text'
-  },
-  {
     key: 'responsible_display',
     label: 'Responsable',
     type: 'text'
@@ -260,7 +255,7 @@ const filtersLabel = computed(() => {
         description="Gestión y seguimiento de proyectos de la empresa seleccionada"
         :data="filteredRows"
         :columns="columns"
-        :search-keys="['name', 'code', 'project_type_name', 'responsible_display']"
+        :search-keys="['name', 'code', 'responsible_display']"
         :selectable="true"
         :exportable="true"
         :creatable="true"
