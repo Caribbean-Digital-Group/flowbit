@@ -320,6 +320,14 @@ const menuItems = [
     ]
   },
   {
+    title: 'Agenda',
+    to: '/admin/agenda',
+    iconPaths: [
+      'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+      'M10 15h4'
+    ]
+  },
+  {
     title: 'Contactos',
     to: '/admin/partners',
     iconPaths: [
@@ -815,27 +823,13 @@ const handleLogout = async () => {
                     </template>
                   </div>
 
-                  <div class="border-t border-slate-100 px-3 py-2 bg-slate-50/80 flex flex-col gap-0.5">
+                  <div class="border-t border-slate-100 px-3 py-2 bg-slate-50/80">
                     <NuxtLink
-                      to="/admin/tasks"
+                      to="/admin/agenda"
                       class="block text-center text-xs font-semibold text-indigo-700 hover:text-indigo-900 py-1.5 rounded-lg hover:bg-white"
                       @click="closeTaskNotif"
                     >
-                      Ver todas las tareas
-                    </NuxtLink>
-                    <NuxtLink
-                      to="/admin/approval-requests"
-                      class="block text-center text-xs font-semibold text-violet-700 hover:text-violet-900 py-1.5 rounded-lg hover:bg-white"
-                      @click="closeTaskNotif"
-                    >
-                      Ver todas las solicitudes
-                    </NuxtLink>
-                    <NuxtLink
-                      to="/admin/crm/leads"
-                      class="block text-center text-xs font-semibold text-sky-700 hover:text-sky-900 py-1.5 rounded-lg hover:bg-white"
-                      @click="closeTaskNotif"
-                    >
-                      Ver leads y seguimientos CRM
+                      Ver agenda
                     </NuxtLink>
                   </div>
                 </div>
