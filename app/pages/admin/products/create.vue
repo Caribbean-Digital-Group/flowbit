@@ -8,7 +8,7 @@ definePageMeta({
 })
 
 const router = useRouter()
-const { createProduct } = useProduct()
+const { createProduct, checkSkuExists } = useProduct()
 
 const authStore = useAuthStore()
 const { selectedCompanyId } = storeToRefs(authStore)
@@ -70,6 +70,15 @@ const handleSave = async () => {
   if (!companyId) {
     errorMessage.value = 'Selecciona una empresa antes de crear un producto.'
     return
+  }
+
+  const sku = formData.value.sku.trim()
+  if (sku) {
+    const skuTaken = await checkSkuExists(companyId, sku)
+    if (skuTaken) {
+      errorMessage.value = `El SKU "${sku}" ya está asignado a otro producto en esta empresa.`
+      return
+    }
   }
 
   isSaving.value = true
