@@ -1,2 +1,7 @@
 User-Agent: *
-Disallow:
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /reset-password
+
+Sitemap: https://flowbit.app/sitemap.xml

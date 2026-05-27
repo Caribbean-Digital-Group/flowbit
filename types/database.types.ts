@@ -39,6 +39,258 @@ export type Database = {
   }
   public: {
     Tables: {
+      approval_category: {
+        Row: {
+          active: boolean
+          archived: boolean
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          internal_code: string
+          name: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          archived?: boolean
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          internal_code: string
+          name: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          archived?: boolean
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          internal_code?: string
+          name?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_category_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_manager: {
+        Row: {
+          active: boolean
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          partner_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          partner_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          partner_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_manager_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_manager_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_manager_category: {
+        Row: {
+          approval_category_id: string
+          approval_manager_id: string
+        }
+        Insert: {
+          approval_category_id: string
+          approval_manager_id: string
+        }
+        Update: {
+          approval_category_id?: string
+          approval_manager_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_manager_category_approval_category_id_fkey"
+            columns: ["approval_category_id"]
+            isOneToOne: false
+            referencedRelation: "approval_category"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_manager_category_approval_manager_id_fkey"
+            columns: ["approval_manager_id"]
+            isOneToOne: false
+            referencedRelation: "approval_manager"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_request: {
+        Row: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          id: string
+          reference: string | null
+          rejected_at: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          status: Database["public"]["Enums"]["approval_request_status"]
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          amount?: number | null
+          approved_at?: string | null
+          assigned_approval_manager_id?: string | null
+          category_id: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          reference?: string | null
+          rejected_at?: string | null
+          request_date?: string
+          request_number: number
+          requesting_partner_id: string
+          status?: Database["public"]["Enums"]["approval_request_status"]
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          amount?: number | null
+          approved_at?: string | null
+          assigned_approval_manager_id?: string | null
+          category_id?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          reference?: string | null
+          rejected_at?: string | null
+          request_date?: string
+          request_number?: number
+          requesting_partner_id?: string
+          status?: Database["public"]["Enums"]["approval_request_status"]
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_request_assigned_approval_manager_id_fkey"
+            columns: ["assigned_approval_manager_id"]
+            isOneToOne: false
+            referencedRelation: "approval_manager"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "approval_category"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_requesting_partner_id_fkey"
+            columns: ["requesting_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_request_serial: {
+        Row: {
+          company_id: string
+          last_value: number
+        }
+        Insert: {
+          company_id: string
+          last_value?: number
+        }
+        Update: {
+          company_id?: string
+          last_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_request_serial_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company: {
         Row: {
           banner_url: string | null
@@ -149,6 +401,356 @@ export type Database = {
           zip?: string | null
         }
         Relationships: []
+      }
+      crm_activity: {
+        Row: {
+          active: boolean
+          company_id: string
+          created_at: string
+          created_by: string | null
+          done_at: string | null
+          id: string
+          lead_id: string
+          notes: string | null
+          responsible_partner_id: string | null
+          scheduled_at: string | null
+          status: Database["public"]["Enums"]["crm_activity_status"]
+          title: string
+          type: Database["public"]["Enums"]["crm_activity_type"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          done_at?: string | null
+          id?: string
+          lead_id: string
+          notes?: string | null
+          responsible_partner_id?: string | null
+          scheduled_at?: string | null
+          status?: Database["public"]["Enums"]["crm_activity_status"]
+          title: string
+          type?: Database["public"]["Enums"]["crm_activity_type"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          done_at?: string | null
+          id?: string
+          lead_id?: string
+          notes?: string | null
+          responsible_partner_id?: string | null
+          scheduled_at?: string | null
+          status?: Database["public"]["Enums"]["crm_activity_status"]
+          title?: string
+          type?: Database["public"]["Enums"]["crm_activity_type"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_activity_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activity_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_lead"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activity_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "v_crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activity_responsible_partner_id_fkey"
+            columns: ["responsible_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_history: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          event: Database["public"]["Enums"]["crm_history_event"]
+          id: string
+          lead_id: string
+          new_value: string | null
+          notes: string | null
+          old_value: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          event: Database["public"]["Enums"]["crm_history_event"]
+          id?: string
+          lead_id: string
+          new_value?: string | null
+          notes?: string | null
+          old_value?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          event?: Database["public"]["Enums"]["crm_history_event"]
+          id?: string
+          lead_id?: string
+          new_value?: string | null
+          notes?: string | null
+          old_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_lead"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "v_crm_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_lead: {
+        Row: {
+          active: boolean
+          actual_close_date: string | null
+          amount: number | null
+          company_id: string
+          contact_company: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          expected_close_date: string | null
+          id: string
+          lead_number: number | null
+          name: string
+          origin: Database["public"]["Enums"]["crm_lead_origin"]
+          partner_id: string | null
+          priority: Database["public"]["Enums"]["crm_lead_priority"]
+          probability: number
+          responsible_partner_id: string | null
+          stage_id: string
+          tags: string[]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          actual_close_date?: string | null
+          amount?: number | null
+          company_id: string
+          contact_company?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          expected_close_date?: string | null
+          id?: string
+          lead_number?: number | null
+          name: string
+          origin?: Database["public"]["Enums"]["crm_lead_origin"]
+          partner_id?: string | null
+          priority?: Database["public"]["Enums"]["crm_lead_priority"]
+          probability?: number
+          responsible_partner_id?: string | null
+          stage_id: string
+          tags?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          actual_close_date?: string | null
+          amount?: number | null
+          company_id?: string
+          contact_company?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          expected_close_date?: string | null
+          id?: string
+          lead_number?: number | null
+          name?: string
+          origin?: Database["public"]["Enums"]["crm_lead_origin"]
+          partner_id?: string | null
+          priority?: Database["public"]["Enums"]["crm_lead_priority"]
+          probability?: number
+          responsible_partner_id?: string | null
+          stage_id?: string
+          tags?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_lead_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_responsible_partner_id_fkey"
+            columns: ["responsible_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "crm_lead_stage"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_lead_order: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          lead_id: string
+          order_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lead_id: string
+          order_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lead_id?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_lead_order_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_lead"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_order_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "v_crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_order_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "order"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_order_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "v_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_lead_stage: {
+        Row: {
+          active: boolean
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_lost: boolean
+          is_won: boolean
+          name: string
+          sequence: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_lost?: boolean
+          is_won?: boolean
+          name: string
+          sequence?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_lost?: boolean
+          is_won?: boolean
+          name?: string
+          sequence?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_lead_stage_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order: {
         Row: {
@@ -617,13 +1219,13 @@ export type Database = {
           is_return: boolean | null
           name: string | null
           notes: string | null
-          order_id: string
+          order_id: string | null
           published_at: string | null
           status: Database["public"]["Enums"]["picking_status"]
           type: Database["public"]["Enums"]["picking_type"]
           updated_at: string | null
           updated_by: string | null
-          warehouse_id: string
+          warehouse_id: string | null
         }
         Insert: {
           active?: boolean | null
@@ -636,13 +1238,13 @@ export type Database = {
           is_return?: boolean | null
           name?: string | null
           notes?: string | null
-          order_id: string
+          order_id?: string | null
           published_at?: string | null
           status?: Database["public"]["Enums"]["picking_status"]
           type: Database["public"]["Enums"]["picking_type"]
           updated_at?: string | null
           updated_by?: string | null
-          warehouse_id: string
+          warehouse_id?: string | null
         }
         Update: {
           active?: boolean | null
@@ -655,13 +1257,13 @@ export type Database = {
           is_return?: boolean | null
           name?: string | null
           notes?: string | null
-          order_id?: string
+          order_id?: string | null
           published_at?: string | null
           status?: Database["public"]["Enums"]["picking_status"]
           type?: Database["public"]["Enums"]["picking_type"]
           updated_at?: string | null
           updated_by?: string | null
-          warehouse_id?: string
+          warehouse_id?: string | null
         }
         Relationships: [
           {
@@ -1608,6 +2210,231 @@ export type Database = {
       }
     }
     Views: {
+      v_approval_requests: {
+        Row: {
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          assigned_approver_display: string | null
+          category_code: string | null
+          category_id: string | null
+          category_name: string | null
+          company_id: string | null
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          id: string | null
+          reference: string | null
+          rejected_at: string | null
+          request_date: string | null
+          request_number: number | null
+          requesting_partner_display: string | null
+          requesting_partner_id: string | null
+          status: Database["public"]["Enums"]["approval_request_status"] | null
+          title: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_request_assigned_approval_manager_id_fkey"
+            columns: ["assigned_approval_manager_id"]
+            isOneToOne: false
+            referencedRelation: "approval_manager"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "approval_category"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_requesting_partner_id_fkey"
+            columns: ["requesting_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_crm_activities: {
+        Row: {
+          active: boolean | null
+          company_id: string | null
+          computed_status: string | null
+          created_at: string | null
+          created_by: string | null
+          done_at: string | null
+          id: string | null
+          lead_company_id: string | null
+          lead_id: string | null
+          lead_name: string | null
+          lead_number: number | null
+          notes: string | null
+          responsible_display_name: string | null
+          responsible_name: string | null
+          responsible_partner_id: string | null
+          scheduled_at: string | null
+          status: Database["public"]["Enums"]["crm_activity_status"] | null
+          title: string | null
+          type: Database["public"]["Enums"]["crm_activity_type"] | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_activity_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activity_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_lead"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activity_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "v_crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activity_responsible_partner_id_fkey"
+            columns: ["responsible_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_company_id_fkey"
+            columns: ["lead_company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_crm_history: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          created_by_display_name: string | null
+          event: Database["public"]["Enums"]["crm_history_event"] | null
+          id: string | null
+          lead_company_id: string | null
+          lead_id: string | null
+          lead_name: string | null
+          new_value: string | null
+          notes: string | null
+          old_value: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_lead"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "v_crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_company_id_fkey"
+            columns: ["lead_company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_crm_leads: {
+        Row: {
+          active: boolean | null
+          actual_close_date: string | null
+          amount: number | null
+          company_id: string | null
+          contact_company: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          description: string | null
+          expected_close_date: string | null
+          id: string | null
+          is_lost: boolean | null
+          is_won: boolean | null
+          lead_number: number | null
+          name: string | null
+          open_activity_count: number | null
+          order_count: number | null
+          orders_total: number | null
+          origin: Database["public"]["Enums"]["crm_lead_origin"] | null
+          overdue_activity_count: number | null
+          partner_display_name: string | null
+          partner_id: string | null
+          partner_name: string | null
+          priority: Database["public"]["Enums"]["crm_lead_priority"] | null
+          probability: number | null
+          responsible_display_name: string | null
+          responsible_name: string | null
+          responsible_partner_id: string | null
+          stage_id: string | null
+          stage_name: string | null
+          stage_sequence: number | null
+          tags: string[] | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_lead_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_responsible_partner_id_fkey"
+            columns: ["responsible_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "crm_lead_stage"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_low_stock_products: {
         Row: {
           company_id: string | null
@@ -2316,6 +3143,181 @@ export type Database = {
         Args: { p_picking_id: string }
         Returns: boolean
       }
+      approval_approve_request: {
+        Args: { p_request_id: string }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          id: string
+          reference: string | null
+          rejected_at: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          status: Database["public"]["Enums"]["approval_request_status"]
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_cancel_request: {
+        Args: { p_request_id: string }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          id: string
+          reference: string | null
+          rejected_at: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          status: Database["public"]["Enums"]["approval_request_status"]
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_publish_request: {
+        Args: { p_request_id: string }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          id: string
+          reference: string | null
+          rejected_at: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          status: Database["public"]["Enums"]["approval_request_status"]
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_reject_request: {
+        Args: { p_request_id: string }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          id: string
+          reference: string | null
+          rejected_at: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          status: Database["public"]["Enums"]["approval_request_status"]
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_reset_request_to_draft: {
+        Args: { p_request_id: string }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          id: string
+          reference: string | null
+          rejected_at: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          status: Database["public"]["Enums"]["approval_request_status"]
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approver_can_act_on_category: {
+        Args: { p_category_id: string; p_manager_id: string }
+        Returns: boolean
+      }
+      assert_category_available_for_request: {
+        Args: { p_category_id: string }
+        Returns: undefined
+      }
+      assert_manager_assignable_for_request: {
+        Args: {
+          p_category_id: string
+          p_company_id: string
+          p_manager_id: string
+        }
+        Returns: undefined
+      }
+      assert_user_is_assigned_approver: {
+        Args: { p_request: Record<string, unknown> }
+        Returns: undefined
+      }
       cancel_order: { Args: { p_order_id: string }; Returns: boolean }
       create_order: {
         Args: {
@@ -2371,6 +3373,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      current_user_partner_row_id: { Args: never; Returns: string }
       get_company_members: {
         Args: {
           p_company_id: string
@@ -2446,6 +3449,10 @@ export type Database = {
         }
         Returns: string
       }
+      is_active_approver_for_company: {
+        Args: { p_company_id: string }
+        Returns: boolean
+      }
       is_company_admin: { Args: { p_company_id: string }; Returns: boolean }
       is_company_member: { Args: { p_company_id: string }; Returns: boolean }
       is_invited_to_company: {
@@ -2476,6 +3483,7 @@ export type Database = {
         Args: { p_accept: boolean; p_rel_id: string }
         Returns: boolean
       }
+      seed_crm_stages: { Args: { p_company_id: string }; Returns: undefined }
       seed_product_uoms: { Args: { p_company_id: string }; Returns: undefined }
       set_picking_status: {
         Args: {
@@ -2559,12 +3567,45 @@ export type Database = {
       }
     }
     Enums: {
+      approval_request_status:
+        | "draft"
+        | "published"
+        | "approved"
+        | "rejected"
+        | "cancelled"
       company_size: "micro" | "small" | "medium" | "large" | "enterprise"
       company_status:
         | "active"
         | "inactive"
         | "suspended"
         | "pending_verification"
+      crm_activity_status: "pending" | "done" | "overdue"
+      crm_activity_type:
+        | "call"
+        | "meeting"
+        | "email"
+        | "demo"
+        | "followup"
+        | "task"
+      crm_history_event:
+        | "created"
+        | "stage_changed"
+        | "responsible_changed"
+        | "order_linked"
+        | "order_unlinked"
+        | "priority_changed"
+        | "closed_won"
+        | "closed_lost"
+        | "reopened"
+      crm_lead_origin:
+        | "web"
+        | "referral"
+        | "campaign"
+        | "call"
+        | "email"
+        | "event"
+        | "other"
+      crm_lead_priority: "low" | "medium" | "high"
       invitation_status:
         | "pending"
         | "accepted"
@@ -2725,6 +3766,13 @@ export const Constants = {
   },
   public: {
     Enums: {
+      approval_request_status: [
+        "draft",
+        "published",
+        "approved",
+        "rejected",
+        "cancelled",
+      ],
       company_size: ["micro", "small", "medium", "large", "enterprise"],
       company_status: [
         "active",
@@ -2732,6 +3780,36 @@ export const Constants = {
         "suspended",
         "pending_verification",
       ],
+      crm_activity_status: ["pending", "done", "overdue"],
+      crm_activity_type: [
+        "call",
+        "meeting",
+        "email",
+        "demo",
+        "followup",
+        "task",
+      ],
+      crm_history_event: [
+        "created",
+        "stage_changed",
+        "responsible_changed",
+        "order_linked",
+        "order_unlinked",
+        "priority_changed",
+        "closed_won",
+        "closed_lost",
+        "reopened",
+      ],
+      crm_lead_origin: [
+        "web",
+        "referral",
+        "campaign",
+        "call",
+        "email",
+        "event",
+        "other",
+      ],
+      crm_lead_priority: ["low", "medium", "high"],
       invitation_status: [
         "pending",
         "accepted",

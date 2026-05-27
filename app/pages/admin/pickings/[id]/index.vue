@@ -3,6 +3,7 @@ import { storeToRefs } from 'pinia'
 import type { MenuOption } from '~/components/CardSheet.vue'
 import {
   createEmptyPickingForm,
+  createEmptyPickingLineForm,
   type PickingFormData,
   type PickingLineFormData
 } from '~/components/Picking/Form.vue'
@@ -125,6 +126,17 @@ const canEdit = computed(() => status.value === 'borrador' || status.value === '
 const isConfirmed = computed(() => status.value === 'confirmado')
 const isFormReadonly = computed(() => !canEdit.value || !isEditing.value)
 
+const shouldOpenInEditMode = (): boolean => {
+  const edit = route.query.edit
+  return edit === '1' || edit === 'true'
+}
+
+const clearEditQueryParam = async () => {
+  if (!route.query.edit) return
+  const { edit: _edit, ...rest } = route.query
+  await router.replace({ path: route.path, query: rest })
+}
+
 const loadCatalogs = async (companyId: string) => {
   const [warehouses, products] = await Promise.all([
     getWarehousesByCompany(companyId),
@@ -188,6 +200,12 @@ const loadPicking = async () => {
 
     if (!canEdit.value) {
       isEditing.value = false
+    } else if (shouldOpenInEditMode()) {
+      isEditing.value = true
+      if (!header.order_id && lines.value.length === 0) {
+        lines.value.push(createEmptyPickingLineForm())
+      }
+      await clearEditQueryParam()
     }
   } finally {
     isLoading.value = false

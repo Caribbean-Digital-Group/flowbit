@@ -101,7 +101,13 @@ export const useProjectTask = () => {
 
   const getTasksByCompany = async (
     companyId: string,
-    options?: { active?: boolean; status?: ProjectTaskStatus }
+    options?: {
+      active?: boolean
+      status?: ProjectTaskStatus
+      /** Últimas tareas por creación (p. ej. dashboard de actividad). */
+      orderByCreatedDesc?: boolean
+      limit?: number
+    }
   ): Promise<ProjectTaskView[]> => {
     if (!companyId) return []
 
@@ -120,7 +126,16 @@ export const useProjectTask = () => {
       query = query.eq('status', options.status)
     }
 
-    const { data, error } = await query.order('due_date', { ascending: true, nullsFirst: false })
+    if (options?.orderByCreatedDesc) {
+      query = query.order('created_at', { ascending: false })
+    } else {
+      query = query.order('due_date', { ascending: true, nullsFirst: false })
+    }
+    if (options?.limit != null) {
+      query = query.limit(options.limit)
+    }
+
+    const { data, error } = await query
 
     if (error) {
       console.error('Error fetching tasks by company:', error)
