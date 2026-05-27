@@ -484,11 +484,11 @@ const handleLogout = async () => {
     <!-- Sidebar -->
     <aside
       :class="[
-        'fixed top-0 left-0 z-50 h-screen bg-white border-r border-slate-200 transition-all duration-300 ease-in-out',
+        'fixed top-0 left-0 z-50 h-screen flex flex-col bg-white border-r border-slate-200 transition-all duration-300 ease-in-out',
         // Desktop: colapsado o expandido
         isSidebarCollapsed ? 'lg:w-20' : 'lg:w-64',
         // Mobile: mostrar/ocultar
-        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        isMobileMenuOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'
       ]"
     >
       <!-- Logo Header -->
@@ -530,7 +530,7 @@ const handleLogout = async () => {
       </div>
 
       <!-- Navigation Menu -->
-      <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav class="flex-1 min-h-0 px-3 py-4 space-y-1 overflow-y-auto">
         <NuxtLink
           v-for="item in menuItems"
           :key="item.to"
