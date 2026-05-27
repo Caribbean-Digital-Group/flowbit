@@ -10,31 +10,35 @@ import type { Tables } from '~/types/database.types'
 type ProductRow = Tables<'product'>
 
 const columns: Column[] = [
-  { 
-    key: 'name', 
-    label: 'Producto', 
-    type: 'avatar', 
-    subtitleKey: 'sku' 
+  {
+    key: 'name',
+    label: 'Producto',
+    type: 'avatar'
   },
-  { 
-    key: 'product_type', 
-    label: 'Tipo', 
+  {
+    key: 'sku',
+    label: 'SKU',
+    type: 'text'
+  },
+  {
+    key: 'product_type',
+    label: 'Tipo',
     type: 'badge',
     badgeConfig: {
-      labels: { 
-        product: 'Producto', 
-        service: 'Servicio', 
-        others: 'Otro' 
+      labels: {
+        product: 'Producto',
+        service: 'Servicio',
+        others: 'Otro'
       }
     }
   },
-  { 
-    key: 'status', 
-    label: 'Estado', 
+  {
+    key: 'status',
+    label: 'Estado',
     type: 'badge',
     badgeConfig: {
-      labels: { 
-        active: 'Activo', 
+      labels: {
+        active: 'Activo',
         inactive: 'Inactivo',
         discontinued: 'Descontinuado',
         out_of_stock: 'Sin stock',
@@ -59,7 +63,7 @@ function mapProductToTableRow(raw: ProductRow): Record<string, unknown> {
   return {
     id: raw.id,
     name: raw.display_name?.trim() || raw.name,
-    sku: raw.sku ?? '—',
+    sku: raw.sku?.trim() || null,
     product_type: raw.product_type,
     status: raw.status ?? 'inactive',
     sale_price: raw.sale_price ?? 0,
@@ -155,6 +159,13 @@ const deleteMany = async (selected: Record<string, any>[]) => {
       export-filename="productos"
       @create="create"
     >
+      <!-- SKU vacío -->
+      <template #cell-sku="{ value }">
+        <span :class="value ? 'font-mono text-slate-700' : 'text-slate-400'">
+          {{ value ?? '—' }}
+        </span>
+      </template>
+
       <!-- Acciones personalizadas por fila -->
       <template #actions="{ row }">
         <div class="flex items-center justify-center gap-2">
