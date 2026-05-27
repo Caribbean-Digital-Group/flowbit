@@ -676,7 +676,7 @@ const handleLogout = async () => {
               >
                 <div
                   v-if="isTaskNotifOpen"
-                  class="absolute right-0 mt-2 w-[min(100vw-2rem,22rem)] max-h-[min(70vh,30rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 z-50 flex flex-col"
+                  class="fixed top-16 left-2 right-2 sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:mt-2 sm:w-[min(100vw-2rem,22rem)] max-h-[min(70vh,30rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 z-50 flex flex-col"
                 >
                   <div class="border-b border-slate-100 bg-gradient-to-r from-indigo-50/80 to-violet-50/60 px-4 py-3">
                     <p class="text-sm font-semibold text-slate-800">
@@ -868,7 +868,7 @@ const handleLogout = async () => {
               >
                 <div
                   v-if="isInvitationsOpen"
-                  class="absolute right-0 mt-2 w-[min(100vw-2rem,22rem)] max-h-[min(70vh,28rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 z-50 flex flex-col"
+                  class="fixed top-16 left-2 right-2 sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:mt-2 sm:w-[min(100vw-2rem,22rem)] max-h-[min(70vh,28rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 z-50 flex flex-col"
                 >
                   <div class="border-b border-slate-100 bg-gradient-to-r from-fuchsia-50/80 to-violet-50/60 px-4 py-3">
                     <p class="text-sm font-semibold text-slate-800">
@@ -1003,7 +1003,7 @@ const handleLogout = async () => {
               >
                 <div
                   v-if="isCompanySelectorOpen"
-                  class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50"
+                  class="fixed top-16 left-2 right-2 sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:mt-2 sm:w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50"
                 >
                   <!-- Header -->
                   <div class="px-3 py-2 border-b border-slate-100">
