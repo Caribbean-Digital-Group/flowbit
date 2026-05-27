@@ -140,6 +140,30 @@ export const useProduct = () => {
     })
   }
 
+  const checkSkuExists = async (companyId: string, sku: string, excludeId?: string): Promise<boolean> => {
+    if (!companyId || !sku.trim()) return false
+
+    let query = supabase
+      .from('product')
+      .select('id')
+      .eq('company_id', companyId)
+      .eq('sku', sku.trim())
+      .limit(1)
+
+    if (excludeId) {
+      query = query.neq('id', excludeId)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error('Error checking SKU:', error)
+      return false
+    }
+
+    return (data?.length ?? 0) > 0
+  }
+
   const createProduct = async (
     companyId: string,
     product: Omit<ProductInsert, 'company_id'>
@@ -215,6 +239,7 @@ export const useProduct = () => {
     getProductsByCompany,
     searchProductsByCompany,
     ensureCatalogProductFromOrderLine,
+    checkSkuExists,
     createProduct,
     updateProduct,
     archiveProduct

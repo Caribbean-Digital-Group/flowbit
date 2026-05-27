@@ -1,5 +1,8 @@
 <template>
   <div :class="containerClasses">
+    <!-- Sentinel para detectar cuando el header está pegado -->
+    <div ref="sentinelRef" class="h-0 w-full" aria-hidden="true" />
+
     <!-- ============================================== -->
     <!-- HEADER SECTION -->
     <!-- ============================================== -->
@@ -351,6 +354,13 @@ defineEmits<{
 }>()
 
 // ═══════════════════════════════════════════════════════════════════════════
+// STICKY HEADER STATE
+// ═══════════════════════════════════════════════════════════════════════════
+const sentinelRef = ref<HTMLDivElement | null>(null)
+const isHeaderStuck = ref(false)
+let stickyObserver: IntersectionObserver | null = null
+
+// ═══════════════════════════════════════════════════════════════════════════
 // MENU DROPDOWN STATE
 // ═══════════════════════════════════════════════════════════════════════════
 const isMenuOpen = ref(false)
@@ -449,11 +459,20 @@ const getOptionClasses = (option: MenuOption): string => {
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   document.addEventListener('keydown', handleKeydown)
+
+  if (sentinelRef.value) {
+    stickyObserver = new IntersectionObserver(
+      ([entry]) => { if (entry) isHeaderStuck.value = !entry.isIntersecting },
+      { threshold: 0, rootMargin: '-64px 0px 0px 0px' }
+    )
+    stickyObserver.observe(sentinelRef.value)
+  }
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
   document.removeEventListener('keydown', handleKeydown)
+  stickyObserver?.disconnect()
 })
 
 // Container classes
@@ -462,10 +481,9 @@ const containerClasses = computed(() => {
     'flex flex-col',
     'bg-white',
     'rounded-2xl lg:rounded-3xl',
-    'overflow-hidden',
     'transition-all duration-300'
   ]
-  
+
   // Variant styles
   const variants = {
     elevated: 'shadow-xl shadow-slate-200/50 border border-slate-100',
@@ -473,12 +491,12 @@ const containerClasses = computed(() => {
     outlined: 'border-2 border-slate-300'
   }
   base.push(variants[props.variant])
-  
+
   // Full height option
   if (props.fullHeight) {
     base.push('h-full min-h-0')
   }
-  
+
   return base.join(' ')
 })
 
@@ -487,9 +505,12 @@ const headerClasses = computed(() => {
   const base = [
     'flex flex-col lg:flex-row lg:items-center justify-between gap-4',
     'bg-gradient-to-r from-slate-50 to-white',
-    'border-b border-slate-100'
+    'border-b border-slate-100',
+    'sticky top-16 z-20',
+    'rounded-t-2xl lg:rounded-t-3xl',
+    'transition-shadow duration-200'
   ]
-  
+
   // Padding based on prop
   const paddings = {
     sm: 'px-4 py-4',
@@ -498,7 +519,11 @@ const headerClasses = computed(() => {
     xl: 'px-10 py-8'
   }
   base.push(paddings[props.padding])
-  
+
+  if (isHeaderStuck.value) {
+    base.push('shadow-lg shadow-slate-200/80 rounded-none')
+  }
+
   return base.join(' ')
 })
 
@@ -526,9 +551,10 @@ const contentClasses = computed(() => {
 const footerClasses = computed(() => {
   const base = [
     'bg-gradient-to-r from-slate-50 to-slate-100/50',
-    'border-t border-slate-200'
+    'border-t border-slate-200',
+    'rounded-b-2xl lg:rounded-b-3xl'
   ]
-  
+
   // Padding based on prop
   const paddings = {
     sm: 'px-4 py-4',
@@ -537,7 +563,7 @@ const footerClasses = computed(() => {
     xl: 'px-10 py-8'
   }
   base.push(paddings[props.padding])
-  
+
   return base.join(' ')
 })
 
