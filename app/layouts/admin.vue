@@ -5,6 +5,7 @@ import type { PendingInvitation } from '~/composables/useMembership'
 
 type TaskViewRow = Database['public']['Views']['v_project_tasks']['Row']
 type ApprovalRequestViewRow = Database['public']['Views']['v_approval_requests']['Row']
+type CrmActivityViewRow = Database['public']['Views']['v_crm_activities']['Row']
 type PartnerCompanyRole = Database['public']['Enums']['partner_company_role']
 
 // Estado del sidebar
@@ -41,10 +42,12 @@ const authStore = useAuthStore()
 const { partner, selectedCompanyId: selectedCompanyIdRef, pendingInvitationCount } = storeToRefs(authStore)
 const { getAssignedTasksForPartner } = useProjectTask()
 const { getPublishedRequestsForMyManager } = useApprovalRequest()
+const { getActivitiesByCompany } = useCrmActivity()
 const { getMyInvitations, respondInvitation } = useMembership()
 
 const assignedTasksPreview = ref<TaskViewRow[]>([])
 const pendingApprovalsPreview = ref<ApprovalRequestViewRow[]>([])
+const crmActivitiesPreview = ref<CrmActivityViewRow[]>([])
 const isTaskNotifOpen = ref(false)
 const isLoadingAssignedTasks = ref(false)
 const taskNotifRef = ref<HTMLElement | null>(null)
@@ -56,6 +59,15 @@ const taskStatusLabels: Record<string, string> = {
   cancelled: 'Cancelada'
 }
 
+const activityTypeLabels: Record<string, string> = {
+  call: 'Llamada',
+  meeting: 'Reunión',
+  email: 'Correo',
+  demo: 'Demo',
+  followup: 'Seguimiento',
+  task: 'Tarea'
+}
+
 const openAssignedTaskCount = computed(() =>
   assignedTasksPreview.value.filter((t) => {
     const st = t.status ?? 'pending'
@@ -64,9 +76,15 @@ const openAssignedTaskCount = computed(() =>
 )
 
 const pendingApprovalCount = computed(() => pendingApprovalsPreview.value.length)
+const openCrmActivityCount = computed(() =>
+  crmActivitiesPreview.value.filter((a) => {
+    const st = (a.status ?? 'pending').toLowerCase()
+    return st !== 'done'
+  }).length
+)
 
 const taskNotifBadgeTotal = computed(
-  () => openAssignedTaskCount.value + pendingApprovalCount.value
+  () => openAssignedTaskCount.value + pendingApprovalCount.value + openCrmActivityCount.value
 )
 
 const notificationBadgeLabel = computed(() => {
@@ -81,16 +99,22 @@ async function refreshTaskNotifPanel() {
   if (!companyId || !partnerId) {
     assignedTasksPreview.value = []
     pendingApprovalsPreview.value = []
+    crmActivitiesPreview.value = []
     return
   }
   isLoadingAssignedTasks.value = true
   try {
-    const [tasks, approvals] = await Promise.all([
+    const [tasks, approvals, activities] = await Promise.all([
       getAssignedTasksForPartner(partnerId, companyId),
-      getPublishedRequestsForMyManager(companyId, partnerId)
+      getPublishedRequestsForMyManager(companyId, partnerId),
+      getActivitiesByCompany(companyId)
     ])
     assignedTasksPreview.value = tasks
     pendingApprovalsPreview.value = approvals
+    crmActivitiesPreview.value = activities.filter((activity) => {
+      if (!activity.responsible_partner_id) return false
+      return activity.responsible_partner_id === partnerId
+    })
   } finally {
     isLoadingAssignedTasks.value = false
   }
@@ -142,6 +166,26 @@ function openApprovalDetailFromNotif(req: ApprovalRequestViewRow) {
   if (!req.id) return
   closeTaskNotif()
   navigateTo(`/admin/approval-requests/${req.id}`)
+}
+
+function formatActivityScheduleShort(date: string | null): string {
+  if (!date) return ''
+  try {
+    return new Intl.DateTimeFormat('es-MX', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(new Date(date))
+  } catch {
+    return date
+  }
+}
+
+function openCrmActivityFromNotif(activity: CrmActivityViewRow) {
+  if (!activity.lead_id) return
+  closeTaskNotif()
+  navigateTo(`/admin/crm/leads/${activity.lead_id}`)
 }
 
 // ============================================================================
@@ -597,10 +641,10 @@ const handleLogout = async () => {
               <button
                 type="button"
                 class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                :title="'Tareas y solicitudes pendientes'"
+                :title="'Tareas, seguimientos y solicitudes pendientes'"
                 :aria-expanded="isTaskNotifOpen"
                 aria-haspopup="true"
-                aria-label="Tareas asignadas y solicitudes de aprobación pendientes"
+                aria-label="Tareas asignadas, actividades de seguimiento y solicitudes de aprobación pendientes"
                 @click.stop="toggleTaskNotif"
               >
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -631,7 +675,7 @@ const handleLogout = async () => {
                       Tu bandeja en esta empresa
                     </p>
                     <p class="mt-0.5 text-xs text-slate-500">
-                      Tareas donde eres responsable y solicitudes publicadas donde eres el aprobador asignado.
+                      Tareas y actividades de seguimiento donde eres responsable, y solicitudes donde eres aprobador asignado.
                     </p>
                   </div>
 
@@ -681,6 +725,47 @@ const handleLogout = async () => {
                                 </span>
                                 <span v-if="task.due_date" class="text-[10px] text-slate-400">
                                   Vence {{ formatTaskDueShort(task.due_date) }}
+                                </span>
+                              </div>
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+
+                      <div class="border-t border-slate-100 pt-3">
+                        <p class="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                          Seguimientos CRM
+                        </p>
+                        <template v-if="crmActivitiesPreview.length === 0">
+                          <p class="px-3 py-4 text-center text-sm text-slate-500">
+                            No tienes actividades de seguimiento asignadas.
+                          </p>
+                        </template>
+                        <ul v-else class="space-y-1">
+                          <li v-for="activity in crmActivitiesPreview" :key="activity.id ?? ''">
+                            <button
+                              type="button"
+                              class="w-full rounded-lg border border-transparent px-3 py-2.5 text-left transition hover:border-sky-100 hover:bg-sky-50/60"
+                              @click="openCrmActivityFromNotif(activity)"
+                            >
+                              <p class="text-sm font-medium text-slate-900 line-clamp-2">
+                                {{ activity.title ?? 'Actividad CRM' }}
+                              </p>
+                              <p class="mt-0.5 text-xs text-slate-500 truncate">
+                                {{ activity.lead_name ?? 'Lead' }}
+                              </p>
+                              <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                <span class="rounded-md bg-sky-100 px-1.5 py-0.5 text-[10px] font-semibold text-sky-800">
+                                  {{ activityTypeLabels[activity.type ?? 'task'] ?? activity.type ?? 'Actividad' }}
+                                </span>
+                                <span
+                                  v-if="activity.status === 'overdue'"
+                                  class="rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700"
+                                >
+                                  Atrasada
+                                </span>
+                                <span v-if="activity.scheduled_at" class="text-[10px] text-slate-400">
+                                  Programada {{ formatActivityScheduleShort(activity.scheduled_at) }}
                                 </span>
                               </div>
                             </button>
@@ -744,6 +829,13 @@ const handleLogout = async () => {
                       @click="closeTaskNotif"
                     >
                       Ver todas las solicitudes
+                    </NuxtLink>
+                    <NuxtLink
+                      to="/admin/crm/leads"
+                      class="block text-center text-xs font-semibold text-sky-700 hover:text-sky-900 py-1.5 rounded-lg hover:bg-white"
+                      @click="closeTaskNotif"
+                    >
+                      Ver leads y seguimientos CRM
                     </NuxtLink>
                   </div>
                 </div>
