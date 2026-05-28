@@ -412,18 +412,26 @@ const buildPrintableHtml = () => {
       const name = line.product_name?.trim() || line.description?.trim() || '—'
       const desc = line.description?.trim() && line.description.trim() !== name ? line.description.trim() : ''
       const rowBg = idx % 2 === 0 ? '#ffffff' : '#f8fafc'
+      const grossLine = Math.round(line.quantity * line.unit_price * 100) / 100
+      const discountCell = line.discount_amount > 0
+        ? `<div style="font-size:10px;color:#94a3b8;line-height:1.3">${line.discount_percent}%</div><div style="color:#dc2626;font-weight:500">−${formatCurrency(line.discount_amount, cur)}</div>`
+        : '<span style="color:#cbd5e1">—</span>'
+      const taxCell = line.tax_amount > 0
+        ? `<div style="font-size:10px;color:#94a3b8;line-height:1.3">${line.tax_rate}%</div><div style="font-weight:500">${formatCurrency(line.tax_amount, cur)}</div>`
+        : '<span style="color:#cbd5e1">—</span>'
       return `
         <tr style="background:${rowBg}">
           <td style="padding:10px 14px;">
             <div style="font-weight:500;color:#0f172a;font-size:12px">${name}</div>
             ${desc ? `<div style="font-size:11px;color:#64748b;margin-top:3px">${desc}</div>` : ''}
           </td>
-          <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap">${line.quantity}</td>
+          <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap;color:#475569">${line.quantity}</td>
           <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap">${formatCurrency(line.unit_price, cur)}</td>
-          <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap">${line.discount_percent > 0 ? line.discount_percent + '%' : '—'}</td>
-          <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap">${line.tax_rate > 0 ? line.tax_rate + '%' : '—'}</td>
-          <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap">${formatCurrency(line.subtotal, cur)}</td>
-          <td style="text-align:right;padding:10px 14px;font-size:12px;font-weight:600;white-space:nowrap">${formatCurrency(line.total, cur)}</td>
+          <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap;color:#64748b">${formatCurrency(grossLine, cur)}</td>
+          <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap">${discountCell}</td>
+          <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap">${taxCell}</td>
+          <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap;background:#f0fdf4">${formatCurrency(line.subtotal, cur)}</td>
+          <td style="text-align:right;padding:10px 14px;font-size:12px;font-weight:700;white-space:nowrap">${formatCurrency(line.total, cur)}</td>
         </tr>`
     })
     .join('')
@@ -561,40 +569,61 @@ const buildPrintableHtml = () => {
         <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:left">Descripción</th>
         <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:right">Cant.</th>
         <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:right">P. Unitario</th>
-        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:right">Desc.</th>
+        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:right">Importe</th>
+        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:right">Descuento</th>
         <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:right">IVA</th>
-        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:right">Subtotal</th>
-        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:right">Total</th>
+        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:right;background:rgba(255,255,255,0.12)">Subtotal s/IVA</th>
+        <th style="color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:11px 14px;text-align:right">Total c/IVA</th>
       </tr>
     </thead>
     <tbody>
-      ${lineRows || `<tr><td colspan="7" style="text-align:center;padding:24px;color:#94a3b8;font-size:13px">Sin líneas de orden</td></tr>`}
+      ${lineRows || `<tr><td colspan="8" style="text-align:center;padding:24px;color:#94a3b8;font-size:13px">Sin líneas de orden</td></tr>`}
     </tbody>
   </table>
 
   <!-- ── TOTALS ── -->
+  ${(() => {
+    const grossAmt = Math.round((formData.value.amount_untaxed + formData.value.amount_discount) * 100) / 100
+    const hasDisc = formData.value.amount_discount > 0
+    const hasTax = formData.value.amount_tax > 0
+    return `
   <div style="display:flex;justify-content:flex-end;margin-bottom:28px">
-    <div style="width:300px;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
-      <div style="display:flex;justify-content:space-between;padding:10px 16px;font-size:13px;border-bottom:1px solid #f1f5f9">
-        <span style="color:#64748b">Subtotal</span>
-        <span style="font-weight:500">${formatCurrency(formData.value.amount_untaxed, cur)}</span>
+    <div style="width:340px;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;font-size:13px">
+
+      ${hasDisc ? `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #f1f5f9;background:#fafafa">
+        <span style="color:#64748b">Importe bruto</span>
+        <span style="font-weight:500">${formatCurrency(grossAmt, cur)}</span>
       </div>
-      ${formData.value.amount_discount > 0 ? `
-      <div style="display:flex;justify-content:space-between;padding:10px 16px;font-size:13px;border-bottom:1px solid #f1f5f9">
-        <span style="color:#64748b">Descuento</span>
-        <span style="font-weight:500;color:#dc2626">− ${formatCurrency(formData.value.amount_discount, cur)}</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #f1f5f9">
+        <span style="color:#64748b">Descuento total</span>
+        <span style="font-weight:600;color:#dc2626">− ${formatCurrency(formData.value.amount_discount, cur)}</span>
       </div>` : ''}
-      ${formData.value.amount_tax > 0 ? `
-      <div style="display:flex;justify-content:space-between;padding:10px 16px;font-size:13px;border-bottom:1px solid #f1f5f9">
+
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid #f1f5f9${hasDisc ? ';background:#f0fdf4' : ''}">
+        <div>
+          <div style="color:#64748b">Subtotal s/IVA</div>
+          ${hasDisc ? `<div style="font-size:10px;color:#16a34a;margin-top:1px">Importe bruto menos descuento</div>` : ''}
+        </div>
+        <span style="font-weight:600${hasDisc ? ';color:#15803d' : ''}">${formatCurrency(formData.value.amount_untaxed, cur)}</span>
+      </div>
+
+      ${hasTax ? `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #f1f5f9">
         <span style="color:#64748b">IVA (${formData.value.tax_rate}%)</span>
         <span style="font-weight:500">${formatCurrency(formData.value.amount_tax, cur)}</span>
       </div>` : ''}
-      <div style="display:flex;justify-content:space-between;padding:13px 16px;font-size:15px;font-weight:700;background:${accentColor};color:#fff">
-        <span style="color:rgba(255,255,255,0.85)">Total</span>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;font-size:15px;font-weight:700;background:${accentColor};color:#fff">
+        <div>
+          <div>Total</div>
+          ${hasTax ? `<div style="font-size:10px;font-weight:400;color:rgba(255,255,255,0.7);margin-top:1px">Subtotal + IVA</div>` : ''}
+        </div>
         <span>${formatCurrency(formData.value.amount_total, cur)}</span>
       </div>
     </div>
-  </div>
+  </div>`
+  })()}
 
   <!-- ── NOTES & TERMS ── -->
   ${extrasHtml}
@@ -666,16 +695,34 @@ const buildTicketHtml = () => {
   const lineRows = orderLines.value.map((line) => {
     const name = line.product_name?.trim() || line.description?.trim() || '—'
     const desc = line.description?.trim() && line.description.trim() !== name ? line.description.trim() : ''
-    const lineTotal = formatCurrency(line.total, cur)
-    const unitInfo = `${line.quantity} × ${formatCurrency(line.unit_price, cur)}`
-    const discountInfo = line.discount_percent > 0 ? ` (−${line.discount_percent}%)` : ''
+    const grossLine = Math.round(line.quantity * line.unit_price * 100) / 100
+    const hasLineDiscount = line.discount_amount > 0
+    const hasLineTax = line.tax_amount > 0
     return `
-      <div style="margin-bottom:10px">
-        <div style="font-size:12px;font-weight:600;color:#0f172a">${name}</div>
+      <div style="margin-bottom:12px;padding-bottom:10px;border-bottom:1px dotted #e2e8f0">
+        <div style="font-size:12px;font-weight:700;color:#0f172a">${name}</div>
         ${desc ? `<div style="font-size:10px;color:#64748b;margin-top:1px">${desc}</div>` : ''}
-        <div style="display:flex;justify-content:space-between;margin-top:3px">
-          <span style="font-size:11px;color:#64748b">${unitInfo}${discountInfo}</span>
-          <span style="font-size:12px;font-weight:600;color:#0f172a">${lineTotal}</span>
+        <div style="display:flex;justify-content:space-between;margin-top:4px">
+          <span style="font-size:11px;color:#64748b">${line.quantity} × ${formatCurrency(line.unit_price, cur)}</span>
+          <span style="font-size:11px;color:#475569">${formatCurrency(grossLine, cur)}</span>
+        </div>
+        ${hasLineDiscount ? `
+        <div style="display:flex;justify-content:space-between;margin-top:2px">
+          <span style="font-size:10px;color:#dc2626">Desc. ${line.discount_percent}%</span>
+          <span style="font-size:10px;color:#dc2626;font-weight:600">−${formatCurrency(line.discount_amount, cur)}</span>
+        </div>` : ''}
+        ${hasLineDiscount || hasLineTax ? `
+        <div style="display:flex;justify-content:space-between;margin-top:2px">
+          <span style="font-size:10px;color:#64748b">Subtotal s/IVA</span>
+          <span style="font-size:10px;color:#0f172a;font-weight:600">${formatCurrency(line.subtotal, cur)}</span>
+        </div>` : ''}
+        ${hasLineTax ? `
+        <div style="display:flex;justify-content:space-between;margin-top:2px">
+          <span style="font-size:10px;color:#64748b">IVA ${line.tax_rate}%</span>
+          <span style="font-size:10px;color:#475569">+${formatCurrency(line.tax_amount, cur)}</span>
+        </div>` : ''}
+        <div style="display:flex;justify-content:flex-end;margin-top:4px">
+          <span style="font-size:13px;font-weight:800;color:#0f172a">${formatCurrency(line.total, cur)}</span>
         </div>
       </div>`
   }).join('')
@@ -757,27 +804,41 @@ const buildTicketHtml = () => {
   ${sep}
 
   <!-- Totales -->
+  ${(() => {
+    const grossAmt = Math.round((formData.value.amount_untaxed + formData.value.amount_discount) * 100) / 100
+    const hasDisc = formData.value.amount_discount > 0
+    const hasTax = formData.value.amount_tax > 0
+    return `
   <div style="font-size:12px">
-    <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-      <span style="color:#64748b">Subtotal</span>
-      <span>${formatCurrency(formData.value.amount_untaxed, cur)}</span>
+    ${hasDisc ? `
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+      <span style="color:#94a3b8">Importe bruto</span>
+      <span style="color:#475569">${formatCurrency(grossAmt, cur)}</span>
     </div>
-    ${formData.value.amount_discount > 0 ? `
-    <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-      <span style="color:#64748b">Descuento</span>
-      <span style="color:#dc2626">− ${formatCurrency(formData.value.amount_discount, cur)}</span>
-    </div>` : ''}
-    ${formData.value.amount_tax > 0 ? `
-    <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+      <span style="color:#dc2626">Descuento total</span>
+      <span style="color:#dc2626;font-weight:700">−${formatCurrency(formData.value.amount_discount, cur)}</span>
+    </div>
+    <div style="border-top:1px dashed #cbd5e1;margin:6px 0"></div>` : ''}
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px${hasDisc ? ';font-weight:700' : ''}">
+      <span style="color:#64748b">Subtotal s/IVA</span>
+      <span${hasDisc ? ' style="color:#15803d"' : ''}>${formatCurrency(formData.value.amount_untaxed, cur)}</span>
+    </div>
+    ${hasTax ? `
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
       <span style="color:#64748b">IVA (${formData.value.tax_rate}%)</span>
-      <span>${formatCurrency(formData.value.amount_tax, cur)}</span>
+      <span>+${formatCurrency(formData.value.amount_tax, cur)}</span>
     </div>` : ''}
   </div>
 
   <div style="display:flex;justify-content:space-between;margin-top:8px;padding:10px 0;border-top:2px solid #0f172a;border-bottom:2px solid #0f172a">
-    <span style="font-size:14px;font-weight:800">TOTAL</span>
+    <div>
+      <div style="font-size:14px;font-weight:800">TOTAL</div>
+      ${hasTax ? `<div style="font-size:9px;color:#64748b;margin-top:1px">Subtotal + IVA</div>` : ''}
+    </div>
     <span style="font-size:14px;font-weight:800">${formatCurrency(formData.value.amount_total, cur)}</span>
-  </div>
+  </div>`
+  })()}
 
   ${formData.value.notes || formData.value.terms ? sep : ''}
 
