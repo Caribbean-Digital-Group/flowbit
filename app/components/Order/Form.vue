@@ -20,6 +20,8 @@ export interface OrderLine {
   margin_percent: number
 }
 
+export type PaymentStatus = 'unpaid' | 'partial' | 'paid' | 'condoned' | 'overdue'
+
 export interface OrderFormData {
   name: string
   order_type: 'sale' | 'purchase'
@@ -42,6 +44,9 @@ export interface OrderFormData {
   amount_tax: number
   amount_total: number
   amount_discount: number
+  payment_method_id: string | null
+  payment_method_name: string
+  payment_status: PaymentStatus
   payment_term: string
   payment_due_date: string
   shipping_street: string
@@ -79,6 +84,9 @@ export const createEmptyOrderForm = (): OrderFormData => ({
   amount_tax: 0,
   amount_total: 0,
   amount_discount: 0,
+  payment_method_id: null,
+  payment_method_name: '',
+  payment_status: 'unpaid',
   payment_term: '',
   payment_due_date: '',
   shipping_street: '',
@@ -123,6 +131,7 @@ interface Props {
   readonly?: boolean
   partnerOptions?: { value: string; label: string }[]
   projectOptions?: { value: string; label: string }[]
+  paymentMethodOptions?: { value: string; label: string }[]
   /** Permite catálogo, autocompletado y alta de productos al guardar la línea. */
   companyId?: string | null
 }
@@ -131,7 +140,37 @@ const props = withDefaults(defineProps<Props>(), {
   readonly: false,
   partnerOptions: () => [],
   projectOptions: () => [],
+  paymentMethodOptions: () => [],
   companyId: null
+})
+
+const paymentStatusOptions = [
+  { value: 'unpaid',   label: 'No pagado' },
+  { value: 'partial',  label: 'Parcial' },
+  { value: 'paid',     label: 'Pagado' },
+  { value: 'condoned', label: 'Condonado' },
+  { value: 'overdue',  label: 'Vencido' }
+]
+
+const paymentStatusBadgeVariant: Record<string, 'success' | 'warning' | 'danger' | 'primary' | 'secondary'> = {
+  paid:     'success',
+  partial:  'warning',
+  overdue:  'danger',
+  condoned: 'primary',
+  unpaid:   'secondary'
+}
+
+const paymentStatusLabel = computed(() =>
+  paymentStatusOptions.find(o => o.value === formData.value.payment_status)?.label ?? formData.value.payment_status
+)
+
+const paymentMethodSelectModel = computed({
+  get: () => formData.value.payment_method_id ?? '',
+  set: (v: string) => {
+    formData.value.payment_method_id = v || null
+    const opt = props.paymentMethodOptions.find(o => o.value === v)
+    formData.value.payment_method_name = opt?.label ?? ''
+  }
 })
 
 const orderTypeOptions = [
@@ -484,6 +523,47 @@ const formatCurrency = (value: number): string => {
           size="md"
         />
       </div>
+
+      <div>
+        <FormSelect
+          v-if="paymentMethodOptions.length > 0 || isEditing"
+          v-model="paymentMethodSelectModel"
+          label="Método de Pago"
+          :options="paymentMethodOptions"
+          :readonly="readonly"
+          placeholder="Sin método"
+          size="md"
+        />
+        <FormInput
+          v-else
+          v-model="formData.payment_method_name"
+          label="Método de Pago"
+          placeholder="—"
+          readonly
+          size="md"
+        />
+      </div>
+
+      <!-- Estado de Pago -->
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Estado de Pago</label>
+        <template v-if="isEditing">
+          <FormSelect
+            v-model="formData.payment_status"
+            :options="paymentStatusOptions"
+            :readonly="false"
+            size="md"
+          />
+        </template>
+        <template v-else>
+          <div class="pt-1">
+            <BadgeApp
+              :variant="paymentStatusBadgeVariant[formData.payment_status] ?? 'secondary'"
+              :label="paymentStatusLabel"
+            />
+          </div>
+        </template>
+      </div>
     </div>
 
     <!-- LÍNEAS DE LA ORDEN -->
@@ -753,20 +833,26 @@ const formatCurrency = (value: number): string => {
                   </div>
                 </label>
 
-                <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors">
-                  <input
-                    v-model="formData.is_paid"
-                    type="checkbox"
-                    :disabled="readonly"
-                    class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
-                  />
-                  <div class="flex items-center gap-2">
-                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <span class="text-sm text-slate-700">Pagada</span>
+                <div class="flex items-start gap-3 p-2 rounded-lg">
+                  <svg class="w-5 h-5 text-slate-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-slate-600 mb-1.5">Estatus de pago</p>
+                    <FormSelect
+                      v-if="isEditing"
+                      v-model="formData.payment_status"
+                      :options="paymentStatusOptions"
+                      :readonly="false"
+                      size="sm"
+                    />
+                    <BadgeApp
+                      v-else
+                      :variant="paymentStatusBadgeVariant[formData.payment_status] ?? 'secondary'"
+                      :label="paymentStatusLabel"
+                    />
                   </div>
-                </label>
+                </div>
               </div>
             </div>
 

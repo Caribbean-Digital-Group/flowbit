@@ -9,7 +9,6 @@ type CrmActivityViewRow = Database['public']['Views']['v_crm_activities']['Row']
 type PartnerCompanyRole = Database['public']['Enums']['partner_company_role']
 
 // Estado del sidebar
-const isSidebarOpen = ref(true)
 const isSidebarCollapsed = ref(false)
 const isMobileMenuOpen = ref(false)
 
@@ -354,6 +353,13 @@ const menuItems = [
     to: '/admin/products',
     iconPaths: [
       'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'
+    ]
+  },
+  {
+    title: 'Métodos de Pago',
+    to: '/admin/payment-methods',
+    iconPaths: [
+      'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z'
     ]
   },
   {
