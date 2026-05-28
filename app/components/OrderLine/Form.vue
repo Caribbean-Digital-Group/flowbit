@@ -196,7 +196,7 @@ function onCatalogKeydown(e: KeyboardEvent): void {
 }
 
 const unitPriceLabel = computed(() =>
-  props.orderType === 'purchase' ? 'Precio unitario de compra' : 'Precio unitario de venta'
+  props.orderType === 'purchase' ? 'Precio unitario' : 'Precio unitario'
 )
 
 const catalogHintMessage = computed(() => {
@@ -212,9 +212,39 @@ const catalogHintMessage = computed(() => {
     : 'Filtra por nombre, SKU u otro código. Si no encuentras coincidencias, puedes escribir un nombre nuevo; se creará el producto al guardar.'
 })
 
-const discountAmount = computed(() => {
-  return Math.round(formData.value.quantity * formData.value.unit_price * formData.value.discount_percent / 100 * 100) / 100
-})
+const grossAmount = computed(() =>
+  Math.round(formData.value.quantity * formData.value.unit_price * 100) / 100
+)
+
+const discountAmount = computed(() =>
+  Math.round(grossAmount.value * formData.value.discount_percent / 100 * 100) / 100
+)
+
+// Local ref para el input de monto de descuento (se sincroniza bidireccionalmente con discount_percent)
+const localDiscountAmount = ref(discountAmount.value)
+let skipAmountSync = false
+
+watch(
+  () => [formData.value.discount_percent, formData.value.quantity, formData.value.unit_price] as const,
+  ([pct, qty, price]) => {
+    if (!skipAmountSync) {
+      localDiscountAmount.value = Math.round(qty * price * pct / 100 * 100) / 100
+    }
+  }
+)
+
+async function onDiscountAmountInput() {
+  skipAmountSync = true
+  if (grossAmount.value > 0) {
+    const clamped = Math.min(localDiscountAmount.value, grossAmount.value)
+    formData.value.discount_percent = Math.min(
+      100,
+      Math.round(clamped / grossAmount.value * 100 * 100) / 100
+    )
+  }
+  await nextTick()
+  skipAmountSync = false
+}
 
 const subtotal = computed(() => {
   const base = formData.value.quantity * formData.value.unit_price
@@ -402,31 +432,73 @@ const formatCurrency = (value: number): string => {
         Descuento e Impuesto
       </h4>
 
-      <div class="bg-slate-50 rounded-lg p-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormInput
-            v-model="formData.discount_percent"
-            type="number"
-            label="Descuento (%)"
-            placeholder="0.00"
-            :readonly="readonly"
-            :min="0"
-            :max="100"
-            :step="0.01"
-            size="md"
-          />
+      <div class="bg-slate-50 rounded-lg p-4 space-y-4">
+        <!-- Descuento: monto y porcentaje sincronizados -->
+        <div>
+          <p class="text-sm font-medium text-slate-700 mb-2">Descuento</p>
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Monto de descuento -->
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Monto ({{ currency }})</label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none select-none">$</span>
+                <input
+                  v-if="isEditing"
+                  v-model.number="localDiscountAmount"
+                  type="number"
+                  min="0"
+                  :max="grossAmount"
+                  step="0.01"
+                  placeholder="0.00"
+                  class="w-full pl-7 pr-3 py-2.5 text-sm border border-slate-300 rounded-xl bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                  @input="onDiscountAmountInput"
+                />
+                <div v-else class="pl-7 pr-3 py-2.5 text-sm bg-slate-100 border border-slate-200 rounded-xl text-slate-700">
+                  {{ localDiscountAmount.toFixed(2) }}
+                </div>
+              </div>
+            </div>
 
-          <FormInput
-            v-model="formData.tax_rate"
-            type="number"
-            label="Tasa de Impuesto (%)"
-            placeholder="16.00"
-            :readonly="readonly"
-            :min="0"
-            :step="0.01"
-            size="md"
-          />
+            <!-- Porcentaje de descuento -->
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Porcentaje</label>
+              <div class="relative">
+                <input
+                  v-if="isEditing"
+                  v-model.number="formData.discount_percent"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  placeholder="0.00"
+                  class="w-full pl-3 pr-7 py-2.5 text-sm border border-slate-300 rounded-xl bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                />
+                <div v-else class="pl-3 pr-7 py-2.5 text-sm bg-slate-100 border border-slate-200 rounded-xl text-slate-700">
+                  {{ formData.discount_percent.toFixed(2) }}
+                </div>
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none select-none">%</span>
+              </div>
+            </div>
+          </div>
+          <p class="mt-2 text-xs text-slate-400 flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4M4 17h12m0 0l-4-4m4 4l-4 4" />
+            </svg>
+            Ingresa el monto o el porcentaje; ambos se sincronizan automáticamente.
+          </p>
         </div>
+
+        <!-- Tasa de Impuesto -->
+        <FormInput
+          v-model="formData.tax_rate"
+          type="number"
+          label="Tasa de Impuesto (%)"
+          placeholder="16.00"
+          :readonly="readonly"
+          :min="0"
+          :step="0.01"
+          size="md"
+        />
       </div>
     </div>
 
@@ -439,39 +511,64 @@ const formatCurrency = (value: number): string => {
         Resumen
       </h4>
 
-      <div class="bg-gradient-to-br from-slate-50 to-indigo-50/50 rounded-lg p-4 space-y-3">
-        <div v-if="discountAmount > 0" class="flex justify-between text-sm">
-          <span class="text-slate-600">Descuento:</span>
-          <span class="font-medium text-red-600">-{{ formatCurrency(discountAmount) }}</span>
+      <div class="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+
+        <!-- Importe bruto -->
+        <div class="flex justify-between items-center px-4 py-2.5 text-sm bg-white border-b border-slate-100">
+          <span class="text-slate-500">Importe bruto</span>
+          <span class="text-slate-600">{{ formatCurrency(grossAmount) }}</span>
         </div>
 
-        <div class="flex justify-between text-sm">
-          <span class="text-slate-600">Subtotal:</span>
-          <span class="font-medium text-slate-800">{{ formatCurrency(subtotal) }}</span>
+        <!-- Descuento (solo si hay descuento) -->
+        <template v-if="discountAmount > 0">
+          <div class="flex justify-between items-center px-4 py-2.5 text-sm border-b border-slate-100">
+            <span class="text-slate-500">Descuento ({{ formData.discount_percent }}%)</span>
+            <span class="font-semibold text-red-600">−{{ formatCurrency(discountAmount) }}</span>
+          </div>
+        </template>
+
+        <!-- Subtotal s/IVA -->
+        <div
+          class="flex justify-between items-center px-4 py-2.5 text-sm border-b border-slate-100"
+          :class="discountAmount > 0 ? 'bg-green-50' : 'bg-white'"
+        >
+          <div>
+            <div class="text-slate-600">Subtotal s/IVA</div>
+            <div v-if="discountAmount > 0" class="text-xs text-green-600 mt-0.5">Importe bruto menos descuento</div>
+          </div>
+          <span class="font-semibold" :class="discountAmount > 0 ? 'text-green-700' : 'text-slate-800'">
+            {{ formatCurrency(subtotal) }}
+          </span>
         </div>
 
-        <div class="flex justify-between text-sm">
-          <span class="text-slate-600">Impuesto ({{ formData.tax_rate }}%):</span>
-          <span class="font-medium text-slate-800">{{ formatCurrency(taxAmount) }}</span>
+        <!-- IVA (solo si hay impuesto) -->
+        <div v-if="taxAmount > 0" class="flex justify-between items-center px-4 py-2.5 text-sm bg-white border-b border-slate-100">
+          <span class="text-slate-500">IVA ({{ formData.tax_rate }}%)</span>
+          <span class="text-slate-700">{{ formatCurrency(taxAmount) }}</span>
         </div>
 
-        <div class="border-t border-slate-200 pt-2 flex justify-between">
-          <span class="text-base font-semibold text-slate-800">Total:</span>
-          <span class="text-base font-bold text-indigo-600">{{ formatCurrency(total) }}</span>
+        <!-- Total -->
+        <div class="flex justify-between items-center px-4 py-3 bg-gradient-to-r from-indigo-500 via-violet-600 to-fuchsia-600">
+          <div>
+            <div class="text-sm font-bold text-white">Total</div>
+            <div v-if="taxAmount > 0" class="text-xs text-indigo-200 mt-0.5">Subtotal + IVA</div>
+          </div>
+          <span class="text-lg font-bold text-white">{{ formatCurrency(total) }}</span>
         </div>
 
-        <div class="border-t border-slate-200 pt-2 grid grid-cols-2 gap-3">
-          <div class="bg-white rounded-lg p-3 text-center">
+        <!-- Margen -->
+        <div class="grid grid-cols-2 divide-x divide-slate-100 border-t border-slate-100">
+          <div class="px-4 py-3 text-center">
             <p class="text-sm font-bold" :class="margin >= 0 ? 'text-green-600' : 'text-red-600'">
               {{ formatCurrency(margin) }}
             </p>
-            <p class="text-xs text-slate-500">Margen</p>
+            <p class="text-xs text-slate-500 mt-0.5">Margen</p>
           </div>
-          <div class="bg-white rounded-lg p-3 text-center">
+          <div class="px-4 py-3 text-center">
             <p class="text-sm font-bold" :class="marginPercent >= 0 ? 'text-green-600' : 'text-red-600'">
               {{ marginPercent.toFixed(2) }}%
             </p>
-            <p class="text-xs text-slate-500">% Margen</p>
+            <p class="text-xs text-slate-500 mt-0.5">% Margen</p>
           </div>
         </div>
       </div>

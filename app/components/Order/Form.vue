@@ -506,46 +506,65 @@ const formatCurrency = (value: number): string => {
               <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Producto
               </th>
-              <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider w-24">
-                Cantidad
+              <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider w-20">
+                Cant.
               </th>
-              <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider w-32">
+              <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider w-28">
                 Precio Unit.
               </th>
-              <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider w-24">
-                Dto. %
+              <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider w-28">
+                Importe
               </th>
-              <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider w-24">
-                IVA %
+              <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider w-32">
+                Descuento
               </th>
-              <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider w-36">
-                Subtotal
+              <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider w-32">
+                IVA
+              </th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider w-32 bg-green-50/60">
+                Subtotal s/IVA
+              </th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider w-32">
+                Total c/IVA
               </th>
               <th v-if="isEditing" class="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider w-20">
               </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-slate-200">
-            <tr v-for="line in lines" :key="line.id" class="hover:bg-slate-50 transition-colors">
+            <tr v-for="line in lines" :key="line.id" class="hover:bg-slate-50/70 transition-colors">
               <td class="px-4 py-3">
                 <div class="text-sm font-medium text-slate-900">{{ line.product_name }}</div>
-                <div class="text-xs text-slate-500">{{ line.description }}</div>
+                <div v-if="line.description && line.description !== line.product_name" class="text-xs text-slate-500 mt-0.5">{{ line.description }}</div>
               </td>
-              <td class="px-4 py-3 text-right text-sm text-slate-900 font-medium">
+              <td class="px-4 py-3 text-right text-sm text-slate-700 font-medium">
                 {{ line.quantity }}
               </td>
-              <td class="px-4 py-3 text-right text-sm text-slate-900">
+              <td class="px-4 py-3 text-right text-sm text-slate-700">
                 {{ formatCurrency(line.unit_price) }}
               </td>
-              <td class="px-4 py-3 text-right text-sm text-slate-900">
-                <span v-if="line.discount_percent > 0" class="text-red-600">{{ line.discount_percent }}%</span>
-                <span v-else class="text-slate-400">—</span>
+              <td class="px-4 py-3 text-right text-sm text-slate-500">
+                {{ formatCurrency(Math.round(line.quantity * line.unit_price * 100) / 100) }}
               </td>
-              <td class="px-4 py-3 text-right text-sm text-slate-900">
-                {{ line.tax_rate }}%
+              <td class="px-4 py-3 text-right text-sm">
+                <template v-if="line.discount_amount > 0">
+                  <div class="text-xs text-slate-400">{{ line.discount_percent }}%</div>
+                  <div class="font-semibold text-red-600">−{{ formatCurrency(line.discount_amount) }}</div>
+                </template>
+                <span v-else class="text-slate-300">—</span>
               </td>
-              <td class="px-4 py-3 text-right text-sm font-semibold text-slate-900">
+              <td class="px-4 py-3 text-right text-sm">
+                <template v-if="line.tax_amount > 0">
+                  <div class="text-xs text-slate-400">{{ line.tax_rate }}%</div>
+                  <div class="text-slate-700">{{ formatCurrency(line.tax_amount) }}</div>
+                </template>
+                <span v-else class="text-slate-300">—</span>
+              </td>
+              <td class="px-4 py-3 text-right text-sm font-semibold text-slate-800 bg-green-50/40">
                 {{ formatCurrency(line.subtotal) }}
+              </td>
+              <td class="px-4 py-3 text-right text-sm font-bold text-slate-900">
+                {{ formatCurrency(line.total) }}
               </td>
               <td v-if="isEditing" class="px-4 py-3 text-center">
                 <div class="flex items-center justify-center gap-1">
@@ -571,7 +590,7 @@ const formatCurrency = (value: number): string => {
               </td>
             </tr>
             <tr v-if="lines.length === 0">
-              <td :colspan="isEditing ? 7 : 6" class="px-4 py-8 text-center text-slate-500">
+              <td :colspan="isEditing ? 9 : 8" class="px-4 py-8 text-center text-slate-500">
                 <div class="flex flex-col items-center gap-2">
                   <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -585,23 +604,53 @@ const formatCurrency = (value: number): string => {
       </div>
 
       <!-- Resumen de totales -->
-      <div class="flex justify-end mt-4">
-        <div class="w-full max-w-sm bg-slate-50 rounded-lg p-4 space-y-2">
-          <div class="flex justify-between text-sm">
-            <span class="text-slate-600">Subtotal:</span>
-            <span class="font-medium text-slate-800">{{ formatCurrency(formData.amount_untaxed) }}</span>
+      <div class="flex justify-end mt-5">
+        <div class="w-full max-w-sm rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+
+          <!-- Importe bruto + Descuento (solo si hay descuento) -->
+          <template v-if="formData.amount_discount > 0">
+            <div class="flex justify-between items-center px-4 py-2.5 text-sm bg-white border-b border-slate-100">
+              <span class="text-slate-500">Importe bruto</span>
+              <span class="text-slate-600">{{ formatCurrency(Math.round((formData.amount_untaxed + formData.amount_discount) * 100) / 100) }}</span>
+            </div>
+            <div class="flex justify-between items-center px-4 py-2.5 text-sm border-b border-slate-100">
+              <span class="text-slate-500">Descuento total</span>
+              <span class="font-semibold text-red-600">−{{ formatCurrency(formData.amount_discount) }}</span>
+            </div>
+          </template>
+
+          <!-- Subtotal s/IVA -->
+          <div
+            class="flex justify-between items-center px-4 py-2.5 text-sm border-b border-slate-100 transition-colors"
+            :class="formData.amount_discount > 0 ? 'bg-green-50' : 'bg-white'"
+          >
+            <div>
+              <div class="text-slate-600">Subtotal s/IVA</div>
+              <div v-if="formData.amount_discount > 0" class="text-xs text-green-600 mt-0.5">
+                Importe bruto menos descuento
+              </div>
+            </div>
+            <span
+              class="font-semibold"
+              :class="formData.amount_discount > 0 ? 'text-green-700' : 'text-slate-800'"
+            >
+              {{ formatCurrency(formData.amount_untaxed) }}
+            </span>
           </div>
-          <div v-if="formData.amount_discount > 0" class="flex justify-between text-sm">
-            <span class="text-slate-600">Descuento:</span>
-            <span class="font-medium text-red-600">-{{ formatCurrency(formData.amount_discount) }}</span>
+
+          <!-- IVA (solo si hay impuesto) -->
+          <div v-if="formData.amount_tax > 0" class="flex justify-between items-center px-4 py-2.5 text-sm bg-white border-b border-slate-100">
+            <span class="text-slate-500">IVA ({{ formData.tax_rate }}%)</span>
+            <span class="text-slate-700">{{ formatCurrency(formData.amount_tax) }}</span>
           </div>
-          <div class="flex justify-between text-sm">
-            <span class="text-slate-600">Impuestos:</span>
-            <span class="font-medium text-slate-800">{{ formatCurrency(formData.amount_tax) }}</span>
-          </div>
-          <div class="border-t border-slate-200 pt-2 flex justify-between">
-            <span class="text-base font-semibold text-slate-800">Total:</span>
-            <span class="text-base font-bold text-indigo-600">{{ formatCurrency(formData.amount_total) }}</span>
+
+          <!-- Total -->
+          <div class="flex justify-between items-center px-4 py-3 bg-gradient-to-r from-indigo-500 via-violet-600 to-fuchsia-600">
+            <div>
+              <div class="text-sm font-bold text-white">Total</div>
+              <div v-if="formData.amount_tax > 0" class="text-xs text-indigo-200 mt-0.5">Subtotal + IVA</div>
+            </div>
+            <span class="text-lg font-bold text-white">{{ formatCurrency(formData.amount_total) }}</span>
           </div>
         </div>
       </div>
