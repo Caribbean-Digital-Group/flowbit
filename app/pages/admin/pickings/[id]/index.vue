@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
+import QRCode from 'qrcode'
 import type { MenuOption } from '~/components/CardSheet.vue'
 import {
   createEmptyPickingForm,
@@ -71,8 +72,26 @@ const statusVariant: Record<PickingStatus, 'warning' | 'primary' | 'success' | '
   cancelado: 'danger'
 }
 
+const showQrPanel = ref(false)
+
 const menuOptions = computed<MenuOption[]>(() => {
   const options: MenuOption[] = []
+  if (status.value === 'publicado') {
+    options.push({
+      id: 'scan',
+      label: 'Iniciar escaneo',
+      icon: 'M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 4v4m-4-4v4m-4-11h.01M4 20h4M4 4h4',
+      action: () => router.push(`/admin/pickings/${rowId.value}/scan`),
+      variant: 'default'
+    })
+  }
+  options.push({
+    id: 'qr-code',
+    label: 'Ver código QR',
+    icon: 'M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 4v4m-4-4v4m-4-11h.01M4 20h4M4 4h4',
+    action: () => { showQrPanel.value = !showQrPanel.value },
+    variant: 'default'
+  })
   options.push({
     id: 'print-picking',
     label: 'Imprimir picking',
@@ -357,7 +376,7 @@ const printHtml = (html: string) => {
   setTimeout(printAndCleanup, 400)
 }
 
-const buildPickingPrintableHtml = () => {
+const buildPickingPrintableHtml = (qrSvg: string) => {
   const co = selectedCompany.value
   const accentColor = co?.primary_color || '#2563eb'
   const companyName = co?.display_name || co?.name || ''
@@ -436,11 +455,17 @@ const buildPickingPrintableHtml = () => {
         ${co?.email ? `<div style="font-size:11px;color:#64748b;margin-top:1px">${co.email}</div>` : ''}
       </div>
     </div>
-    <div style="text-align:right">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${accentColor};margin-bottom:4px">Orden de Almacén</div>
-      <div style="font-size:28px;font-weight:800;letter-spacing:-0.5px;line-height:1;color:${typeColor}">${typeLabel[pickType.value].toUpperCase()}</div>
-      <div style="font-size:16px;font-weight:600;color:#0f172a;margin-top:4px">${pickName.value}</div>
-      <span style="display:inline-block;margin-top:8px;padding:3px 12px;border-radius:999px;font-size:11px;font-weight:700;${badgeStyle}">${statusLabel[status.value]}</span>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px">
+      <div style="text-align:right">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${accentColor};margin-bottom:4px">Orden de Almacén</div>
+        <div style="font-size:28px;font-weight:800;letter-spacing:-0.5px;line-height:1;color:${typeColor}">${typeLabel[pickType.value].toUpperCase()}</div>
+        <div style="font-size:16px;font-weight:600;color:#0f172a;margin-top:4px">${pickName.value}</div>
+        <span style="display:inline-block;margin-top:8px;padding:3px 12px;border-radius:999px;font-size:11px;font-weight:700;${badgeStyle}">${statusLabel[status.value]}</span>
+      </div>
+      <div style="border:1px solid #e2e8f0;border-radius:8px;padding:6px;background:#fff;text-align:center">
+        <div style="width:90px;height:90px">${qrSvg}</div>
+        <div style="font-size:9px;color:#94a3b8;margin-top:3px;font-family:sans-serif">Escanear picking</div>
+      </div>
     </div>
   </div>
 
@@ -505,7 +530,7 @@ const buildPickingPrintableHtml = () => {
 </html>`
 }
 
-const buildPickingTicketHtml = () => {
+const buildPickingTicketHtml = (qrSvg: string) => {
   const co = selectedCompany.value
   const accentColor = co?.primary_color || '#2563eb'
   const companyName = co?.display_name || co?.name || ''
@@ -579,6 +604,13 @@ const buildPickingTicketHtml = () => {
     <span style="display:inline-block;margin-top:5px;padding:2px 10px;border-radius:999px;font-size:10px;font-weight:700;background:${accentColor};color:#fff">${statusLabel[status.value]}</span>
   </div>
 
+  <div style="display:flex;justify-content:center;margin:10px 0">
+    <div style="text-align:center">
+      <div style="width:100px;height:100px;margin:0 auto">${qrSvg}</div>
+      <div style="font-size:9px;color:#94a3b8;margin-top:3px;font-family:monospace">Escanear para procesar</div>
+    </div>
+  </div>
+
   ${sep}
 
   <!-- Datos -->
@@ -634,8 +666,30 @@ const buildPickingTicketHtml = () => {
 </html>`
 }
 
-const handlePrintPicking = () => printHtml(buildPickingPrintableHtml())
-const handlePrintTicket = () => printHtml(buildPickingTicketHtml())
+const generateQrSvg = async (url: string): Promise<string> => {
+  const svg = await QRCode.toString(url, {
+    type: 'svg',
+    margin: 1,
+    color: { dark: '#0f172a', light: '#ffffff' }
+  })
+  return svg
+    .replace(/width="[^"]*"/, 'width="100%"')
+    .replace(/height="[^"]*"/, 'height="100%"')
+}
+
+const handlePrintPicking = async () => {
+  const config = useRuntimeConfig()
+  const scanUrl = `${config.public.siteUrl}/admin/pickings/${rowId.value}/scan`
+  const qrSvg = await generateQrSvg(scanUrl)
+  printHtml(buildPickingPrintableHtml(qrSvg))
+}
+
+const handlePrintTicket = async () => {
+  const config = useRuntimeConfig()
+  const scanUrl = `${config.public.siteUrl}/admin/pickings/${rowId.value}/scan`
+  const qrSvg = await generateQrSvg(scanUrl)
+  printHtml(buildPickingTicketHtml(qrSvg))
+}
 </script>
 
 <template>
@@ -658,6 +712,47 @@ const handlePrintTicket = () => printHtml(buildPickingTicketHtml())
         class="mb-6 rounded-2xl border border-red-100 bg-red-50 px-6 py-4 text-red-700"
       >
         {{ errorMessage }}
+      </div>
+
+      <!-- PANEL QR -->
+      <div
+        v-if="showQrPanel"
+        class="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+      >
+        <div class="flex flex-col sm:flex-row gap-6 items-start">
+          <PickingQrCode :picking-id="rowId ?? ''" :picking-name="pickName" :size="140" />
+          <div class="flex-1 space-y-3">
+            <div>
+              <p class="text-sm font-semibold text-slate-800">Código QR de escaneo</p>
+              <p class="text-sm text-slate-500 mt-1">
+                Escanea este QR con la cámara del celular del operador o con un lector para abrir directamente la vista de escaneo de este picking.
+              </p>
+            </div>
+            <div class="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 space-y-2">
+              <div class="flex items-center gap-2 text-xs text-slate-500">
+                <svg class="w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Funcionan pistolas barcode USB/Bluetooth en modo keyboard-wedge.</span>
+              </div>
+              <div class="flex items-center gap-2 text-xs text-slate-500">
+                <svg class="w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <span>También puedes abrirlo desde cualquier dispositivo móvil con la cámara.</span>
+              </div>
+            </div>
+            <NuxtLink
+              :to="`/admin/pickings/${rowId}/scan`"
+              class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-600 to-fuchsia-600 px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 4v4m-4-4v4m-4-11h.01M4 20h4M4 4h4" />
+              </svg>
+              Abrir vista de escaneo
+            </NuxtLink>
+          </div>
+        </div>
       </div>
 
       <div
