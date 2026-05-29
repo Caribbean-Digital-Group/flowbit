@@ -9,6 +9,20 @@ definePageMeta({
 
 type OrderListRow = Database['public']['Views']['v_orders']['Row']
 
+const paymentStatusValues = ['unpaid', 'partial', 'paid', 'condoned', 'overdue'] as const
+type PaymentStatusValue = typeof paymentStatusValues[number]
+
+const paymentStatusConfig = {
+  labels: { unpaid: 'No pagado', partial: 'Parcial', paid: 'Pagado', condoned: 'Condonado', overdue: 'Vencido' },
+  colors: {
+    unpaid:   'bg-slate-100 text-slate-600',
+    partial:  'bg-amber-100 text-amber-700',
+    paid:     'bg-emerald-100 text-emerald-700',
+    condoned: 'bg-indigo-100 text-indigo-700',
+    overdue:  'bg-red-100 text-red-700'
+  }
+}
+
 const columns: Column[] = [
   {
     key: 'name',
@@ -39,6 +53,12 @@ const columns: Column[] = [
       }
     }
   },
+  {
+    key: 'payment_status',
+    label: 'Pago',
+    type: 'badge',
+    badgeConfig: paymentStatusConfig
+  },
   { key: 'amount_total', label: 'Total', type: 'currency', currencyKey: 'currency' },
   { key: 'order_date', label: 'Fecha', type: 'date' }
 ]
@@ -52,16 +72,24 @@ const orders = ref<Record<string, unknown>[]>([])
 const isLoadingOrders = ref(false)
 const selectedTypeFilters = ref<Array<'sale' | 'purchase'>>(['sale', 'purchase'])
 const selectedStateFilters = ref<Array<'draft' | 'posted' | 'cancel'>>(['draft', 'posted', 'cancel'])
-const selectedFulfillmentFilters = ref<Array<'compliant' | 'invoiced' | 'delivered' | 'paid'>>([])
+const selectedFulfillmentFilters = ref<Array<'compliant' | 'invoiced' | 'delivered'>>([])
+const selectedPaymentStatusFilters = ref<PaymentStatusValue[]>([...paymentStatusValues])
 const selectedCurrencyFilters = ref<string[]>([])
 
 function mapOrderToTableRow(raw: OrderListRow): Record<string, unknown> {
+  const rowAny = raw as Record<string, unknown>
+  const rawStatus = rowAny['payment_status'] as string | null | undefined
+  const paymentStatus: PaymentStatusValue = paymentStatusValues.includes(rawStatus as PaymentStatusValue)
+    ? (rawStatus as PaymentStatusValue)
+    : ((raw.is_paid ?? false) ? 'paid' : 'unpaid')
+
   return {
     id: raw.id,
     name: raw.name ?? '—',
     partner_name: raw.partner_name?.trim() || '—',
     order_type: raw.order_type,
     order_state: raw.order_state,
+    payment_status: paymentStatus,
     amount_total: raw.amount_total ?? 0,
     currency: raw.currency ?? 'MXN',
     order_date: raw.order_date ?? '',
@@ -95,28 +123,29 @@ const filteredOrders = computed(() => {
   const typeFilters = selectedTypeFilters.value
   const stateFilters = selectedStateFilters.value
   const fulfillmentFilters = selectedFulfillmentFilters.value
+  const paymentStatusFilters = selectedPaymentStatusFilters.value
   const currencyFilters = selectedCurrencyFilters.value
 
-  if (typeFilters.length === 0 || stateFilters.length === 0) return []
+  if (typeFilters.length === 0 || stateFilters.length === 0 || paymentStatusFilters.length === 0) return []
 
   return orders.value.filter((row) => {
     const orderType = row.order_type as 'sale' | 'purchase' | null
     const orderState = row.order_state as 'draft' | 'posted' | 'cancel' | null
     const orderCurrency = (String(row.currency ?? 'MXN').trim().toUpperCase()) || 'MXN'
+    const paymentStatus = (row.payment_status as PaymentStatusValue) ?? 'unpaid'
     const isInvoiced = row.is_invoiced === true
     const isDelivered = row.is_delivered === true
-    const isPaid = row.is_paid === true
-    const isCompliant = isInvoiced && isDelivered && isPaid
+    const isCompliant = isInvoiced && isDelivered && paymentStatus === 'paid'
 
     if (!orderType || !orderState) return false
     if (!typeFilters.includes(orderType)) return false
     if (!stateFilters.includes(orderState)) return false
+    if (!paymentStatusFilters.includes(paymentStatus)) return false
     if (currencyFilters.length > 0 && !currencyFilters.includes(orderCurrency)) return false
 
     if (fulfillmentFilters.includes('compliant') && !isCompliant) return false
     if (fulfillmentFilters.includes('invoiced') && !isInvoiced) return false
     if (fulfillmentFilters.includes('delivered') && !isDelivered) return false
-    if (fulfillmentFilters.includes('paid') && !isPaid) return false
 
     return true
   })
@@ -134,14 +163,14 @@ const availableCurrencies = computed(() => {
 const selectedFiltersLabel = computed(() => {
   const typeCount = selectedTypeFilters.value.length
   const stateCount = selectedStateFilters.value.length
-  const fulfillmentCount = selectedFulfillmentFilters.value.length
+  const paymentCount = selectedPaymentStatusFilters.value.length
+  const paymentTotal = paymentStatusValues.length
   const currencyCount = selectedCurrencyFilters.value.length
   const currencyTotal = availableCurrencies.value.length
-  const currencyLabel = currencyCount === 0
-    ? `${currencyTotal} moneda(s)`
-    : `${currencyCount} moneda(s)`
+  const paymentLabel = paymentCount === paymentTotal ? 'todos los pagos' : `${paymentCount} pago(s)`
+  const currencyLabel = currencyCount === 0 ? `${currencyTotal} moneda(s)` : `${currencyCount} moneda(s)`
 
-  return `${typeCount} tipo(s) · ${stateCount} estado(s) · ${fulfillmentCount} cumplimiento · ${currencyLabel}`
+  return `${typeCount} tipo(s) · ${stateCount} estado(s) · ${paymentLabel} · ${currencyLabel}`
 })
 
 const toggleTypeFilter = (value: 'sale' | 'purchase') => {
@@ -158,9 +187,16 @@ const toggleStateFilter = (value: 'draft' | 'posted' | 'cancel') => {
     : [...current, value]
 }
 
-const toggleFulfillmentFilter = (value: 'compliant' | 'invoiced' | 'delivered' | 'paid') => {
+const toggleFulfillmentFilter = (value: 'compliant' | 'invoiced' | 'delivered') => {
   const current = selectedFulfillmentFilters.value
   selectedFulfillmentFilters.value = current.includes(value)
+    ? current.filter((item) => item !== value)
+    : [...current, value]
+}
+
+const togglePaymentStatusFilter = (value: PaymentStatusValue) => {
+  const current = selectedPaymentStatusFilters.value
+  selectedPaymentStatusFilters.value = current.includes(value)
     ? current.filter((item) => item !== value)
     : [...current, value]
 }
@@ -176,6 +212,7 @@ const resetFilters = () => {
   selectedTypeFilters.value = ['sale', 'purchase']
   selectedStateFilters.value = ['draft', 'posted', 'cancel']
   selectedFulfillmentFilters.value = []
+  selectedPaymentStatusFilters.value = [...paymentStatusValues]
   selectedCurrencyFilters.value = []
 }
 
@@ -343,14 +380,26 @@ const deleteMany = async (selected: Record<string, unknown>[]) => {
                     >
                     Entregada
                   </label>
-                  <label class="flex items-center gap-2 text-sm text-slate-700">
+                </div>
+              </div>
+
+              <div class="mt-4 border-t border-slate-100 pt-4">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Estatus de Pago
+                </p>
+                <div class="mt-2 space-y-2">
+                  <label
+                    v-for="status in paymentStatusValues"
+                    :key="status"
+                    class="flex items-center gap-2 text-sm text-slate-700"
+                  >
                     <input
                       type="checkbox"
-                      :checked="selectedFulfillmentFilters.includes('paid')"
+                      :checked="selectedPaymentStatusFilters.includes(status)"
                       class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                      @change="toggleFulfillmentFilter('paid')"
+                      @change="togglePaymentStatusFilter(status)"
                     >
-                    Pagada
+                    {{ paymentStatusConfig.labels[status] }}
                   </label>
                 </div>
               </div>

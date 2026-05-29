@@ -777,6 +777,8 @@ export type Database = {
           order_type: Database["public"]["Enums"]["order_type"]
           partner_id: string
           payment_due_date: string | null
+          payment_method_id: string | null
+          payment_status: string | null
           payment_term: string | null
           project_id: string | null
           reference: string | null
@@ -816,6 +818,8 @@ export type Database = {
           order_type?: Database["public"]["Enums"]["order_type"]
           partner_id: string
           payment_due_date?: string | null
+          payment_method_id?: string | null
+          payment_status?: string | null
           payment_term?: string | null
           project_id?: string | null
           reference?: string | null
@@ -855,6 +859,8 @@ export type Database = {
           order_type?: Database["public"]["Enums"]["order_type"]
           partner_id?: string
           payment_due_date?: string | null
+          payment_method_id?: string | null
+          payment_status?: string | null
           payment_term?: string | null
           project_id?: string | null
           reference?: string | null
@@ -890,6 +896,13 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_method"
             referencedColumns: ["id"]
           },
           {
@@ -1203,6 +1216,53 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_method: {
+        Row: {
+          active: boolean | null
+          code: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          code?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          code?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_method_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
             referencedColumns: ["id"]
           },
         ]

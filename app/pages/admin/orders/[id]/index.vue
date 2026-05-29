@@ -32,6 +32,7 @@ const {
 
 const { getPartnersByCompany } = usePartner()
 const { getProjectsByCompany } = useProject()
+const { getAllByCompany: getPaymentMethodsByCompany } = usePaymentMethod()
 const {
   getOrderLineViewsByOrderId,
   deleteOrderLine,
@@ -56,6 +57,7 @@ const errorMessage = ref<string | null>(null)
 const stockShortageLines = ref<StockShortageRow[]>([])
 const partnerOptions = ref<{ value: string; label: string }[]>([])
 const projectOptions = ref<{ value: string; label: string }[]>([])
+const paymentMethodOptions = ref<{ value: string; label: string }[]>([])
 
 const formData = ref<OrderFormData>(createEmptyOrderForm())
 const orderLines = ref<OrderLine[]>([])
@@ -151,42 +153,57 @@ watch(isEditing, (editing) => {
   }
 })
 
-const mapViewToForm = (v: OrderViewRow): OrderFormData => ({
-  name: v.name ?? '',
-  order_type: v.order_type ?? 'sale',
-  reference: v.reference ?? '',
-  order_state: v.order_state ?? 'draft',
-  project_id: v.project_id ?? null,
-  project_name: v.project_name ?? '',
-  partner_id: v.partner_id ?? null,
-  partner_name: v.partner_name ?? '',
-  created_by_partner_id: v.created_by_partner_id ?? null,
-  created_by_partner_name: v.created_by_partner_name ?? '',
-  order_date: v.order_date ?? '',
-  confirmation_date: v.confirmation_date ?? null,
-  delivery_date: v.delivery_date ?? '',
-  currency: v.currency ?? 'MXN',
-  exchange_rate: v.exchange_rate ?? 1,
-  tax_rate: v.tax_rate ?? 0,
-  tax_included: v.tax_included ?? false,
-  amount_untaxed: v.amount_untaxed ?? 0,
-  amount_tax: v.amount_tax ?? 0,
-  amount_total: v.amount_total ?? 0,
-  amount_discount: v.amount_discount ?? 0,
-  payment_term: v.payment_term ?? '',
-  payment_due_date: v.payment_due_date ?? '',
-  shipping_street: v.shipping_street ?? '',
-  shipping_street2: v.shipping_street2 ?? '',
-  shipping_city: v.shipping_city ?? '',
-  shipping_state: v.shipping_state ?? '',
-  shipping_zip: v.shipping_zip ?? '',
-  shipping_country_code: v.shipping_country_code ?? 'MX',
-  notes: v.notes ?? '',
-  terms: v.terms ?? '',
-  is_invoiced: v.is_invoiced ?? false,
-  is_delivered: v.is_delivered ?? false,
-  is_paid: v.is_paid ?? false
-})
+const mapViewToForm = (v: OrderViewRow): OrderFormData => {
+  const row = v as Record<string, unknown>
+  const rawStatus = row['payment_status'] as string | null | undefined
+  const validStatuses = ['unpaid', 'partial', 'paid', 'condoned', 'overdue'] as const
+  const paymentStatus = validStatuses.includes(rawStatus as typeof validStatuses[number])
+    ? rawStatus as typeof validStatuses[number]
+    : ((v.is_paid ?? false) ? 'paid' : 'unpaid')
+
+  const pmId = (row['payment_method_id'] as string | null) ?? null
+  const pmName = paymentMethodOptions.value.find(o => o.value === pmId)?.label ?? ''
+
+  return {
+    name: v.name ?? '',
+    order_type: v.order_type ?? 'sale',
+    reference: v.reference ?? '',
+    order_state: v.order_state ?? 'draft',
+    project_id: v.project_id ?? null,
+    project_name: v.project_name ?? '',
+    partner_id: v.partner_id ?? null,
+    partner_name: v.partner_name ?? '',
+    created_by_partner_id: v.created_by_partner_id ?? null,
+    created_by_partner_name: v.created_by_partner_name ?? '',
+    order_date: v.order_date ?? '',
+    confirmation_date: v.confirmation_date ?? null,
+    delivery_date: v.delivery_date ?? '',
+    currency: v.currency ?? 'MXN',
+    exchange_rate: v.exchange_rate ?? 1,
+    tax_rate: v.tax_rate ?? 0,
+    tax_included: v.tax_included ?? false,
+    amount_untaxed: v.amount_untaxed ?? 0,
+    amount_tax: v.amount_tax ?? 0,
+    amount_total: v.amount_total ?? 0,
+    amount_discount: v.amount_discount ?? 0,
+    payment_method_id: pmId,
+    payment_method_name: pmName,
+    payment_status: paymentStatus,
+    payment_term: v.payment_term ?? '',
+    payment_due_date: v.payment_due_date ?? '',
+    shipping_street: v.shipping_street ?? '',
+    shipping_street2: v.shipping_street2 ?? '',
+    shipping_city: v.shipping_city ?? '',
+    shipping_state: v.shipping_state ?? '',
+    shipping_zip: v.shipping_zip ?? '',
+    shipping_country_code: v.shipping_country_code ?? 'MX',
+    notes: v.notes ?? '',
+    terms: v.terms ?? '',
+    is_invoiced: v.is_invoiced ?? false,
+    is_delivered: v.is_delivered ?? false,
+    is_paid: v.is_paid ?? false
+  }
+}
 
 const mapViewLineToUi = (row: OrderLineViewRow): OrderLine => ({
   id: row.id ?? crypto.randomUUID(),
@@ -209,41 +226,51 @@ const mapViewLineToUi = (row: OrderLineViewRow): OrderLine => ({
   margin_percent: row.margin_percent ?? 0
 })
 
-const mapFormToOrderUpdate = (value: OrderFormData): TablesUpdate<'order'> => ({
-  partner_id: value.partner_id ?? undefined,
-  project_id: value.project_id ?? null,
-  reference: value.reference.trim() || null,
-  order_date: value.order_date,
-  delivery_date: value.delivery_date.trim() || null,
-  currency: value.currency.trim() || 'MXN',
-  exchange_rate: value.exchange_rate,
-  tax_rate: value.tax_rate,
-  tax_included: value.tax_included,
-  payment_term: value.payment_term.trim() || null,
-  payment_due_date: value.payment_due_date.trim() || null,
-  shipping_street: value.shipping_street.trim() || null,
-  shipping_street2: value.shipping_street2.trim() || null,
-  shipping_city: value.shipping_city.trim() || null,
-  shipping_state: value.shipping_state.trim() || null,
-  shipping_zip: value.shipping_zip.trim() || null,
-  shipping_country_code: value.shipping_country_code.trim() || null,
-  notes: value.notes.trim() || null,
-  terms: value.terms.trim() || null,
-  is_invoiced: value.is_invoiced,
-  is_delivered: value.is_delivered,
-  is_paid: value.is_paid,
-  order_type: value.order_type
-})
+const mapFormToOrderUpdate = (value: OrderFormData): TablesUpdate<'order'> => {
+  const base: TablesUpdate<'order'> = {
+    partner_id: value.partner_id ?? undefined,
+    project_id: value.project_id ?? null,
+    reference: value.reference.trim() || null,
+    order_date: value.order_date,
+    delivery_date: value.delivery_date.trim() || null,
+    currency: value.currency.trim() || 'MXN',
+    exchange_rate: value.exchange_rate,
+    tax_rate: value.tax_rate,
+    tax_included: value.tax_included,
+    payment_term: value.payment_term.trim() || null,
+    payment_due_date: value.payment_due_date.trim() || null,
+    shipping_street: value.shipping_street.trim() || null,
+    shipping_street2: value.shipping_street2.trim() || null,
+    shipping_city: value.shipping_city.trim() || null,
+    shipping_state: value.shipping_state.trim() || null,
+    shipping_zip: value.shipping_zip.trim() || null,
+    shipping_country_code: value.shipping_country_code.trim() || null,
+    notes: value.notes.trim() || null,
+    terms: value.terms.trim() || null,
+    is_invoiced: value.is_invoiced,
+    is_delivered: value.is_delivered,
+    is_paid: value.payment_status === 'paid',
+    order_type: value.order_type
+  }
+  // Los campos payment_method_id y payment_status se agregan al tipo
+  // después de correr: npm run db:migration:up && npm run db:types
+  const extended = base as Record<string, unknown>
+  extended['payment_method_id'] = value.payment_method_id || null
+  extended['payment_status'] = value.payment_status
+  return base
+}
 
 const loadPartners = async () => {
   const companyId = selectedCompanyId.value
   partnerOptions.value = []
   projectOptions.value = []
+  paymentMethodOptions.value = []
   if (!companyId) return
 
-  const [partners, projects] = await Promise.all([
+  const [partners, projects, paymentMethods] = await Promise.all([
     getPartnersByCompany(companyId),
-    getProjectsByCompany(companyId)
+    getProjectsByCompany(companyId),
+    getPaymentMethodsByCompany(companyId)
   ])
   partnerOptions.value = partners.map((p) => ({
     value: p.id,
@@ -253,6 +280,10 @@ const loadPartners = async () => {
     value: p.id ?? '',
     label: [p.code, p.name].filter(Boolean).join(' · ') || 'Proyecto'
   })).filter((p) => p.value)
+  paymentMethodOptions.value = (paymentMethods as Array<{ id: string; name: string }>).map((pm) => ({
+    value: pm.id,
+    label: pm.name
+  }))
 }
 
 const loadOrder = async () => {
@@ -1065,7 +1096,8 @@ const formatDate = (dateString: string | null): string => {
         v-model:lines="orderLines"
         :readonly="!isEditing"
         :partner-options="partnerOptions"
-          :project-options="projectOptions"
+        :project-options="projectOptions"
+        :payment-method-options="paymentMethodOptions"
         :company-id="selectedCompanyId"
       />
     </CardSheet>
