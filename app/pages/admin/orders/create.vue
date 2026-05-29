@@ -25,11 +25,13 @@ const preselectedPartnerId = computed(() => {
 const { createDraftOrder, updateOrder, addOrderLineRpc } = useOrder()
 const { getPartnersByCompany } = usePartner()
 const { getProjectsByCompany } = useProject()
+const { getAllByCompany: getPaymentMethodsByCompany } = usePaymentMethod()
 
 const formData = ref<OrderFormData>(createEmptyOrderForm())
 const orderLines = ref<OrderLine[]>([])
 const partnerOptions = ref<{ value: string; label: string }[]>([])
 const projectOptions = ref<{ value: string; label: string }[]>([])
+const paymentMethodOptions = ref<{ value: string; label: string }[]>([])
 const isSaving = ref(false)
 const errorMessage = ref<string | null>(null)
 
@@ -55,9 +57,10 @@ const mapFormToOrderUpdate = (value: OrderFormData): TablesUpdate<'order'> => ({
   terms: value.terms.trim() || null,
   is_invoiced: value.is_invoiced,
   is_delivered: value.is_delivered,
-  is_paid: value.is_paid,
-  order_type: value.order_type
-})
+  is_paid: value.payment_status === 'paid',
+  order_type: value.order_type,
+  ...({ payment_method_id: value.payment_method_id || null, payment_status: value.payment_status } as Record<string, unknown>)
+} as TablesUpdate<'order'>)
 
 const loadPartners = async () => {
   const companyId = selectedCompanyId.value
@@ -70,9 +73,10 @@ const loadPartners = async () => {
 
   if (!companyId) return
 
-  const [partners, projects] = await Promise.all([
+  const [partners, projects, paymentMethods] = await Promise.all([
     getPartnersByCompany(companyId),
-    getProjectsByCompany(companyId)
+    getProjectsByCompany(companyId),
+    getPaymentMethodsByCompany(companyId)
   ])
   partnerOptions.value = partners.map((p) => ({
     value: p.id,
@@ -82,6 +86,10 @@ const loadPartners = async () => {
     value: p.id ?? '',
     label: [p.code, p.name].filter(Boolean).join(' · ') || 'Proyecto'
   })).filter((p) => p.value)
+  paymentMethodOptions.value = (paymentMethods as Array<{ id: string; name: string }>).map((pm) => ({
+    value: pm.id,
+    label: pm.name
+  }))
 
   const pid = preselectedPartnerId.value
   if (pid && partnerOptions.value.some(p => p.value === pid)) {
@@ -208,6 +216,7 @@ const handleCancel = () => {
       v-model:lines="orderLines"
       :partner-options="partnerOptions"
       :project-options="projectOptions"
+      :payment-method-options="paymentMethodOptions"
       :company-id="selectedCompanyId"
     />
   </CardSheet>
