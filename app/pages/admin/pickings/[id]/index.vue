@@ -72,8 +72,6 @@ const statusVariant: Record<PickingStatus, 'warning' | 'primary' | 'success' | '
   cancelado: 'danger'
 }
 
-const showQrPanel = ref(false)
-
 const menuOptions = computed<MenuOption[]>(() => {
   const options: MenuOption[] = []
   if (status.value === 'publicado') {
@@ -85,13 +83,6 @@ const menuOptions = computed<MenuOption[]>(() => {
       variant: 'default'
     })
   }
-  options.push({
-    id: 'qr-code',
-    label: 'Ver código QR',
-    icon: 'M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 4v4m-4-4v4m-4-11h.01M4 20h4M4 4h4',
-    action: () => { showQrPanel.value = !showQrPanel.value },
-    variant: 'default'
-  })
   options.push({
     id: 'print-picking',
     label: 'Imprimir picking',
@@ -714,47 +705,6 @@ const handlePrintTicket = async () => {
         {{ errorMessage }}
       </div>
 
-      <!-- PANEL QR -->
-      <div
-        v-if="showQrPanel"
-        class="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-      >
-        <div class="flex flex-col sm:flex-row gap-6 items-start">
-          <PickingQrCode :picking-id="rowId ?? ''" :picking-name="pickName" :size="140" />
-          <div class="flex-1 space-y-3">
-            <div>
-              <p class="text-sm font-semibold text-slate-800">Código QR de escaneo</p>
-              <p class="text-sm text-slate-500 mt-1">
-                Escanea este QR con la cámara del celular del operador o con un lector para abrir directamente la vista de escaneo de este picking.
-              </p>
-            </div>
-            <div class="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 space-y-2">
-              <div class="flex items-center gap-2 text-xs text-slate-500">
-                <svg class="w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Funcionan pistolas barcode USB/Bluetooth en modo keyboard-wedge.</span>
-              </div>
-              <div class="flex items-center gap-2 text-xs text-slate-500">
-                <svg class="w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-                <span>También puedes abrirlo desde cualquier dispositivo móvil con la cámara.</span>
-              </div>
-            </div>
-            <NuxtLink
-              :to="`/admin/pickings/${rowId}/scan`"
-              class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-600 to-fuchsia-600 px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 4v4m-4-4v4m-4-11h.01M4 20h4M4 4h4" />
-              </svg>
-              Abrir vista de escaneo
-            </NuxtLink>
-          </div>
-        </div>
-      </div>
-
       <div
         v-if="isConfirmed"
         class="mb-6 rounded-2xl border border-emerald-100 bg-emerald-50 px-6 py-4 text-emerald-800"
@@ -783,6 +733,28 @@ const handlePrintTicket = async () => {
         :product-options="productOptions"
         :warehouse-options="warehouseOptions"
       />
+
+      <!-- SECCIÓN QR - siempre visible -->
+      <div class="mt-8 pt-6 border-t border-slate-200">
+        <h3 class="text-sm font-semibold text-slate-700 mb-4">Código QR del picking</h3>
+        <div class="flex flex-col sm:flex-row gap-5 items-start">
+          <PickingQrCode :picking-id="rowId ?? ''" :picking-name="pickName" :size="128" />
+          <div class="flex-1 space-y-3">
+            <p class="text-sm text-slate-500">
+              Escanea con la cámara del operador o con un lector para abrir directamente la vista de escaneo de este picking en cualquier dispositivo.
+            </p>
+            <NuxtLink
+              :to="`/admin/pickings/${rowId}/scan`"
+              class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-600 to-fuchsia-600 px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 4v4m-4-4v4m-4-11h.01M4 20h4M4 4h4" />
+              </svg>
+              Abrir vista de escaneo
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
     </CardSheet>
   </div>
 </template>

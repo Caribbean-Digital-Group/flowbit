@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import type { Tables } from '~/types/database.types'
-
 definePageMeta({ layout: 'admin' })
 
-type PickingLine = Tables<'picking_line'>
 type TrackingType = 'none' | 'lot' | 'serial'
 type ScanStage = 'scan_product' | 'scan_serial' | 'scan_lot' | 'confirm_quantity'
 type LineStatus = 'pending' | 'scanned' | 'discrepancy'
@@ -53,8 +50,6 @@ const scanInput = ref('')
 const stageError = ref<string | null>(null)
 const scanInputRef = ref<HTMLInputElement | null>(null)
 const showSummary = ref(false)
-const showDiscrepancyModal = ref(false)
-const discrepancyNote = ref('')
 
 const currentLine = computed(() => scanLines.value[currentIndex.value] ?? null)
 const doneCount = computed(() => scanLines.value.filter((l) => l.status !== 'pending').length)
@@ -259,6 +254,15 @@ const confirmPicking = async () => {
   isSaving.value = true
   errorMessage.value = null
   try {
+    if (pickingStatus.value === 'borrador') {
+      const published = await setPickingStatus(id, 'publicado')
+      if (!published) {
+        errorMessage.value = 'No se pudo publicar el picking antes de confirmarlo.'
+        return
+      }
+      pickingStatus.value = 'publicado'
+    }
+
     const ok = await setPickingStatus(id, 'confirmado')
     if (!ok) {
       errorMessage.value = 'No se pudo confirmar el picking. Verifica el estado e intenta de nuevo.'
