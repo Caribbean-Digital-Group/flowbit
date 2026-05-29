@@ -1276,6 +1276,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           id: string
+          is_partial: boolean | null
           is_return: boolean | null
           name: string | null
           notes: string | null
@@ -1295,6 +1296,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           id?: string
+          is_partial?: boolean | null
           is_return?: boolean | null
           name?: string | null
           notes?: string | null
@@ -1314,6 +1316,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           id?: string
+          is_partial?: boolean | null
           is_return?: boolean | null
           name?: string | null
           notes?: string | null
@@ -1364,6 +1367,7 @@ export type Database = {
           created_by: string | null
           done_quantity: number | null
           id: string
+          is_partial: boolean | null
           lot_name: string | null
           picking_id: string
           product_id: string
@@ -1383,6 +1387,7 @@ export type Database = {
           created_by?: string | null
           done_quantity?: number | null
           id?: string
+          is_partial?: boolean | null
           lot_name?: string | null
           picking_id: string
           product_id: string
@@ -1402,6 +1407,7 @@ export type Database = {
           created_by?: string | null
           done_quantity?: number | null
           id?: string
+          is_partial?: boolean | null
           lot_name?: string | null
           picking_id?: string
           product_id?: string

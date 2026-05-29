@@ -65,6 +65,7 @@ const mapRow = (row: PickingRow): Record<string, unknown> => ({
   order_name: row.order_name ?? 'Sin orden',
   type: row.type ?? 'salida',
   status: row.status ?? 'borrador',
+  is_partial: row.is_partial ?? false,
   warehouse_name: row.warehouse_name ?? '—',
   line_count: row.line_count ?? 0,
   total_quantity: row.total_quantity ?? 0
@@ -354,16 +355,27 @@ const handleCreateManual = async (type: PickingType) => {
       </template>
 
       <template #actions="{ row }">
-        <BtnApp variant="ghost" size="sm" @click="goDetail(row)">
-          <template #iconLeft>
-            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        <div class="flex items-center gap-2 justify-end">
+          <span
+            v-if="row.is_partial"
+            class="hidden sm:inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700"
+          >
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             </svg>
-          </template>
-        </BtnApp>
+            Parcial
+          </span>
+          <BtnApp variant="ghost" size="sm" @click="goDetail(row)">
+            <template #iconLeft>
+              <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </template>
+          </BtnApp>
+        </div>
       </template>
     </Datatable>
   </div>

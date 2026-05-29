@@ -5,6 +5,8 @@ export interface PickingLineFormData {
   id: string
   product_id: string
   quantity: number
+  done_quantity: number | null
+  is_partial: boolean
   tracking_type: Database['public']['Enums']['product_tracking']
   lot_name: string
   serial_number: string
@@ -29,6 +31,8 @@ export const createEmptyPickingLineForm = (): PickingLineFormData => ({
   id: crypto.randomUUID(),
   product_id: '',
   quantity: 1,
+  done_quantity: null,
+  is_partial: false,
   tracking_type: 'none',
   lot_name: '',
   serial_number: '',
@@ -37,8 +41,6 @@ export const createEmptyPickingLineForm = (): PickingLineFormData => ({
 </script>
 
 <script setup lang="ts">
-import type { Database } from '~/types/database.types'
-
 interface Props {
   readonly?: boolean
   productOptions?: { value: string; label: string; tracking: Database['public']['Enums']['product_tracking'] }[]
@@ -120,7 +122,8 @@ const handleProductChange = (line: PickingLineFormData) => {
         <div
           v-for="line in lines"
           :key="line.id"
-          class="rounded-xl border border-slate-200 bg-white p-4"
+          class="rounded-xl border p-4"
+          :class="line.is_partial ? 'border-amber-200 bg-amber-50/40' : 'border-slate-200 bg-white'"
         >
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div class="lg:col-span-4">
@@ -137,9 +140,28 @@ const handleProductChange = (line: PickingLineFormData) => {
               <FormInput
                 v-model="line.quantity"
                 type="number"
-                label="Cantidad"
+                label="Cantidad planeada"
                 :disabled="readonly"
               />
+            </div>
+
+            <!-- Cantidad real (visible solo cuando hay datos de escaneo) -->
+            <div v-if="readonly && line.done_quantity !== null" class="lg:col-span-2">
+              <label class="block text-xs font-medium text-slate-500 mb-1">Cantidad real</label>
+              <div
+                class="flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-semibold"
+                :class="line.is_partial
+                  ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                  : 'bg-emerald-50 text-emerald-700 border border-emerald-200'"
+              >
+                <svg v-if="line.is_partial" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                <svg v-else class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                {{ line.done_quantity }}
+              </div>
             </div>
 
             <div class="lg:col-span-2">

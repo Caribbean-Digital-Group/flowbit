@@ -49,6 +49,7 @@ const status = ref<PickingStatus>('borrador')
 const pickName = ref('Picking')
 const orderName = ref('Sin orden')
 const pickType = ref<PickingType>('salida')
+const isPartial = ref(false)
 
 const warehouseOptions = ref<{ value: string; label: string }[]>([])
 const productOptions = ref<{ value: string; label: string; tracking: Database['public']['Enums']['product_tracking'] }[]>([])
@@ -187,6 +188,7 @@ const loadPicking = async () => {
     pickName.value = header.name || 'Picking'
     orderName.value = header.order_name || 'Sin orden'
     pickType.value = (header.type || 'salida') as PickingType
+    isPartial.value = header.is_partial ?? false
 
     const mappedForm: PickingFormData = {
       notes: header.notes || '',
@@ -201,6 +203,8 @@ const loadPicking = async () => {
       id: line.id,
       product_id: line.product_id,
       quantity: line.quantity,
+      done_quantity: line.done_quantity ?? null,
+      is_partial: line.is_partial ?? false,
       tracking_type: line.tracking_type,
       lot_name: line.lot_name || '',
       serial_number: line.serial_number || '',
@@ -392,6 +396,7 @@ const buildPickingPrintableHtml = (qrSvg: string) => {
     ? `<img src="${co.logo_url}" alt="${companyName}" style="width:64px;height:64px;object-fit:contain;border-radius:8px;display:block" />`
     : `<div style="width:64px;height:64px;border-radius:8px;background:${accentColor}20;font-size:24px;font-weight:800;color:${accentColor};line-height:64px;text-align:center">${logoInitial}</div>`
 
+  const hasAnyScanned = lines.value.some(l => l.done_quantity !== null)
   const lineRows = lines.value.map((line, idx) => {
     const product = productOptions.value.find(p => p.value === line.product_id)
     const productLabel = product?.label || line.product_id || '—'
@@ -402,14 +407,27 @@ const buildPickingPrintableHtml = (qrSvg: string) => {
       : line.tracking_type === 'serial'
         ? `<span style="background:#fce7f3;color:#9d174d;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">Serie</span>`
         : `<span style="background:#f1f5f9;color:#64748b;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">Ninguno</span>`
-    const rowBg = idx % 2 === 0 ? '#ffffff' : '#f8fafc'
+    const rowBg = line.is_partial ? '#fffbeb' : (idx % 2 === 0 ? '#ffffff' : '#f8fafc')
+    const qtyCell = hasAnyScanned
+      ? line.done_quantity !== null
+        ? line.is_partial
+          ? `<div style="font-size:12px;font-weight:700;color:#d97706">${line.done_quantity}</div>
+             <div style="font-size:10px;color:#94a3b8;text-decoration:line-through">${line.quantity} plan.</div>`
+          : `<div style="font-size:12px;font-weight:700;color:#15803d">${line.done_quantity}</div>`
+        : `<div style="font-size:12px;font-weight:700;color:#0f172a">${line.quantity}</div>`
+      : `<div style="font-size:12px;font-weight:700;color:#0f172a">${line.quantity}</div>`
+    const partialBadge = line.is_partial
+      ? `<span style="background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">Parcial</span>`
+      : ''
     return `
       <tr style="background:${rowBg}">
-        <td style="padding:10px 14px;font-size:12px;font-weight:500;color:#0f172a">${productLabel}</td>
+        <td style="padding:10px 14px;font-size:12px;font-weight:500;color:#0f172a">
+          ${productLabel}${partialBadge ? `<br><span style="margin-top:3px;display:inline-block">${partialBadge}</span>` : ''}
+        </td>
         <td style="padding:10px 14px;text-align:center">${trackingBadge}</td>
         <td style="padding:10px 14px;text-align:center;font-size:12px;color:#475569">${lot}</td>
         <td style="padding:10px 14px;text-align:center;font-size:12px;color:#475569">${serial}</td>
-        <td style="padding:10px 14px;text-align:right;font-size:12px;font-weight:700;color:#0f172a">${line.quantity}</td>
+        <td style="padding:10px 14px;text-align:right">${qtyCell}</td>
       </tr>`
   }).join('')
 
@@ -547,11 +565,16 @@ const buildPickingTicketHtml = (qrSvg: string) => {
       : line.tracking_type === 'serial' && line.serial_number
         ? `Serie: ${line.serial_number}`
         : ''
+    const qtyDisplay = line.done_quantity !== null
+      ? line.is_partial
+        ? `<span style="color:#d97706;font-weight:700">${line.done_quantity}</span><span style="color:#94a3b8;font-size:10px;text-decoration:line-through;margin-left:3px">${line.quantity}</span>`
+        : `${line.done_quantity} uds.`
+      : `${line.quantity} uds.`
     return `
-      <div style="margin-bottom:10px">
+      <div style="margin-bottom:10px;${line.is_partial ? 'background:#fffbeb;border-radius:6px;padding:4px 6px;margin-left:-6px;margin-right:-6px' : ''}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <div style="font-size:12px;font-weight:600;color:#0f172a;flex:1;padding-right:8px">${productLabel}</div>
-          <div style="font-size:13px;font-weight:700;color:#0f172a;white-space:nowrap">${line.quantity} uds.</div>
+          <div style="font-size:12px;font-weight:600;color:#0f172a;flex:1;padding-right:8px">${productLabel}${line.is_partial ? ' <span style="background:#fef3c7;color:#92400e;padding:0px 5px;border-radius:999px;font-size:9px;font-weight:700">PARCIAL</span>' : ''}</div>
+          <div style="font-size:13px;font-weight:700;white-space:nowrap">${qtyDisplay}</div>
         </div>
         ${trackingInfo ? `<div style="font-size:10px;color:#64748b;margin-top:2px">${trackingInfo}</div>` : ''}
       </div>`
@@ -706,6 +729,16 @@ const handlePrintTicket = async () => {
       </div>
 
       <div
+        v-if="isConfirmed && isPartial"
+        class="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-6 py-4"
+      >
+        <p class="text-sm font-semibold text-amber-800">Picking parcial</p>
+        <p class="text-sm text-amber-700 mt-0.5">
+          Una o más líneas se procesaron con una cantidad diferente a la planeada. El stock fue ajustado únicamente por las cantidades reales confirmadas.
+        </p>
+      </div>
+
+      <div
         v-if="isConfirmed"
         class="mb-6 rounded-2xl border border-emerald-100 bg-emerald-50 px-6 py-4 text-emerald-800"
       >
@@ -720,9 +753,10 @@ const handlePrintTicket = async () => {
       </div>
 
       <template #status>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           <BadgeApp :label="typeLabel[pickType]" :variant="pickType === 'entrada' ? 'success' : 'warning'" />
           <BadgeApp :label="statusLabel[status]" :variant="statusVariant[status]" />
+          <BadgeApp v-if="isPartial" label="Parcial" variant="warning" />
         </div>
       </template>
 
