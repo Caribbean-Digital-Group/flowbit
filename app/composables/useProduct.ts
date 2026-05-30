@@ -234,10 +234,33 @@ export const useProduct = () => {
     return true
   }
 
+  const getProductByBarcode = async (
+    companyId: string,
+    barcode: string
+  ): Promise<Product | null> => {
+    if (!companyId || !barcode.trim()) return null
+
+    const { data, error } = await supabase
+      .from('product')
+      .select('*')
+      .eq('company_id', companyId)
+      .eq('barcode', barcode.trim())
+      .eq('active', true)
+      .maybeSingle()
+
+    if (error) {
+      console.error('Error fetching product by barcode:', error)
+      return null
+    }
+
+    return data
+  }
+
   return {
     getProductById,
     getProductsByCompany,
     searchProductsByCompany,
+    getProductByBarcode,
     ensureCatalogProductFromOrderLine,
     checkSkuExists,
     createProduct,

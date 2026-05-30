@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
+import QRCode from 'qrcode'
 import type { MenuOption } from '~/components/CardSheet.vue'
 import {
   createEmptyPickingForm,
@@ -48,6 +49,7 @@ const status = ref<PickingStatus>('borrador')
 const pickName = ref('Picking')
 const orderName = ref('Sin orden')
 const pickType = ref<PickingType>('salida')
+const isPartial = ref(false)
 
 const warehouseOptions = ref<{ value: string; label: string }[]>([])
 const productOptions = ref<{ value: string; label: string; tracking: Database['public']['Enums']['product_tracking'] }[]>([])
@@ -73,6 +75,15 @@ const statusVariant: Record<PickingStatus, 'warning' | 'primary' | 'success' | '
 
 const menuOptions = computed<MenuOption[]>(() => {
   const options: MenuOption[] = []
+  if (status.value === 'publicado') {
+    options.push({
+      id: 'scan',
+      label: 'Iniciar escaneo',
+      icon: 'M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 4v4m-4-4v4m-4-11h.01M4 20h4M4 4h4',
+      action: () => router.push(`/admin/pickings/${rowId.value}/scan`),
+      variant: 'default'
+    })
+  }
   options.push({
     id: 'print-picking',
     label: 'Imprimir picking',
@@ -177,6 +188,7 @@ const loadPicking = async () => {
     pickName.value = header.name || 'Picking'
     orderName.value = header.order_name || 'Sin orden'
     pickType.value = (header.type || 'salida') as PickingType
+    isPartial.value = header.is_partial ?? false
 
     const mappedForm: PickingFormData = {
       notes: header.notes || '',
@@ -191,6 +203,8 @@ const loadPicking = async () => {
       id: line.id,
       product_id: line.product_id,
       quantity: line.quantity,
+      done_quantity: line.done_quantity ?? null,
+      is_partial: line.is_partial ?? false,
       tracking_type: line.tracking_type,
       lot_name: line.lot_name || '',
       serial_number: line.serial_number || '',
@@ -357,7 +371,7 @@ const printHtml = (html: string) => {
   setTimeout(printAndCleanup, 400)
 }
 
-const buildPickingPrintableHtml = () => {
+const buildPickingPrintableHtml = (qrSvg: string) => {
   const co = selectedCompany.value
   const accentColor = co?.primary_color || '#2563eb'
   const companyName = co?.display_name || co?.name || ''
@@ -382,6 +396,7 @@ const buildPickingPrintableHtml = () => {
     ? `<img src="${co.logo_url}" alt="${companyName}" style="width:64px;height:64px;object-fit:contain;border-radius:8px;display:block" />`
     : `<div style="width:64px;height:64px;border-radius:8px;background:${accentColor}20;font-size:24px;font-weight:800;color:${accentColor};line-height:64px;text-align:center">${logoInitial}</div>`
 
+  const hasAnyScanned = lines.value.some(l => l.done_quantity !== null)
   const lineRows = lines.value.map((line, idx) => {
     const product = productOptions.value.find(p => p.value === line.product_id)
     const productLabel = product?.label || line.product_id || '—'
@@ -392,14 +407,27 @@ const buildPickingPrintableHtml = () => {
       : line.tracking_type === 'serial'
         ? `<span style="background:#fce7f3;color:#9d174d;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">Serie</span>`
         : `<span style="background:#f1f5f9;color:#64748b;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">Ninguno</span>`
-    const rowBg = idx % 2 === 0 ? '#ffffff' : '#f8fafc'
+    const rowBg = line.is_partial ? '#fffbeb' : (idx % 2 === 0 ? '#ffffff' : '#f8fafc')
+    const qtyCell = hasAnyScanned
+      ? line.done_quantity !== null
+        ? line.is_partial
+          ? `<div style="font-size:12px;font-weight:700;color:#d97706">${line.done_quantity}</div>
+             <div style="font-size:10px;color:#94a3b8;text-decoration:line-through">${line.quantity} plan.</div>`
+          : `<div style="font-size:12px;font-weight:700;color:#15803d">${line.done_quantity}</div>`
+        : `<div style="font-size:12px;font-weight:700;color:#0f172a">${line.quantity}</div>`
+      : `<div style="font-size:12px;font-weight:700;color:#0f172a">${line.quantity}</div>`
+    const partialBadge = line.is_partial
+      ? `<span style="background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">Parcial</span>`
+      : ''
     return `
       <tr style="background:${rowBg}">
-        <td style="padding:10px 14px;font-size:12px;font-weight:500;color:#0f172a">${productLabel}</td>
+        <td style="padding:10px 14px;font-size:12px;font-weight:500;color:#0f172a">
+          ${productLabel}${partialBadge ? `<br><span style="margin-top:3px;display:inline-block">${partialBadge}</span>` : ''}
+        </td>
         <td style="padding:10px 14px;text-align:center">${trackingBadge}</td>
         <td style="padding:10px 14px;text-align:center;font-size:12px;color:#475569">${lot}</td>
         <td style="padding:10px 14px;text-align:center;font-size:12px;color:#475569">${serial}</td>
-        <td style="padding:10px 14px;text-align:right;font-size:12px;font-weight:700;color:#0f172a">${line.quantity}</td>
+        <td style="padding:10px 14px;text-align:right">${qtyCell}</td>
       </tr>`
   }).join('')
 
@@ -436,11 +464,17 @@ const buildPickingPrintableHtml = () => {
         ${co?.email ? `<div style="font-size:11px;color:#64748b;margin-top:1px">${co.email}</div>` : ''}
       </div>
     </div>
-    <div style="text-align:right">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${accentColor};margin-bottom:4px">Orden de Almacén</div>
-      <div style="font-size:28px;font-weight:800;letter-spacing:-0.5px;line-height:1;color:${typeColor}">${typeLabel[pickType.value].toUpperCase()}</div>
-      <div style="font-size:16px;font-weight:600;color:#0f172a;margin-top:4px">${pickName.value}</div>
-      <span style="display:inline-block;margin-top:8px;padding:3px 12px;border-radius:999px;font-size:11px;font-weight:700;${badgeStyle}">${statusLabel[status.value]}</span>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px">
+      <div style="text-align:right">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${accentColor};margin-bottom:4px">Orden de Almacén</div>
+        <div style="font-size:28px;font-weight:800;letter-spacing:-0.5px;line-height:1;color:${typeColor}">${typeLabel[pickType.value].toUpperCase()}</div>
+        <div style="font-size:16px;font-weight:600;color:#0f172a;margin-top:4px">${pickName.value}</div>
+        <span style="display:inline-block;margin-top:8px;padding:3px 12px;border-radius:999px;font-size:11px;font-weight:700;${badgeStyle}">${statusLabel[status.value]}</span>
+      </div>
+      <div style="border:1px solid #e2e8f0;border-radius:8px;padding:6px;background:#fff;text-align:center">
+        <div style="width:90px;height:90px">${qrSvg}</div>
+        <div style="font-size:9px;color:#94a3b8;margin-top:3px;font-family:sans-serif">Escanear picking</div>
+      </div>
     </div>
   </div>
 
@@ -505,7 +539,7 @@ const buildPickingPrintableHtml = () => {
 </html>`
 }
 
-const buildPickingTicketHtml = () => {
+const buildPickingTicketHtml = (qrSvg: string) => {
   const co = selectedCompany.value
   const accentColor = co?.primary_color || '#2563eb'
   const companyName = co?.display_name || co?.name || ''
@@ -531,11 +565,16 @@ const buildPickingTicketHtml = () => {
       : line.tracking_type === 'serial' && line.serial_number
         ? `Serie: ${line.serial_number}`
         : ''
+    const qtyDisplay = line.done_quantity !== null
+      ? line.is_partial
+        ? `<span style="color:#d97706;font-weight:700">${line.done_quantity}</span><span style="color:#94a3b8;font-size:10px;text-decoration:line-through;margin-left:3px">${line.quantity}</span>`
+        : `${line.done_quantity} uds.`
+      : `${line.quantity} uds.`
     return `
-      <div style="margin-bottom:10px">
+      <div style="margin-bottom:10px;${line.is_partial ? 'background:#fffbeb;border-radius:6px;padding:4px 6px;margin-left:-6px;margin-right:-6px' : ''}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <div style="font-size:12px;font-weight:600;color:#0f172a;flex:1;padding-right:8px">${productLabel}</div>
-          <div style="font-size:13px;font-weight:700;color:#0f172a;white-space:nowrap">${line.quantity} uds.</div>
+          <div style="font-size:12px;font-weight:600;color:#0f172a;flex:1;padding-right:8px">${productLabel}${line.is_partial ? ' <span style="background:#fef3c7;color:#92400e;padding:0px 5px;border-radius:999px;font-size:9px;font-weight:700">PARCIAL</span>' : ''}</div>
+          <div style="font-size:13px;font-weight:700;white-space:nowrap">${qtyDisplay}</div>
         </div>
         ${trackingInfo ? `<div style="font-size:10px;color:#64748b;margin-top:2px">${trackingInfo}</div>` : ''}
       </div>`
@@ -577,6 +616,13 @@ const buildPickingTicketHtml = () => {
     <div style="font-size:20px;font-weight:800;color:${typeColor};margin-top:2px;text-transform:uppercase">${typeLabel[pickType.value]}</div>
     <div style="font-size:16px;font-weight:700;color:#0f172a;margin-top:2px">${pickName.value}</div>
     <span style="display:inline-block;margin-top:5px;padding:2px 10px;border-radius:999px;font-size:10px;font-weight:700;background:${accentColor};color:#fff">${statusLabel[status.value]}</span>
+  </div>
+
+  <div style="display:flex;justify-content:center;margin:10px 0">
+    <div style="text-align:center">
+      <div style="width:100px;height:100px;margin:0 auto">${qrSvg}</div>
+      <div style="font-size:9px;color:#94a3b8;margin-top:3px;font-family:monospace">Escanear para procesar</div>
+    </div>
   </div>
 
   ${sep}
@@ -634,8 +680,30 @@ const buildPickingTicketHtml = () => {
 </html>`
 }
 
-const handlePrintPicking = () => printHtml(buildPickingPrintableHtml())
-const handlePrintTicket = () => printHtml(buildPickingTicketHtml())
+const generateQrSvg = async (url: string): Promise<string> => {
+  const svg = await QRCode.toString(url, {
+    type: 'svg',
+    margin: 1,
+    color: { dark: '#0f172a', light: '#ffffff' }
+  })
+  return svg
+    .replace(/width="[^"]*"/, 'width="100%"')
+    .replace(/height="[^"]*"/, 'height="100%"')
+}
+
+const handlePrintPicking = async () => {
+  const config = useRuntimeConfig()
+  const scanUrl = `${config.public.siteUrl}/admin/pickings/${rowId.value}/scan`
+  const qrSvg = await generateQrSvg(scanUrl)
+  printHtml(buildPickingPrintableHtml(qrSvg))
+}
+
+const handlePrintTicket = async () => {
+  const config = useRuntimeConfig()
+  const scanUrl = `${config.public.siteUrl}/admin/pickings/${rowId.value}/scan`
+  const qrSvg = await generateQrSvg(scanUrl)
+  printHtml(buildPickingTicketHtml(qrSvg))
+}
 </script>
 
 <template>
@@ -661,6 +729,16 @@ const handlePrintTicket = () => printHtml(buildPickingTicketHtml())
       </div>
 
       <div
+        v-if="isConfirmed && isPartial"
+        class="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-6 py-4"
+      >
+        <p class="text-sm font-semibold text-amber-800">Picking parcial</p>
+        <p class="text-sm text-amber-700 mt-0.5">
+          Una o más líneas se procesaron con una cantidad diferente a la planeada. El stock fue ajustado únicamente por las cantidades reales confirmadas.
+        </p>
+      </div>
+
+      <div
         v-if="isConfirmed"
         class="mb-6 rounded-2xl border border-emerald-100 bg-emerald-50 px-6 py-4 text-emerald-800"
       >
@@ -675,9 +753,10 @@ const handlePrintTicket = () => printHtml(buildPickingTicketHtml())
       </div>
 
       <template #status>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           <BadgeApp :label="typeLabel[pickType]" :variant="pickType === 'entrada' ? 'success' : 'warning'" />
           <BadgeApp :label="statusLabel[status]" :variant="statusVariant[status]" />
+          <BadgeApp v-if="isPartial" label="Parcial" variant="warning" />
         </div>
       </template>
 
@@ -688,6 +767,28 @@ const handlePrintTicket = () => printHtml(buildPickingTicketHtml())
         :product-options="productOptions"
         :warehouse-options="warehouseOptions"
       />
+
+      <!-- SECCIÓN QR - siempre visible -->
+      <div class="mt-8 pt-6 border-t border-slate-200">
+        <h3 class="text-sm font-semibold text-slate-700 mb-4">Código QR del picking</h3>
+        <div class="flex flex-col sm:flex-row gap-5 items-start">
+          <PickingQrCode :picking-id="rowId ?? ''" :picking-name="pickName" :size="128" />
+          <div class="flex-1 space-y-3">
+            <p class="text-sm text-slate-500">
+              Escanea con la cámara del operador o con un lector para abrir directamente la vista de escaneo de este picking en cualquier dispositivo.
+            </p>
+            <NuxtLink
+              :to="`/admin/pickings/${rowId}/scan`"
+              class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-600 to-fuchsia-600 px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 4v4m-4-4v4m-4-11h.01M4 20h4M4 4h4" />
+              </svg>
+              Abrir vista de escaneo
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
     </CardSheet>
   </div>
 </template>

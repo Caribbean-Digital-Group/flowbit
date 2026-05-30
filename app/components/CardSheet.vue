@@ -137,7 +137,9 @@
           <template v-if="isEditing">
             <button
               type="button"
-              class="flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-lg transition-all duration-200"
+              :disabled="isLoading"
+              class="flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-100 text-slate-600 font-semibold text-lg transition-all duration-200"
+              :class="isLoading ? 'opacity-40 cursor-not-allowed' : 'hover:bg-slate-200'"
               @click="$emit('cancel')"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,13 +149,19 @@
             </button>
             <button
               type="button"
-              class="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-semibold text-lg shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all duration-200"
+              :disabled="isLoading"
+              class="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold text-lg shadow-lg transition-all duration-200"
+              :class="isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:from-indigo-700 hover:to-violet-700 shadow-indigo-500/25 hover:shadow-indigo-500/40'"
               @click="$emit('save')"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-if="isLoading" class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
-              <span>Guardar</span>
+              <span>{{ isLoading ? 'Guardando...' : 'Guardar' }}</span>
             </button>
           </template>
         </slot>
