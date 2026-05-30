@@ -15,6 +15,7 @@
       <!-- Select button -->
       <button
         :id="id"
+        ref="buttonRef"
         type="button"
         :disabled="disabled"
         :class="selectClasses"
@@ -36,91 +37,94 @@
         </svg>
       </button>
 
-      <!-- Dropdown -->
-      <Transition
-        enter-active-class="transition ease-out duration-100"
-        enter-from-class="transform opacity-0 scale-95"
-        enter-to-class="transform opacity-100 scale-100"
-        leave-active-class="transition ease-in duration-75"
-        leave-from-class="transform opacity-100 scale-100"
-        leave-to-class="transform opacity-0 scale-95"
-      >
-        <div
-          v-if="isOpen"
-          class="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden"
+      <!-- Dropdown (teleportado a body para escapar cualquier overflow ancestro) -->
+      <Teleport to="body">
+        <Transition
+          enter-active-class="transition ease-out duration-100"
+          enter-from-class="transform opacity-0 scale-95"
+          enter-to-class="transform opacity-100 scale-100"
+          leave-active-class="transition ease-in duration-75"
+          leave-from-class="transform opacity-100 scale-100"
+          leave-to-class="transform opacity-0 scale-95"
         >
-          <!-- Search input -->
-          <div v-if="searchable" class="p-3 border-b border-slate-200">
-            <div class="relative">
-              <svg
-                class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          <div
+            v-if="isOpen"
+            :style="dropdownStyle"
+            class="fixed z-[9999] bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden"
+          >
+            <!-- Search input -->
+            <div v-if="searchable" class="p-3 border-b border-slate-200">
+              <div class="relative">
+                <svg
+                  class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  ref="searchInputRef"
+                  v-model="searchQuery"
+                  type="text"
+                  :placeholder="searchPlaceholder"
+                  class="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                  @keydown.esc="closeDropdown"
+                />
+              </div>
+            </div>
+
+            <!-- Options list -->
+            <ul
+              class="max-h-60 overflow-y-auto py-2"
+              role="listbox"
+            >
+              <!-- Empty state -->
+              <li
+                v-if="filteredOptions.length === 0"
+                class="px-4 py-3 text-sm text-slate-500 text-center"
               >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                ref="searchInputRef"
-                v-model="searchQuery"
-                type="text"
-                :placeholder="searchPlaceholder"
-                class="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                @keydown.esc="closeDropdown"
-              />
+                {{ noResultsText }}
+              </li>
+
+              <!-- Options -->
+              <li
+                v-for="(option, index) in filteredOptions"
+                :key="String(getOptionValue(option) ?? index)"
+                role="option"
+                :aria-selected="isSelected(option)"
+                :class="optionClasses(option)"
+                @click="selectOption(option)"
+              >
+                <span class="truncate">{{ getOptionLabel(option) }}</span>
+
+                <!-- Check icon for selected option -->
+                <svg
+                  v-if="isSelected(option)"
+                  class="w-5 h-5 text-indigo-600 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </li>
+            </ul>
+
+            <!-- Clear selection button -->
+            <div v-if="clearable && modelValue !== null && modelValue !== undefined && modelValue !== ''" class="p-2 border-t border-slate-200">
+              <button
+                type="button"
+                class="w-full px-4 py-2 text-sm text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                @click="clearSelection"
+              >
+                {{ clearText }}
+              </button>
             </div>
           </div>
-
-          <!-- Options list -->
-          <ul
-            class="max-h-60 overflow-y-auto py-2"
-            role="listbox"
-          >
-            <!-- Empty state -->
-            <li
-              v-if="filteredOptions.length === 0"
-              class="px-4 py-3 text-sm text-slate-500 text-center"
-            >
-              {{ noResultsText }}
-            </li>
-
-            <!-- Options -->
-            <li
-              v-for="(option, index) in filteredOptions"
-              :key="String(getOptionValue(option) ?? index)"
-              role="option"
-              :aria-selected="isSelected(option)"
-              :class="optionClasses(option)"
-              @click="selectOption(option)"
-            >
-              <span class="truncate">{{ getOptionLabel(option) }}</span>
-              
-              <!-- Check icon for selected option -->
-              <svg
-                v-if="isSelected(option)"
-                class="w-5 h-5 text-indigo-600 flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-            </li>
-          </ul>
-
-          <!-- Clear selection button -->
-          <div v-if="clearable && modelValue !== null && modelValue !== undefined && modelValue !== ''" class="p-2 border-t border-slate-200">
-            <button
-              type="button"
-              class="w-full px-4 py-2 text-sm text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-              @click="clearSelection"
-            >
-              {{ clearText }}
-            </button>
-          </div>
-        </div>
-      </Transition>
+        </Transition>
+      </Teleport>
     </div>
 
     <!-- Error message -->
@@ -136,7 +140,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 
 // Types
 type OptionValue = string | number | boolean | null
@@ -192,9 +196,11 @@ const emit = defineEmits<{
 
 // Refs
 const containerRef = ref<HTMLElement | null>(null)
+const buttonRef = ref<HTMLButtonElement | null>(null)
 const searchInputRef = ref<HTMLInputElement | null>(null)
 const isOpen = ref(false)
 const searchQuery = ref('')
+const dropdownStyle = ref<Record<string, string>>({})
 
 // Helpers to get value and label from options
 const getOptionValue = (option: Option): OptionValue => {
@@ -239,14 +245,34 @@ const isSelected = (option: Option): boolean => {
   return getOptionValue(option) === props.modelValue
 }
 
+// Calculates fixed position of the dropdown relative to the button
+const updateDropdownPosition = () => {
+  if (!buttonRef.value) return
+  const rect = buttonRef.value.getBoundingClientRect()
+  const viewportHeight = window.innerHeight
+  const dropdownHeight = 320 // max height estimate (search + options)
+  const spaceBelow = viewportHeight - rect.bottom
+  const openAbove = spaceBelow < dropdownHeight && rect.top > dropdownHeight
+
+  dropdownStyle.value = {
+    position: 'fixed',
+    left: `${rect.left}px`,
+    width: `${rect.width}px`,
+    ...(openAbove
+      ? { bottom: `${viewportHeight - rect.top + 4}px`, top: 'auto' }
+      : { top: `${rect.bottom + 4}px`, bottom: 'auto' })
+  }
+}
+
 // Toggle dropdown
 const toggleDropdown = () => {
   if (props.disabled) return
-  
+
   isOpen.value = !isOpen.value
-  
+
   if (isOpen.value) {
     searchQuery.value = ''
+    updateDropdownPosition()
     nextTick(() => {
       searchInputRef.value?.focus()
     })
@@ -281,13 +307,21 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 }
 
+const handleScrollOrResize = () => {
+  if (isOpen.value) updateDropdownPosition()
+}
+
 // Lifecycle
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  window.addEventListener('scroll', handleScrollOrResize, true)
+  window.addEventListener('resize', handleScrollOrResize)
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  window.removeEventListener('scroll', handleScrollOrResize, true)
+  window.removeEventListener('resize', handleScrollOrResize)
 })
 
 // Size classes

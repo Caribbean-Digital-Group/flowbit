@@ -106,11 +106,39 @@ export const usePickingLine = () => {
     return true
   }
 
+  const updateScanProgress = async (
+    id: string,
+    doneQuantity: number,
+    scanNotes: string | null
+  ): Promise<PickingLine | null> => {
+    const user = await useSupabaseUser()
+
+    const { data, error } = await supabase
+      .from('picking_line')
+      .update({
+        done_quantity: doneQuantity,
+        scan_notes: scanNotes,
+        scanned_at: new Date().toISOString(),
+        updated_by: user?.id
+      })
+      .eq('id', id)
+      .select()
+      .maybeSingle()
+
+    if (error) {
+      console.error('Error updating scan progress:', error)
+      return null
+    }
+
+    return data
+  }
+
   return {
     getPickingLinesByPickingId,
     getPickingLineViewsByCompany,
     createPickingLine,
     updatePickingLine,
-    deletePickingLine
+    deletePickingLine,
+    updateScanProgress
   }
 }
