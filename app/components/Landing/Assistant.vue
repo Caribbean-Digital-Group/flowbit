@@ -9,7 +9,6 @@ interface SectionInfo {
   highlight: string
   funFact?: string
   ctaLabel: string
-  ctaHref: string
   accentFrom: string
   accentTo: string
 }
@@ -25,7 +24,6 @@ const SECTIONS: Record<string, SectionInfo> = {
     highlight: 'Sin tarjeta de crédito. Sin límites de usuarios. Sin trampa.',
     funFact: 'Puedes estar operando tu empresa en menos de 2 minutos desde que creas tu cuenta.',
     ctaLabel: 'Crear mi cuenta gratis →',
-    ctaHref: '#',
     accentFrom: 'from-indigo-500',
     accentTo: 'to-violet-600',
   },
@@ -39,7 +37,6 @@ const SECTIONS: Record<string, SectionInfo> = {
     highlight: '8+ módulos integrados trabajando en tiempo real.',
     funFact: 'Las empresas con sistemas integrados reducen el tiempo de operación hasta un 60% comparado con hojas de cálculo.',
     ctaLabel: 'Probar todos los módulos gratis →',
-    ctaHref: '#',
     accentFrom: 'from-violet-500',
     accentTo: 'to-fuchsia-600',
   },
@@ -53,7 +50,6 @@ const SECTIONS: Record<string, SectionInfo> = {
     highlight: 'Cliente → Proyecto → Orden → Picking. Un flujo, cero duplicados.',
     funFact: 'Cada paso del workflow genera automáticamente el documento siguiente. No hay capturas manuales.',
     ctaLabel: 'Empezar mi flujo de negocio →',
-    ctaHref: '#',
     accentFrom: 'from-fuchsia-500',
     accentTo: 'to-pink-600',
   },
@@ -67,7 +63,6 @@ const SECTIONS: Record<string, SectionInfo> = {
     highlight: 'Sin freemium. Sin trial de 14 días. Sin "plan básico". Todo gratis siempre.',
     funFact: 'Licencia MIT significa que puedes auditar, modificar y adaptar el código a tus necesidades sin restricciones.',
     ctaLabel: 'Cambiarme a Flowbit gratis →',
-    ctaHref: '#',
     accentFrom: 'from-indigo-500',
     accentTo: 'to-fuchsia-600',
   },
@@ -80,7 +75,6 @@ const SECTIONS: Record<string, SectionInfo> = {
     message: 'Crea tu cuenta ahora, configura tu empresa, invita a tu equipo y empieza a registrar clientes, órdenes y proyectos. Sin instalaciones, sin servidores, sin configuraciones interminables.',
     highlight: '2 minutos para estar operando. Lo garantizamos.',
     ctaLabel: '¡Crear mi cuenta ahora, es gratis! 🚀',
-    ctaHref: '#',
     accentFrom: 'from-indigo-500',
     accentTo: 'to-fuchsia-600',
   },
@@ -88,13 +82,23 @@ const SECTIONS: Record<string, SectionInfo> = {
 
 const SECTION_ORDER = ['hero', 'ecosistema', 'workflow', 'ventajas', 'cta-final']
 
+// Canal compartido con FormLogin
+const externalViewRequest = useState<'login' | 'register' | 'forgot-password' | null>('landing-form-view', () => null)
+
+function openRegisterForm() {
+  externalViewRequest.value = 'register'
+  document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth' })
+  isOpen.value = false
+  showTeaser.value = false
+}
+
 const isOpen = ref(false)
 const currentSectionId = ref('hero')
 const showTeaser = ref(false)
 const isMascotBouncing = ref(false)
 const hasInteracted = ref(false)
 
-const currentSection = computed<SectionInfo>(() => SECTIONS[currentSectionId.value] ?? SECTIONS.hero)
+const currentSection = computed(() => (SECTIONS[currentSectionId.value] ?? SECTIONS['hero']) as SectionInfo)
 const currentSectionIndex = computed(() => SECTION_ORDER.indexOf(currentSectionId.value))
 
 let teaserTimer: ReturnType<typeof setTimeout> | null = null
@@ -338,12 +342,13 @@ onUnmounted(() => {
 
         <!-- Footer CTA -->
         <div class="flex-shrink-0 bg-white border-t border-slate-100 p-4">
-          <a
-            :href="currentSection.ctaHref"
+          <button
+            type="button"
             :class="['block w-full text-center py-3.5 px-4 rounded-2xl font-bold text-white text-sm bg-gradient-to-r shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]', currentSection.accentFrom, currentSection.accentTo, 'hover:shadow-violet-500/40']"
+            @click="openRegisterForm"
           >
             {{ currentSection.ctaLabel }}
-          </a>
+          </button>
           <p class="mt-2 text-center text-[11px] text-slate-400">Sin tarjeta de crédito · Sin compromisos</p>
         </div>
       </div>
