@@ -83,7 +83,7 @@ const workflow = [
     <!-- ============================================ -->
     <!-- HERO SECTION -->
     <!-- ============================================ -->
-    <section class="relative bg-slate-950 overflow-hidden">
+    <section id="hero" class="relative bg-slate-950 overflow-hidden">
       <!-- Mesh gradient background -->
       <div class="absolute inset-0">
         <div class="absolute top-0 -left-40 w-[600px] h-[600px] bg-indigo-600/30 rounded-full blur-[120px]"></div>
@@ -615,7 +615,7 @@ const workflow = [
     <!-- ============================================ -->
     <!-- CTA FINAL -->
     <!-- ============================================ -->
-    <section class="relative px-4 sm:px-6 lg:px-8 py-24 bg-white overflow-hidden">
+    <section id="cta-final" class="relative px-4 sm:px-6 lg:px-8 py-24 bg-white overflow-hidden">
       <div class="relative max-w-6xl mx-auto">
         <div class="relative bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 rounded-[2.5rem] p-12 sm:p-16 overflow-hidden">
           <!-- Dynamic decoration -->
@@ -661,6 +661,8 @@ const workflow = [
         </div>
       </div>
     </section>
+    <!-- Asistente Bit (guía de landing) -->
+    <LandingAssistant />
   </div>
 </template>
 

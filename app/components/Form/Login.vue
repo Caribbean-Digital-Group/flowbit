@@ -294,6 +294,15 @@ const goTo = (target: View) => {
   errorMessage.value = null
 }
 
+// Canal compartido con el asistente de landing para abrir vistas desde fuera
+const externalViewRequest = useState<View | null>('landing-form-view', () => null)
+watch(externalViewRequest, (val) => {
+  if (val) {
+    goTo(val)
+    externalViewRequest.value = null
+  }
+})
+
 const handleLogin = async () => {
   if (isLoading.value) return
 
