@@ -67,20 +67,27 @@ const activityTypeLabels: Record<string, string> = {
   task: 'Tarea'
 }
 
-const openAssignedTaskCount = computed(() =>
+const visibleAssignedTasks = computed(() =>
   assignedTasksPreview.value.filter((t) => {
     const st = t.status ?? 'pending'
     return st !== 'completed' && st !== 'cancelled'
-  }).length
+  })
 )
 
-const pendingApprovalCount = computed(() => pendingApprovalsPreview.value.length)
-const openCrmActivityCount = computed(() =>
-  crmActivitiesPreview.value.filter((a) => {
-    const st = (a.status ?? 'pending').toLowerCase()
-    return st !== 'done'
-  }).length
+const visibleCrmActivities = computed(() =>
+  crmActivitiesPreview.value
+    .filter((a) => (a.status ?? 'pending').toLowerCase() !== 'done')
+    .sort((a, b) => {
+      if (!a.scheduled_at && !b.scheduled_at) return 0
+      if (!a.scheduled_at) return 1
+      if (!b.scheduled_at) return -1
+      return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
+    })
 )
+
+const openAssignedTaskCount = computed(() => visibleAssignedTasks.value.length)
+const pendingApprovalCount = computed(() => pendingApprovalsPreview.value.length)
+const openCrmActivityCount = computed(() => visibleCrmActivities.value.length)
 
 const taskNotifBadgeTotal = computed(
   () => openAssignedTaskCount.value + pendingApprovalCount.value + openCrmActivityCount.value
@@ -133,7 +140,9 @@ function closeTaskNotif() {
 function formatTaskDueShort(d: string | null): string {
   if (!d) return ''
   try {
-    return new Intl.DateTimeFormat('es-MX', { month: 'short', day: 'numeric' }).format(new Date(d))
+    // Append T00:00:00 so the date-only string is parsed as local midnight, not UTC midnight
+    const parsed = d.includes('T') ? new Date(d) : new Date(d + 'T00:00:00')
+    return new Intl.DateTimeFormat('es-MX', { month: 'short', day: 'numeric' }).format(parsed)
   } catch {
     return d
   }
@@ -879,13 +888,13 @@ const handleLogout = async () => {
                         <p class="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                           Tareas
                         </p>
-                        <template v-if="assignedTasksPreview.length === 0">
+                        <template v-if="visibleAssignedTasks.length === 0">
                           <p class="px-3 py-4 text-center text-sm text-slate-500">
                             No tienes tareas asignadas en esta empresa.
                           </p>
                         </template>
                         <ul v-else class="space-y-1">
-                          <li v-for="task in assignedTasksPreview" :key="task.id ?? ''">
+                          <li v-for="task in visibleAssignedTasks" :key="task.id ?? ''">
                             <button
                               type="button"
                               class="w-full rounded-lg border border-transparent px-3 py-2.5 text-left transition hover:border-indigo-100 hover:bg-indigo-50/60"
@@ -920,13 +929,13 @@ const handleLogout = async () => {
                         <p class="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                           Seguimientos CRM
                         </p>
-                        <template v-if="crmActivitiesPreview.length === 0">
+                        <template v-if="visibleCrmActivities.length === 0">
                           <p class="px-3 py-4 text-center text-sm text-slate-500">
                             No tienes actividades de seguimiento asignadas.
                           </p>
                         </template>
                         <ul v-else class="space-y-1">
-                          <li v-for="activity in crmActivitiesPreview" :key="activity.id ?? ''">
+                          <li v-for="activity in visibleCrmActivities" :key="activity.id ?? ''">
                             <button
                               type="button"
                               class="w-full rounded-lg border border-transparent px-3 py-2.5 text-left transition hover:border-sky-100 hover:bg-sky-50/60"

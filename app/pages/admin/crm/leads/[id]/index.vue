@@ -393,7 +393,10 @@ const openActivityForm = (activity?: CrmActivityView) => {
       type: (activity.type as CrmActivityFormData['type']) ?? 'task',
       title: activity.title ?? '',
       scheduled_at: activity.scheduled_at
-        ? new Date(activity.scheduled_at).toISOString().slice(0, 16)
+        ? (() => {
+            const d = new Date(activity.scheduled_at)
+            return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+          })()
         : '',
       responsible_partner_id: activity.responsible_partner_id ?? null,
       notes: activity.notes ?? ''
@@ -418,11 +421,15 @@ const handleSaveActivity = async () => {
 
   isSavingActivity.value = true
   try {
+    const scheduledAtUtc = activityFormData.value.scheduled_at
+      ? new Date(activityFormData.value.scheduled_at).toISOString()
+      : null
+
     if (editingActivityId.value) {
       await updateActivity(editingActivityId.value, {
         type: activityFormData.value.type,
         title: activityFormData.value.title.trim(),
-        scheduled_at: activityFormData.value.scheduled_at || null,
+        scheduled_at: scheduledAtUtc,
         responsible_partner_id: activityFormData.value.responsible_partner_id || null,
         notes: activityFormData.value.notes.trim() || null
       })
@@ -431,7 +438,7 @@ const handleSaveActivity = async () => {
         lead_id: leadId.value,
         type: activityFormData.value.type,
         title: activityFormData.value.title.trim(),
-        scheduled_at: activityFormData.value.scheduled_at || null,
+        scheduled_at: scheduledAtUtc,
         responsible_partner_id: activityFormData.value.responsible_partner_id || null,
         notes: activityFormData.value.notes.trim() || null
       })
