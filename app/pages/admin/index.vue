@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import type { StatItem } from '~/components/StatGrid.vue'
 import type { Database, Tables } from '~/types/database.types'
 
 definePageMeta({
@@ -37,6 +36,7 @@ type ProjectViewRow = Database['public']['Views']['v_projects']['Row']
 type PickingViewRow = Database['public']['Views']['v_pickings']['Row']
 type ApprovalRequestViewRow = Database['public']['Views']['v_approval_requests']['Row']
 type ProjectTaskViewRow = Database['public']['Views']['v_project_tasks']['Row']
+type CrmLeadViewRow = Database['public']['Views']['v_crm_leads']['Row']
 type ApprovalRequestStatus = Database['public']['Enums']['approval_request_status']
 type PickingStatus = Database['public']['Enums']['picking_status']
 type PickingType = Database['public']['Enums']['picking_type']
@@ -54,6 +54,7 @@ const { getProjectsByCompany } = useProject()
 const { getPickingsByCompany } = usePicking()
 const { getRequestsByCompany } = useApprovalRequest()
 const { getTasksByCompany } = useProjectTask()
+const { getLeadsByCompany } = useCrmLead()
 
 const isLoading = ref(false)
 const partners = ref<PartnerRow[]>([])
@@ -64,6 +65,7 @@ const projects = ref<ProjectViewRow[]>([])
 const pickings = ref<PickingViewRow[]>([])
 const approvalRequests = ref<ApprovalRequestViewRow[]>([])
 const projectTasks = ref<ProjectTaskViewRow[]>([])
+const leads = ref<CrmLeadViewRow[]>([])
 
 const publicProjects = computed(() =>
   projects.value.filter(
@@ -172,14 +174,6 @@ const activeProductsCount = computed(() => {
   return count
 })
 
-const draftOrdersCount = computed(() =>
-  orders.value.filter((order) => order.order_state === 'draft').length
-)
-
-const postedOrdersCount = computed(() =>
-  orders.value.filter((order) => order.order_state === 'posted').length
-)
-
 const activeCurrencies = computed(() => {
   const currencies = new Set<string>()
 
@@ -190,24 +184,201 @@ const activeCurrencies = computed(() => {
   return Array.from(currencies).sort()
 })
 
-const stats = computed<StatItem[]>(() => [
-  {
-    label: 'Partners activos',
-    value: activePartnersCount.value
-  },
-  {
-    label: 'Productos activos',
-    value: activeProductsCount.value
-  },
-  {
-    label: 'Órdenes borrador',
-    value: draftOrdersCount.value
-  },
-  {
-    label: 'Órdenes confirmadas',
-    value: postedOrdersCount.value
+// ── Dashboard stat cards ───────────────────────────────────────────────────────
+
+type StatAccent = 'emerald' | 'rose' | 'sky' | 'violet' | 'indigo' | 'amber'
+
+interface DashboardStat {
+  key: string
+  label: string
+  value: string
+  sublabel: string
+  iconPath: string
+  accent: StatAccent
+  to?: string
+  trend?: { label: string; direction: 'up' | 'down' | 'neutral' }
+}
+
+const accentStyles: Record<StatAccent, { icon: string; blob: string; ring: string }> = {
+  emerald: { icon: 'bg-emerald-50 text-emerald-600', blob: 'bg-emerald-400', ring: 'group-hover:border-emerald-200' },
+  rose: { icon: 'bg-rose-50 text-rose-600', blob: 'bg-rose-400', ring: 'group-hover:border-rose-200' },
+  sky: { icon: 'bg-sky-50 text-sky-600', blob: 'bg-sky-400', ring: 'group-hover:border-sky-200' },
+  violet: { icon: 'bg-violet-50 text-violet-600', blob: 'bg-violet-400', ring: 'group-hover:border-violet-200' },
+  indigo: { icon: 'bg-indigo-50 text-indigo-600', blob: 'bg-indigo-400', ring: 'group-hover:border-indigo-200' },
+  amber: { icon: 'bg-amber-50 text-amber-600', blob: 'bg-amber-400', ring: 'group-hover:border-amber-200' }
+}
+
+const ICONS = {
+  trendingUp: 'M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941',
+  trendingDown: 'M2.25 6 9 12.75l4.286-4.286a11.948 11.948 0 0 1 4.306 6.43l.776 2.898m0 0 3.182-5.511m-3.182 5.51-5.511-3.181',
+  scale: 'M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 0 1-2.031.352 5.989 5.989 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971Zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.99 5.99 0 0 1-2.031.352 5.99 5.99 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971Z',
+  funnel: 'M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z',
+  briefcase: 'M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0M12 12.75h.008v.008H12v-.008Z',
+  users: 'M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z'
+} as const
+
+const primaryCurrency = computed(() =>
+  chartCurrency.value || activeCurrencies.value[0] || 'MXN'
+)
+
+const primaryMetrics = computed<CurrencyMetrics | undefined>(() =>
+  metricsByCurrency.value.find((m) => m.currency === primaryCurrency.value)
+)
+
+const monthKey = (date: Date): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+
+const monthlyComparison = computed(() => {
+  const now = new Date()
+  const currentKey = monthKey(now)
+  const previousKey = monthKey(new Date(now.getFullYear(), now.getMonth() - 1, 1))
+  const currency = primaryCurrency.value
+
+  let currentIncome = 0
+  let previousIncome = 0
+  let currentExpense = 0
+  let previousExpense = 0
+
+  for (const order of orders.value) {
+    if (order.order_state !== 'posted') continue
+    if (normalizeCurrency(order.currency) !== currency) continue
+
+    const dateStr = order.order_date ?? order.created_at
+    if (!dateStr) continue
+
+    const key = monthKey(new Date(dateStr))
+    if (key !== currentKey && key !== previousKey) continue
+
+    const amount = Number(order.amount_total ?? 0)
+    if (order.order_type === 'sale') {
+      if (key === currentKey) currentIncome += amount
+      else previousIncome += amount
+    } else if (order.order_type === 'purchase') {
+      if (key === currentKey) currentExpense += amount
+      else previousExpense += amount
+    }
   }
-])
+
+  return { currentIncome, previousIncome, currentExpense, previousExpense }
+})
+
+const computeTrend = (
+  current: number,
+  previous: number
+): DashboardStat['trend'] => {
+  if (previous === 0 && current === 0) return undefined
+  if (previous === 0) return { label: 'Nuevo', direction: 'up' }
+  const pct = Math.round(((current - previous) / previous) * 100)
+  if (pct === 0) return { label: 'Sin cambios', direction: 'neutral' }
+  return {
+    label: `${pct > 0 ? '+' : ''}${pct}% vs mes anterior`,
+    direction: pct > 0 ? 'up' : 'down'
+  }
+}
+
+const leadStats = computed(() => {
+  let open = 0
+  let won = 0
+  let lost = 0
+  let openAmount = 0
+  let wonAmount = 0
+
+  for (const lead of leads.value) {
+    if (lead.is_won) {
+      won += 1
+      wonAmount += Number(lead.amount ?? 0)
+    } else if (lead.is_lost) {
+      lost += 1
+    } else {
+      open += 1
+      openAmount += Number(lead.amount ?? 0)
+    }
+  }
+
+  return { open, won, lost, openAmount, wonAmount, total: leads.value.length }
+})
+
+const projectStats = computed(() => {
+  let active = 0
+  let completed = 0
+
+  for (const project of projects.value) {
+    if (project.status === 'in_progress') active += 1
+    else if (project.status === 'completed') completed += 1
+  }
+
+  return { active, completed, total: projects.value.length }
+})
+
+const dashboardStats = computed<DashboardStat[]>(() => {
+  const currency = primaryCurrency.value
+  const metrics = primaryMetrics.value
+  const income = metrics?.salePosted ?? 0
+  const expense = metrics?.purchasePosted ?? 0
+  const balance = income - expense
+  const margin = income > 0 ? Math.round((balance / income) * 100) : 0
+  const comparison = monthlyComparison.value
+  const ls = leadStats.value
+  const ps = projectStats.value
+
+  return [
+    {
+      key: 'income',
+      label: 'Ingresos confirmados',
+      value: formatCurrency(income, currency),
+      sublabel: `${metrics?.salePostedCount ?? 0} ventas confirmadas`,
+      iconPath: ICONS.trendingUp,
+      accent: 'emerald',
+      to: '/admin/orders',
+      trend: computeTrend(comparison.currentIncome, comparison.previousIncome)
+    },
+    {
+      key: 'expense',
+      label: 'Egresos confirmados',
+      value: formatCurrency(expense, currency),
+      sublabel: `${metrics?.purchasePostedCount ?? 0} compras confirmadas`,
+      iconPath: ICONS.trendingDown,
+      accent: 'rose',
+      to: '/admin/orders',
+      trend: computeTrend(comparison.currentExpense, comparison.previousExpense)
+    },
+    {
+      key: 'balance',
+      label: 'Balance neto',
+      value: formatCurrency(balance, currency),
+      sublabel: income > 0 ? `Margen ${margin}%` : 'Sin ingresos registrados',
+      iconPath: ICONS.scale,
+      accent: balance >= 0 ? 'sky' : 'rose'
+    },
+    {
+      key: 'leads',
+      label: 'Pipeline de leads',
+      value: formatCurrency(ls.openAmount, currency),
+      sublabel: `${ls.open} abiertos · ${ls.won} ganados`,
+      iconPath: ICONS.funnel,
+      accent: 'violet',
+      to: '/admin/crm/leads'
+    },
+    {
+      key: 'projects',
+      label: 'Proyectos activos',
+      value: String(ps.active),
+      sublabel: `${ps.completed} completados · ${ps.total} en total`,
+      iconPath: ICONS.briefcase,
+      accent: 'indigo',
+      to: '/admin/projects'
+    },
+    {
+      key: 'partners',
+      label: 'Partners activos',
+      value: String(activePartnersCount.value),
+      sublabel: `${activeProductsCount.value} productos activos`,
+      iconPath: ICONS.users,
+      accent: 'amber',
+      to: '/admin/partners'
+    }
+  ]
+})
 
 // ── Chart ────────────────────────────────────────────────────────────────────
 
@@ -475,6 +646,7 @@ const loadDashboard = async () => {
     pickings.value = []
     approvalRequests.value = []
     projectTasks.value = []
+    leads.value = []
     return
   }
 
@@ -488,7 +660,8 @@ const loadDashboard = async () => {
       projectList,
       pickingList,
       approvalList,
-      recentTaskList
+      recentTaskList,
+      leadList
     ] = await Promise.all([
       getPartnersByCompany(companyId),
       getProductsByCompany(companyId),
@@ -500,7 +673,8 @@ const loadDashboard = async () => {
       getTasksByCompany(companyId, {
         orderByCreatedDesc: true,
         limit: 12
-      })
+      }),
+      getLeadsByCompany(companyId)
     ])
 
     partners.value = partnerList
@@ -511,6 +685,7 @@ const loadDashboard = async () => {
     pickings.value = pickingList
     approvalRequests.value = approvalList
     projectTasks.value = recentTaskList
+    leads.value = leadList
   } finally {
     isLoading.value = false
   }
@@ -543,7 +718,96 @@ watch(selectedCompanyId, () => {
     </div>
 
     <template v-else>
-      <StatGrid :stats="stats" :columns="4" :loading="isLoading" />
+      <!-- ── Stat cards ──────────────────────────────────────────────────── -->
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <template v-if="isLoading">
+          <div
+            v-for="i in 6"
+            :key="`stat-skeleton-${i}`"
+            class="animate-pulse rounded-2xl border border-slate-200 bg-white p-5"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1 space-y-3">
+                <div class="h-3 w-24 rounded bg-slate-200" />
+                <div class="h-7 w-32 rounded bg-slate-200" />
+              </div>
+              <div class="h-11 w-11 rounded-xl bg-slate-200" />
+            </div>
+            <div class="mt-4 h-3 w-28 rounded bg-slate-200" />
+          </div>
+        </template>
+
+        <template v-else>
+          <component
+            :is="stat.to ? 'NuxtLink' : 'div'"
+            v-for="stat in dashboardStats"
+            :key="stat.key"
+            :to="stat.to"
+            :class="[
+              'group relative block overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200',
+              stat.to ? 'hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/60' : '',
+              accentStyles[stat.accent].ring
+            ]"
+          >
+            <div
+              :class="[
+                'pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full opacity-[0.07] blur-2xl transition-opacity group-hover:opacity-[0.14]',
+                accentStyles[stat.accent].blob
+              ]"
+            />
+
+            <div class="relative flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-slate-500">{{ stat.label }}</p>
+                <p class="mt-2 truncate text-2xl font-bold tracking-tight text-slate-900">
+                  {{ stat.value }}
+                </p>
+              </div>
+              <span
+                :class="[
+                  'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+                  accentStyles[stat.accent].icon
+                ]"
+              >
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" :d="stat.iconPath" />
+                </svg>
+              </span>
+            </div>
+
+            <div class="relative mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span
+                v-if="stat.trend"
+                :class="[
+                  'inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold',
+                  stat.trend.direction === 'up'
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : stat.trend.direction === 'down'
+                      ? 'bg-rose-50 text-rose-700'
+                      : 'bg-slate-100 text-slate-600'
+                ]"
+              >
+                <svg
+                  v-if="stat.trend.direction !== 'neutral'"
+                  class="h-3 w-3"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    :d="stat.trend.direction === 'up' ? 'M4.5 15.75l7.5-7.5 7.5 7.5' : 'M19.5 8.25l-7.5 7.5-7.5-7.5'"
+                  />
+                </svg>
+                {{ stat.trend.label }}
+              </span>
+              <p class="text-xs text-slate-500">{{ stat.sublabel }}</p>
+            </div>
+          </component>
+        </template>
+      </div>
 
       <!-- ── Bar chart: ingresos y egresos por mes ──────────────────────────── -->
       <div class="rounded-2xl border border-slate-200 bg-white p-6">

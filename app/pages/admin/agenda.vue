@@ -169,11 +169,107 @@ const groupedAgenda = computed(() => {
   }))
 })
 
-const totalCount = computed(() => agendaItems.value.length)
-const overdueCount = computed(() => agendaItems.value.filter(i => i.isOverdue).length)
-const todayCount = computed(() => {
-  const todayKey = new Date().toISOString().slice(0, 10)
-  return agendaItems.value.filter(i => i.dateIso.slice(0, 10) === todayKey).length
+// ── Planning stat cards ────────────────────────────────────────────────────────
+
+type StatAccent = 'indigo' | 'rose' | 'amber' | 'emerald'
+
+interface AgendaStat {
+  key: string
+  label: string
+  value: number
+  sublabel: string
+  iconPath: string
+  accent: StatAccent
+  valueClass: string
+}
+
+const accentStyles: Record<StatAccent, { icon: string; blob: string }> = {
+  indigo: { icon: 'bg-indigo-50 text-indigo-600', blob: 'bg-indigo-400' },
+  rose: { icon: 'bg-rose-50 text-rose-600', blob: 'bg-rose-400' },
+  amber: { icon: 'bg-amber-50 text-amber-600', blob: 'bg-amber-400' },
+  emerald: { icon: 'bg-emerald-50 text-emerald-600', blob: 'bg-emerald-400' }
+}
+
+const ICONS = {
+  clipboard: 'M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z',
+  alert: 'M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z',
+  clock: 'M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
+  calendarDays: 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z'
+} as const
+
+const todayLongLabel = new Intl.DateTimeFormat('es-MX', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long'
+}).format(new Date())
+
+const planningStats = computed(() => {
+  const items = allAgendaItems.value
+  const todayStartMs = startOfToday().getTime()
+  const weekEndMs = todayStartMs + 7 * 24 * 60 * 60 * 1000
+
+  let overdue = 0
+  let todayN = 0
+  let next7 = 0
+  let taskN = 0
+  let approvalN = 0
+  let activityN = 0
+
+  for (const item of items) {
+    if (item.type === 'task') taskN += 1
+    else if (item.type === 'approval') approvalN += 1
+    else activityN += 1
+
+    if (item.isOverdue) overdue += 1
+    if (item.dateIso.slice(0, 10) === todayKey) todayN += 1
+
+    const ms = new Date(item.dateIso).getTime()
+    if (!item.isOverdue && ms >= todayStartMs && ms <= weekEndMs) next7 += 1
+  }
+
+  return { total: items.length, overdue, todayN, next7, taskN, approvalN, activityN }
+})
+
+const agendaStats = computed<AgendaStat[]>(() => {
+  const s = planningStats.value
+  return [
+    {
+      key: 'total',
+      label: 'Pendientes',
+      value: s.total,
+      sublabel: `${s.taskN} tareas · ${s.approvalN} aprob. · ${s.activityN} segu.`,
+      iconPath: ICONS.clipboard,
+      accent: 'indigo',
+      valueClass: 'text-slate-900'
+    },
+    {
+      key: 'overdue',
+      label: 'Atrasados',
+      value: s.overdue,
+      sublabel: s.overdue > 0 ? 'Requieren atención inmediata' : 'Todo al día',
+      iconPath: ICONS.alert,
+      accent: 'rose',
+      valueClass: s.overdue > 0 ? 'text-rose-600' : 'text-slate-900'
+    },
+    {
+      key: 'today',
+      label: 'Para hoy',
+      value: s.todayN,
+      sublabel: todayLongLabel,
+      iconPath: ICONS.clock,
+      accent: 'amber',
+      valueClass: 'text-slate-900'
+    },
+    {
+      key: 'week',
+      label: 'Próximos 7 días',
+      value: s.next7,
+      sublabel: 'Planificación de la semana',
+      iconPath: ICONS.calendarDays,
+      accent: 'emerald',
+      valueClass: 'text-slate-900'
+    }
+  ]
 })
 
 // Calendar computed
@@ -333,26 +429,51 @@ watch([selectedCompanyId, () => partner.value?.id], () => {
           Actualizar
         </BtnApp>
       </div>
-
-      <!-- Stats -->
-      <div class="mt-5 grid grid-cols-3 gap-3">
-        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Total</p>
-          <p class="mt-1 text-2xl font-bold text-slate-900">{{ totalCount }}</p>
-          <p class="text-[11px] text-slate-400">eventos activos</p>
-        </div>
-        <div class="rounded-xl border border-red-100 bg-red-50 px-4 py-3">
-          <p class="text-[11px] font-semibold uppercase tracking-wider text-red-400">Atrasados</p>
-          <p class="mt-1 text-2xl font-bold text-red-600">{{ overdueCount }}</p>
-          <p class="text-[11px] text-red-400">requieren atención</p>
-        </div>
-        <div class="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3">
-          <p class="text-[11px] font-semibold uppercase tracking-wider text-indigo-400">Hoy</p>
-          <p class="mt-1 text-2xl font-bold text-indigo-600">{{ todayCount }}</p>
-          <p class="text-[11px] text-indigo-400">para hoy</p>
-        </div>
-      </div>
     </header>
+
+    <!-- Stat cards -->
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div
+        v-for="stat in agendaStats"
+        :key="stat.key"
+        class="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/60"
+      >
+        <div
+          :class="[
+            'pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full opacity-[0.07] blur-2xl transition-opacity group-hover:opacity-[0.14]',
+            accentStyles[stat.accent].blob
+          ]"
+        />
+
+        <div class="relative flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-slate-500">{{ stat.label }}</p>
+            <p :class="['mt-2 text-3xl font-bold tracking-tight', stat.valueClass]">
+              {{ stat.value }}
+            </p>
+          </div>
+          <span
+            :class="[
+              'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+              accentStyles[stat.accent].icon
+            ]"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" :d="stat.iconPath" />
+            </svg>
+          </span>
+        </div>
+
+        <p
+          :class="[
+            'relative mt-3 text-xs text-slate-500',
+            stat.key === 'today' ? 'capitalize' : ''
+          ]"
+        >
+          {{ stat.sublabel }}
+        </p>
+      </div>
+    </div>
 
     <!-- Toolbar -->
     <div class="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-lg shadow-slate-200/50">
