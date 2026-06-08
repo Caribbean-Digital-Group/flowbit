@@ -8,8 +8,26 @@ import type { Database, Tables, TablesUpdate } from '~/types/database.types'
 definePageMeta({ layout: 'admin' })
 
 type Warehouse = Tables<'warehouse'>
-type Product = Tables<'product'>
 type PickingView = Database['public']['Views']['v_pickings']['Row']
+
+/** Subconjunto de producto usado en el dashboard; evita recursión profunda de tipos Supabase en computed. */
+interface WarehouseInventoryProduct {
+  id: string
+  name: string
+  display_name: string | null
+  sku: string | null
+  internal_ref: string | null
+  is_stockable: boolean | null
+  status: string | null
+  stock_quantity: number | null
+  stock_min: number | null
+  cost_price: number | null
+  sale_price: number | null
+  currency: string | null
+}
+
+const filterStockableProducts = (items: WarehouseInventoryProduct[]): WarehouseInventoryProduct[] =>
+  items.filter(p => p.is_stockable === true && p.status !== 'inactive')
 
 const route = useRoute()
 const router = useRouter()
@@ -30,7 +48,7 @@ const initialForm = ref<WarehouseFormData>(createEmptyWarehouseForm())
 // ── Dashboard state ─────────────────────────────────────────────────────────
 const dashboardLoading = ref(false)
 const pickings = ref<PickingView[]>([])
-const products = ref<Product[]>([])
+const products = ref<WarehouseInventoryProduct[]>([])
 
 // ── Computed ────────────────────────────────────────────────────────────────
 const rowId = computed(() => {
@@ -50,15 +68,13 @@ const totalEntradasQty = computed(() =>
 const totalSalidasQty = computed(() =>
   confirmedSalidas.value.reduce((s, p) => s + (p.total_quantity ?? 0), 0)
 )
-const stockableProducts = computed<Product[]>(() =>
-  products.value.filter(p => p.is_stockable === true && p.status !== 'inactive')
-)
-const inStockProducts = computed<Product[]>(() =>
+const stockableProducts = computed(() => filterStockableProducts(products.value))
+const inStockProducts = computed(() =>
   stockableProducts.value
     .filter(p => (p.stock_quantity ?? 0) > 0)
     .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
 )
-const outOfStockProducts = computed<Product[]>(() =>
+const outOfStockProducts = computed(() =>
   stockableProducts.value
     .filter(p => (p.stock_quantity ?? 0) <= 0)
     .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
@@ -153,7 +169,7 @@ const loadDashboard = async () => {
       getProductsByCompany(companyId)
     ])
     pickings.value = pickingData
-    products.value = productData
+    products.value = productData as WarehouseInventoryProduct[]
   } finally {
     dashboardLoading.value = false
   }
