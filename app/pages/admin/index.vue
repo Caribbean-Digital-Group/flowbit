@@ -246,7 +246,7 @@ const monthlyComparison = computed(() => {
     const dateStr = order.order_date ?? order.created_at
     if (!dateStr) continue
 
-    const key = monthKey(new Date(dateStr))
+    const key = dateStr.slice(0, 7)
     if (key !== currentKey && key !== previousKey) continue
 
     const amount = Number(order.amount_total ?? 0)
@@ -425,8 +425,7 @@ const chartData = computed<ChartBar[]>(() => {
     const dateStr = order.order_date ?? order.created_at
     if (!dateStr) continue
 
-    const d = new Date(dateStr)
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    const key = dateStr.slice(0, 7)
     const bucket = monthMap.get(key)
     if (!bucket) continue
 
