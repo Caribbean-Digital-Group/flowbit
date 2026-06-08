@@ -385,7 +385,7 @@ const menuGroups: MenuGroup[] = [
   },
   {
     id: 'ventas',
-    title: 'Ventas',
+    title: 'Ventas / Compras',
     accentColor: 'emerald',
     items: [
       {
