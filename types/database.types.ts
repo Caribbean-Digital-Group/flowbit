@@ -2667,6 +2667,8 @@ export type Database = {
           partner_name: string | null
           partner_vat: string | null
           payment_due_date: string | null
+          payment_method_id: string | null
+          payment_status: string | null
           payment_term: string | null
           project_code: string | null
           project_id: string | null
@@ -2704,6 +2706,13 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_method"
             referencedColumns: ["id"]
           },
           {
