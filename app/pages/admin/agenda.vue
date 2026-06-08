@@ -315,15 +315,15 @@ const itemsByDay = computed(() => {
   return map
 })
 
-const selectedCalendarDay = ref<string | null>(null)
+const todayKey = new Date().toISOString().slice(0, 10)
+
+const selectedCalendarDay = ref<string | null>(todayKey)
 
 const selectedDayItems = computed(() => {
   if (!selectedCalendarDay.value) return []
   return (itemsByDay.value.get(selectedCalendarDay.value) ?? [])
     .filter((item) => activeFilter.value === 'all' || item.type === activeFilter.value)
 })
-
-const todayKey = new Date().toISOString().slice(0, 10)
 
 const prevMonth = () => {
   if (calendarMonth.value === 0) {
