@@ -212,11 +212,33 @@ export const useOrder = () => {
     return data
   }
 
+  const getOrdersByPartner = async (
+    partnerId: string,
+    companyId: string
+  ): Promise<OrderRowView[]> => {
+    if (!partnerId || !companyId) return []
+
+    const { data, error } = await supabase
+      .from('v_orders')
+      .select('*')
+      .eq('company_id', companyId)
+      .eq('partner_id', partnerId)
+      .order('order_date', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching orders by partner:', error)
+      return []
+    }
+
+    return data ?? []
+  }
+
   return {
     getOrdersByCompany,
     getOrderById,
     getOrderViewById,
     getOrdersByProject,
+    getOrdersByPartner,
     updateOrder,
     createDraftOrder,
     previewOrderStockShortages,
