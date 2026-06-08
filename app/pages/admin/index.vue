@@ -209,6 +209,71 @@ const stats = computed<StatItem[]>(() => [
   }
 ])
 
+// ── Chart ────────────────────────────────────────────────────────────────────
+
+interface ChartBar {
+  label: string
+  income: number
+  expense: number
+  incomeCount: number
+  expenseCount: number
+}
+
+const chartFilter = ref(12)
+const chartCurrency = ref('')
+
+watch(
+  activeCurrencies,
+  (currencies) => {
+    if (currencies.length > 0 && !currencies.includes(chartCurrency.value)) {
+      chartCurrency.value = currencies[0] ?? ''
+    }
+  },
+  { immediate: true }
+)
+
+const chartData = computed<ChartBar[]>(() => {
+  const now = new Date()
+  const months: (ChartBar & { key: string })[] = []
+
+  for (let i = chartFilter.value - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    const monthStr = d.toLocaleDateString('es-MX', { month: 'short' }).replace(/\./g, '').slice(0, 3).toUpperCase()
+    const yearStr = String(d.getFullYear()).slice(2)
+    months.push({ key, label: `${monthStr} ${yearStr}`, income: 0, expense: 0, incomeCount: 0, expenseCount: 0 })
+  }
+
+  const monthMap = new Map(months.map((m) => [m.key, m]))
+  const currency = chartCurrency.value
+
+  for (const order of orders.value) {
+    if (order.order_state !== 'posted') continue
+    if (!currency || normalizeCurrency(order.currency) !== currency) continue
+
+    const dateStr = order.order_date ?? order.created_at
+    if (!dateStr) continue
+
+    const d = new Date(dateStr)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    const bucket = monthMap.get(key)
+    if (!bucket) continue
+
+    const amount = Number(order.amount_total ?? 0)
+    if (order.order_type === 'sale') {
+      bucket.income += amount
+      bucket.incomeCount++
+    } else if (order.order_type === 'purchase') {
+      bucket.expense += amount
+      bucket.expenseCount++
+    }
+  }
+
+  return months
+})
+
+// ── Financial summary ─────────────────────────────────────────────────────────
+
 const metricsByCurrency = computed<CurrencyMetrics[]>(() => {
   const summary = new Map<string, CurrencyMetrics>()
 
@@ -480,6 +545,91 @@ watch(selectedCompanyId, () => {
     <template v-else>
       <StatGrid :stats="stats" :columns="4" :loading="isLoading" />
 
+      <!-- ── Bar chart: ingresos y egresos por mes ──────────────────────────── -->
+      <div class="rounded-2xl border border-slate-200 bg-white p-6">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-semibold text-slate-900">
+              Ingresos y egresos por mes
+            </h2>
+            <p class="mt-1 text-sm text-slate-500">
+              Comparativa mensual de ventas y compras confirmadas.
+            </p>
+          </div>
+
+          <!-- Currency switcher -->
+          <div
+            v-if="activeCurrencies.length > 0"
+            class="flex flex-wrap items-center gap-1.5"
+          >
+            <span class="text-xs font-medium text-slate-500">Moneda:</span>
+            <button
+              v-for="c in activeCurrencies"
+              :key="c"
+              type="button"
+              :class="[
+                'rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
+                chartCurrency === c
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              ]"
+              @click="chartCurrency = c"
+            >
+              {{ c }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Period filters -->
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+          <span class="text-xs font-medium text-slate-500">Periodo:</span>
+          <div class="flex rounded-xl border border-slate-200 bg-slate-50 p-0.5 gap-0.5">
+            <button
+              v-for="f in [12, 6, 3, 1]"
+              :key="f"
+              type="button"
+              :class="[
+                'rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
+                chartFilter === f
+                  ? 'bg-white text-indigo-700 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              ]"
+              @click="chartFilter = f"
+            >
+              {{ f === 1 ? '1 mes' : `${f} meses` }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Chart canvas -->
+        <div class="mt-5 min-h-[200px]">
+          <div
+            v-if="isLoading"
+            class="flex h-48 items-center justify-center text-sm text-slate-400"
+          >
+            Cargando datos…
+          </div>
+          <ChartMonthlyBars
+            v-else
+            :data="chartData"
+            :currency="chartCurrency || activeCurrencies[0] || 'MXN'"
+          />
+        </div>
+
+        <!-- Legend -->
+        <div class="mt-3 flex flex-wrap items-center gap-5">
+          <div class="flex items-center gap-1.5">
+            <span class="inline-block h-3 w-3 rounded-sm bg-emerald-500" />
+            <span class="text-xs text-slate-600">Ingresos (ventas confirmadas)</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="inline-block h-3 w-3 rounded-sm bg-rose-500" />
+            <span class="text-xs text-slate-600">Egresos (compras confirmadas)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Financial summary table ─────────────────────────────────────── -->
       <div class="rounded-2xl border border-slate-200 bg-white p-6">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
