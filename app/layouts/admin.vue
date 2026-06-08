@@ -309,159 +309,252 @@ const handleClickOutside = (event: MouseEvent) => {
 }
 
 // Definición de módulos del sidebar
-const menuItems = [
+interface MenuItem {
+  title: string
+  to: string
+  exact?: boolean
+  iconPaths: string[]
+}
+
+interface MenuGroup {
+  id: string
+  title?: string
+  accentColor?: string
+  separator?: boolean
+  items: MenuItem[]
+}
+
+const groupAccentClasses: Record<string, { bar: string; text: string; dot: string }> = {
+  sky: { bar: 'bg-sky-500', text: 'text-sky-600', dot: 'bg-sky-400' },
+  emerald: { bar: 'bg-emerald-500', text: 'text-emerald-600', dot: 'bg-emerald-400' },
+  orange: { bar: 'bg-orange-500', text: 'text-orange-600', dot: 'bg-orange-400' },
+  violet: { bar: 'bg-violet-500', text: 'text-violet-600', dot: 'bg-violet-400' },
+  amber: { bar: 'bg-amber-500', text: 'text-amber-600', dot: 'bg-amber-400' },
+}
+
+const menuGroups: MenuGroup[] = [
   {
-    title: 'Dashboard',
-    to: '/admin',
-    exact: true,
-    iconPaths: [
-      'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z'
+    id: 'general',
+    items: [
+      {
+        title: 'Dashboard',
+        to: '/admin',
+        exact: true,
+        iconPaths: [
+          'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z'
+        ]
+      },
+      {
+        title: 'Agenda',
+        to: '/admin/agenda',
+        iconPaths: [
+          'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+          'M10 15h4'
+        ]
+      },
+      {
+        title: 'Contactos',
+        to: '/admin/partners',
+        iconPaths: [
+          'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'
+        ]
+      },
     ]
   },
   {
-    title: 'Agenda',
-    to: '/admin/agenda',
-    iconPaths: [
-      'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
-      'M10 15h4'
+    id: 'crm',
+    title: 'CRM',
+    accentColor: 'sky',
+    items: [
+      {
+        title: 'Leads',
+        to: '/admin/crm/leads',
+        iconPaths: [
+          'M17 20h5v-2a4 4 0 00-3-3.87',
+          'M9 20H4v-2a4 4 0 013-3.87m6-1a4 4 0 100-8 4 4 0 000 8zm6 3a3 3 0 11-6 0 3 3 0 016 0zM3 7l2 2 4-4'
+        ]
+      },
+      {
+        title: 'Pipeline',
+        to: '/admin/crm/stages',
+        iconPaths: [
+          'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
+        ]
+      },
     ]
   },
   {
-    title: 'Contactos',
-    to: '/admin/partners',
-    iconPaths: [
-      'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'
+    id: 'ventas',
+    title: 'Ventas',
+    accentColor: 'emerald',
+    items: [
+      {
+        title: 'Órdenes',
+        to: '/admin/orders',
+        iconPaths: [
+          'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'
+        ]
+      },
+      {
+        title: 'Líneas de orden',
+        to: '/admin/order-lines',
+        iconPaths: [
+          'M4 6h16M4 10h16M4 14h16M4 18h16'
+        ]
+      },
+      {
+        title: 'Métodos de Pago',
+        to: '/admin/payment-methods',
+        iconPaths: [
+          'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z'
+        ]
+      },
     ]
   },
   {
-    title: 'Leads / CRM',
-    to: '/admin/crm/leads',
-    iconPaths: [
-      'M17 20h5v-2a4 4 0 00-3-3.87',
-      'M9 20H4v-2a4 4 0 013-3.87m6-1a4 4 0 100-8 4 4 0 000 8zm6 3a3 3 0 11-6 0 3 3 0 016 0zM3 7l2 2 4-4'
+    id: 'inventario',
+    title: 'Inventario',
+    accentColor: 'orange',
+    items: [
+      {
+        title: 'Productos',
+        to: '/admin/products',
+        iconPaths: [
+          'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'
+        ]
+      },
+      {
+        title: 'Almacenes',
+        to: '/admin/warehouses',
+        iconPaths: [
+          'M3 7l9-4 9 4-9 4-9-4z',
+          'M3 7v10l9 4 9-4V7'
+        ]
+      },
+      {
+        title: 'Movimientos',
+        to: '/admin/pickings',
+        iconPaths: [
+          'M8 7h12m0 0l-4-4m4 4l-4 4',
+          'M16 17H4m0 0l4-4m-4 4l4 4'
+        ]
+      },
+      {
+        title: 'Líneas de picking',
+        to: '/admin/picking-lines',
+        iconPaths: [
+          'M4 6h16M4 12h16M4 18h16',
+          'M9 6v12M15 6v12'
+        ]
+      },
     ]
   },
   {
-    title: 'Pipeline CRM',
-    to: '/admin/crm/stages',
-    iconPaths: [
-      'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
-    ]
-  },
-  {
-    title: 'Productos',
-    to: '/admin/products',
-    iconPaths: [
-      'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'
-    ]
-  },
-  {
-    title: 'Métodos de Pago',
-    to: '/admin/payment-methods',
-    iconPaths: [
-      'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z'
-    ]
-  },
-  {
-    title: 'Órdenes',
-    to: '/admin/orders',
-    iconPaths: [
-      'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'
-    ]
-  },
-  {
-    title: 'Líneas de orden',
-    to: '/admin/order-lines',
-    iconPaths: [
-      'M4 6h16M4 10h16M4 14h16M4 18h16'
-    ]
-  },
-  {
+    id: 'proyectos',
     title: 'Proyectos',
-    to: '/admin/projects',
-    iconPaths: [
-      'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z',
-      'M12 11v6m-3-3h6'
+    accentColor: 'violet',
+    items: [
+      {
+        title: 'Proyectos',
+        to: '/admin/projects',
+        iconPaths: [
+          'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z',
+          'M12 11v6m-3-3h6'
+        ]
+      },
+      {
+        title: 'Tareas',
+        to: '/admin/tasks',
+        iconPaths: [
+          'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2',
+          'M9 14l2 2 4-4'
+        ]
+      },
     ]
   },
   {
-    title: 'Tareas',
-    to: '/admin/tasks',
-    iconPaths: [
-      'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2',
-      'M9 14l2 2 4-4'
+    id: 'aprobaciones',
+    title: 'Aprobaciones',
+    accentColor: 'amber',
+    items: [
+      {
+        title: 'Solicitudes',
+        to: '/admin/approval-requests',
+        iconPaths: [
+          'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+          'M12 8v4l3 3'
+        ]
+      },
+      {
+        title: 'Categorías',
+        to: '/admin/approval-categories',
+        iconPaths: [
+          'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z'
+        ]
+      },
+      {
+        title: 'Aprobadores',
+        to: '/admin/approval-managers',
+        iconPaths: [
+          'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V8m8 0V6',
+          'M12 12a3 3 0 110-6 3 3 0 010 6z'
+        ]
+      },
     ]
   },
   {
-    title: 'Almacenes',
-    to: '/admin/warehouses',
-    iconPaths: [
-      'M3 7l9-4 9 4-9 4-9-4z',
-      'M3 7v10l9 4 9-4V7'
-    ]
-  },
-  {
-    title: 'Movimientos',
-    to: '/admin/pickings',
-    iconPaths: [
-      'M8 7h12m0 0l-4-4m4 4l-4 4',
-      'M16 17H4m0 0l4-4m-4 4l4 4'
-    ]
-  },
-  {
-    title: 'Líneas de picking',
-    to: '/admin/picking-lines',
-    iconPaths: [
-      'M4 6h16M4 12h16M4 18h16',
-      'M9 6v12M15 6v12'
-    ]
-  },
-  {
-    title: 'Solicitudes de aprobación',
-    to: '/admin/approval-requests',
-    iconPaths: [
-      'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-      'M12 8v4l3 3'
-    ]
-  },
-  {
-    title: 'Categorías de aprobación',
-    to: '/admin/approval-categories',
-    iconPaths: [
-      'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z'
-    ]
-  },
-  {
-    title: 'Gerentes / aprobadores',
-    to: '/admin/approval-managers',
-    iconPaths: [
-      'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V8m8 0V6',
-      'M12 12a3 3 0 110-6 3 3 0 010 6z'
-    ]
-  },
-  {
-    title: 'Equipo',
-    to: '/admin/team',
-    iconPaths: [
-      'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-7a4 4 0 11-8 0 4 4 0 018 0zm6 3a3 3 0 11-6 0 3 3 0 016 0z'
-    ]
-  },
-  {
-    title: 'Manual de usuario',
-    to: '/admin/manual',
-    iconPaths: [
-      'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'
-    ]
-  },
-  {
-    title: 'Configuración',
-    to: '/admin/settings',
-    iconPaths: [
-      'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
-      'M15 12a3 3 0 11-6 0 3 3 0 016 0z'
+    id: 'sistema',
+    separator: true,
+    items: [
+      {
+        title: 'Equipo',
+        to: '/admin/team',
+        iconPaths: [
+          'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-7a4 4 0 11-8 0 4 4 0 018 0zm6 3a3 3 0 11-6 0 3 3 0 016 0z'
+        ]
+      },
+      {
+        title: 'Manual',
+        to: '/admin/manual',
+        iconPaths: [
+          'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'
+        ]
+      },
+      {
+        title: 'Configuración',
+        to: '/admin/settings',
+        iconPaths: [
+          'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
+          'M15 12a3 3 0 11-6 0 3 3 0 016 0z'
+        ]
+      },
     ]
   }
 ]
+
+const collapsedGroups = ref<Record<string, boolean>>(
+  Object.fromEntries(menuGroups.filter(g => g.title).map(g => [g.id, true]))
+)
+
+const isGroupCollapsed = (groupId: string): boolean => {
+  return collapsedGroups.value[groupId] ?? false
+}
+
+const toggleGroup = (groupId: string) => {
+  collapsedGroups.value[groupId] = !isGroupCollapsed(groupId)
+}
+
+const isGroupActive = (group: MenuGroup): boolean => {
+  return group.items.some(item => isMenuItemActive(item))
+}
+
+watch(() => route.path, () => {
+  menuGroups.forEach(group => {
+    if (group.title && isGroupActive(group)) {
+      collapsedGroups.value[group.id] = false
+    }
+  })
+}, { immediate: true })
 
 // Handlers para el Avatar dropdown
 const handleProfile = () => {
@@ -543,48 +636,106 @@ const handleLogout = async () => {
       </div>
 
       <!-- Navigation Menu -->
-      <nav class="flex-1 min-h-0 px-3 py-4 space-y-1 overflow-y-auto">
-        <NuxtLink
-          v-for="item in menuItems"
-          :key="item.to"
-          :to="item.to"
-          :class="[
-            'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group',
-            isSidebarCollapsed ? 'justify-center' : '',
-            isMenuItemActive(item)
-              ? 'bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/25'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-          ]"
+      <nav class="flex-1 min-h-0 overflow-y-auto py-3">
+        <div
+          v-for="group in menuGroups"
+          :key="group.id"
         >
-          <!-- Icon -->
-          <svg class="w-5 h-5 min-w-[20px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              v-for="(path, index) in item.iconPaths"
-              :key="index"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              :d="path"
-            />
-          </svg>
+          <!-- Línea separadora antes del grupo sistema -->
+          <div
+            v-if="group.separator"
+            class="mx-4 my-2 border-t border-slate-100"
+          />
 
-          <!-- Label -->
-          <Transition
-            enter-active-class="transition-all duration-300"
-            enter-from-class="opacity-0"
-            enter-to-class="opacity-100"
-            leave-active-class="transition-all duration-200"
-            leave-from-class="opacity-100"
-            leave-to-class="opacity-0"
+          <!-- Cabecera de grupo (solo sidebar expandido) -->
+          <button
+            v-if="group.title && !isSidebarCollapsed"
+            type="button"
+            class="group/hdr w-full flex items-center justify-between px-4 py-1 mt-3 mb-0.5 hover:bg-slate-50 rounded-lg transition-colors"
+            @click="toggleGroup(group.id)"
           >
-            <span
-              v-if="!isSidebarCollapsed"
-              class="whitespace-nowrap"
+            <div class="flex items-center gap-2">
+              <div
+                :class="['w-1 h-3.5 rounded-full flex-shrink-0', groupAccentClasses[group.accentColor!]?.bar ?? 'bg-slate-300']"
+              />
+              <span
+                :class="[
+                  'text-[10px] font-bold uppercase tracking-[0.12em] transition-colors',
+                  isGroupActive(group)
+                    ? (groupAccentClasses[group.accentColor!]?.text ?? 'text-slate-700')
+                    : 'text-slate-400 group-hover/hdr:text-slate-600'
+                ]"
+              >
+                {{ group.title }}
+              </span>
+            </div>
+            <svg
+              :class="[
+                'w-3.5 h-3.5 text-slate-300 group-hover/hdr:text-slate-400 transition-transform duration-200',
+                isGroupCollapsed(group.id) ? '-rotate-90' : ''
+              ]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              {{ item.title }}
-            </span>
-          </Transition>
-        </NuxtLink>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <!-- Separador de grupo en sidebar colapsado (punto de color) -->
+          <div
+            v-else-if="group.title && isSidebarCollapsed"
+            class="flex justify-center py-2 mt-1"
+          >
+            <div
+              :class="['w-1.5 h-1.5 rounded-full', groupAccentClasses[group.accentColor!]?.dot ?? 'bg-slate-300']"
+            />
+          </div>
+
+          <!-- Items del grupo -->
+          <div
+            v-show="!group.title || isSidebarCollapsed || !isGroupCollapsed(group.id)"
+            class="px-2 space-y-0.5"
+            :class="group.title && !isSidebarCollapsed ? 'pb-1' : 'py-1'"
+          >
+            <NuxtLink
+              v-for="item in group.items"
+              :key="item.to"
+              :to="item.to"
+              :title="isSidebarCollapsed ? item.title : undefined"
+              :class="[
+                'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
+                isSidebarCollapsed ? 'justify-center' : '',
+                isMenuItemActive(item)
+                  ? 'bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/25'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              ]"
+            >
+              <svg class="w-5 h-5 min-w-[20px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  v-for="(path, index) in item.iconPaths"
+                  :key="index"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  :d="path"
+                />
+              </svg>
+              <Transition
+                enter-active-class="transition-all duration-300"
+                enter-from-class="opacity-0"
+                enter-to-class="opacity-100"
+                leave-active-class="transition-all duration-200"
+                leave-from-class="opacity-100"
+                leave-to-class="opacity-0"
+              >
+                <span v-if="!isSidebarCollapsed" class="whitespace-nowrap">
+                  {{ item.title }}
+                </span>
+              </Transition>
+            </NuxtLink>
+          </div>
+        </div>
       </nav>
 
       <!-- Collapse Toggle Button (Desktop only) -->
