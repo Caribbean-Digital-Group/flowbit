@@ -146,10 +146,29 @@ export const usePicking = () => {
     return data
   }
 
+  const getPickingsByWarehouse = async (warehouseId: string, companyId: string): Promise<PickingView[]> => {
+    if (!companyId || !warehouseId) return []
+
+    const { data, error } = await supabase
+      .from('v_pickings')
+      .select('*')
+      .eq('company_id', companyId)
+      .eq('warehouse_id', warehouseId)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching pickings by warehouse:', error)
+      return []
+    }
+
+    return data || []
+  }
+
   return {
     getPickingById,
     getPickingViewById,
     getPickingsByCompany,
+    getPickingsByWarehouse,
     createPicking,
     updatePicking,
     setPickingStatus,

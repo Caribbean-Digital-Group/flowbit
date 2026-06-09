@@ -1,24 +1,34 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import type { MenuOption } from '~/components/CardSheet.vue'
 import { createEmptyPartnerForm, type PartnerFormData } from '~/components/Partner/Form.vue'
-import type { Tables, TablesUpdate } from '~/types/database.types'
+import type { Database, Tables, TablesUpdate } from '~/types/database.types'
 
 definePageMeta({
   layout: 'admin'
 })
 
 type Partner = Tables<'partner'>
+type OrderView = Database['public']['Views']['v_orders']['Row']
+type LeadView = Database['public']['Views']['v_crm_leads']['Row']
 
 const route = useRoute()
 const router = useRouter()
 const { getPartnerById, updatePartner, archivePartner } = usePartner()
+const { getOrdersByPartner } = useOrder()
+const { getLeadsByPartner } = useCrmLead()
+const authStore = useAuthStore()
+const { selectedCompanyId } = storeToRefs(authStore)
 
-const isEditing = ref(false)
 const isLoading = ref(false)
+const isLoadingMetrics = ref(false)
 const errorMessage = ref<string | null>(null)
 const partner = ref<Partner | null>(null)
 const partnerForm = ref<PartnerFormData>(createEmptyPartnerForm())
 const initialForm = ref<PartnerFormData>(createEmptyPartnerForm())
+const partnerOrders = ref<OrderView[]>([])
+const partnerLeads = ref<LeadView[]>([])
+const isEditing = ref(false)
 
 const partnerId = computed(() => {
   const raw = route.params.id
@@ -89,27 +99,39 @@ const mapFormToPartnerUpdate = (value: PartnerFormData): TablesUpdate<'partner'>
 
 const loadPartner = async (): Promise<void> => {
   const id = partnerId.value
+  const companyId = selectedCompanyId.value
+
   if (!id) {
     errorMessage.value = 'No se recibió un identificador de cliente válido.'
     return
   }
 
   isLoading.value = true
+  isLoadingMetrics.value = true
   errorMessage.value = null
 
   try {
-    const data = await getPartnerById(id)
-    if (!data) {
+    const [partnerData, orderList, leadList] = await Promise.all([
+      getPartnerById(id),
+      companyId ? getOrdersByPartner(id, companyId) : Promise.resolve([]),
+      companyId ? getLeadsByPartner(id, companyId) : Promise.resolve([])
+    ])
+
+    if (!partnerData) {
       errorMessage.value = 'No se encontró el cliente solicitado o no tienes acceso.'
       return
     }
 
-    partner.value = data
-    const mapped = mapPartnerToForm(data)
+    partner.value = partnerData
+    const mapped = mapPartnerToForm(partnerData)
     partnerForm.value = mapped
     initialForm.value = { ...mapped }
+
+    partnerOrders.value = orderList
+    partnerLeads.value = leadList
   } finally {
     isLoading.value = false
+    isLoadingMetrics.value = false
   }
 }
 
@@ -177,11 +199,12 @@ const handleArchive = async () => {
   }
 }
 
-watch(partnerId, () => {
+watch([partnerId, selectedCompanyId], () => {
   isEditing.value = false
   void loadPartner()
 }, { immediate: true })
 </script>
+
 <template>
   <CardSheet
     :title="partnerForm.name || 'Cliente sin nombre'"
@@ -210,6 +233,11 @@ watch(partnerId, () => {
     </div>
 
     <PartnerForm v-model="partnerForm" :readonly="!isEditing" />
+
+    <PartnerMetricsPanel
+      :orders="partnerOrders"
+      :leads="partnerLeads"
+      :loading="isLoadingMetrics"
+    />
   </CardSheet>
 </template>
-

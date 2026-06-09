@@ -224,6 +224,27 @@ export const useCrmLead = () => {
     return metrics
   }
 
+  const getLeadsByPartner = async (
+    partnerId: string,
+    companyId: string
+  ): Promise<CrmLeadView[]> => {
+    if (!partnerId || !companyId) return []
+
+    const { data, error } = await supabase
+      .from('v_crm_leads')
+      .select('*')
+      .eq('company_id', companyId)
+      .eq('partner_id', partnerId)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching leads by partner:', error)
+      return []
+    }
+
+    return data ?? []
+  }
+
   return {
     getLeadsByCompany,
     getLeadById,
@@ -234,6 +255,7 @@ export const useCrmLead = () => {
     getLinkedOrders,
     linkOrder,
     unlinkOrder,
-    computeMetrics
+    computeMetrics,
+    getLeadsByPartner
   }
 }
