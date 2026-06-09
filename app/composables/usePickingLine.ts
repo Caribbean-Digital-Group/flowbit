@@ -47,6 +47,27 @@ export const usePickingLine = () => {
     return data || []
   }
 
+  const getPickingLinesByProduct = async (
+    productId: string,
+    companyId: string
+  ): Promise<PickingLineView[]> => {
+    if (!companyId || !productId) return []
+
+    const { data, error } = await supabase
+      .from('v_picking_lines')
+      .select('*')
+      .eq('product_id', productId)
+      .eq('company_id', companyId)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching picking lines by product:', error)
+      return []
+    }
+
+    return data || []
+  }
+
   const createPickingLine = async (payload: PickingLineInsert): Promise<PickingLine | null> => {
     const user = await useSupabaseUser()
 
@@ -136,6 +157,7 @@ export const usePickingLine = () => {
   return {
     getPickingLinesByPickingId,
     getPickingLineViewsByCompany,
+    getPickingLinesByProduct,
     createPickingLine,
     updatePickingLine,
     deletePickingLine,

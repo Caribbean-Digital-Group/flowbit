@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import type { Column } from '~/components/Datatable.vue'
-import type { StatItem } from '~/components/StatGrid.vue'
 import type { Database } from '~/types/database.types'
 
 definePageMeta({
@@ -130,32 +129,81 @@ const aggregatedMetrics = computed(() =>
   computeAggregatedMetrics(projectsRaw.value)
 )
 
-const stats = computed<StatItem[]>(() => {
+// ── Stat cards ─────────────────────────────────────────────────────────────────
+
+type StatAccent = 'indigo' | 'sky' | 'rose' | 'emerald' | 'amber'
+
+interface ProjectStat {
+  key: string
+  label: string
+  value: string
+  sublabel: string
+  iconPath: string
+  accent: StatAccent
+  valueClass: string
+  progress?: number
+}
+
+const accentStyles: Record<StatAccent, { icon: string; blob: string }> = {
+  indigo: { icon: 'bg-indigo-50 text-indigo-600', blob: 'bg-indigo-400' },
+  sky: { icon: 'bg-sky-50 text-sky-600', blob: 'bg-sky-400' },
+  rose: { icon: 'bg-rose-50 text-rose-600', blob: 'bg-rose-400' },
+  emerald: { icon: 'bg-emerald-50 text-emerald-600', blob: 'bg-emerald-400' },
+  amber: { icon: 'bg-amber-50 text-amber-600', blob: 'bg-amber-400' }
+}
+
+const ICONS = {
+  briefcase: 'M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0M12 12.75h.008v.008H12v-.008Z',
+  chart: 'M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z',
+  alert: 'M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z',
+  banknotes: 'M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z'
+} as const
+
+const projectStats = computed<ProjectStat[]>(() => {
   const m = aggregatedMetrics.value
+  const utilization = m.totalBudgetEstimated > 0
+    ? Math.round((m.totalBudgetActual / m.totalBudgetEstimated) * 100)
+    : 0
+
   return [
     {
-      label: 'Proyectos totales',
-      value: String(m.total),
-      change: `${m.inProgress} activos`,
-      trend: 'neutral'
+      key: 'active',
+      label: 'Proyectos activos',
+      value: String(m.inProgress),
+      sublabel: `${m.pending} por iniciar · ${m.total} en total`,
+      iconPath: ICONS.briefcase,
+      accent: 'indigo',
+      valueClass: 'text-slate-900'
     },
     {
+      key: 'progress',
       label: 'Avance promedio',
       value: `${m.averageProgress}%`,
-      change: `${m.completed} finalizados`,
-      trend: m.averageProgress >= 50 ? 'up' : 'neutral'
+      sublabel: `${m.completed} finalizados · ${m.paused} en pausa`,
+      iconPath: ICONS.chart,
+      accent: 'sky',
+      valueClass: 'text-slate-900',
+      progress: m.averageProgress
     },
     {
+      key: 'risk',
       label: 'En riesgo',
       value: String(m.overdue),
-      change: m.overdue === 0 ? 'Sin retrasos' : 'Atrasados',
-      trend: m.overdue === 0 ? 'up' : 'down'
+      sublabel: m.overdue > 0 ? 'Atrasados, requieren atención' : 'Todo en tiempo',
+      iconPath: ICONS.alert,
+      accent: m.overdue > 0 ? 'rose' : 'emerald',
+      valueClass: m.overdue > 0 ? 'text-rose-600' : 'text-slate-900'
     },
     {
-      label: 'Presupuesto',
+      key: 'budget',
+      label: 'Presupuesto estimado',
       value: formatCurrency(m.totalBudgetEstimated),
-      change: `Real: ${formatCurrency(m.totalBudgetActual)}`,
-      trend: m.totalBudgetActual <= m.totalBudgetEstimated ? 'up' : 'down'
+      sublabel: m.totalBudgetEstimated > 0
+        ? `Ejecutado: ${formatCurrency(m.totalBudgetActual)} (${utilization}%)`
+        : `Ejecutado: ${formatCurrency(m.totalBudgetActual)}`,
+      iconPath: ICONS.banknotes,
+      accent: 'amber',
+      valueClass: 'text-slate-900'
     }
   ]
 })
@@ -239,8 +287,71 @@ const filtersLabel = computed(() => {
     </div>
 
     <template v-else>
-      <!-- KPIs -->
-      <StatGrid :stats="stats" :loading="isLoading" :columns="4" />
+      <!-- Stat cards -->
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <template v-if="isLoading">
+          <div
+            v-for="i in 4"
+            :key="`project-stat-skeleton-${i}`"
+            class="animate-pulse rounded-2xl border border-slate-200 bg-white p-5"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1 space-y-3">
+                <div class="h-3 w-24 rounded bg-slate-200" />
+                <div class="h-7 w-32 rounded bg-slate-200" />
+              </div>
+              <div class="h-11 w-11 rounded-xl bg-slate-200" />
+            </div>
+            <div class="mt-4 h-3 w-28 rounded bg-slate-200" />
+          </div>
+        </template>
+
+        <template v-else>
+          <div
+            v-for="stat in projectStats"
+            :key="stat.key"
+            class="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/60"
+          >
+            <div
+              :class="[
+                'pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full opacity-[0.07] blur-2xl transition-opacity group-hover:opacity-[0.14]',
+                accentStyles[stat.accent].blob
+              ]"
+            />
+
+            <div class="relative flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-slate-500">{{ stat.label }}</p>
+                <p :class="['mt-2 truncate text-2xl font-bold tracking-tight', stat.valueClass]">
+                  {{ stat.value }}
+                </p>
+              </div>
+              <span
+                :class="[
+                  'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+                  accentStyles[stat.accent].icon
+                ]"
+              >
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" :d="stat.iconPath" />
+                </svg>
+              </span>
+            </div>
+
+            <div
+              v-if="typeof stat.progress === 'number'"
+              class="relative mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-100"
+            >
+              <div
+                class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-600 to-fuchsia-600 transition-all"
+                :style="{ width: `${Math.min(Math.max(stat.progress, 0), 100)}%` }"
+              />
+            </div>
+
+            <p class="relative mt-3 truncate text-xs text-slate-500">{{ stat.sublabel }}</p>
+          </div>
+        </template>
+      </div>
 
       <div
         v-if="isLoading"

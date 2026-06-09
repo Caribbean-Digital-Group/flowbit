@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import type { Column } from '~/components/Datatable.vue'
-import type { StatItem } from '~/components/StatGrid.vue'
 import type { Database } from '~/types/database.types'
 
 definePageMeta({ layout: 'admin' })
@@ -27,7 +26,7 @@ const columns: Column[] = [
 
 const authStore = useAuthStore()
 const { selectedCompanyId } = storeToRefs(authStore)
-const { getLeadsByCompany, archiveLead, computeMetrics } = useCrmLead()
+const { getLeadsByCompany, archiveLead } = useCrmLead()
 
 const isLoading = ref(false)
 const leadsRaw = ref<CrmLeadView[]>([])
@@ -66,15 +65,117 @@ const filteredLeads = computed(() => {
 
 const filteredRows = computed(() => filteredLeads.value.map(mapToRow))
 
-const metrics = computed(() => computeMetrics(leadsRaw.value))
+// ── Pipeline stat cards ────────────────────────────────────────────────────────
 
-const stats = computed<StatItem[]>(() => {
-  const m = metrics.value
+type StatAccent = 'violet' | 'indigo' | 'emerald' | 'amber' | 'rose'
+
+interface LeadStat {
+  key: string
+  label: string
+  value: string
+  sublabel: string
+  iconPath: string
+  accent: StatAccent
+}
+
+const accentStyles: Record<StatAccent, { icon: string; blob: string }> = {
+  violet: { icon: 'bg-violet-50 text-violet-600', blob: 'bg-violet-400' },
+  indigo: { icon: 'bg-indigo-50 text-indigo-600', blob: 'bg-indigo-400' },
+  emerald: { icon: 'bg-emerald-50 text-emerald-600', blob: 'bg-emerald-400' },
+  amber: { icon: 'bg-amber-50 text-amber-600', blob: 'bg-amber-400' },
+  rose: { icon: 'bg-rose-50 text-rose-600', blob: 'bg-rose-400' }
+}
+
+const ICONS = {
+  funnel: 'M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z',
+  chart: 'M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605',
+  trophy: 'M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 0 0 2.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 0 1 2.916.52 6.003 6.003 0 0 1-5.395 4.972m0 0a6.726 6.726 0 0 1-2.749 1.35m0 0a6.772 6.772 0 0 1-3.044 0',
+  bell: 'M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0'
+} as const
+
+const pipelineMetrics = computed(() => {
+  let total = 0
+  let open = 0
+  let won = 0
+  let lost = 0
+  let openAmount = 0
+  let wonAmount = 0
+  let weightedPipeline = 0
+  let openActivities = 0
+  let overdueActivities = 0
+
+  for (const lead of leadsRaw.value) {
+    total += 1
+    const amount = Number(lead.amount ?? 0)
+
+    if (lead.is_won) {
+      won += 1
+      wonAmount += amount
+    } else if (lead.is_lost) {
+      lost += 1
+    } else {
+      open += 1
+      openAmount += amount
+      weightedPipeline += amount * (Number(lead.probability ?? 0) / 100)
+      openActivities += Number(lead.open_activity_count ?? 0)
+      overdueActivities += Number(lead.overdue_activity_count ?? 0)
+    }
+  }
+
+  const closed = won + lost
+  const conversionRate = closed > 0 ? Math.round((won / closed) * 100) : 0
+
+  return {
+    total,
+    open,
+    won,
+    lost,
+    openAmount,
+    wonAmount,
+    weightedPipeline,
+    conversionRate,
+    openActivities,
+    overdueActivities
+  }
+})
+
+const leadStats = computed<LeadStat[]>(() => {
+  const m = pipelineMetrics.value
   return [
-    { label: 'Leads totales', value: String(m.total), change: `${m.open} abiertos`, trend: 'neutral' },
-    { label: 'Ganados', value: String(m.won), change: m.won > 0 ? `${Math.round((m.won / m.total) * 100)}% conversión` : '—', trend: m.won > 0 ? 'up' : 'neutral' },
-    { label: 'Cancelados', value: String(m.lost), change: m.lost > 0 ? `${Math.round((m.lost / m.total) * 100)}% pérdida` : '—', trend: m.lost > 0 ? 'down' : 'neutral' },
-    { label: 'Valor total', value: formatCurrency(m.totalAmount), change: `Ganado: ${formatCurrency(m.wonAmount)}`, trend: 'neutral' }
+    {
+      key: 'pipeline',
+      label: 'Pipeline abierto',
+      value: formatCurrency(m.openAmount),
+      sublabel: `${m.open} abiertos · ${m.total} leads totales`,
+      iconPath: ICONS.funnel,
+      accent: 'violet'
+    },
+    {
+      key: 'forecast',
+      label: 'Pronóstico ponderado',
+      value: formatCurrency(Math.round(m.weightedPipeline)),
+      sublabel: 'Estimado según probabilidad de cierre',
+      iconPath: ICONS.chart,
+      accent: 'indigo'
+    },
+    {
+      key: 'conversion',
+      label: 'Tasa de conversión',
+      value: `${m.conversionRate}%`,
+      sublabel: `${m.won} ganados · ${m.lost} perdidos · ${formatCurrency(m.wonAmount)}`,
+      iconPath: ICONS.trophy,
+      accent: 'emerald'
+    },
+    {
+      key: 'activities',
+      label: 'Actividades por atender',
+      value: String(m.openActivities),
+      sublabel: m.overdueActivities > 0
+        ? `${m.overdueActivities} atrasadas requieren acción`
+        : 'Sin actividades atrasadas',
+      iconPath: ICONS.bell,
+      accent: m.overdueActivities > 0 ? 'rose' : 'amber'
+    }
   ]
 })
 
@@ -130,7 +231,61 @@ const deleteMany = async (selected: Record<string, unknown>[]) => {
     </div>
 
     <template v-else>
-      <StatGrid :stats="stats" :loading="isLoading" :columns="4" />
+      <!-- Stat cards -->
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <template v-if="isLoading">
+          <div
+            v-for="i in 4"
+            :key="`lead-stat-skeleton-${i}`"
+            class="animate-pulse rounded-2xl border border-slate-200 bg-white p-5"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1 space-y-3">
+                <div class="h-3 w-24 rounded bg-slate-200" />
+                <div class="h-7 w-32 rounded bg-slate-200" />
+              </div>
+              <div class="h-11 w-11 rounded-xl bg-slate-200" />
+            </div>
+            <div class="mt-4 h-3 w-28 rounded bg-slate-200" />
+          </div>
+        </template>
+
+        <template v-else>
+          <div
+            v-for="stat in leadStats"
+            :key="stat.key"
+            class="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/60"
+          >
+            <div
+              :class="[
+                'pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full opacity-[0.07] blur-2xl transition-opacity group-hover:opacity-[0.14]',
+                accentStyles[stat.accent].blob
+              ]"
+            />
+
+            <div class="relative flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-slate-500">{{ stat.label }}</p>
+                <p class="mt-2 truncate text-2xl font-bold tracking-tight text-slate-900">
+                  {{ stat.value }}
+                </p>
+              </div>
+              <span
+                :class="[
+                  'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+                  accentStyles[stat.accent].icon
+                ]"
+              >
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" :d="stat.iconPath" />
+                </svg>
+              </span>
+            </div>
+
+            <p class="relative mt-3 truncate text-xs text-slate-500">{{ stat.sublabel }}</p>
+          </div>
+        </template>
+      </div>
 
       <div
         v-if="isLoading"

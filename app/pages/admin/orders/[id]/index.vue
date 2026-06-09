@@ -54,6 +54,8 @@ type StockShortageRow = {
 const isEditing = ref(false)
 const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
+const showPaymentModal = ref(false)
+const selectedPaymentMethodId = ref<string>('')
 const stockShortageLines = ref<StockShortageRow[]>([])
 const partnerOptions = ref<{ value: string; label: string }[]>([])
 const projectOptions = ref<{ value: string; label: string }[]>([])
@@ -100,6 +102,12 @@ const canCancel = computed(
     && !formData.value.is_invoiced
 )
 
+const canPay = computed(
+  () =>
+    formData.value.order_state === 'posted'
+    && formData.value.payment_status !== 'paid'
+)
+
 const menuOptions = computed<MenuOption[]>(() => {
   const opts: MenuOption[] = []
   opts.push({
@@ -122,6 +130,15 @@ const menuOptions = computed<MenuOption[]>(() => {
       label: 'Confirmar Orden',
       icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
       action: () => void handlePostOrder(),
+      variant: 'success'
+    })
+  }
+  if (canPay.value) {
+    opts.push({
+      id: 'pay-order',
+      label: 'Pagar Orden',
+      icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
+      action: () => void handlePayOrder(),
       variant: 'success'
     })
   }
@@ -384,6 +401,57 @@ const handleCancelOrder = async () => {
   } finally {
     isLoading.value = false
   }
+}
+
+const markOrderAsPaid = async (paymentMethodId: string | null) => {
+  const id = orderId.value
+  const companyId = selectedCompanyId.value
+  if (!id || !companyId || !canPay.value) return
+
+  isLoading.value = true
+  errorMessage.value = null
+  try {
+    const updates: TablesUpdate<'order'> = {
+      is_paid: true,
+      payment_status: 'paid',
+      payment_method_id: paymentMethodId
+    }
+
+    const updated = await updateOrder(id, companyId, updates)
+    if (!updated) {
+      errorMessage.value = 'No se pudo registrar el pago de la orden.'
+      return
+    }
+    await loadOrder()
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const handlePayOrder = async () => {
+  if (!canPay.value) return
+
+  if (formData.value.payment_method_id) {
+    await markOrderAsPaid(formData.value.payment_method_id)
+    return
+  }
+
+  selectedPaymentMethodId.value = ''
+  showPaymentModal.value = true
+}
+
+const closePaymentModal = () => {
+  if (isLoading.value) return
+  showPaymentModal.value = false
+}
+
+const handleConfirmPayment = async () => {
+  if (!selectedPaymentMethodId.value) {
+    errorMessage.value = 'Selecciona un método de pago para confirmar el pago.'
+    return
+  }
+  showPaymentModal.value = false
+  await markOrderAsPaid(selectedPaymentMethodId.value)
 }
 
 const handleEdit = () => {
@@ -1101,5 +1169,85 @@ const formatDate = (dateString: string | null): string => {
         :company-id="selectedCompanyId"
       />
     </CardSheet>
+
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-opacity duration-200"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition-opacity duration-150"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="showPaymentModal"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+          @click.self="closePaymentModal"
+        >
+          <Transition
+            appear
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="opacity-0 scale-95 translate-y-2"
+            enter-to-class="opacity-100 scale-100 translate-y-0"
+          >
+            <div class="w-full max-w-md rounded-2xl bg-white shadow-2xl shadow-slate-900/20 border border-slate-100 overflow-hidden">
+              <div class="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-indigo-50/80 to-violet-50/60 flex items-start justify-between gap-4">
+                <div class="min-w-0">
+                  <h3 class="text-lg font-semibold text-slate-900">
+                    Registrar pago
+                  </h3>
+                  <p class="mt-1 text-sm text-slate-500">
+                    Selecciona el método de pago para marcar esta orden como pagada.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-white hover:text-slate-800 transition-colors"
+                  :disabled="isLoading"
+                  aria-label="Cerrar"
+                  @click="closePaymentModal"
+                >
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form class="px-6 py-6 space-y-5" @submit.prevent="handleConfirmPayment">
+                <FormSelect
+                  v-model="selectedPaymentMethodId"
+                  label="Método de pago"
+                  placeholder="Selecciona un método de pago"
+                  :options="paymentMethodOptions"
+                  required
+                  :disabled="isLoading"
+                  size="md"
+                />
+
+                <p
+                  v-if="paymentMethodOptions.length === 0"
+                  class="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+                >
+                  No hay métodos de pago configurados. Crea uno antes de registrar el pago.
+                </p>
+
+                <div class="flex items-center justify-end gap-3 pt-2">
+                  <BtnApp variant="ghost" type="button" :disabled="isLoading" @click="closePaymentModal">
+                    Cancelar
+                  </BtnApp>
+                  <BtnApp
+                    variant="primary"
+                    type="submit"
+                    :disabled="isLoading || !selectedPaymentMethodId"
+                  >
+                    {{ isLoading ? 'Procesando…' : 'Confirmar pago' }}
+                  </BtnApp>
+                </div>
+              </form>
+            </div>
+          </Transition>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
