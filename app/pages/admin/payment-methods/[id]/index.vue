@@ -48,6 +48,7 @@ const load = async () => {
       name: row.name,
       code: row.code ?? '',
       description: row.description ?? '',
+      is_cash: row.is_cash ?? false,
       active: row.active ?? true
     }
     formData.value = mapped
@@ -78,6 +79,7 @@ const handleSave = async () => {
       name: formData.value.name.trim(),
       code: formData.value.code.trim() || null,
       description: formData.value.description.trim() || null,
+      is_cash: formData.value.is_cash,
       active: formData.value.active
     })
     if (!result) { errorMessage.value = 'No se pudo actualizar el método de pago.'; return }

@@ -1,6 +1,7 @@
 import type { Database, Tables, TablesInsert, TablesUpdate } from '~/types/database.types'
 
 type Product = Tables<'product'>
+type ProductView = Database['public']['Views']['v_products']['Row']
 type OrderKind = Database['public']['Enums']['order_type']
 type ProductInsert = TablesInsert<'product'>
 type ProductUpdate = TablesUpdate<'product'>
@@ -67,6 +68,30 @@ export const useProduct = () => {
     }
 
     return data || []
+  }
+
+  /** Productos vendibles con nombre de categoría resuelto (para el POS). */
+  const getSellableProductViews = async (
+    companyId: string,
+    limit = 400
+  ): Promise<ProductView[]> => {
+    if (!companyId) return []
+
+    const { data, error } = await supabase
+      .from('v_products')
+      .select('*')
+      .eq('company_id', companyId)
+      .eq('status', 'active')
+      .neq('can_be_sold', false)
+      .order('name')
+      .limit(limit)
+
+    if (error) {
+      console.error('Error fetching sellable products:', error)
+      return []
+    }
+
+    return data ?? []
   }
 
   const searchProductsByCompany = async (
@@ -245,7 +270,7 @@ export const useProduct = () => {
       .select('*')
       .eq('company_id', companyId)
       .eq('barcode', barcode.trim())
-      .eq('active', true)
+      .eq('status', 'active')
       .maybeSingle()
 
     if (error) {
@@ -259,6 +284,7 @@ export const useProduct = () => {
   return {
     getProductById,
     getProductsByCompany,
+    getSellableProductViews,
     searchProductsByCompany,
     getProductByBarcode,
     ensureCatalogProductFromOrderLine,
