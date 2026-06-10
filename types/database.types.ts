@@ -780,6 +780,7 @@ export type Database = {
           payment_method_id: string | null
           payment_status: string | null
           payment_term: string | null
+          pos_session_id: string | null
           project_id: string | null
           reference: string | null
           shipping_city: string | null
@@ -821,6 +822,7 @@ export type Database = {
           payment_method_id?: string | null
           payment_status?: string | null
           payment_term?: string | null
+          pos_session_id?: string | null
           project_id?: string | null
           reference?: string | null
           shipping_city?: string | null
@@ -862,6 +864,7 @@ export type Database = {
           payment_method_id?: string | null
           payment_status?: string | null
           payment_term?: string | null
+          pos_session_id?: string | null
           project_id?: string | null
           reference?: string | null
           shipping_city?: string | null
@@ -903,6 +906,20 @@ export type Database = {
             columns: ["payment_method_id"]
             isOneToOne: false
             referencedRelation: "payment_method"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_pos_session_id_fkey"
+            columns: ["pos_session_id"]
+            isOneToOne: false
+            referencedRelation: "pos_session"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_pos_session_id_fkey"
+            columns: ["pos_session_id"]
+            isOneToOne: false
+            referencedRelation: "v_pos_sessions"
             referencedColumns: ["id"]
           },
           {
@@ -1229,6 +1246,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           id: string
+          is_cash: boolean | null
           name: string
           updated_at: string | null
           updated_by: string | null
@@ -1241,6 +1259,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          is_cash?: boolean | null
           name: string
           updated_at?: string | null
           updated_by?: string | null
@@ -1253,6 +1272,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          is_cash?: boolean | null
           name?: string
           updated_at?: string | null
           updated_by?: string | null
@@ -1461,6 +1481,395 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "v_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_cash_movement: {
+        Row: {
+          active: boolean | null
+          amount: number
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          movement_type: Database["public"]["Enums"]["pos_movement_type"]
+          reason: string
+          session_id: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          amount: number
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          movement_type: Database["public"]["Enums"]["pos_movement_type"]
+          reason: string
+          session_id: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          amount?: number
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          movement_type?: Database["public"]["Enums"]["pos_movement_type"]
+          reason?: string
+          session_id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_cash_movement_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_cash_movement_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "pos_session"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_cash_movement_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "v_pos_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_payment: {
+        Row: {
+          active: boolean | null
+          amount: number
+          change_amount: number
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_refund: boolean
+          notes: string | null
+          order_id: string
+          payment_method_id: string
+          session_id: string
+          tendered: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          amount: number
+          change_amount?: number
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_refund?: boolean
+          notes?: string | null
+          order_id: string
+          payment_method_id: string
+          session_id: string
+          tendered?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          amount?: number
+          change_amount?: number
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_refund?: boolean
+          notes?: string | null
+          order_id?: string
+          payment_method_id?: string
+          session_id?: string
+          tendered?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_payment_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_payment_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "order"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_payment_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "v_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_payment_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_method"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_payment_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "pos_session"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_payment_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "v_pos_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_register: {
+        Row: {
+          active: boolean | null
+          blind_close: boolean
+          code: string
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          default_partner_id: string | null
+          description: string | null
+          difference_tolerance: number
+          id: string
+          max_discount_percent: number
+          name: string
+          updated_at: string | null
+          updated_by: string | null
+          warehouse_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          blind_close?: boolean
+          code: string
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          default_partner_id?: string | null
+          description?: string | null
+          difference_tolerance?: number
+          id?: string
+          max_discount_percent?: number
+          name: string
+          updated_at?: string | null
+          updated_by?: string | null
+          warehouse_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          blind_close?: boolean
+          code?: string
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          default_partner_id?: string | null
+          description?: string | null
+          difference_tolerance?: number
+          id?: string
+          max_discount_percent?: number
+          name?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_register_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_register_default_partner_id_fkey"
+            columns: ["default_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_register_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouse"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_session: {
+        Row: {
+          active: boolean | null
+          closed_at: string | null
+          closed_by: string | null
+          closing_notes: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          name: string | null
+          opened_at: string
+          opened_by: string | null
+          opening_balance: number
+          opening_notes: string | null
+          register_id: string
+          status: Database["public"]["Enums"]["pos_session_status"]
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          closed_at?: string | null
+          closed_by?: string | null
+          closing_notes?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name?: string | null
+          opened_at?: string
+          opened_by?: string | null
+          opening_balance?: number
+          opening_notes?: string | null
+          register_id: string
+          status?: Database["public"]["Enums"]["pos_session_status"]
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          closed_at?: string | null
+          closed_by?: string | null
+          closing_notes?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name?: string | null
+          opened_at?: string
+          opened_by?: string | null
+          opening_balance?: number
+          opening_notes?: string | null
+          register_id?: string
+          status?: Database["public"]["Enums"]["pos_session_status"]
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_session_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_session_register_id_fkey"
+            columns: ["register_id"]
+            isOneToOne: false
+            referencedRelation: "pos_register"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_session_count: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          counted: number
+          created_at: string | null
+          created_by: string | null
+          difference: number
+          expected: number
+          id: string
+          justification: string | null
+          payment_method_id: string
+          session_id: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          counted?: number
+          created_at?: string | null
+          created_by?: string | null
+          difference?: number
+          expected?: number
+          id?: string
+          justification?: string | null
+          payment_method_id: string
+          session_id: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          counted?: number
+          created_at?: string | null
+          created_by?: string | null
+          difference?: number
+          expected?: number
+          id?: string
+          justification?: string | null
+          payment_method_id?: string
+          session_id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_session_count_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_session_count_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_method"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_session_count_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "pos_session"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_session_count_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "v_pos_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -2920,6 +3329,137 @@ export type Database = {
           },
         ]
       }
+      v_pos_payments: {
+        Row: {
+          active: boolean | null
+          amount: number | null
+          change_amount: number | null
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string | null
+          is_refund: boolean | null
+          notes: string | null
+          order_id: string | null
+          order_name: string | null
+          partner_id: string | null
+          partner_name: string | null
+          payment_method_id: string | null
+          payment_method_is_cash: boolean | null
+          payment_method_name: string | null
+          register_id: string | null
+          session_id: string | null
+          session_name: string | null
+          tendered: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_payment_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_payment_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "order"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_payment_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "v_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_payment_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_method"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_payment_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "pos_session"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_payment_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "v_pos_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_session_register_id_fkey"
+            columns: ["register_id"]
+            isOneToOne: false
+            referencedRelation: "pos_register"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_pos_sessions: {
+        Row: {
+          active: boolean | null
+          blind_close: boolean | null
+          closed_at: string | null
+          closed_by: string | null
+          closed_by_name: string | null
+          closing_notes: string | null
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          difference_tolerance: number | null
+          id: string | null
+          name: string | null
+          opened_at: string | null
+          opened_by: string | null
+          opened_by_name: string | null
+          opening_balance: number | null
+          opening_notes: string | null
+          refunds_total: number | null
+          register_code: string | null
+          register_id: string | null
+          register_name: string | null
+          sales_count: number | null
+          sales_total: number | null
+          status: Database["public"]["Enums"]["pos_session_status"] | null
+          total_difference: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_session_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_session_register_id_fkey"
+            columns: ["register_id"]
+            isOneToOne: false
+            referencedRelation: "pos_register"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_products: {
         Row: {
           attributes: Json | null
@@ -3223,6 +3763,15 @@ export type Database = {
         }
         Returns: string
       }
+      add_pos_cash_movement: {
+        Args: {
+          p_amount: number
+          p_movement_type: Database["public"]["Enums"]["pos_movement_type"]
+          p_reason: string
+          p_session_id: string
+        }
+        Returns: string
+      }
       apply_picking_inventory: {
         Args: { p_picking_id: string }
         Returns: boolean
@@ -3403,6 +3952,10 @@ export type Database = {
         Returns: undefined
       }
       cancel_order: { Args: { p_order_id: string }; Returns: boolean }
+      close_pos_session: {
+        Args: { p_counts?: Json; p_notes?: string; p_session_id: string }
+        Returns: Json
+      }
       create_order: {
         Args: {
           p_company_id: string
@@ -3515,6 +4068,7 @@ export type Database = {
           role: string
         }[]
       }
+      get_pos_session_summary: { Args: { p_session_id: string }; Returns: Json }
       get_public_project_view: { Args: { p_project_id: string }; Returns: Json }
       invite_partner_by_email: {
         Args: {
@@ -3544,6 +4098,14 @@ export type Database = {
         Returns: boolean
       }
       is_own_partner: { Args: { p_partner_id: string }; Returns: boolean }
+      open_pos_session: {
+        Args: {
+          p_notes?: string
+          p_opening_balance?: number
+          p_register_id: string
+        }
+        Returns: string
+      }
       post_order: { Args: { p_order_id: string }; Returns: boolean }
       preview_order_stock_shortages: {
         Args: { p_order_id: string }
@@ -3561,6 +4123,26 @@ export type Database = {
       recompute_project_order_amounts: {
         Args: { p_project_id: string }
         Returns: boolean
+      }
+      register_pos_refund: {
+        Args: {
+          p_lines: Json
+          p_order_id: string
+          p_payment_method_id: string
+          p_reason: string
+          p_session_id: string
+        }
+        Returns: Json
+      }
+      register_pos_sale: {
+        Args: {
+          p_lines: Json
+          p_notes?: string
+          p_partner_id: string
+          p_payments: Json
+          p_session_id: string
+        }
+        Returns: Json
       }
       remove_company_member: { Args: { p_rel_id: string }; Returns: boolean }
       respond_to_invitation: {
@@ -3704,6 +4286,8 @@ export type Database = {
       partner_type: "person" | "company"
       picking_status: "borrador" | "publicado" | "confirmado" | "cancelado"
       picking_type: "entrada" | "salida"
+      pos_movement_type: "in" | "out"
+      pos_session_status: "open" | "closed"
       product_status:
         | "active"
         | "inactive"
@@ -3909,6 +4493,8 @@ export const Constants = {
       partner_type: ["person", "company"],
       picking_status: ["borrador", "publicado", "confirmado", "cancelado"],
       picking_type: ["entrada", "salida"],
+      pos_movement_type: ["in", "out"],
+      pos_session_status: ["open", "closed"],
       product_status: [
         "active",
         "inactive",

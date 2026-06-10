@@ -30,6 +30,7 @@ const handleSave = async () => {
       name: formData.value.name.trim(),
       code: formData.value.code.trim() || null,
       description: formData.value.description.trim() || null,
+      is_cash: formData.value.is_cash,
       active: formData.value.active
     })
     if (!result) { errorMessage.value = 'No se pudo crear el método de pago.'; return }
