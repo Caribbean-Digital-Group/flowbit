@@ -339,6 +339,7 @@ const groupAccentClasses: Record<string, { bar: string; text: string; dot: strin
   orange: { bar: 'bg-orange-500', text: 'text-orange-600', dot: 'bg-orange-400' },
   violet: { bar: 'bg-violet-500', text: 'text-violet-600', dot: 'bg-violet-400' },
   amber: { bar: 'bg-amber-500', text: 'text-amber-600', dot: 'bg-amber-400' },
+  fuchsia: { bar: 'bg-fuchsia-500', text: 'text-fuchsia-600', dot: 'bg-fuchsia-400' },
 }
 
 const menuGroups: MenuGroup[] = [
@@ -416,6 +417,34 @@ const menuGroups: MenuGroup[] = [
         to: '/admin/payment-methods',
         iconPaths: [
           'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z'
+        ]
+      },
+    ]
+  },
+  {
+    id: 'pos',
+    title: 'Punto de Venta',
+    accentColor: 'fuchsia',
+    items: [
+      {
+        title: 'Terminal POS',
+        to: '/pos',
+        iconPaths: [
+          'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z'
+        ]
+      },
+      {
+        title: 'Cajas',
+        to: '/admin/pos/registers',
+        iconPaths: [
+          'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z'
+        ]
+      },
+      {
+        title: 'Sesiones de caja',
+        to: '/admin/pos/sessions',
+        iconPaths: [
+          'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
         ]
       },
     ]
