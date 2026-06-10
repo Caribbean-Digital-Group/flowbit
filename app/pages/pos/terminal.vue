@@ -233,6 +233,14 @@ const activeMethod = computed(() =>
 )
 const isActiveMethodCash = computed(() => Boolean(activeMethod.value?.is_cash))
 
+// Cambio en vivo mientras el cajero captura el monto recibido en efectivo
+const liveChange = computed(() => {
+  if (!isActiveMethodCash.value) return 0
+  const tendered = round2(Number(tenderedAmount.value) || 0)
+  if (tendered <= 0 || remainingDue.value <= 0) return 0
+  return round2(Math.max(tendered - remainingDue.value, 0))
+})
+
 // ── Persistencia local del ticket ────────────────────────────────────────────
 const persistTicket = (): void => {
   if (typeof window === 'undefined' || !sessionId.value) return
@@ -833,10 +841,19 @@ const buildReceiptHtml = (params: {
       <td style="text-align:right">${formatCurrency(a.total)}</td>
     </tr>`
   }).join('')
-  const pays = params.payments.map(p => `<tr>
+  const pays = params.payments.map(p => {
+    const base = `<tr>
       <td>${p.method_name}</td>
       <td style="text-align:right">${formatCurrency(p.amount)}</td>
-    </tr>`).join('')
+    </tr>`
+    const received = p.is_cash && p.tendered
+      ? `<tr>
+      <td>Recibido</td>
+      <td style="text-align:right">${formatCurrency(p.tendered)}</td>
+    </tr>`
+      : ''
+    return base + received
+  }).join('')
 
   return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>${params.orderName}</title>
     <style>
@@ -864,7 +881,7 @@ const buildReceiptHtml = (params: {
     </table>
     <div class="sep"></div>
     <table>${pays}
-      ${params.change > 0 ? `<tr><td>Cambio</td><td style="text-align:right">${formatCurrency(params.change)}</td></tr>` : ''}
+      ${params.change > 0 ? `<tr class="total"><td>CAMBIO</td><td style="text-align:right">${formatCurrency(params.change)}</td></tr>` : ''}
     </table>
     <div class="sep"></div>
     <p>¡Gracias por su compra!</p>
@@ -1663,6 +1680,30 @@ onUnmounted(() => {
                     >
                       Exacto
                     </button>
+                  </div>
+
+                  <!-- Cambio calculado en vivo -->
+                  <div
+                    v-if="Number(tenderedAmount) > 0"
+                    :class="[
+                      'rounded-xl px-4 py-3 flex items-center justify-between',
+                      liveChange > 0 ? 'bg-indigo-50' : Number(tenderedAmount) >= remainingDue ? 'bg-emerald-50' : 'bg-amber-50'
+                    ]"
+                  >
+                    <template v-if="Number(tenderedAmount) >= remainingDue">
+                      <span :class="['text-sm font-semibold', liveChange > 0 ? 'text-indigo-500' : 'text-emerald-600']">
+                        Cambio a entregar
+                      </span>
+                      <span :class="['text-2xl font-extrabold tabular-nums', liveChange > 0 ? 'text-indigo-700' : 'text-emerald-700']">
+                        {{ formatCurrency(liveChange) }}
+                      </span>
+                    </template>
+                    <template v-else>
+                      <span class="text-sm font-semibold text-amber-600">Falta por recibir</span>
+                      <span class="text-2xl font-extrabold tabular-nums text-amber-700">
+                        {{ formatCurrency(round2(remainingDue - Number(tenderedAmount))) }}
+                      </span>
+                    </template>
                   </div>
                 </template>
                 <template v-else>
