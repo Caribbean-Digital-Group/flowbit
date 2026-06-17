@@ -406,13 +406,13 @@ const buildPickingPrintableHtml = (qrSvg: string) => {
       ? `<span style="background:#dbeafe;color:#1d4ed8;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">Lote</span>`
       : line.tracking_type === 'serial'
         ? `<span style="background:#fce7f3;color:#9d174d;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">Serie</span>`
-        : `<span style="background:#f1f5f9;color:#64748b;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">Ninguno</span>`
+        : `<span style="background:#f1f5f9;color:#374151;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">Ninguno</span>`
     const rowBg = line.is_partial ? '#fffbeb' : (idx % 2 === 0 ? '#ffffff' : '#f8fafc')
     const qtyCell = hasAnyScanned
       ? line.done_quantity !== null
         ? line.is_partial
           ? `<div style="font-size:12px;font-weight:700;color:#d97706">${line.done_quantity}</div>
-             <div style="font-size:10px;color:#94a3b8;text-decoration:line-through">${line.quantity} plan.</div>`
+             <div style="font-size:10px;color:#374151;text-decoration:line-through">${line.quantity} plan.</div>`
           : `<div style="font-size:12px;font-weight:700;color:#15803d">${line.done_quantity}</div>`
         : `<div style="font-size:12px;font-weight:700;color:#0f172a">${line.quantity}</div>`
       : `<div style="font-size:12px;font-weight:700;color:#0f172a">${line.quantity}</div>`
@@ -457,11 +457,11 @@ const buildPickingPrintableHtml = (qrSvg: string) => {
       ${logoHtml}
       <div>
         <div style="font-size:20px;font-weight:800;color:#0f172a;line-height:1.2">${companyName}</div>
-        ${legalName ? `<div style="font-size:11px;color:#64748b;margin-top:2px">${legalName}</div>` : ''}
-        ${co?.vat ? `<div style="font-size:11px;color:#64748b;margin-top:2px">RFC: ${co.vat}</div>` : ''}
-        ${companyAddress ? `<div style="font-size:11px;color:#64748b;margin-top:2px">${companyAddress}</div>` : ''}
-        ${co?.phone ? `<div style="font-size:11px;color:#64748b;margin-top:1px">Tel: ${co.phone}</div>` : ''}
-        ${co?.email ? `<div style="font-size:11px;color:#64748b;margin-top:1px">${co.email}</div>` : ''}
+        ${legalName ? `<div style="font-size:11px;color:#374151;margin-top:2px">${legalName}</div>` : ''}
+        ${co?.vat ? `<div style="font-size:11px;color:#374151;margin-top:2px">RFC: ${co.vat}</div>` : ''}
+        ${companyAddress ? `<div style="font-size:11px;color:#374151;margin-top:2px">${companyAddress}</div>` : ''}
+        ${co?.phone ? `<div style="font-size:11px;color:#374151;margin-top:1px">Tel: ${co.phone}</div>` : ''}
+        ${co?.email ? `<div style="font-size:11px;color:#374151;margin-top:1px">${co.email}</div>` : ''}
       </div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px">
@@ -473,7 +473,7 @@ const buildPickingPrintableHtml = (qrSvg: string) => {
       </div>
       <div style="border:1px solid #e2e8f0;border-radius:8px;padding:6px;background:#fff;text-align:center">
         <div style="width:90px;height:90px">${qrSvg}</div>
-        <div style="font-size:9px;color:#94a3b8;margin-top:3px;font-family:sans-serif">Escanear picking</div>
+        <div style="font-size:9px;color:#374151;margin-top:3px;font-family:sans-serif">Escanear picking</div>
       </div>
     </div>
   </div>
@@ -483,17 +483,17 @@ const buildPickingPrintableHtml = (qrSvg: string) => {
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:${accentColor};margin-bottom:8px">Orden Origen</div>
       <div style="font-size:13px;font-weight:600;color:#0f172a">${orderName.value || '—'}</div>
-      <div style="font-size:11px;color:#64748b;margin-top:4px">Orden vinculada</div>
+      <div style="font-size:11px;color:#374151;margin-top:4px">Orden vinculada</div>
     </div>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:${accentColor};margin-bottom:8px">Almacén</div>
       <div style="font-size:13px;font-weight:600;color:#0f172a">${warehouseLabel}</div>
-      <div style="font-size:11px;color:#64748b;margin-top:4px">Destino del movimiento</div>
+      <div style="font-size:11px;color:#374151;margin-top:4px">Destino del movimiento</div>
     </div>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:${accentColor};margin-bottom:8px">Resumen</div>
       <div style="font-size:13px;font-weight:600;color:#0f172a">${lines.value.length} ${lines.value.length === 1 ? 'línea' : 'líneas'}</div>
-      <div style="font-size:11px;color:#64748b;margin-top:4px">${totalUnits} unidades en total</div>
+      <div style="font-size:11px;color:#374151;margin-top:4px">${totalUnits} unidades en total</div>
     </div>
   </div>
 
@@ -509,7 +509,7 @@ const buildPickingPrintableHtml = (qrSvg: string) => {
       </tr>
     </thead>
     <tbody>
-      ${lineRows || `<tr><td colspan="5" style="text-align:center;padding:24px;color:#94a3b8;font-size:13px">Sin líneas de picking</td></tr>`}
+      ${lineRows || `<tr><td colspan="5" style="text-align:center;padding:24px;color:#374151;font-size:13px">Sin líneas de picking</td></tr>`}
     </tbody>
   </table>
 
@@ -524,14 +524,14 @@ const buildPickingPrintableHtml = (qrSvg: string) => {
     ${['Preparó', 'Validó', 'Recibió'].map(label => `
     <div>
       <div style="height:56px;border-bottom:1.5px solid #94a3b8;margin-bottom:8px"></div>
-      <div style="text-align:center;font-size:11px;color:#64748b;font-weight:600">${label}</div>
+      <div style="text-align:center;font-size:11px;color:#374151;font-weight:600">${label}</div>
     </div>`).join('')}
   </div>
 
   <!-- FOOTER -->
   <div style="border-top:1px solid #e2e8f0;padding-top:14px;display:flex;justify-content:space-between;align-items:center">
-    <div style="font-size:10px;color:#94a3b8">${companyName}${pickName.value ? ' · ' + pickName.value : ''}</div>
-    <div style="font-size:10px;color:#94a3b8">Impreso el ${today}</div>
+    <div style="font-size:10px;color:#374151">${companyName}${pickName.value ? ' · ' + pickName.value : ''}</div>
+    <div style="font-size:10px;color:#374151">Impreso el ${today}</div>
   </div>
 
 </div>
@@ -548,11 +548,12 @@ const buildPickingTicketHtml = (qrSvg: string) => {
   const typeColor = pickType.value === 'entrada' ? '#16a34a' : '#d97706'
   const warehouseLabel = warehouseOptions.value.find(w => w.value === formData.value.warehouse_id)?.label || '—'
   const totalUnits = lines.value.reduce((acc, l) => acc + l.quantity, 0)
+  const companyDesc = co?.description || ''
 
   const logoInitial = (companyName[0] || 'F').toUpperCase()
   const logoHtml = co?.logo_url
-    ? `<img src="${co.logo_url}" alt="${companyName}" style="width:52px;height:52px;object-fit:contain;border-radius:6px;display:block;margin:0 auto 8px" />`
-    : `<div style="width:52px;height:52px;border-radius:50%;background:${accentColor};color:#fff;font-size:22px;font-weight:800;line-height:52px;text-align:center;margin:0 auto 8px">${logoInitial}</div>`
+    ? `<img src="${co.logo_url}" alt="${companyName}" style="width:68px;height:68px;object-fit:contain;border-radius:6px;display:block;margin:0 auto 8px" />`
+    : `<div style="width:68px;height:68px;border-radius:50%;background:${accentColor};color:#fff;font-size:24px;font-weight:800;line-height:68px;text-align:center;margin:0 auto 8px">${logoInitial}</div>`
 
   const sep = `<div style="border-top:1px dashed #cbd5e1;margin:12px 0"></div>`
   const today = new Date().toLocaleString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
@@ -567,7 +568,7 @@ const buildPickingTicketHtml = (qrSvg: string) => {
         : ''
     const qtyDisplay = line.done_quantity !== null
       ? line.is_partial
-        ? `<span style="color:#d97706;font-weight:700">${line.done_quantity}</span><span style="color:#94a3b8;font-size:10px;text-decoration:line-through;margin-left:3px">${line.quantity}</span>`
+        ? `<span style="color:#d97706;font-weight:700">${line.done_quantity}</span><span style="color:#374151;font-size:10px;text-decoration:line-through;margin-left:3px">${line.quantity}</span>`
         : `${line.done_quantity} uds.`
       : `${line.quantity} uds.`
     return `
@@ -576,7 +577,7 @@ const buildPickingTicketHtml = (qrSvg: string) => {
           <div style="font-size:12px;font-weight:600;color:#0f172a;flex:1;padding-right:8px">${productLabel}${line.is_partial ? ' <span style="background:#fef3c7;color:#92400e;padding:0px 5px;border-radius:999px;font-size:9px;font-weight:700">PARCIAL</span>' : ''}</div>
           <div style="font-size:13px;font-weight:700;white-space:nowrap">${qtyDisplay}</div>
         </div>
-        ${trackingInfo ? `<div style="font-size:10px;color:#64748b;margin-top:2px">${trackingInfo}</div>` : ''}
+        ${trackingInfo ? `<div style="font-size:10px;color:#374151;margin-top:2px">${trackingInfo}</div>` : ''}
       </div>`
   }).join('')
 
@@ -602,10 +603,10 @@ const buildPickingTicketHtml = (qrSvg: string) => {
   <div style="text-align:center;margin-bottom:12px">
     ${logoHtml}
     <div style="font-size:14px;font-weight:800;color:#0f172a;line-height:1.2">${companyName}</div>
-    ${legalName ? `<div style="font-size:10px;color:#64748b;margin-top:1px">${legalName}</div>` : ''}
-    ${co?.vat ? `<div style="font-size:10px;color:#64748b;margin-top:1px">RFC: ${co.vat}</div>` : ''}
-    ${companyAddress ? `<div style="font-size:10px;color:#64748b;margin-top:1px">${companyAddress}</div>` : ''}
-    ${co?.phone ? `<div style="font-size:10px;color:#64748b;margin-top:1px">${co.phone}</div>` : ''}
+    ${legalName ? `<div style="font-size:10px;color:#374151;margin-top:1px">${legalName}</div>` : ''}
+    ${co?.vat ? `<div style="font-size:10px;color:#374151;margin-top:1px">RFC: ${co.vat}</div>` : ''}
+    ${companyAddress ? `<div style="font-size:10px;color:#374151;margin-top:1px">${companyAddress}</div>` : ''}
+    ${co?.phone ? `<div style="font-size:10px;color:#374151;margin-top:1px">${co.phone}</div>` : ''}
   </div>
 
   ${sep}
@@ -621,7 +622,7 @@ const buildPickingTicketHtml = (qrSvg: string) => {
   <div style="display:flex;justify-content:center;margin:10px 0">
     <div style="text-align:center">
       <div style="width:100px;height:100px;margin:0 auto">${qrSvg}</div>
-      <div style="font-size:9px;color:#94a3b8;margin-top:3px;font-family:monospace">Escanear para procesar</div>
+      <div style="font-size:9px;color:#374151;margin-top:3px;font-family:monospace">Escanear para procesar</div>
     </div>
   </div>
 
@@ -630,19 +631,19 @@ const buildPickingTicketHtml = (qrSvg: string) => {
   <!-- Datos -->
   <div style="font-size:11px;margin-bottom:4px">
     <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-      <span style="color:#64748b">Orden origen</span>
+      <span style="color:#374151">Orden origen</span>
       <span style="font-weight:600">${orderName.value || '—'}</span>
     </div>
     <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-      <span style="color:#64748b">Almacén</span>
+      <span style="color:#374151">Almacén</span>
       <span style="font-weight:600;text-align:right;max-width:60%">${warehouseLabel}</span>
     </div>
     <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-      <span style="color:#64748b">Líneas</span>
+      <span style="color:#374151">Líneas</span>
       <span style="font-weight:600">${lines.value.length}</span>
     </div>
     <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-      <span style="color:#64748b">Total unidades</span>
+      <span style="color:#374151">Total unidades</span>
       <span style="font-weight:700">${totalUnits}</span>
     </div>
   </div>
@@ -650,7 +651,7 @@ const buildPickingTicketHtml = (qrSvg: string) => {
   ${sep}
 
   <!-- Líneas -->
-  ${lineRows || `<div style="text-align:center;font-size:11px;color:#94a3b8;padding:8px 0">Sin líneas</div>`}
+  ${lineRows || `<div style="text-align:center;font-size:11px;color:#374151;padding:8px 0">Sin líneas</div>`}
 
   ${sep}
 
@@ -663,14 +664,16 @@ const buildPickingTicketHtml = (qrSvg: string) => {
     ${['Preparó', 'Validó', 'Recibió'].map(label => `
     <div style="margin-bottom:16px">
       <div style="height:36px;border-bottom:1px solid #94a3b8"></div>
-      <div style="text-align:center;font-size:10px;color:#64748b;margin-top:4px">${label}</div>
+      <div style="text-align:center;font-size:10px;color:#374151;margin-top:4px">${label}</div>
     </div>`).join('')}
   </div>
 
   ${sep}
 
+  ${companyDesc ? `<div style="font-size:10px;color:#374151;line-height:1.5;text-align:center;white-space:pre-line;margin-bottom:10px">${companyDesc}</div>${sep}` : ''}
+
   <!-- Footer -->
-  <div style="text-align:center;font-size:10px;color:#94a3b8;line-height:1.6">
+  <div style="text-align:center;font-size:10px;color:#374151;line-height:1.6">
     <div>${companyName}</div>
     <div>${today}</div>
   </div>

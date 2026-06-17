@@ -485,7 +485,7 @@ const buildPrintableHtml = () => {
   const stateLabel = stateLabels[formData.value.order_state] || formData.value.order_state
 
   const stateBadgeStyle: Record<string, string> = {
-    draft: 'background:#e2e8f0;color:#475569',
+    draft: 'background:#e2e8f0;color:#1f2937',
     posted: 'background:#dcfce7;color:#15803d',
     cancel: 'background:#fee2e2;color:#b91c1c'
   }
@@ -513,20 +513,20 @@ const buildPrintableHtml = () => {
       const rowBg = idx % 2 === 0 ? '#ffffff' : '#f8fafc'
       const grossLine = Math.round(line.quantity * line.unit_price * 100) / 100
       const discountCell = line.discount_amount > 0
-        ? `<div style="font-size:10px;color:#94a3b8;line-height:1.3">${line.discount_percent}%</div><div style="color:#dc2626;font-weight:500">−${formatCurrency(line.discount_amount, cur)}</div>`
+        ? `<div style="font-size:10px;color:#374151;line-height:1.3">${line.discount_percent}%</div><div style="color:#dc2626;font-weight:500">−${formatCurrency(line.discount_amount, cur)}</div>`
         : '<span style="color:#cbd5e1">—</span>'
       const taxCell = line.tax_amount > 0
-        ? `<div style="font-size:10px;color:#94a3b8;line-height:1.3">${line.tax_rate}%</div><div style="font-weight:500">${formatCurrency(line.tax_amount, cur)}</div>`
+        ? `<div style="font-size:10px;color:#374151;line-height:1.3">${line.tax_rate}%</div><div style="font-weight:500">${formatCurrency(line.tax_amount, cur)}</div>`
         : '<span style="color:#cbd5e1">—</span>'
       return `
         <tr style="background:${rowBg}">
           <td style="padding:10px 14px;">
             <div style="font-weight:500;color:#0f172a;font-size:12px">${name}</div>
-            ${desc ? `<div style="font-size:11px;color:#64748b;margin-top:3px">${desc}</div>` : ''}
+            ${desc ? `<div style="font-size:11px;color:#1a202c;margin-top:3px">${desc}</div>` : ''}
           </td>
-          <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap;color:#475569">${line.quantity}</td>
+          <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap;color:#1f2937">${line.quantity}</td>
           <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap">${formatCurrency(line.unit_price, cur)}</td>
-          <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap;color:#64748b">${formatCurrency(grossLine, cur)}</td>
+          <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap;color:#1a202c">${formatCurrency(grossLine, cur)}</td>
           <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap">${discountCell}</td>
           <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap">${taxCell}</td>
           <td style="text-align:right;padding:10px 14px;font-size:12px;white-space:nowrap;background:#f0fdf4">${formatCurrency(line.subtotal, cur)}</td>
@@ -538,14 +538,14 @@ const buildPrintableHtml = () => {
   const notesHtml = formData.value.notes
     ? `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;flex:1">
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:${accentColor};margin-bottom:8px">Notas</div>
-        <div style="font-size:11px;color:#475569;line-height:1.6;white-space:pre-line">${formData.value.notes}</div>
+        <div style="font-size:11px;color:#1f2937;line-height:1.6;white-space:pre-line">${formData.value.notes}</div>
        </div>`
     : ''
 
   const termsHtml = formData.value.terms
     ? `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;flex:1">
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:${accentColor};margin-bottom:8px">Términos y Condiciones</div>
-        <div style="font-size:11px;color:#475569;line-height:1.6;white-space:pre-line">${formData.value.terms}</div>
+        <div style="font-size:11px;color:#1f2937;line-height:1.6;white-space:pre-line">${formData.value.terms}</div>
        </div>`
     : ''
 
@@ -586,12 +586,12 @@ const buildPrintableHtml = () => {
       ${logoHtml}
       <div>
         <div style="font-size:20px;font-weight:800;color:#0f172a;line-height:1.2">${companyName}</div>
-        ${legalName ? `<div style="font-size:11px;color:#64748b;margin-top:2px">${legalName}</div>` : ''}
-        ${co?.vat ? `<div style="font-size:11px;color:#64748b;margin-top:2px">RFC: ${co.vat}</div>` : ''}
-        ${companyAddress ? `<div style="font-size:11px;color:#64748b;margin-top:2px">${companyAddress}</div>` : ''}
-        ${co?.phone ? `<div style="font-size:11px;color:#64748b;margin-top:1px">Tel: ${co.phone}</div>` : ''}
-        ${co?.email ? `<div style="font-size:11px;color:#64748b;margin-top:1px">${co.email}</div>` : ''}
-        ${co?.website ? `<div style="font-size:11px;color:#64748b;margin-top:1px">${co.website}</div>` : ''}
+        ${legalName ? `<div style="font-size:11px;color:#1a202c;margin-top:2px">${legalName}</div>` : ''}
+        ${co?.vat ? `<div style="font-size:11px;color:#1a202c;margin-top:2px">RFC: ${co.vat}</div>` : ''}
+        ${companyAddress ? `<div style="font-size:11px;color:#1a202c;margin-top:2px">${companyAddress}</div>` : ''}
+        ${co?.phone ? `<div style="font-size:11px;color:#1a202c;margin-top:1px">Tel: ${co.phone}</div>` : ''}
+        ${co?.email ? `<div style="font-size:11px;color:#1a202c;margin-top:1px">${co.email}</div>` : ''}
+        ${co?.website ? `<div style="font-size:11px;color:#1a202c;margin-top:1px">${co.website}</div>` : ''}
       </div>
     </div>
 
@@ -599,7 +599,7 @@ const buildPrintableHtml = () => {
     <div style="text-align:right">
       <div style="font-size:28px;font-weight:800;color:${accentColor};letter-spacing:-0.5px;line-height:1">${orderTypeLabel.toUpperCase()}</div>
       <div style="font-size:16px;font-weight:600;color:#0f172a;margin-top:4px">${formData.value.name || '—'}</div>
-      ${formData.value.reference ? `<div style="font-size:12px;color:#64748b;margin-top:2px">Ref: ${formData.value.reference}</div>` : ''}
+      ${formData.value.reference ? `<div style="font-size:12px;color:#1a202c;margin-top:2px">Ref: ${formData.value.reference}</div>` : ''}
       <span style="display:inline-block;margin-top:8px;padding:3px 12px;border-radius:999px;font-size:11px;font-weight:700;${badgeStyle}">${stateLabel}</span>
     </div>
   </div>
@@ -613,17 +613,17 @@ const buildPrintableHtml = () => {
       <div style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:8px">${formData.value.partner_name || '—'}</div>
       ${shippingAddress ? `
       <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-        <span style="font-size:11px;color:#94a3b8">Dirección de envío</span>
+        <span style="font-size:11px;color:#374151">Dirección de envío</span>
         <span style="font-size:11px;font-weight:500;color:#0f172a;text-align:right;max-width:55%">${shippingAddress}</span>
       </div>` : ''}
       ${formData.value.project_name ? `
       <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-        <span style="font-size:11px;color:#94a3b8">Proyecto</span>
+        <span style="font-size:11px;color:#374151">Proyecto</span>
         <span style="font-size:11px;font-weight:500;color:#0f172a">${formData.value.project_name}</span>
       </div>` : ''}
       ${formData.value.created_by_partner_name ? `
       <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-        <span style="font-size:11px;color:#94a3b8">Elaborado por</span>
+        <span style="font-size:11px;color:#374151">Elaborado por</span>
         <span style="font-size:11px;font-weight:500;color:#0f172a">${formData.value.created_by_partner_name}</span>
       </div>` : ''}
     </div>
@@ -632,30 +632,30 @@ const buildPrintableHtml = () => {
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:${accentColor};margin-bottom:10px">Detalles de Orden</div>
       <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <span style="font-size:11px;color:#94a3b8">Fecha de orden</span>
+        <span style="font-size:11px;color:#374151">Fecha de orden</span>
         <span style="font-size:11px;font-weight:500;color:#0f172a">${orderDate}</span>
       </div>
       <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <span style="font-size:11px;color:#94a3b8">Fecha de entrega</span>
+        <span style="font-size:11px;color:#374151">Fecha de entrega</span>
         <span style="font-size:11px;font-weight:500;color:#0f172a">${deliveryDate}</span>
       </div>
       ${formData.value.payment_term ? `
       <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <span style="font-size:11px;color:#94a3b8">Condición de pago</span>
+        <span style="font-size:11px;color:#374151">Condición de pago</span>
         <span style="font-size:11px;font-weight:500;color:#0f172a">${formData.value.payment_term}</span>
       </div>` : ''}
       ${formData.value.payment_due_date ? `
       <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <span style="font-size:11px;color:#94a3b8">Vencimiento</span>
+        <span style="font-size:11px;color:#374151">Vencimiento</span>
         <span style="font-size:11px;font-weight:500;color:#0f172a">${formData.value.payment_due_date}</span>
       </div>` : ''}
       <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <span style="font-size:11px;color:#94a3b8">Moneda</span>
+        <span style="font-size:11px;color:#374151">Moneda</span>
         <span style="font-size:11px;font-weight:500;color:#0f172a">${cur}${formData.value.exchange_rate !== 1 ? ` · T.C. ${formData.value.exchange_rate}` : ''}</span>
       </div>
       ${formData.value.tax_included ? `
       <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <span style="font-size:11px;color:#94a3b8">IVA</span>
+        <span style="font-size:11px;color:#374151">IVA</span>
         <span style="font-size:11px;font-weight:500;color:#0f172a">Incluido en precios</span>
       </div>` : ''}
     </div>
@@ -676,7 +676,7 @@ const buildPrintableHtml = () => {
       </tr>
     </thead>
     <tbody>
-      ${lineRows || `<tr><td colspan="8" style="text-align:center;padding:24px;color:#94a3b8;font-size:13px">Sin líneas de orden</td></tr>`}
+      ${lineRows || `<tr><td colspan="8" style="text-align:center;padding:24px;color:#374151;font-size:13px">Sin líneas de orden</td></tr>`}
     </tbody>
   </table>
 
@@ -691,17 +691,17 @@ const buildPrintableHtml = () => {
 
       ${hasDisc ? `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #f1f5f9;background:#fafafa">
-        <span style="color:#64748b">Importe bruto</span>
+        <span style="color:#1a202c">Importe bruto</span>
         <span style="font-weight:500">${formatCurrency(grossAmt, cur)}</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #f1f5f9">
-        <span style="color:#64748b">Descuento total</span>
+        <span style="color:#1a202c">Descuento total</span>
         <span style="font-weight:600;color:#dc2626">− ${formatCurrency(formData.value.amount_discount, cur)}</span>
       </div>` : ''}
 
       <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid #f1f5f9${hasDisc ? ';background:#f0fdf4' : ''}">
         <div>
-          <div style="color:#64748b">Subtotal s/IVA</div>
+          <div style="color:#1a202c">Subtotal s/IVA</div>
           ${hasDisc ? `<div style="font-size:10px;color:#16a34a;margin-top:1px">Importe bruto menos descuento</div>` : ''}
         </div>
         <span style="font-weight:600${hasDisc ? ';color:#15803d' : ''}">${formatCurrency(formData.value.amount_untaxed, cur)}</span>
@@ -709,7 +709,7 @@ const buildPrintableHtml = () => {
 
       ${hasTax ? `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #f1f5f9">
-        <span style="color:#64748b">IVA (${formData.value.tax_rate}%)</span>
+        <span style="color:#1a202c">IVA (${formData.value.tax_rate}%)</span>
         <span style="font-weight:500">${formatCurrency(formData.value.amount_tax, cur)}</span>
       </div>` : ''}
 
@@ -729,8 +729,8 @@ const buildPrintableHtml = () => {
 
   <!-- ── FOOTER ── -->
   <div style="border-top:1px solid #e2e8f0;padding-top:14px;display:flex;justify-content:space-between;align-items:center">
-    <div style="font-size:10px;color:#94a3b8">${companyName}${formData.value.name ? ' · ' + formData.value.name : ''}</div>
-    <div style="font-size:10px;color:#94a3b8">Generado el ${today}</div>
+    <div style="font-size:10px;color:#374151">${companyName}${formData.value.name ? ' · ' + formData.value.name : ''}</div>
+    <div style="font-size:10px;color:#374151">Generado el ${today}</div>
   </div>
 
 </div>
@@ -782,14 +782,15 @@ const buildTicketHtml = () => {
   const cur = formData.value.currency
   const orderTypeLabel = orderTypeLabels[formData.value.order_type] || formData.value.order_type
   const stateLabel = stateLabels[formData.value.order_state] || formData.value.order_state
+  const companyDesc = co?.description || ''
 
   const fmtDate = (d: string | null) =>
     d ? new Date(d).toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '—'
 
   const logoInitial = (companyName[0] || 'F').toUpperCase()
   const logoHtml = co?.logo_url
-    ? `<img src="${co.logo_url}" alt="${companyName}" style="width:52px;height:52px;object-fit:contain;border-radius:6px;display:block;margin:0 auto 8px" />`
-    : `<div style="width:52px;height:52px;border-radius:50%;background:${accentColor};color:#fff;font-size:22px;font-weight:800;line-height:52px;text-align:center;margin:0 auto 8px">${logoInitial}</div>`
+    ? `<img src="${co.logo_url}" alt="${companyName}" style="width:68px;height:68px;object-fit:contain;border-radius:6px;display:block;margin:0 auto 8px" />`
+    : `<div style="width:68px;height:68px;border-radius:50%;background:${accentColor};color:#fff;font-size:24px;font-weight:800;line-height:68px;text-align:center;margin:0 auto 8px">${logoInitial}</div>`
 
   const lineRows = orderLines.value.map((line) => {
     const name = line.product_name?.trim() || line.description?.trim() || '—'
@@ -800,10 +801,10 @@ const buildTicketHtml = () => {
     return `
       <div style="margin-bottom:12px;padding-bottom:10px;border-bottom:1px dotted #e2e8f0">
         <div style="font-size:12px;font-weight:700;color:#0f172a">${name}</div>
-        ${desc ? `<div style="font-size:10px;color:#64748b;margin-top:1px">${desc}</div>` : ''}
+        ${desc ? `<div style="font-size:10px;color:#1a202c;margin-top:1px">${desc}</div>` : ''}
         <div style="display:flex;justify-content:space-between;margin-top:4px">
-          <span style="font-size:11px;color:#64748b">${line.quantity} × ${formatCurrency(line.unit_price, cur)}</span>
-          <span style="font-size:11px;color:#475569">${formatCurrency(grossLine, cur)}</span>
+          <span style="font-size:11px;color:#1a202c">${line.quantity} × ${formatCurrency(line.unit_price, cur)}</span>
+          <span style="font-size:11px;color:#1f2937">${formatCurrency(grossLine, cur)}</span>
         </div>
         ${hasLineDiscount ? `
         <div style="display:flex;justify-content:space-between;margin-top:2px">
@@ -812,13 +813,13 @@ const buildTicketHtml = () => {
         </div>` : ''}
         ${hasLineDiscount || hasLineTax ? `
         <div style="display:flex;justify-content:space-between;margin-top:2px">
-          <span style="font-size:10px;color:#64748b">Subtotal s/IVA</span>
+          <span style="font-size:10px;color:#1a202c">Subtotal s/IVA</span>
           <span style="font-size:10px;color:#0f172a;font-weight:600">${formatCurrency(line.subtotal, cur)}</span>
         </div>` : ''}
         ${hasLineTax ? `
         <div style="display:flex;justify-content:space-between;margin-top:2px">
-          <span style="font-size:10px;color:#64748b">IVA ${line.tax_rate}%</span>
-          <span style="font-size:10px;color:#475569">+${formatCurrency(line.tax_amount, cur)}</span>
+          <span style="font-size:10px;color:#1a202c">IVA ${line.tax_rate}%</span>
+          <span style="font-size:10px;color:#1f2937">+${formatCurrency(line.tax_amount, cur)}</span>
         </div>` : ''}
         <div style="display:flex;justify-content:flex-end;margin-top:4px">
           <span style="font-size:13px;font-weight:800;color:#0f172a">${formatCurrency(line.total, cur)}</span>
@@ -851,10 +852,10 @@ const buildTicketHtml = () => {
   <div style="text-align:center;margin-bottom:12px">
     ${logoHtml}
     <div style="font-size:14px;font-weight:800;color:#0f172a;line-height:1.2">${companyName}</div>
-    ${legalName ? `<div style="font-size:10px;color:#64748b;margin-top:1px">${legalName}</div>` : ''}
-    ${co?.vat ? `<div style="font-size:10px;color:#64748b;margin-top:1px">RFC: ${co.vat}</div>` : ''}
-    ${companyAddress ? `<div style="font-size:10px;color:#64748b;margin-top:1px">${companyAddress}</div>` : ''}
-    ${co?.phone ? `<div style="font-size:10px;color:#64748b;margin-top:1px">${co.phone}</div>` : ''}
+    ${legalName ? `<div style="font-size:10px;color:#1a202c;margin-top:1px">${legalName}</div>` : ''}
+    ${co?.vat ? `<div style="font-size:10px;color:#1a202c;margin-top:1px">RFC: ${co.vat}</div>` : ''}
+    ${companyAddress ? `<div style="font-size:10px;color:#1a202c;margin-top:1px">${companyAddress}</div>` : ''}
+    ${co?.phone ? `<div style="font-size:10px;color:#1a202c;margin-top:1px">${co.phone}</div>` : ''}
   </div>
 
   ${sep}
@@ -871,26 +872,26 @@ const buildTicketHtml = () => {
   <!-- Datos -->
   <div style="font-size:11px;margin-bottom:4px">
     <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-      <span style="color:#64748b">${formData.value.order_type === 'sale' ? 'Cliente' : 'Proveedor'}</span>
+      <span style="color:#1a202c">${formData.value.order_type === 'sale' ? 'Cliente' : 'Proveedor'}</span>
       <span style="font-weight:600;text-align:right;max-width:55%">${formData.value.partner_name || '—'}</span>
     </div>
     ${formData.value.reference ? `
     <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-      <span style="color:#64748b">Referencia</span>
+      <span style="color:#1a202c">Referencia</span>
       <span style="font-weight:600">${formData.value.reference}</span>
     </div>` : ''}
     <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-      <span style="color:#64748b">Fecha</span>
+      <span style="color:#1a202c">Fecha</span>
       <span style="font-weight:600">${fmtDate(formData.value.order_date)}</span>
     </div>
     ${formData.value.delivery_date ? `
     <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-      <span style="color:#64748b">Entrega</span>
+      <span style="color:#1a202c">Entrega</span>
       <span style="font-weight:600">${fmtDate(formData.value.delivery_date)}</span>
     </div>` : ''}
     ${formData.value.payment_term ? `
     <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-      <span style="color:#64748b">Pago</span>
+      <span style="color:#1a202c">Pago</span>
       <span style="font-weight:600">${formData.value.payment_term}</span>
     </div>` : ''}
   </div>
@@ -898,7 +899,7 @@ const buildTicketHtml = () => {
   ${sep}
 
   <!-- Líneas -->
-  ${lineRows || `<div style="text-align:center;font-size:11px;color:#94a3b8;padding:8px 0">Sin líneas</div>`}
+  ${lineRows || `<div style="text-align:center;font-size:11px;color:#374151;padding:8px 0">Sin líneas</div>`}
 
   ${sep}
 
@@ -911,8 +912,8 @@ const buildTicketHtml = () => {
   <div style="font-size:12px">
     ${hasDisc ? `
     <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-      <span style="color:#94a3b8">Importe bruto</span>
-      <span style="color:#475569">${formatCurrency(grossAmt, cur)}</span>
+      <span style="color:#374151">Importe bruto</span>
+      <span style="color:#1f2937">${formatCurrency(grossAmt, cur)}</span>
     </div>
     <div style="display:flex;justify-content:space-between;margin-bottom:4px">
       <span style="color:#dc2626">Descuento total</span>
@@ -920,12 +921,12 @@ const buildTicketHtml = () => {
     </div>
     <div style="border-top:1px dashed #cbd5e1;margin:6px 0"></div>` : ''}
     <div style="display:flex;justify-content:space-between;margin-bottom:4px${hasDisc ? ';font-weight:700' : ''}">
-      <span style="color:#64748b">Subtotal s/IVA</span>
+      <span style="color:#1a202c">Subtotal s/IVA</span>
       <span${hasDisc ? ' style="color:#15803d"' : ''}>${formatCurrency(formData.value.amount_untaxed, cur)}</span>
     </div>
     ${hasTax ? `
     <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-      <span style="color:#64748b">IVA (${formData.value.tax_rate}%)</span>
+      <span style="color:#1a202c">IVA (${formData.value.tax_rate}%)</span>
       <span>+${formatCurrency(formData.value.amount_tax, cur)}</span>
     </div>` : ''}
   </div>
@@ -933,7 +934,7 @@ const buildTicketHtml = () => {
   <div style="display:flex;justify-content:space-between;margin-top:8px;padding:10px 0;border-top:2px solid #0f172a;border-bottom:2px solid #0f172a">
     <div>
       <div style="font-size:14px;font-weight:800">TOTAL</div>
-      ${hasTax ? `<div style="font-size:9px;color:#64748b;margin-top:1px">Subtotal + IVA</div>` : ''}
+      ${hasTax ? `<div style="font-size:9px;color:#1a202c;margin-top:1px">Subtotal + IVA</div>` : ''}
     </div>
     <span style="font-size:14px;font-weight:800">${formatCurrency(formData.value.amount_total, cur)}</span>
   </div>`
@@ -942,15 +943,17 @@ const buildTicketHtml = () => {
   ${formData.value.notes || formData.value.terms ? sep : ''}
 
   ${formData.value.notes ? `
-  <div style="font-size:10px;color:#475569;line-height:1.5;margin-bottom:8px;text-align:center;white-space:pre-line">${formData.value.notes}</div>` : ''}
+  <div style="font-size:10px;color:#1f2937;line-height:1.5;margin-bottom:8px;text-align:center;white-space:pre-line">${formData.value.notes}</div>` : ''}
 
   ${formData.value.terms ? `
-  <div style="font-size:9px;color:#94a3b8;line-height:1.4;text-align:center;white-space:pre-line">${formData.value.terms}</div>` : ''}
+  <div style="font-size:9px;color:#374151;line-height:1.4;text-align:center;white-space:pre-line">${formData.value.terms}</div>` : ''}
 
   ${sep}
 
+  ${companyDesc ? `<div style="font-size:10px;color:#374151;line-height:1.5;text-align:center;white-space:pre-line;margin-bottom:10px">${companyDesc}</div>${sep}` : ''}
+
   <!-- Footer -->
-  <div style="text-align:center;font-size:10px;color:#94a3b8;line-height:1.6">
+  <div style="text-align:center;font-size:10px;color:#374151;line-height:1.6">
     <div>${companyName}</div>
     <div>${today}</div>
   </div>
