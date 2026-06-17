@@ -3186,7 +3186,9 @@ export type Database = {
           company_id: string | null
           created_at: string | null
           created_by: string | null
+          done_quantity: number | null
           id: string | null
+          is_partial: boolean | null
           lot_name: string | null
           order_id: string | null
           order_name: string | null
@@ -3198,6 +3200,8 @@ export type Database = {
           product_name: string | null
           product_sku: string | null
           quantity: number | null
+          scan_notes: string | null
+          scanned_at: string | null
           sequence: number | null
           serial_number: string | null
           tracking_type: Database["public"]["Enums"]["product_tracking"] | null
@@ -3280,6 +3284,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           id: string | null
+          is_partial: boolean | null
           is_return: boolean | null
           line_count: number | null
           name: string | null

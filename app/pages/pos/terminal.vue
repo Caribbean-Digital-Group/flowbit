@@ -833,7 +833,13 @@ const buildReceiptHtml = (params: {
   customer: string
   change: number
 }): string => {
-  const company = authStore.selectedCompany?.name ?? 'Flowbit'
+  const co = authStore.selectedCompany
+  const company = co?.name ?? 'Flowbit'
+  const companyDesc = co?.description || ''
+  const logoInitial = (company[0] || 'F').toUpperCase()
+  const logoHtml = co?.logo_url
+    ? `<img src="${co.logo_url}" alt="${company}" style="display:block;width:80px;height:80px;object-fit:contain;border-radius:6px;margin:0 auto 6px" />`
+    : `<div style="width:64px;height:64px;border-radius:50%;background:#2563eb;color:#fff;font-size:24px;font-weight:800;line-height:64px;text-align:center;margin:0 auto 6px;font-family:sans-serif">${logoInitial}</div>`
   const rows = params.lines.map(l => {
     const a = lineAmounts(l)
     return `<tr>
@@ -865,6 +871,7 @@ const buildReceiptHtml = (params: {
       .sep { border-top: 1px dashed #111; margin: 6px 0; }
       .total { font-size: 16px; font-weight: bold; }
     </style></head><body>
+    <div style="text-align:center;margin-bottom:8px">${logoHtml}</div>
     <h1>${company}</h1>
     <p>Ticket ${params.orderName}</p>
     <p>${new Date().toLocaleString('es-MX')}</p>
@@ -884,6 +891,7 @@ const buildReceiptHtml = (params: {
       ${params.change > 0 ? `<tr class="total"><td>CAMBIO</td><td style="text-align:right">${formatCurrency(params.change)}</td></tr>` : ''}
     </table>
     <div class="sep"></div>
+    ${companyDesc ? `<p style="font-size:10px;color:#333;white-space:pre-line;margin:4px 0 8px;text-align:center">${companyDesc}</p>` : ''}
     <p>¡Gracias por su compra!</p>
     </body></html>`
 }
