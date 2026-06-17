@@ -131,11 +131,11 @@ const loadData = async () => {
         (order): order is typeof order & { id: string } =>
           order.id != null &&
           order.order_state === 'posted' &&
-          order.is_delivered === true
+          (order.order_type === 'purchase' || order.is_delivered === true)
       )
       .map((order) => ({
         value: order.id,
-        label: `${order.name ?? 'Orden'} - ${order.partner_name ?? 'Sin partner'}`
+        label: `${order.name ?? 'Orden'} — ${order.order_type === 'purchase' ? 'Compra' : 'Venta'} — ${order.partner_name ?? 'Sin partner'}`
       }))
   } finally {
     isLoading.value = false
@@ -153,7 +153,7 @@ const goDetail = (row: Record<string, unknown>) => {
 const handleSync = async () => {
   errorMessage.value = null
   if (!orderToSync.value) {
-    errorMessage.value = 'Selecciona una orden entregada.'
+    errorMessage.value = 'Selecciona una orden confirmada.'
     return
   }
   const pickingId = await syncOrderToDraftPicking(orderToSync.value, false)
@@ -216,7 +216,7 @@ const handleCreateManual = async (type: PickingType) => {
           <div class="lg:col-span-3">
             <FormSelect
               v-model="orderToSync"
-              label="Orden entregada"
+              label="Orden confirmada"
               :options="syncOptions"
               placeholder="Selecciona una orden"
             />

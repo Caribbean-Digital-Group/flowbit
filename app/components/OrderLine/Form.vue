@@ -88,14 +88,14 @@ const catalogLabelSubtitle = (p: Product): string => {
 
 function applyPricesFromCatalog(p: Product): void {
   const salePrice = Number(p.sale_price ?? 0)
-  const costPrice = Number(p.cost_price ?? 0)
+  const costPrice = p.cost_price != null ? Number(p.cost_price) : null
 
   if (props.orderType === 'sale') {
-    formData.value.unit_price = salePrice || costPrice
-    formData.value.unit_cost = costPrice
+    formData.value.unit_price = salePrice
+    formData.value.unit_cost = costPrice ?? salePrice
   } else {
-    formData.value.unit_price = costPrice || salePrice
-    formData.value.unit_cost = costPrice
+    formData.value.unit_price = costPrice ?? salePrice
+    formData.value.unit_cost = costPrice ?? 0
   }
 
   const tr = Number(p.tax_rate ?? props.catalogTaxFallback ?? 16)
@@ -196,7 +196,7 @@ function onCatalogKeydown(e: KeyboardEvent): void {
 }
 
 const unitPriceLabel = computed(() =>
-  props.orderType === 'purchase' ? 'Precio unitario' : 'Precio unitario'
+  props.orderType === 'purchase' ? 'Precio de compra' : 'Precio de venta'
 )
 
 const catalogHintMessage = computed(() => {
