@@ -22,7 +22,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const { selectedCompanyId, selectedCompany } = storeToRefs(authStore)
 
-const { getPickingViewById, updatePicking, setPickingStatus } = usePicking()
+const { getPickingViewById, getPickingById, updatePicking, setPickingStatus } = usePicking()
 const { getWarehousesByCompany } = useWarehouse()
 const { getProductsByCompany } = useProduct()
 const {
@@ -174,9 +174,10 @@ const loadPicking = async () => {
   try {
     await loadCatalogs(companyId)
 
-    const [header, detailLines] = await Promise.all([
+    const [header, detailLines, picking] = await Promise.all([
       getPickingViewById(id, companyId),
-      getPickingLinesByPickingId(id, companyId)
+      getPickingLinesByPickingId(id, companyId),
+      getPickingById(id, companyId)
     ])
 
     if (!header) {
@@ -188,7 +189,7 @@ const loadPicking = async () => {
     pickName.value = header.name || 'Picking'
     orderName.value = header.order_name || 'Sin orden'
     pickType.value = (header.type || 'salida') as PickingType
-    isPartial.value = header.is_partial ?? false
+    isPartial.value = picking?.is_partial ?? false
 
     const mappedForm: PickingFormData = {
       notes: header.notes || '',
