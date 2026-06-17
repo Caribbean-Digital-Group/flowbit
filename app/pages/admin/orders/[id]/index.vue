@@ -124,6 +124,13 @@ const menuOptions = computed<MenuOption[]>(() => {
     action: () => handlePrintTicket(),
     variant: 'default'
   })
+  opts.push({
+    id: 'print-pos-ticket',
+    label: 'Reimprimir ticket POS',
+    icon: 'M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z',
+    action: () => handlePrintPosTicket(),
+    variant: 'default'
+  })
   if (canPost.value) {
     opts.push({
       id: 'post',
@@ -964,6 +971,69 @@ const buildTicketHtml = () => {
 }
 
 const handlePrintTicket = () => printHtml(buildTicketHtml())
+
+const buildPosReceiptHtml = () => {
+  const co = selectedCompany.value
+  const company = co?.display_name || co?.name || ''
+  const companyDesc = co?.description || ''
+  const logoInitial = (company[0] || 'F').toUpperCase()
+  const logoHtml = co?.logo_url
+    ? `<img src="${co.logo_url}" alt="${company}" style="display:block;width:80px;height:80px;object-fit:contain;border-radius:6px;margin:0 auto 6px" />`
+    : `<div style="width:64px;height:64px;border-radius:50%;background:#2563eb;color:#fff;font-size:24px;font-weight:800;line-height:64px;text-align:center;margin:0 auto 6px;font-family:sans-serif">${logoInitial}</div>`
+
+  const cur = formData.value.currency
+
+  const rows = orderLines.value.map(line => {
+    const name = line.product_name?.trim() || line.description?.trim() || '—'
+    const discStr = line.discount_percent > 0 ? ` (-${line.discount_percent}%)` : ''
+    return `<tr>
+      <td>${line.quantity} × ${name}${discStr}</td>
+      <td style="text-align:right">${formatCurrency(line.total, cur)}</td>
+    </tr>`
+  }).join('')
+
+  const paymentRow = formData.value.payment_method_name
+    ? `<tr>
+      <td>${formData.value.payment_method_name}</td>
+      <td style="text-align:right">${formatCurrency(formData.value.amount_total, cur)}</td>
+    </tr>`
+    : ''
+
+  const createdBy = auditFooter.createdBy !== '—' ? auditFooter.createdBy : ''
+
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>${formData.value.name || 'Ticket'}</title>
+    <style>
+      body { font-family: 'Courier New', monospace; font-size: 12px; width: 280px; margin: 0 auto; padding: 12px; color: #111; }
+      h1 { font-size: 14px; text-align: center; margin: 0 0 4px; }
+      p { margin: 2px 0; text-align: center; }
+      table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+      td { padding: 2px 0; vertical-align: top; }
+      .sep { border-top: 1px dashed #111; margin: 6px 0; }
+      .total { font-size: 16px; font-weight: bold; }
+    </style></head><body>
+    <div style="text-align:center;margin-bottom:8px">${logoHtml}</div>
+    <h1>${company}</h1>
+    <p>Ticket ${formData.value.name || '—'}</p>
+    <p>${new Date().toLocaleString('es-MX')}</p>
+    <p>Cliente: ${formData.value.partner_name || '—'}</p>
+    ${createdBy ? `<p>Atendió: ${createdBy}</p>` : ''}
+    <div class="sep"></div>
+    <table>${rows || `<tr><td colspan="2" style="text-align:center">Sin líneas</td></tr>`}</table>
+    <div class="sep"></div>
+    <table>
+      ${formData.value.amount_discount > 0 ? `<tr><td>Descuento</td><td style="text-align:right">-${formatCurrency(formData.value.amount_discount, cur)}</td></tr>` : ''}
+      <tr><td>Subtotal</td><td style="text-align:right">${formatCurrency(formData.value.amount_untaxed, cur)}</td></tr>
+      ${formData.value.amount_tax > 0 ? `<tr><td>Impuestos (${formData.value.tax_rate}%)</td><td style="text-align:right">${formatCurrency(formData.value.amount_tax, cur)}</td></tr>` : ''}
+      <tr class="total"><td>TOTAL</td><td style="text-align:right">${formatCurrency(formData.value.amount_total, cur)}</td></tr>
+    </table>
+    ${paymentRow ? `<div class="sep"></div><table>${paymentRow}</table>` : ''}
+    <div class="sep"></div>
+    ${companyDesc ? `<p style="font-size:10px;color:#333;white-space:pre-line;margin:4px 0 8px;text-align:center">${companyDesc}</p>` : ''}
+    <p>¡Gracias por su compra!</p>
+    </body></html>`
+}
+
+const handlePrintPosTicket = () => printHtml(buildPosReceiptHtml())
 
 const syncLines = async (id: string, companyId: string): Promise<boolean> => {
   const currentIds = new Set(orderLines.value.map((l) => l.id))
