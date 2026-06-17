@@ -30,6 +30,7 @@ const {
   addOrderLineRpc
 } = useOrder()
 
+const { syncOrderToDraftPicking } = usePicking()
 const { getPartnersByCompany } = usePartner()
 const { getProjectsByCompany } = useProject()
 const { getAllByCompany: getPaymentMethodsByCompany } = usePaymentMethod()
@@ -387,6 +388,11 @@ const handlePostOrder = async () => {
     }
 
     stockShortageLines.value = []
+
+    if (formData.value.order_type === 'purchase') {
+      await syncOrderToDraftPicking(id, false)
+    }
+
     await loadOrder()
   } finally {
     isLoading.value = false
