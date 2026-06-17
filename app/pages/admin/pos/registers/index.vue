@@ -8,16 +8,7 @@ const authStore = useAuthStore()
 const { selectedCompanyId } = storeToRefs(authStore)
 const { getAllByCompany, archive } = usePosRegister()
 
-type PosRegisterRow = {
-  id: string
-  name: string
-  code: string
-  max_discount_percent: string
-  blind_close: string
-  active: boolean
-}
-
-const items = ref<PosRegisterRow[]>([])
+const items = ref<Record<string, unknown>[]>([])
 const isLoading = ref(false)
 
 const columns = [
@@ -28,7 +19,7 @@ const columns = [
   { key: 'active', label: 'Estado', type: 'badge' as const }
 ]
 
-const mapRow = (r: Awaited<ReturnType<typeof getAllByCompany>>[0]): PosRegisterRow => ({
+const mapRow = (r: Awaited<ReturnType<typeof getAllByCompany>>[0]): Record<string, unknown> => ({
   id: r.id,
   name: r.name,
   code: r.code,
@@ -51,12 +42,12 @@ const load = async () => {
 watch(selectedCompanyId, load, { immediate: true })
 
 const handleCreate = () => router.push('/admin/pos/registers/create')
-const handleEdit = (row: PosRegisterRow) => router.push(`/admin/pos/registers/${row.id}`)
+const handleEdit = (row: Record<string, unknown>) => router.push(`/admin/pos/registers/${row.id as string}`)
 
-const handleArchive = async (row: PosRegisterRow) => {
+const handleArchive = async (row: Record<string, unknown>) => {
   const cid = selectedCompanyId.value
   if (!cid) return
-  await archive(row.id, cid)
+  await archive(row.id as string, cid)
   await load()
 }
 </script>
