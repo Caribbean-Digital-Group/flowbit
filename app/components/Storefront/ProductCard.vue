@@ -29,16 +29,16 @@ const handleQuickAdd = () => {
 
 <template>
   <article
-    class="group relative bg-white rounded-2xl shadow-lg shadow-slate-200/50 overflow-hidden flex flex-col transition-transform duration-200 hover:-translate-y-1"
+    class="group relative bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-300/50 hover:border-slate-200"
   >
     <NuxtLink :to="productPath" class="block focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
-      <div class="aspect-square bg-slate-100 overflow-hidden relative">
+      <div class="aspect-square bg-slate-50 overflow-hidden relative">
         <img
           v-if="product.image_url"
           :src="product.image_url"
           :alt="product.name"
           loading="lazy"
-          class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.07]"
         />
         <div v-else class="w-full h-full flex items-center justify-center">
           <svg class="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -48,13 +48,13 @@ const handleQuickAdd = () => {
 
         <span
           v-if="hasDiscount"
-          class="absolute top-3 left-3 px-2 py-0.5 rounded-full bg-rose-500 text-white text-xs font-bold"
+          class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-rose-500 text-white text-xs font-bold shadow-sm shadow-rose-500/30"
         >
           Oferta
         </span>
         <span
           v-if="!product.in_stock"
-          class="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-slate-800/80 text-white text-xs font-semibold"
+          class="absolute top-3 right-3 px-2.5 py-0.5 rounded-full bg-slate-900/70 text-white text-xs font-semibold backdrop-blur-sm"
         >
           Agotado
         </span>
@@ -82,7 +82,7 @@ const handleQuickAdd = () => {
 
       <button
         type="button"
-        class="p-2.5 rounded-xl text-white transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
+        class="p-2.5 rounded-xl text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-sm"
         :style="{ backgroundColor: 'var(--sf-primary, #6366f1)' }"
         :disabled="!product.in_stock"
         :aria-label="product.in_stock ? `Agregar ${product.name} al carrito` : `${product.name} agotado`"
