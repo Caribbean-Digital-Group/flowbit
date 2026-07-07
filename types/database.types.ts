@@ -758,12 +758,18 @@ export type Database = {
           amount_tax: number | null
           amount_total: number | null
           amount_untaxed: number | null
+          checkout_token: string | null
           company_id: string
           confirmation_date: string | null
+          coupon_code: string | null
+          coupon_discount: number | null
           created_at: string | null
           created_by: string | null
           created_by_partner_id: string | null
           currency: string
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
           delivery_date: string | null
           exchange_rate: number | null
           id: string
@@ -775,6 +781,7 @@ export type Database = {
           order_date: string
           order_state: Database["public"]["Enums"]["order_state"]
           order_type: Database["public"]["Enums"]["order_type"]
+          origin: string
           partner_id: string
           payment_due_date: string | null
           payment_method_id: string | null
@@ -784,7 +791,9 @@ export type Database = {
           project_id: string | null
           reference: string | null
           shipping_city: string | null
+          shipping_cost: number | null
           shipping_country_code: string | null
+          shipping_method_name: string | null
           shipping_state: string | null
           shipping_street: string | null
           shipping_street2: string | null
@@ -800,12 +809,18 @@ export type Database = {
           amount_tax?: number | null
           amount_total?: number | null
           amount_untaxed?: number | null
+          checkout_token?: string | null
           company_id: string
           confirmation_date?: string | null
+          coupon_code?: string | null
+          coupon_discount?: number | null
           created_at?: string | null
           created_by?: string | null
           created_by_partner_id?: string | null
           currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
           delivery_date?: string | null
           exchange_rate?: number | null
           id?: string
@@ -817,6 +832,7 @@ export type Database = {
           order_date?: string
           order_state?: Database["public"]["Enums"]["order_state"]
           order_type?: Database["public"]["Enums"]["order_type"]
+          origin?: string
           partner_id: string
           payment_due_date?: string | null
           payment_method_id?: string | null
@@ -826,7 +842,9 @@ export type Database = {
           project_id?: string | null
           reference?: string | null
           shipping_city?: string | null
+          shipping_cost?: number | null
           shipping_country_code?: string | null
+          shipping_method_name?: string | null
           shipping_state?: string | null
           shipping_street?: string | null
           shipping_street2?: string | null
@@ -842,12 +860,18 @@ export type Database = {
           amount_tax?: number | null
           amount_total?: number | null
           amount_untaxed?: number | null
+          checkout_token?: string | null
           company_id?: string
           confirmation_date?: string | null
+          coupon_code?: string | null
+          coupon_discount?: number | null
           created_at?: string | null
           created_by?: string | null
           created_by_partner_id?: string | null
           currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
           delivery_date?: string | null
           exchange_rate?: number | null
           id?: string
@@ -859,6 +883,7 @@ export type Database = {
           order_date?: string
           order_state?: Database["public"]["Enums"]["order_state"]
           order_type?: Database["public"]["Enums"]["order_type"]
+          origin?: string
           partner_id?: string
           payment_due_date?: string | null
           payment_method_id?: string | null
@@ -868,7 +893,9 @@ export type Database = {
           project_id?: string | null
           reference?: string | null
           shipping_city?: string | null
+          shipping_cost?: number | null
           shipping_country_code?: string | null
+          shipping_method_name?: string | null
           shipping_state?: string | null
           shipping_street?: string | null
           shipping_street2?: string | null
@@ -1910,6 +1937,7 @@ export type Database = {
           sale_price: number | null
           short_description: string | null
           sku: string | null
+          slug: string | null
           status: Database["public"]["Enums"]["product_status"] | null
           stock_max: number | null
           stock_min: number | null
@@ -1962,6 +1990,7 @@ export type Database = {
           sale_price?: number | null
           short_description?: string | null
           sku?: string | null
+          slug?: string | null
           status?: Database["public"]["Enums"]["product_status"] | null
           stock_max?: number | null
           stock_min?: number | null
@@ -2014,6 +2043,7 @@ export type Database = {
           sale_price?: number | null
           short_description?: string | null
           sku?: string | null
+          slug?: string | null
           status?: Database["public"]["Enums"]["product_status"] | null
           stock_max?: number | null
           stock_min?: number | null
@@ -2642,6 +2672,201 @@ export type Database = {
           },
         ]
       }
+      storefront_coupon: {
+        Row: {
+          active: boolean | null
+          code: string
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          min_purchase: number | null
+          starts_at: string | null
+          updated_at: string | null
+          updated_by: string | null
+          usage_count: number
+          usage_limit: number | null
+        }
+        Insert: {
+          active?: boolean | null
+          code: string
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value: number
+          expires_at?: string | null
+          id?: string
+          min_purchase?: number | null
+          starts_at?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          usage_count?: number
+          usage_limit?: number | null
+        }
+        Update: {
+          active?: boolean | null
+          code?: string
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          min_purchase?: number | null
+          starts_at?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          usage_count?: number
+          usage_limit?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storefront_coupon_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storefront_settings: {
+        Row: {
+          about_text: string | null
+          active: boolean | null
+          announcement: string | null
+          company_id: string
+          contact_address: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string | null
+          created_by: string | null
+          hero_subtitle: string | null
+          hero_title: string | null
+          id: string
+          is_active: boolean
+          policy_privacy: string | null
+          policy_returns: string | null
+          policy_shipping: string | null
+          policy_terms: string | null
+          show_out_of_stock: boolean
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          about_text?: string | null
+          active?: boolean | null
+          announcement?: string | null
+          company_id: string
+          contact_address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          hero_subtitle?: string | null
+          hero_title?: string | null
+          id?: string
+          is_active?: boolean
+          policy_privacy?: string | null
+          policy_returns?: string | null
+          policy_shipping?: string | null
+          policy_terms?: string | null
+          show_out_of_stock?: boolean
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          about_text?: string | null
+          active?: boolean | null
+          announcement?: string | null
+          company_id?: string
+          contact_address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          hero_subtitle?: string | null
+          hero_title?: string | null
+          id?: string
+          is_active?: boolean
+          policy_privacy?: string | null
+          policy_returns?: string | null
+          policy_shipping?: string | null
+          policy_terms?: string | null
+          show_out_of_stock?: boolean
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storefront_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storefront_shipping_method: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          delivery_estimate: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          name: string
+          price: number
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          delivery_estimate?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          name: string
+          price?: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          delivery_estimate?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          name?: string
+          price?: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storefront_shipping_method_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       warehouse: {
         Row: {
           active: boolean | null
@@ -3050,15 +3275,21 @@ export type Database = {
           amount_tax: number | null
           amount_total: number | null
           amount_untaxed: number | null
+          checkout_token: string | null
           company_currency: string | null
           company_id: string | null
           company_name: string | null
           confirmation_date: string | null
+          coupon_code: string | null
+          coupon_discount: number | null
           created_at: string | null
           created_by: string | null
           created_by_partner_id: string | null
           created_by_partner_name: string | null
           currency: string | null
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
           delivery_date: string | null
           exchange_rate: number | null
           id: string | null
@@ -3071,6 +3302,7 @@ export type Database = {
           order_date: string | null
           order_state: Database["public"]["Enums"]["order_state"] | null
           order_type: Database["public"]["Enums"]["order_type"] | null
+          origin: string | null
           partner_email: string | null
           partner_id: string | null
           partner_name: string | null
@@ -3079,12 +3311,15 @@ export type Database = {
           payment_method_id: string | null
           payment_status: string | null
           payment_term: string | null
+          pos_session_id: string | null
           project_code: string | null
           project_id: string | null
           project_name: string | null
           reference: string | null
           shipping_city: string | null
+          shipping_cost: number | null
           shipping_country_code: string | null
+          shipping_method_name: string | null
           shipping_state: string | null
           shipping_street: string | null
           shipping_street2: string | null
@@ -3122,6 +3357,20 @@ export type Database = {
             columns: ["payment_method_id"]
             isOneToOne: false
             referencedRelation: "payment_method"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_pos_session_id_fkey"
+            columns: ["pos_session_id"]
+            isOneToOne: false
+            referencedRelation: "pos_session"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_pos_session_id_fkey"
+            columns: ["pos_session_id"]
+            isOneToOne: false
+            referencedRelation: "v_pos_sessions"
             referencedColumns: ["id"]
           },
           {
@@ -4075,6 +4324,31 @@ export type Database = {
       }
       get_pos_session_summary: { Args: { p_session_id: string }; Returns: Json }
       get_public_project_view: { Args: { p_project_id: string }; Returns: Json }
+      get_storefront: { Args: { p_slug: string }; Returns: Json }
+      get_storefront_checkout_info: { Args: { p_slug: string }; Returns: Json }
+      get_storefront_my_orders: { Args: { p_slug: string }; Returns: Json }
+      get_storefront_order: {
+        Args: { p_email: string; p_order_ref: string; p_slug: string }
+        Returns: Json
+      }
+      get_storefront_product: {
+        Args: { p_product_slug: string; p_slug: string }
+        Returns: Json
+      }
+      get_storefront_products: {
+        Args: {
+          p_category_id?: string
+          p_max_price?: number
+          p_min_price?: number
+          p_only_in_stock?: boolean
+          p_page?: number
+          p_page_size?: number
+          p_search?: string
+          p_slug: string
+          p_sort?: string
+        }
+        Returns: Json
+      }
       invite_partner_by_email: {
         Args: {
           p_company_id: string
@@ -4110,6 +4384,19 @@ export type Database = {
           p_register_id: string
         }
         Returns: string
+      }
+      place_storefront_order: {
+        Args: {
+          p_checkout_token: string
+          p_coupon_code?: string
+          p_customer: Json
+          p_items: Json
+          p_notes?: string
+          p_payment_method_id: string
+          p_shipping_method_id: string
+          p_slug: string
+        }
+        Returns: Json
       }
       post_order: { Args: { p_order_id: string }; Returns: boolean }
       preview_order_stock_shortages: {
@@ -4150,6 +4437,7 @@ export type Database = {
         Returns: Json
       }
       remove_company_member: { Args: { p_rel_id: string }; Returns: boolean }
+      resolve_storefront_company: { Args: { p_slug: string }; Returns: string }
       respond_to_invitation: {
         Args: { p_accept: boolean; p_rel_id: string }
         Returns: boolean
@@ -4177,6 +4465,11 @@ export type Database = {
         }
         Returns: boolean
       }
+      storefront_display_price: {
+        Args: { p_price: number; p_tax_included: boolean; p_tax_rate: number }
+        Returns: number
+      }
+      storefront_product_card: { Args: { p_product_id: string }; Returns: Json }
       sync_order_to_draft_picking: {
         Args: { p_is_return?: boolean; p_order_id: string }
         Returns: string
@@ -4235,6 +4528,10 @@ export type Database = {
       user_belongs_to_company: {
         Args: { p_company_id: string }
         Returns: boolean
+      }
+      validate_storefront_coupon: {
+        Args: { p_code: string; p_slug: string; p_subtotal: number }
+        Returns: Json
       }
     }
     Enums: {

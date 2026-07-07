@@ -100,6 +100,17 @@ flowbit/
 | Líneas de orden | `/admin/order-lines` | `useOrderLine` |
 | Métodos de pago | `/admin/payment-methods` | `usePaymentMethod` |
 
+### Tienda en línea (Storefront)
+
+| Módulo | Ruta admin | Composable(s) |
+|---|---|---|
+| Ajustes de tienda | `/admin/storefront` | `useStorefrontSettings`, `useCompany` |
+| Cupones | `/admin/storefront/coupons` | `useStorefrontCoupon` |
+| Métodos de envío | `/admin/storefront/shipping-methods` | `useStorefrontShippingMethod` |
+| Tienda pública | `/stores/[company_slug]/**` | `useStorefront` (RPCs anon) + store Pinia `storefront` |
+
+> Documentación completa del módulo en `docs/storefront.md`.
+
 ### Inventario
 
 | Módulo | Ruta admin | Composable(s) |
