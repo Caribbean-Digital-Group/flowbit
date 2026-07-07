@@ -121,11 +121,8 @@ const handleShare = async () => {
   isSharing.value = true
   try {
     if (typeof navigator !== 'undefined' && navigator.share) {
-      await navigator.share({
-        title: product.value.name,
-        text: shareText.value,
-        url: shareUrl.value
-      })
+      // Solo `text`: `title` y `url` aparte duplican nombre/URL en muchos SO/navegadores.
+      await navigator.share({ text: shareText.value })
       return
     }
 
