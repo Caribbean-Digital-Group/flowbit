@@ -428,6 +428,35 @@ const formatCurrency = (value: number): string => {
             <span class="text-sm text-slate-700">Producto destacado</span>
           </label>
         </div>
+
+        <h4 class="text-base font-medium text-slate-700 border-b border-slate-100 pb-2 mt-6">
+          Imagen de la tienda
+        </h4>
+
+        <div class="space-y-4">
+          <FormInput
+            v-model="formData.image_url"
+            type="url"
+            label="URL de la imagen"
+            placeholder="https://..."
+            :readonly="readonly"
+            size="md"
+          />
+
+          <div
+            v-if="formData.image_url.trim()"
+            class="w-32 h-32 rounded-xl overflow-hidden bg-slate-100 border border-slate-200"
+          >
+            <img
+              :src="formData.image_url.trim()"
+              alt="Vista previa del producto"
+              class="w-full h-full object-cover"
+            />
+          </div>
+          <p v-else class="text-xs text-slate-500">
+            La imagen se muestra en el catálogo y la ficha del producto en la tienda en línea.
+          </p>
+        </div>
       </div>
     </div>
 
