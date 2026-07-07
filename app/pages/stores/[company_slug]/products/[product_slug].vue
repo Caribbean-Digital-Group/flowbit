@@ -91,6 +91,63 @@ const handleAddToCart = () => {
   storefrontStore.notify(`«${product.value.name}» agregado al carrito`)
 }
 
+const isSharing = ref(false)
+
+/** URL absoluta del producto para compartir. */
+const shareUrl = computed(() => {
+  if (typeof window !== 'undefined') return window.location.href
+  const base = (useRuntimeConfig().public.siteUrl as string | undefined)?.replace(/\/$/, '') ?? ''
+  return `${base}${basePath.value}/products/${productSlug.value}`
+})
+
+/** Texto con la información del producto para compartir/copiar. */
+const shareText = computed(() => {
+  const p = product.value
+  if (!p) return ''
+  const description = p.short_description || p.description || ''
+  return [
+    `🛍️ ${p.name}`,
+    description ? description.trim().slice(0, 200) : '',
+    `💵 Precio: ${formatStorefrontCurrency(p.price_final, p.currency)}`,
+    store.value?.name ? `🏬 ${store.value.name}` : '',
+    shareUrl.value
+  ]
+    .filter(Boolean)
+    .join('\n')
+})
+
+const handleShare = async () => {
+  if (!product.value || isSharing.value) return
+  isSharing.value = true
+  try {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      await navigator.share({
+        title: product.value.name,
+        text: shareText.value,
+        url: shareUrl.value
+      })
+      return
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      await navigator.clipboard.writeText(shareText.value)
+      storefrontStore.notify('Información del producto copiada al portapapeles')
+    }
+  } catch (error) {
+    // El usuario canceló el diálogo nativo de compartir: no es un error real.
+    if (error instanceof DOMException && error.name === 'AbortError') return
+    console.error('Error sharing product:', error)
+    try {
+      await navigator.clipboard.writeText(shareText.value)
+      storefrontStore.notify('Información del producto copiada al portapapeles')
+    } catch {
+      storefrontStore.notify('No se pudo compartir el producto')
+    }
+  } finally {
+    isSharing.value = false
+  }
+}
+
 useHead(() => ({
   title: product.value
     ? `${product.value.meta_title || product.value.name} — ${store.value?.name ?? ''}`
@@ -303,6 +360,19 @@ useHead(() => ({
               @click="handleAddToCart"
             >
               {{ product.in_stock ? 'Agregar al carrito' : 'Agotado' }}
+            </button>
+
+            <button
+              type="button"
+              class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:opacity-50"
+              :disabled="isSharing"
+              aria-label="Compartir producto"
+              @click="handleShare"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+              Compartir
             </button>
           </div>
 
