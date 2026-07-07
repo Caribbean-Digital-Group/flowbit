@@ -2759,6 +2759,7 @@ export type Database = {
           show_out_of_stock: boolean
           updated_at: string | null
           updated_by: string | null
+          whatsapp_phone: string | null
         }
         Insert: {
           about_text?: string | null
@@ -2781,6 +2782,7 @@ export type Database = {
           show_out_of_stock?: boolean
           updated_at?: string | null
           updated_by?: string | null
+          whatsapp_phone?: string | null
         }
         Update: {
           about_text?: string | null
@@ -2803,6 +2805,7 @@ export type Database = {
           show_out_of_stock?: boolean
           updated_at?: string | null
           updated_by?: string | null
+          whatsapp_phone?: string | null
         }
         Relationships: [
           {

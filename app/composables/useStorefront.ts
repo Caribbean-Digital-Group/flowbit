@@ -27,6 +27,7 @@ export interface StorefrontInfo {
   contact_email: string | null
   contact_phone: string | null
   contact_address: string | null
+  whatsapp_phone: string | null
   policy_shipping: string | null
   policy_returns: string | null
   policy_privacy: string | null
