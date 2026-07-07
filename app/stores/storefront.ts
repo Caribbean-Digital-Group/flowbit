@@ -1,4 +1,6 @@
 import { defineStore } from 'pinia'
+import { storefrontTracker } from '~/utils/analyticsTracker'
+import { analyticsItemFromProduct, analyticsItemFromCartItem } from '~/utils/analytics'
 import type {
   StorefrontInfo,
   StorefrontCategory,
@@ -166,6 +168,13 @@ export const useStorefrontStore = defineStore('storefront', () => {
       })
     }
     persist()
+
+    const item = analyticsItemFromProduct(product, quantity)
+    storefrontTracker.trackEcommerce('add_to_cart', {
+      value: (product.price_final ?? 0) * quantity,
+      currency: product.currency,
+      items: [item]
+    })
   }
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -177,9 +186,18 @@ export const useStorefrontStore = defineStore('storefront', () => {
   }
 
   const removeItem = (productId: string) => {
+    const removed = items.value.find((item) => item.productId === productId)
     items.value = items.value.filter((item) => item.productId !== productId)
     if (!items.value.length) coupon.value = null
     persist()
+
+    if (removed) {
+      storefrontTracker.trackEcommerce('remove_from_cart', {
+        value: removed.priceFinal * removed.quantity,
+        currency: removed.currency,
+        items: [analyticsItemFromCartItem(removed)]
+      })
+    }
   }
 
   const clearCart = () => {

@@ -107,9 +107,12 @@ flowbit/
 | Ajustes de tienda | `/admin/storefront` | `useStorefrontSettings`, `useCompany` |
 | Cupones | `/admin/storefront/coupons` | `useStorefrontCoupon` |
 | Métodos de envío | `/admin/storefront/shipping-methods` | `useStorefrontShippingMethod` |
+| Analítica | `/admin/storefront/analytics` | `useStorefrontAnalyticsReport` |
 | Tienda pública | `/stores/[company_slug]/**` | `useStorefront` (RPCs anon) + store Pinia `storefront` |
 
 > Documentación completa del módulo en `docs/storefront.md`.
+> Analítica first-party (tracker propio + ingesta `/api/storefront/analytics` + rollups): `docs/storefront-analytics.md`.
+> Los eventos del storefront se emiten únicamente vía la fachada `useStorefrontTracker`.
 
 ### Inventario
 

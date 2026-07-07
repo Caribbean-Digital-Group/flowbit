@@ -25,6 +25,24 @@ const softGradient = computed(() => ({
   ].join(', ')
 }))
 
+// Impresión de la lista de destacados (una vez por visita a la portada)
+const tracker = useStorefrontTracker()
+const hasTrackedFeatured = ref(false)
+watch(
+  [featuredProducts, tracker.consent],
+  () => {
+    if (hasTrackedFeatured.value) return
+    if (tracker.consent.value !== 'granted' || !featuredProducts.value.length) return
+    hasTrackedFeatured.value = true
+    tracker.trackEcommerce('view_item_list', {
+      currency: store.value?.currency,
+      items: featuredProducts.value.map((p) => analyticsItemFromProduct(p)),
+      properties: { list: 'featured' }
+    })
+  },
+  { immediate: true }
+)
+
 useHead(() => ({
   title: store.value ? `${store.value.name} — Tienda en línea` : 'Tienda en línea',
   meta: [

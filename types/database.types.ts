@@ -2672,6 +2672,160 @@ export type Database = {
           },
         ]
       }
+      storefront_analytics_daily: {
+        Row: {
+          bounce_sessions: number
+          company_id: string
+          converted_sessions: number
+          created_at: string | null
+          day: string
+          funnel_add_to_cart: number
+          funnel_begin_checkout: number
+          funnel_purchase: number
+          funnel_view_item: number
+          id: string
+          new_visitors: number
+          orders: number
+          page_views: number
+          refund_amount: number
+          refunds: number
+          revenue: number
+          sessions: number
+          total_session_seconds: number
+          updated_at: string | null
+          visitors: number
+        }
+        Insert: {
+          bounce_sessions?: number
+          company_id: string
+          converted_sessions?: number
+          created_at?: string | null
+          day: string
+          funnel_add_to_cart?: number
+          funnel_begin_checkout?: number
+          funnel_purchase?: number
+          funnel_view_item?: number
+          id?: string
+          new_visitors?: number
+          orders?: number
+          page_views?: number
+          refund_amount?: number
+          refunds?: number
+          revenue?: number
+          sessions?: number
+          total_session_seconds?: number
+          updated_at?: string | null
+          visitors?: number
+        }
+        Update: {
+          bounce_sessions?: number
+          company_id?: string
+          converted_sessions?: number
+          created_at?: string | null
+          day?: string
+          funnel_add_to_cart?: number
+          funnel_begin_checkout?: number
+          funnel_purchase?: number
+          funnel_view_item?: number
+          id?: string
+          new_visitors?: number
+          orders?: number
+          page_views?: number
+          refund_amount?: number
+          refunds?: number
+          revenue?: number
+          sessions?: number
+          total_session_seconds?: number
+          updated_at?: string | null
+          visitors?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storefront_analytics_daily_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storefront_analytics_daily_dim: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          day: string
+          dim: string
+          dim_key: string
+          dim_label: string | null
+          hits: number
+          id: string
+          uniques: number
+          value: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          day: string
+          dim: string
+          dim_key: string
+          dim_label?: string | null
+          hits?: number
+          id?: string
+          uniques?: number
+          value?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          day?: string
+          dim?: string
+          dim_key?: string
+          dim_label?: string | null
+          hits?: number
+          id?: string
+          uniques?: number
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storefront_analytics_daily_dim_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storefront_analytics_job_run: {
+        Row: {
+          created_at: string | null
+          error: string | null
+          finished_at: string | null
+          id: string
+          job_name: string
+          rows_processed: number | null
+          started_at: string
+        }
+        Insert: {
+          created_at?: string | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          job_name: string
+          rows_processed?: number | null
+          started_at?: string
+        }
+        Update: {
+          created_at?: string | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          job_name?: string
+          rows_processed?: number | null
+          started_at?: string
+        }
+        Relationships: []
+      }
       storefront_coupon: {
         Row: {
           active: boolean | null
@@ -2730,6 +2884,219 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "storefront_coupon_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storefront_event: {
+        Row: {
+          anonymous_id: string | null
+          browser: string | null
+          checkout_token: string | null
+          client_ts: string | null
+          company_id: string
+          country: string | null
+          created_at: string | null
+          currency: string | null
+          device_type: string | null
+          event_category: string
+          event_name: string
+          id: string
+          items: Json | null
+          language: string | null
+          order_id: string | null
+          os: string | null
+          page_path: string | null
+          page_title: string | null
+          properties: Json
+          referrer: string | null
+          server_ts: string
+          session_id: string | null
+          user_id: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          value: number | null
+          viewport: string | null
+        }
+        Insert: {
+          anonymous_id?: string | null
+          browser?: string | null
+          checkout_token?: string | null
+          client_ts?: string | null
+          company_id: string
+          country?: string | null
+          created_at?: string | null
+          currency?: string | null
+          device_type?: string | null
+          event_category?: string
+          event_name: string
+          id: string
+          items?: Json | null
+          language?: string | null
+          order_id?: string | null
+          os?: string | null
+          page_path?: string | null
+          page_title?: string | null
+          properties?: Json
+          referrer?: string | null
+          server_ts?: string
+          session_id?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          value?: number | null
+          viewport?: string | null
+        }
+        Update: {
+          anonymous_id?: string | null
+          browser?: string | null
+          checkout_token?: string | null
+          client_ts?: string | null
+          company_id?: string
+          country?: string | null
+          created_at?: string | null
+          currency?: string | null
+          device_type?: string | null
+          event_category?: string
+          event_name?: string
+          id?: string
+          items?: Json | null
+          language?: string | null
+          order_id?: string | null
+          os?: string | null
+          page_path?: string | null
+          page_title?: string | null
+          properties?: Json
+          referrer?: string | null
+          server_ts?: string
+          session_id?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          value?: number | null
+          viewport?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storefront_event_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "storefront_event_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "order"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "storefront_event_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "v_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storefront_session: {
+        Row: {
+          anonymous_id: string | null
+          browser: string | null
+          company_id: string
+          converted: boolean
+          country: string | null
+          created_at: string | null
+          device_type: string | null
+          duration_seconds: number
+          entry_path: string | null
+          events_count: number
+          exit_path: string | null
+          id: string
+          is_bounce: boolean
+          is_new_visitor: boolean
+          last_seen_at: string
+          order_count: number
+          os: string | null
+          page_views: number
+          referrer: string | null
+          revenue: number
+          session_id: string
+          started_at: string
+          updated_at: string | null
+          user_id: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          anonymous_id?: string | null
+          browser?: string | null
+          company_id: string
+          converted?: boolean
+          country?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          duration_seconds?: number
+          entry_path?: string | null
+          events_count?: number
+          exit_path?: string | null
+          id?: string
+          is_bounce?: boolean
+          is_new_visitor?: boolean
+          last_seen_at: string
+          order_count?: number
+          os?: string | null
+          page_views?: number
+          referrer?: string | null
+          revenue?: number
+          session_id: string
+          started_at: string
+          updated_at?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          anonymous_id?: string | null
+          browser?: string | null
+          company_id?: string
+          converted?: boolean
+          country?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          duration_seconds?: number
+          entry_path?: string | null
+          events_count?: number
+          exit_path?: string | null
+          id?: string
+          is_bounce?: boolean
+          is_new_visitor?: boolean
+          last_seen_at?: string
+          order_count?: number
+          os?: string | null
+          page_views?: number
+          referrer?: string | null
+          revenue?: number
+          session_id?: string
+          started_at?: string
+          updated_at?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storefront_session_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "company"
@@ -4328,6 +4695,10 @@ export type Database = {
       get_pos_session_summary: { Args: { p_session_id: string }; Returns: Json }
       get_public_project_view: { Args: { p_project_id: string }; Returns: Json }
       get_storefront: { Args: { p_slug: string }; Returns: Json }
+      get_storefront_active_visitors: {
+        Args: { p_company_id: string }
+        Returns: number
+      }
       get_storefront_checkout_info: { Args: { p_slug: string }; Returns: Json }
       get_storefront_my_orders: { Args: { p_slug: string }; Returns: Json }
       get_storefront_order: {
@@ -4350,6 +4721,10 @@ export type Database = {
           p_slug: string
           p_sort?: string
         }
+        Returns: Json
+      }
+      ingest_storefront_events: {
+        Args: { p_context?: Json; p_events: Json; p_slug: string }
         Returns: Json
       }
       invite_partner_by_email: {
@@ -4445,6 +4820,7 @@ export type Database = {
         Args: { p_accept: boolean; p_rel_id: string }
         Returns: boolean
       }
+      run_storefront_analytics_jobs: { Args: never; Returns: Json }
       seed_crm_stages: { Args: { p_company_id: string }; Returns: undefined }
       seed_product_uoms: { Args: { p_company_id: string }; Returns: undefined }
       set_picking_status: {
@@ -4467,6 +4843,22 @@ export type Database = {
           p_task_id: string
         }
         Returns: boolean
+      }
+      storefront_analytics_cleanup: {
+        Args: { p_keep_days?: number }
+        Returns: Json
+      }
+      storefront_analytics_forget_visitor: {
+        Args: { p_anonymous_id: string; p_company_id: string }
+        Returns: Json
+      }
+      storefront_analytics_rollup: {
+        Args: { p_days?: number }
+        Returns: number
+      }
+      storefront_analytics_sessionize: {
+        Args: { p_lookback?: string }
+        Returns: number
       }
       storefront_display_price: {
         Args: { p_price: number; p_tax_included: boolean; p_tax_rate: number }

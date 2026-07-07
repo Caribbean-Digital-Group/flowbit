@@ -54,6 +54,17 @@ const handleRemoveCoupon = () => {
   storefrontStore.setCoupon(null)
 }
 
+const tracker = useStorefrontTracker()
+onMounted(() => {
+  if (items.value.length) {
+    tracker.trackEcommerce('view_cart', {
+      value: subtotalFinal.value,
+      currency: currency.value,
+      items: items.value.map((item) => analyticsItemFromCartItem(item))
+    })
+  }
+})
+
 useHead(() => ({
   title: store.value ? `Carrito — ${store.value.name}` : 'Carrito'
 }))

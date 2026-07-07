@@ -33,6 +33,10 @@ const page = ref(1)
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / PAGE_SIZE)))
 
+const tracker = useStorefrontTracker()
+/** Evita re-emitir search al paginar u ordenar los mismos resultados */
+const lastTrackedSearch = ref<string | null>(null)
+
 const sortOptions = [
   { value: 'relevance', label: 'Relevancia' },
   { value: 'newest', label: 'Más recientes' },
@@ -80,6 +84,19 @@ const load = async () => {
     })
     products.value = result?.products ?? []
     total.value = result?.total ?? 0
+
+    const term = search.value.trim()
+    if (term && term.toLowerCase() !== lastTrackedSearch.value) {
+      lastTrackedSearch.value = term.toLowerCase()
+      tracker.trackEvent('search', { term, results: total.value })
+    }
+    if (products.value.length) {
+      tracker.trackEcommerce('view_item_list', {
+        currency: store.value?.currency,
+        items: products.value.map((p) => analyticsItemFromProduct(p)),
+        properties: { list: term ? 'search_results' : 'catalog', page: page.value }
+      })
+    }
   } finally {
     isLoading.value = false
   }

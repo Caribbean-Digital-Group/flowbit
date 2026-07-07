@@ -72,7 +72,20 @@ const estimatedTotal = computed(() =>
   Math.max(subtotalFinal.value - couponDiscountFinal.value, 0) + (selectedShipping.value?.price ?? 0)
 )
 
+const tracker = useStorefrontTracker()
+
 onMounted(async () => {
+  // begin_checkout con el mismo token de idempotencia que usará la orden:
+  // así el evento purchase (server-side) se atribuye a esta sesión
+  if (items.value.length) {
+    tracker.trackEcommerce('begin_checkout', {
+      value: subtotalFinal.value,
+      currency: currency.value,
+      items: items.value.map((item) => analyticsItemFromCartItem(item)),
+      checkoutToken: storefrontStore.ensureCheckoutToken()
+    })
+  }
+
   // Prellenar con el usuario autenticado si existe sesión
   await authStore.loadSession()
   if (authStore.isAuthenticated) {
@@ -116,6 +129,23 @@ const goNext = () => {
     return
   }
   stepError.value = null
+
+  if (currentStep.value === 2) {
+    tracker.trackEcommerce('add_shipping_info', {
+      value: estimatedTotal.value,
+      currency: currency.value,
+      checkoutToken: storefrontStore.ensureCheckoutToken(),
+      properties: { shipping_method: selectedShipping.value?.name ?? null }
+    })
+  } else if (currentStep.value === 3) {
+    tracker.trackEcommerce('add_payment_info', {
+      value: estimatedTotal.value,
+      currency: currency.value,
+      checkoutToken: storefrontStore.ensureCheckoutToken(),
+      properties: { payment_method: selectedPayment.value?.name ?? null }
+    })
+  }
+
   currentStep.value = Math.min(currentStep.value + 1, 4)
 }
 

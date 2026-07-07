@@ -74,6 +74,17 @@ const load = async () => {
     relatedProducts.value = result.relatedProducts
     quantity.value = 1
     activeImageIndex.value = 0
+
+    useStorefrontTracker().trackEcommerce('view_item', {
+      value: result.product.price_final,
+      currency: result.product.currency,
+      items: [analyticsItemFromProduct(result.product)],
+      properties: {
+        product_id: result.product.id,
+        product_name: result.product.name,
+        category: result.product.category_name
+      }
+    })
   } finally {
     isLoading.value = false
   }

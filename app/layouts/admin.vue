@@ -449,6 +449,13 @@ const menuGroups: MenuGroup[] = [
           'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.6a1 1 0 01.9.55L19.6 11H21a1 1 0 011 1v4a1 1 0 01-1 1h-1m-6 0a2 2 0 104 0m-4 0H9m10 0a2 2 0 11-4 0'
         ]
       },
+      {
+        title: 'Analítica',
+        to: '/admin/storefront/analytics',
+        iconPaths: [
+          'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
+        ]
+      },
     ]
   },
   {

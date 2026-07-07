@@ -25,13 +25,27 @@ const handleQuickAdd = () => {
   storefrontStore.addItem(props.product, 1)
   storefrontStore.notify(`«${props.product.name}» agregado al carrito`)
 }
+
+const tracker = useStorefrontTracker()
+
+const handleSelect = () => {
+  tracker.trackEcommerce('select_item', {
+    currency: props.product.currency,
+    items: [analyticsItemFromProduct(props.product)],
+    properties: { product_id: props.product.id, product_name: props.product.name }
+  })
+}
 </script>
 
 <template>
   <article
     class="group relative bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-300/50 hover:border-slate-200"
   >
-    <NuxtLink :to="productPath" class="block focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
+    <NuxtLink
+      :to="productPath"
+      class="block focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+      @click="handleSelect"
+    >
       <div class="aspect-square bg-slate-50 overflow-hidden relative">
         <img
           v-if="product.image_url"

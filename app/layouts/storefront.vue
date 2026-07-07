@@ -29,6 +29,35 @@ watch(
   { immediate: true }
 )
 
+// ── Analítica first-party ────────────────────────────────────────────
+// El layout solo llama a la fachada: page_view en cada cambio de ruta y
+// solo con consentimiento otorgado. El transporte vive en el tracker.
+const tracker = useStorefrontTracker()
+const lastTrackedPath = ref<string | null>(null)
+
+const trackCurrentPage = () => {
+  if (!store.value || tracker.consent.value !== 'granted') return
+  if (lastTrackedPath.value === route.fullPath) return
+  lastTrackedPath.value = route.fullPath
+  // nextTick: esperar a que la página destino actualice el título
+  void nextTick(() => tracker.trackPageView(route.path))
+}
+
+onMounted(async () => {
+  watch(
+    companySlug,
+    (slug) => {
+      if (slug) tracker.configure(slug)
+    },
+    { immediate: true }
+  )
+  watch([() => route.fullPath, store, tracker.consent], trackCurrentPage, { immediate: true })
+
+  // Vincular usuario autenticado (solo el id, sin PII adicional)
+  const user = await useSupabaseUser()
+  tracker.identify(user?.id ?? null)
+})
+
 const basePath = computed(() => storefrontPath(companySlug.value))
 
 const navLinks = computed(() => [
@@ -292,6 +321,13 @@ const handleSearch = () => {
         </span>
       </a>
     </template>
+
+    <!-- Consentimiento de cookies / analítica -->
+    <StorefrontCookieConsent
+      v-if="store"
+      :base-path="basePath"
+      :primary-color="primaryColor"
+    />
 
     <!-- Toast de feedback -->
     <Transition

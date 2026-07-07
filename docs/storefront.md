@@ -126,3 +126,10 @@ eliminar el shim.
 | Admin | `app/pages/admin/storefront/**` + entrada «Tienda en línea» en el sidebar |
 | Componentes | `Storefront/ProductCard.vue`, `StorefrontCoupon/Form.vue`, `StorefrontShippingMethod/Form.vue` |
 | Utils | `app/utils/storefront.ts` (`formatStorefrontCurrency`, `storefrontPath`) |
+
+## Analítica
+
+La tienda incluye analítica first-party (tracker propio, ingesta vía
+`/api/storefront/analytics`, sesiones/rollups en Supabase y panel en
+`/admin/storefront/analytics`), con banner de consentimiento de cookies.
+Documentación completa en `docs/storefront-analytics.md`.
