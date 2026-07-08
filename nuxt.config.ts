@@ -12,7 +12,7 @@ export default defineNuxtConfig({
     public: {
       supabaseUrl: process.env.SUPABASE_URL,
       supabasePublishableKey: process.env.SUPABASE_PUBLISHABLE_KEY,
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://flowbit.app',
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://tryflowbit.netlify.app',
     },
   },
   alias: {

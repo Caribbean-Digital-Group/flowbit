@@ -42,6 +42,23 @@ const columns: Column[] = [
     }
   },
   {
+    key: 'origin',
+    label: 'Origen',
+    type: 'badge',
+    badgeConfig: {
+      labels: {
+        dashboard: 'Panel',
+        pos: 'POS',
+        storefront: 'Tienda en línea'
+      },
+      colors: {
+        dashboard: 'bg-slate-100 text-slate-600',
+        pos: 'bg-fuchsia-100 text-fuchsia-700',
+        storefront: 'bg-violet-100 text-violet-700'
+      }
+    }
+  },
+  {
     key: 'order_state',
     label: 'Estado',
     type: 'badge',
@@ -88,6 +105,8 @@ function mapOrderToTableRow(raw: OrderListRow): Record<string, unknown> {
     name: raw.name ?? '—',
     partner_name: raw.partner_name?.trim() || '—',
     order_type: raw.order_type,
+    // `origin` aún no existe en los types generados; llega desde v_orders
+    origin: (rowAny['origin'] as string | null) ?? 'dashboard',
     order_state: raw.order_state,
     payment_status: paymentStatus,
     amount_total: raw.amount_total ?? 0,
