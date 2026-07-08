@@ -422,6 +422,43 @@ const menuGroups: MenuGroup[] = [
     ]
   },
   {
+    id: 'storefront',
+    title: 'Tienda en línea',
+    accentColor: 'violet',
+    items: [
+      {
+        title: 'Ajustes de tienda',
+        to: '/admin/storefront',
+        exact: true,
+        iconPaths: [
+          'M13.7 4.6a2 2 0 00-3.4 0l-.4.7a2 2 0 01-1.8 1l-.8-.1a2 2 0 00-2.2 2.2l.1.8a2 2 0 01-1 1.8l-.7.4a2 2 0 000 3.4l.7.4a2 2 0 011 1.8l-.1.8a2 2 0 002.2 2.2l.8-.1a2 2 0 011.8 1l.4.7a2 2 0 003.4 0l.4-.7a2 2 0 011.8-1l.8.1a2 2 0 002.2-2.2l-.1-.8a2 2 0 011-1.8l.7-.4a2 2 0 000-3.4l-.7-.4a2 2 0 01-1-1.8l.1-.8a2 2 0 00-2.2-2.2l-.8.1a2 2 0 01-1.8-1l-.4-.7z',
+          'M15 12a3 3 0 11-6 0 3 3 0 016 0z'
+        ]
+      },
+      {
+        title: 'Cupones',
+        to: '/admin/storefront/coupons',
+        iconPaths: [
+          'M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z'
+        ]
+      },
+      {
+        title: 'Métodos de envío',
+        to: '/admin/storefront/shipping-methods',
+        iconPaths: [
+          'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.6a1 1 0 01.9.55L19.6 11H21a1 1 0 011 1v4a1 1 0 01-1 1h-1m-6 0a2 2 0 104 0m-4 0H9m10 0a2 2 0 11-4 0'
+        ]
+      },
+      {
+        title: 'Analítica',
+        to: '/admin/storefront/analytics',
+        iconPaths: [
+          'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
+        ]
+      },
+    ]
+  },
+  {
     id: 'pos',
     title: 'Punto de Venta',
     accentColor: 'fuchsia',

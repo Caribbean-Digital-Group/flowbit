@@ -66,6 +66,25 @@ const formData = ref<OrderFormData>(createEmptyOrderForm())
 const orderLines = ref<OrderLine[]>([])
 const initialLineIds = ref<Set<string>>(new Set())
 
+// Datos del cliente cuando la orden viene de la tienda en línea
+// (las columnas origin/customer_* aún no existen en los types generados)
+interface StorefrontOrderInfo {
+  customerName: string | null
+  customerEmail: string | null
+  customerPhone: string | null
+  shippingMethodName: string | null
+  couponCode: string | null
+  couponDiscount: number
+}
+const orderOrigin = ref<string>('dashboard')
+const storefrontInfo = ref<StorefrontOrderInfo | null>(null)
+
+const originLabels: Record<string, string> = {
+  dashboard: 'Panel',
+  pos: 'POS',
+  storefront: 'Tienda en línea'
+}
+
 const orderTypeLabels: Record<string, string> = {
   sale: 'Venta',
   purchase: 'Compra'
@@ -337,6 +356,19 @@ const loadOrder = async () => {
 
     const mappedForm = mapViewToForm(view)
     formData.value = mappedForm
+
+    const viewAny = view as Record<string, unknown>
+    orderOrigin.value = (viewAny['origin'] as string | null) ?? 'dashboard'
+    storefrontInfo.value = orderOrigin.value === 'storefront'
+      ? {
+          customerName: (viewAny['customer_name'] as string | null) ?? null,
+          customerEmail: (viewAny['customer_email'] as string | null) ?? null,
+          customerPhone: (viewAny['customer_phone'] as string | null) ?? null,
+          shippingMethodName: (viewAny['shipping_method_name'] as string | null) ?? null,
+          couponCode: (viewAny['coupon_code'] as string | null) ?? null,
+          couponDiscount: Number(viewAny['coupon_discount'] ?? 0)
+        }
+      : null
 
     auditFooter.createdBy = view.created_by ?? '—'
     auditFooter.createdAt = view.created_at ?? ''
@@ -1221,6 +1253,11 @@ const formatDate = (dateString: string | null): string => {
             :variant="stateVariants[formData.order_state] || 'secondary'"
           />
           <BadgeApp
+            v-if="orderOrigin !== 'dashboard'"
+            :label="originLabels[orderOrigin] || orderOrigin"
+            variant="primary"
+          />
+          <BadgeApp
             v-if="formData.is_paid"
             label="Pagada"
             variant="success"
@@ -1237,6 +1274,33 @@ const formatDate = (dateString: string | null): string => {
           />
         </div>
       </template>
+
+      <!-- Datos del cliente de la tienda en línea -->
+      <div
+        v-if="storefrontInfo"
+        class="mb-6 rounded-2xl border border-violet-100 bg-violet-50/60 px-6 py-4"
+      >
+        <p class="text-xs font-semibold text-violet-700 uppercase tracking-wide mb-2">
+          Compra desde la tienda en línea
+        </p>
+        <div class="flex flex-wrap gap-x-8 gap-y-1.5 text-sm text-slate-700">
+          <span v-if="storefrontInfo.customerName">
+            <span class="text-slate-400">Cliente:</span> {{ storefrontInfo.customerName }}
+          </span>
+          <span v-if="storefrontInfo.customerEmail">
+            <span class="text-slate-400">Email:</span> {{ storefrontInfo.customerEmail }}
+          </span>
+          <span v-if="storefrontInfo.customerPhone">
+            <span class="text-slate-400">Teléfono:</span> {{ storefrontInfo.customerPhone }}
+          </span>
+          <span v-if="storefrontInfo.shippingMethodName">
+            <span class="text-slate-400">Envío:</span> {{ storefrontInfo.shippingMethodName }}
+          </span>
+          <span v-if="storefrontInfo.couponCode">
+            <span class="text-slate-400">Cupón:</span> {{ storefrontInfo.couponCode }}
+          </span>
+        </div>
+      </div>
 
       <OrderForm
         v-model="formData"
