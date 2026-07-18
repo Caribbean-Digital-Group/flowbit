@@ -782,9 +782,11 @@ export type Database = {
           order_state: Database["public"]["Enums"]["order_state"]
           order_type: Database["public"]["Enums"]["order_type"]
           origin: string
+          paid_at: string | null
           partner_id: string
           payment_due_date: string | null
           payment_method_id: string | null
+          payment_provider: string | null
           payment_status: string | null
           payment_term: string | null
           pos_session_id: string | null
@@ -798,6 +800,8 @@ export type Database = {
           shipping_street: string | null
           shipping_street2: string | null
           shipping_zip: string | null
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
           tax_included: boolean | null
           tax_rate: number | null
           terms: string | null
@@ -833,9 +837,11 @@ export type Database = {
           order_state?: Database["public"]["Enums"]["order_state"]
           order_type?: Database["public"]["Enums"]["order_type"]
           origin?: string
+          paid_at?: string | null
           partner_id: string
           payment_due_date?: string | null
           payment_method_id?: string | null
+          payment_provider?: string | null
           payment_status?: string | null
           payment_term?: string | null
           pos_session_id?: string | null
@@ -849,6 +855,8 @@ export type Database = {
           shipping_street?: string | null
           shipping_street2?: string | null
           shipping_zip?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           tax_included?: boolean | null
           tax_rate?: number | null
           terms?: string | null
@@ -884,9 +892,11 @@ export type Database = {
           order_state?: Database["public"]["Enums"]["order_state"]
           order_type?: Database["public"]["Enums"]["order_type"]
           origin?: string
+          paid_at?: string | null
           partner_id?: string
           payment_due_date?: string | null
           payment_method_id?: string | null
+          payment_provider?: string | null
           payment_status?: string | null
           payment_term?: string | null
           pos_session_id?: string | null
@@ -900,6 +910,8 @@ export type Database = {
           shipping_street?: string | null
           shipping_street2?: string | null
           shipping_zip?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           tax_included?: boolean | null
           tax_rate?: number | null
           terms?: string | null
@@ -3124,6 +3136,10 @@ export type Database = {
           policy_shipping: string | null
           policy_terms: string | null
           show_out_of_stock: boolean
+          stripe_enabled: boolean
+          stripe_publishable_key: string | null
+          stripe_secret_key: string | null
+          stripe_webhook_secret: string | null
           updated_at: string | null
           updated_by: string | null
           whatsapp_phone: string | null
@@ -3147,6 +3163,10 @@ export type Database = {
           policy_shipping?: string | null
           policy_terms?: string | null
           show_out_of_stock?: boolean
+          stripe_enabled?: boolean
+          stripe_publishable_key?: string | null
+          stripe_secret_key?: string | null
+          stripe_webhook_secret?: string | null
           updated_at?: string | null
           updated_by?: string | null
           whatsapp_phone?: string | null
@@ -3170,6 +3190,10 @@ export type Database = {
           policy_shipping?: string | null
           policy_terms?: string | null
           show_out_of_stock?: boolean
+          stripe_enabled?: boolean
+          stripe_publishable_key?: string | null
+          stripe_secret_key?: string | null
+          stripe_webhook_secret?: string | null
           updated_at?: string | null
           updated_by?: string | null
           whatsapp_phone?: string | null
@@ -4723,6 +4747,11 @@ export type Database = {
         }
         Returns: Json
       }
+      get_storefront_stripe_config: { Args: { p_slug: string }; Returns: Json }
+      get_storefront_stripe_order: {
+        Args: { p_email: string; p_order_ref: string; p_slug: string }
+        Returns: Json
+      }
       ingest_storefront_events: {
         Args: { p_context?: Json; p_events: Json; p_slug: string }
         Returns: Json
@@ -4755,6 +4784,16 @@ export type Database = {
         Returns: boolean
       }
       is_own_partner: { Args: { p_partner_id: string }; Returns: boolean }
+      mark_storefront_order_paid: {
+        Args: {
+          p_amount: number
+          p_currency: string
+          p_order_id: string
+          p_payment_intent: string
+          p_session_id: string
+        }
+        Returns: Json
+      }
       open_pos_session: {
         Args: {
           p_notes?: string
@@ -4770,7 +4809,8 @@ export type Database = {
           p_customer: Json
           p_items: Json
           p_notes?: string
-          p_payment_method_id: string
+          p_payment_method_id?: string
+          p_payment_provider?: string
           p_shipping_method_id: string
           p_slug: string
         }
@@ -4793,6 +4833,10 @@ export type Database = {
       recompute_project_order_amounts: {
         Args: { p_project_id: string }
         Returns: boolean
+      }
+      record_storefront_stripe_session: {
+        Args: { p_order_id: string; p_session_id: string }
+        Returns: Json
       }
       register_pos_refund: {
         Args: {

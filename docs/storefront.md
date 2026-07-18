@@ -85,12 +85,19 @@ el picking puede haber sobreventa si se vende por otros canales (mismo
 comportamiento que las órdenes de venta del panel).
 
 ### Pagos
-El proyecto no integra una pasarela de pago; el checkout ofrece el catálogo
-`payment_method` de la empresa (transferencia, contra entrega, etc.), registra
-`payment_method_id` en la orden y la deja `unpaid`. El cobro se concilia desde
-el dashboard (acción «pagar» existente). **Nunca se capturan ni almacenan datos
-de tarjeta.** Si en el futuro se integra una pasarela, debe usarse
-hosted-fields/checkout de la pasarela y actualizarse `payment_status` vía webhook.
+El checkout ofrece dos vías:
+
+- **Métodos manuales** — catálogo `payment_method` de la empresa
+  (transferencia, contra entrega, etc.): registra `payment_method_id` en la
+  orden y la deja `unpaid`; el cobro se concilia desde el dashboard (acción
+  «pagar» existente).
+- **Tarjeta vía Stripe** (opcional, por empresa) — Stripe Checkout hosted con
+  confirmación por webhook y verificación al retorno. La orden se crea con
+  `payment_provider='stripe'` y `payment_status` se actualiza en servidor.
+  Documentación completa en `docs/storefront-stripe.md`.
+
+**Nunca se capturan ni almacenan datos de tarjeta** en Flowbit; el cobro con
+tarjeta ocurre en la página hospedada de Stripe.
 
 ### Origen de las órdenes
 Nueva columna `order.origin` (`dashboard` | `pos` | `storefront`), con backfill

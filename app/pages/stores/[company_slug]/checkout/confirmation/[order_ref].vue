@@ -30,6 +30,79 @@ const notFound = ref(false)
 const emailInput = ref('')
 const askEmail = ref(false)
 
+// ── Pago con Stripe ──────────────────────────────────────────────────────
+const isVerifyingPayment = ref(false)
+const isStartingPayment = ref(false)
+const paymentError = ref<string | null>(null)
+
+const paymentCancelled = computed(
+  () => route.query.stripe === 'cancelled' && order.value?.payment_status !== 'paid'
+)
+const canPayWithStripe = computed(
+  () =>
+    !!order.value &&
+    order.value.payment_provider === 'stripe' &&
+    order.value.payment_status !== 'paid'
+)
+
+/**
+ * Al volver de Stripe (?stripe=success) el webhook puede no haber llegado
+ * aún: pedir al backend que verifique la sesión y marque la orden pagada.
+ */
+const verifyStripePayment = async (email: string) => {
+  if (!order.value || order.value.payment_provider !== 'stripe') return
+  if (order.value.payment_status === 'paid') return
+  if (route.query.stripe !== 'success' && !route.query.session_id) return
+
+  isVerifyingPayment.value = true
+  try {
+    const result = await $fetch<{ status: string; payment_status?: string }>(
+      '/api/storefront/stripe/status',
+      {
+        method: 'POST',
+        body: { slug: companySlug.value, order_ref: orderRef.value, email }
+      }
+    ).catch(() => null)
+
+    if (result?.status === 'ok' && result.payment_status && order.value) {
+      order.value = { ...order.value, payment_status: result.payment_status }
+    }
+  } finally {
+    isVerifyingPayment.value = false
+  }
+}
+
+/** Inicia (o reintenta) el pago con tarjeta redirigiendo a Stripe Checkout. */
+const payWithStripe = async () => {
+  if (isStartingPayment.value) return
+  const email = emailInput.value.trim() || lastOrder.value?.email || ''
+  if (!email) return
+
+  paymentError.value = null
+  isStartingPayment.value = true
+  try {
+    const session = await $fetch<{ status: string; url?: string }>(
+      '/api/storefront/stripe/session',
+      {
+        method: 'POST',
+        body: { slug: companySlug.value, order_ref: orderRef.value, email }
+      }
+    ).catch(() => null)
+
+    if (session?.status === 'ok' && session.url) {
+      window.location.href = session.url
+      return
+    }
+    if (session?.status === 'already_paid') {
+      await load(email)
+      return
+    }
+    paymentError.value = 'No se pudo iniciar el pago con tarjeta. Intenta de nuevo en unos minutos.'
+  } finally {
+    isStartingPayment.value = false
+  }
+}
+
 const load = async (email: string) => {
   isLoading.value = true
   notFound.value = false
@@ -43,6 +116,7 @@ const load = async (email: string) => {
     order.value = result.order
     lines.value = result.lines
     askEmail.value = false
+    await verifyStripePayment(email)
   } finally {
     isLoading.value = false
   }
@@ -153,6 +227,29 @@ useHead(() => ({
         </p>
       </div>
 
+      <!-- Avisos del pago con tarjeta (Stripe) -->
+      <div
+        v-if="isVerifyingPayment"
+        class="mb-6 rounded-2xl border border-indigo-100 bg-indigo-50 px-6 py-4 text-sm text-indigo-700"
+        role="status"
+      >
+        Confirmando tu pago con la pasarela…
+      </div>
+      <div
+        v-else-if="paymentCancelled && canPayWithStripe"
+        class="mb-6 rounded-2xl border border-amber-100 bg-amber-50 px-6 py-4 text-sm text-amber-700"
+        role="alert"
+      >
+        El pago con tarjeta no se completó. Tu pedido quedó registrado; puedes intentar pagarlo de nuevo abajo.
+      </div>
+      <div
+        v-if="paymentError"
+        class="mb-6 rounded-2xl border border-red-100 bg-red-50 px-6 py-4 text-sm text-red-700"
+        role="alert"
+      >
+        {{ paymentError }}
+      </div>
+
       <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 overflow-hidden">
         <!-- Estado -->
         <div class="px-6 sm:px-8 py-5 border-b border-slate-100 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
@@ -237,9 +334,31 @@ useHead(() => ({
       <!-- Siguientes pasos -->
       <div class="mt-8 text-center">
         <p class="text-sm text-slate-500 max-w-lg mx-auto">
-          El vendedor preparará tu pedido y te contactará para coordinar el pago y la entrega.
+          <template v-if="order.payment_status === 'paid'">
+            Tu pago fue confirmado. El vendedor preparará tu pedido y te contactará para coordinar la entrega.
+          </template>
+          <template v-else-if="canPayWithStripe">
+            Tu pedido está reservado en espera del pago con tarjeta.
+          </template>
+          <template v-else>
+            El vendedor preparará tu pedido y te contactará para coordinar el pago y la entrega.
+          </template>
           Guarda tu número de pedido <span class="font-semibold text-slate-700">{{ order.order_ref }}</span> para cualquier aclaración.
         </p>
+
+        <button
+          v-if="canPayWithStripe"
+          type="button"
+          class="mt-6 inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-sm font-semibold text-white shadow-lg transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:opacity-50 disabled:cursor-wait"
+          :style="{ backgroundColor: primaryColor }"
+          :disabled="isStartingPayment || isVerifyingPayment"
+          @click="payWithStripe"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h2m4 0h4M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" />
+          </svg>
+          {{ isStartingPayment ? 'Redirigiendo a Stripe…' : 'Pagar ahora con tarjeta' }}
+        </button>
         <a
           v-if="whatsappOrderLink"
           :href="whatsappOrderLink"
