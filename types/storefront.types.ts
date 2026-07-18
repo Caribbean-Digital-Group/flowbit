@@ -29,6 +29,10 @@ export type StorefrontSettingsRow = {
   policy_privacy: string | null
   policy_terms: string | null
   show_out_of_stock: boolean
+  stripe_enabled: boolean
+  stripe_publishable_key: string | null
+  stripe_secret_key: string | null
+  stripe_webhook_secret: string | null
   active: boolean | null
   created_at: string | null
   updated_at: string | null

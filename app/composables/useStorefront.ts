@@ -89,6 +89,11 @@ export interface StorefrontPaymentOption {
   description: string | null
 }
 
+export interface StorefrontStripeInfo {
+  enabled: boolean
+  publishable_key: string | null
+}
+
 export interface StorefrontCouponValidation {
   status: 'valid' | 'invalid'
   reason?: string
@@ -124,6 +129,8 @@ export interface StorefrontOrderResult {
   currency?: string
   available?: number
   product_id?: string
+  payment_provider?: string | null
+  payment_status?: string
 }
 
 export interface StorefrontOrderLine {
@@ -142,6 +149,7 @@ export interface StorefrontOrderSummary {
   order_date: string
   order_state: string
   payment_status: string
+  payment_provider: string | null
   is_delivered: boolean
   customer_name: string | null
   customer_email: string | null
@@ -263,17 +271,20 @@ export const useStorefront = () => {
   const getCheckoutInfo = async (slug: string): Promise<{
     shippingMethods: StorefrontShippingOption[]
     paymentMethods: StorefrontPaymentOption[]
+    stripe: StorefrontStripeInfo
   } | null> => {
     if (!slug) return null
     const data = await callRpc<{
       status: string
       shipping_methods: StorefrontShippingOption[]
       payment_methods: StorefrontPaymentOption[]
+      stripe?: StorefrontStripeInfo
     }>('get_storefront_checkout_info', { p_slug: slug })
     if (!data || data.status !== 'ok') return null
     return {
       shippingMethods: data.shipping_methods ?? [],
-      paymentMethods: data.payment_methods ?? []
+      paymentMethods: data.payment_methods ?? [],
+      stripe: data.stripe ?? { enabled: false, publishable_key: null }
     }
   }
 
@@ -300,7 +311,8 @@ export const useStorefront = () => {
     customer: StorefrontCheckoutCustomer
     items: { product_id: string; quantity: number }[]
     shippingMethodId: string
-    paymentMethodId: string
+    paymentMethodId: string | null
+    paymentProvider?: 'stripe' | null
     couponCode?: string | null
     notes?: string | null
   }): Promise<StorefrontOrderResult> => {
@@ -312,7 +324,8 @@ export const useStorefront = () => {
       p_shipping_method_id: params.shippingMethodId,
       p_payment_method_id: params.paymentMethodId,
       p_coupon_code: params.couponCode ?? null,
-      p_notes: params.notes ?? null
+      p_notes: params.notes ?? null,
+      p_payment_provider: params.paymentProvider ?? null
     })
     if (!data) {
       return {

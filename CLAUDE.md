@@ -112,6 +112,7 @@ flowbit/
 
 > Documentación completa del módulo en `docs/storefront.md`.
 > Analítica first-party (tracker propio + ingesta `/api/storefront/analytics` + rollups): `docs/storefront-analytics.md`.
+> Pagos con tarjeta por empresa (Stripe Checkout hosted + webhook + endpoints `/api/storefront/stripe/*`): `docs/storefront-stripe.md`.
 > Los eventos del storefront se emiten únicamente vía la fachada `useStorefrontTracker`.
 
 ### Inventario
@@ -482,6 +483,7 @@ Variables de entorno requeridas (`.env.local`):
 ```
 SUPABASE_URL=
 SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SECRET_KEY=      # service_role — solo servidor; requerida para pagos Stripe del storefront
 NUXT_PUBLIC_SITE_URL=
 ```
 
