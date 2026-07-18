@@ -9,6 +9,8 @@ export default defineNuxtConfig({
   },
   modules: ['@pinia/nuxt'],
   runtimeConfig: {
+    // Solo servidor: clave service_role para los RPCs de Stripe (nunca llega al cliente)
+    supabaseSecretKey: process.env.SUPABASE_SECRET_KEY,
     public: {
       supabaseUrl: process.env.SUPABASE_URL,
       supabasePublishableKey: process.env.SUPABASE_PUBLISHABLE_KEY,

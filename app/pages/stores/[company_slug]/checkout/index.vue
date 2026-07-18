@@ -2,7 +2,8 @@
 import { storeToRefs } from 'pinia'
 import type {
   StorefrontShippingOption,
-  StorefrontPaymentOption
+  StorefrontPaymentOption,
+  StorefrontStripeInfo
 } from '~/composables/useStorefront'
 
 definePageMeta({ layout: 'storefront' })
@@ -55,17 +56,36 @@ const notes = ref('')
 
 const shippingMethods = ref<StorefrontShippingOption[]>([])
 const paymentMethods = ref<StorefrontPaymentOption[]>([])
+const stripeInfo = ref<StorefrontStripeInfo | null>(null)
 const selectedShippingId = ref<string | null>(null)
 const selectedPaymentId = ref<string | null>(null)
 const isLoadingInfo = ref(true)
 const isPlacing = ref(false)
 const orderError = ref<string | null>(null)
 
+/** Id sintético de la opción de pago con tarjeta vía Stripe. */
+const STRIPE_PAYMENT_ID = 'stripe'
+
+/** Opciones de pago: pasarela Stripe (si la tienda la habilitó) + catálogo. */
+const paymentOptions = computed<StorefrontPaymentOption[]>(() => {
+  const options: StorefrontPaymentOption[] = []
+  if (stripeInfo.value?.enabled) {
+    options.push({
+      id: STRIPE_PAYMENT_ID,
+      name: 'Tarjeta de crédito o débito',
+      description: 'Pago seguro en línea procesado por Stripe. Te redirigiremos para completar el pago.'
+    })
+  }
+  return [...options, ...paymentMethods.value]
+})
+
+const isPayingWithStripe = computed(() => selectedPaymentId.value === STRIPE_PAYMENT_ID)
+
 const selectedShipping = computed(
   () => shippingMethods.value.find((method) => method.id === selectedShippingId.value) ?? null
 )
 const selectedPayment = computed(
-  () => paymentMethods.value.find((method) => method.id === selectedPaymentId.value) ?? null
+  () => paymentOptions.value.find((method) => method.id === selectedPaymentId.value) ?? null
 )
 
 const estimatedTotal = computed(() =>
@@ -96,8 +116,9 @@ onMounted(async () => {
   const info = await getCheckoutInfo(companySlug.value)
   shippingMethods.value = info?.shippingMethods ?? []
   paymentMethods.value = info?.paymentMethods ?? []
+  stripeInfo.value = info?.stripe ?? null
   if (shippingMethods.value.length === 1) selectedShippingId.value = shippingMethods.value[0]?.id ?? null
-  if (paymentMethods.value.length === 1) selectedPaymentId.value = paymentMethods.value[0]?.id ?? null
+  if (paymentOptions.value.length === 1) selectedPaymentId.value = paymentOptions.value[0]?.id ?? null
   isLoadingInfo.value = false
 })
 
@@ -189,7 +210,8 @@ const handlePlaceOrder = async () => {
         quantity: item.quantity
       })),
       shippingMethodId: selectedShippingId.value,
-      paymentMethodId: selectedPaymentId.value,
+      paymentMethodId: isPayingWithStripe.value ? null : selectedPaymentId.value,
+      paymentProvider: isPayingWithStripe.value ? 'stripe' : null,
       couponCode: coupon.value?.status === 'valid' ? coupon.value.code : null,
       notes: notes.value.trim() || null
     })
@@ -198,6 +220,24 @@ const handlePlaceOrder = async () => {
       const email = customer.value.email.trim()
       storefrontStore.setLastOrder(result.order_ref, email)
       storefrontStore.clearCart()
+
+      // Con Stripe: crear la sesión de pago y redirigir al checkout hospedado.
+      // Si algo falla, la confirmación ofrece reintentar el pago.
+      if (isPayingWithStripe.value && result.payment_status !== 'paid') {
+        const session = await $fetch<{ status: string; url?: string }>(
+          '/api/storefront/stripe/session',
+          {
+            method: 'POST',
+            body: { slug: companySlug.value, order_ref: result.order_ref, email }
+          }
+        ).catch(() => null)
+
+        if (session?.status === 'ok' && session.url) {
+          window.location.href = session.url
+          return
+        }
+      }
+
       await router.push(`${basePath.value}/checkout/confirmation/${encodeURIComponent(result.order_ref)}`)
       return
     }
@@ -381,12 +421,12 @@ useHead(() => ({
               </p>
 
               <div v-if="isLoadingInfo" class="text-sm text-slate-400">Cargando métodos de pago…</div>
-              <p v-else-if="!paymentMethods.length" class="text-sm text-amber-600">
+              <p v-else-if="!paymentOptions.length" class="text-sm text-amber-600">
                 Esta tienda aún no tiene métodos de pago configurados. Contacta al vendedor.
               </p>
               <div v-else class="space-y-2">
                 <label
-                  v-for="method in paymentMethods"
+                  v-for="method in paymentOptions"
                   :key="method.id"
                   class="flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors"
                   :class="selectedPaymentId === method.id ? 'border-slate-800 bg-slate-50' : 'border-slate-200 hover:border-slate-300'"
@@ -399,7 +439,19 @@ useHead(() => ({
                     class="mt-1 w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500"
                   />
                   <span class="flex-1 min-w-0">
-                    <span class="text-sm font-semibold text-slate-800">{{ method.name }}</span>
+                    <span class="flex items-center gap-2">
+                      <span class="text-sm font-semibold text-slate-800">{{ method.name }}</span>
+                      <svg
+                        v-if="method.id === STRIPE_PAYMENT_ID"
+                        class="w-4 h-4 text-indigo-500 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h2m4 0h4M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" />
+                      </svg>
+                    </span>
                     <span v-if="method.description" class="block text-xs text-slate-500 mt-0.5">
                       {{ method.description }}
                     </span>
@@ -526,7 +578,7 @@ useHead(() => ({
                 :disabled="isPlacing"
                 @click="handlePlaceOrder"
               >
-                {{ isPlacing ? 'Procesando…' : 'Confirmar compra' }}
+                {{ isPlacing ? 'Procesando…' : isPayingWithStripe ? 'Pagar con tarjeta' : 'Confirmar compra' }}
               </button>
             </div>
           </div>

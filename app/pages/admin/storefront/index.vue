@@ -29,7 +29,11 @@ const settings = ref({
   policy_returns: '',
   policy_privacy: '',
   policy_terms: '',
-  show_out_of_stock: true
+  show_out_of_stock: true,
+  stripe_enabled: false,
+  stripe_publishable_key: '',
+  stripe_secret_key: '',
+  stripe_webhook_secret: ''
 })
 
 // Branding e identidad pública (tabla company)
@@ -47,6 +51,12 @@ const storeUrl = computed(() => {
 })
 
 const whatsappPreviewLink = computed(() => buildWhatsappLink(settings.value.whatsapp_phone))
+
+/** URL del webhook de Stripe que el vendedor debe registrar en su dashboard. */
+const stripeWebhookUrl = computed(() => {
+  const base = (config.public.siteUrl as string).replace(/\/$/, '')
+  return `${base}/api/storefront/stripe/webhook`
+})
 
 const load = async () => {
   const cid = selectedCompanyId.value
@@ -70,7 +80,11 @@ const load = async () => {
       policy_returns: row?.policy_returns ?? '',
       policy_privacy: row?.policy_privacy ?? '',
       policy_terms: row?.policy_terms ?? '',
-      show_out_of_stock: row?.show_out_of_stock ?? true
+      show_out_of_stock: row?.show_out_of_stock ?? true,
+      stripe_enabled: row?.stripe_enabled ?? false,
+      stripe_publishable_key: row?.stripe_publishable_key ?? '',
+      stripe_secret_key: row?.stripe_secret_key ?? '',
+      stripe_webhook_secret: row?.stripe_webhook_secret ?? ''
     }
 
     branding.value = {
@@ -100,6 +114,24 @@ const handleSave = async () => {
     return
   }
 
+  const stripePk = settings.value.stripe_publishable_key.trim()
+  const stripeSk = settings.value.stripe_secret_key.trim()
+  const stripeWh = settings.value.stripe_webhook_secret.trim()
+  if (settings.value.stripe_enabled) {
+    if (!stripePk.startsWith('pk_')) {
+      errorMessage.value = 'La publishable key de Stripe debe comenzar con «pk_».'
+      return
+    }
+    if (!stripeSk.startsWith('sk_') && !stripeSk.startsWith('rk_')) {
+      errorMessage.value = 'La secret key de Stripe debe comenzar con «sk_» (o «rk_» para claves restringidas).'
+      return
+    }
+  }
+  if (stripeWh && !stripeWh.startsWith('whsec_')) {
+    errorMessage.value = 'El signing secret del webhook de Stripe debe comenzar con «whsec_».'
+    return
+  }
+
   errorMessage.value = null
   successMessage.value = null
   isSaving.value = true
@@ -125,7 +157,11 @@ const handleSave = async () => {
       policy_returns: settings.value.policy_returns.trim() || null,
       policy_privacy: settings.value.policy_privacy.trim() || null,
       policy_terms: settings.value.policy_terms.trim() || null,
-      show_out_of_stock: settings.value.show_out_of_stock
+      show_out_of_stock: settings.value.show_out_of_stock,
+      stripe_enabled: settings.value.stripe_enabled,
+      stripe_publishable_key: stripePk || null,
+      stripe_secret_key: stripeSk || null,
+      stripe_webhook_secret: stripeWh || null
     })
 
     if (!companyResult || !settingsResult) {
@@ -147,6 +183,15 @@ const copyStoreUrl = async () => {
     successMessage.value = 'Enlace copiado al portapapeles.'
   } catch {
     errorMessage.value = 'No se pudo copiar el enlace.'
+  }
+}
+
+const copyWebhookUrl = async () => {
+  try {
+    await navigator.clipboard.writeText(stripeWebhookUrl.value)
+    successMessage.value = 'URL del webhook copiada al portapapeles.'
+  } catch {
+    errorMessage.value = 'No se pudo copiar la URL del webhook.'
   }
 }
 </script>
@@ -344,6 +389,75 @@ const copyStoreUrl = async () => {
         </div>
       </section>
 
+      <!-- Pasarela de pago (Stripe) -->
+      <section class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-base font-bold text-slate-800">Pasarela de pago — Stripe</h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Permite que tus clientes paguen con tarjeta directamente en el checkout de la tienda.
+              El cobro lo procesa Stripe; nunca capturamos ni almacenamos datos de tarjetas.
+            </p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+            <input v-model="settings.stripe_enabled" type="checkbox" class="sr-only peer" />
+            <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-indigo-600 peer-focus-visible:ring-2 peer-focus-visible:ring-indigo-400 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-transform peer-checked:after:translate-x-5" />
+            <span class="ml-3 text-sm font-medium text-slate-700">
+              {{ settings.stripe_enabled ? 'Habilitado' : 'Deshabilitado' }}
+            </span>
+          </label>
+        </div>
+
+        <div class="mt-6 grid grid-cols-1 gap-4">
+          <FormInput
+            v-model="settings.stripe_publishable_key"
+            label="Publishable key"
+            placeholder="pk_live_..."
+            hint="La encuentras en Stripe → Developers → API keys. Es pública y se usa para identificar tu cuenta."
+            size="md"
+          />
+          <FormInput
+            v-model="settings.stripe_secret_key"
+            label="Secret key"
+            type="password"
+            placeholder="sk_live_..."
+            hint="Clave privada de tu cuenta de Stripe. Solo la usa el servidor para crear los cobros; jamás se muestra en la tienda."
+            size="md"
+          />
+          <FormInput
+            v-model="settings.stripe_webhook_secret"
+            label="Webhook signing secret (recomendado)"
+            type="password"
+            placeholder="whsec_..."
+            hint="Permite confirmar pagos automáticamente aunque el cliente cierre la ventana. Créalo en Stripe → Developers → Webhooks."
+            size="md"
+          />
+
+          <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+            <p class="text-sm font-medium text-slate-700 mb-1.5">URL del webhook</p>
+            <div class="flex items-center gap-2">
+              <code class="flex-1 min-w-0 truncate text-xs text-slate-600 bg-white border border-slate-200 rounded-lg px-3 py-2">{{ stripeWebhookUrl }}</code>
+              <button
+                type="button"
+                class="p-2 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-white transition-colors flex-shrink-0"
+                aria-label="Copiar URL del webhook"
+                @click="copyWebhookUrl"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </button>
+            </div>
+            <p class="text-xs text-slate-500 mt-2">
+              En el dashboard de Stripe crea un endpoint de webhook con esta URL y suscríbelo a los eventos
+              <code class="text-[0.7rem] bg-white border border-slate-200 rounded px-1">checkout.session.completed</code> y
+              <code class="text-[0.7rem] bg-white border border-slate-200 rounded px-1">checkout.session.async_payment_succeeded</code>.
+              Luego pega aquí el signing secret. Sin webhook, el pago se confirma cuando el cliente regresa a la tienda.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <!-- Políticas -->
       <section class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6">
         <h2 class="text-base font-bold text-slate-800 mb-1">Políticas</h2>
@@ -363,7 +477,7 @@ const copyStoreUrl = async () => {
         <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
           <li>Publica productos desde <NuxtLink to="/admin/products" class="text-indigo-600 font-medium hover:underline">Productos</NuxtLink> (opción «Publicado en tienda»).</li>
           <li>Configura al menos un <NuxtLink to="/admin/storefront/shipping-methods" class="text-indigo-600 font-medium hover:underline">método de envío</NuxtLink>.</li>
-          <li>Configura al menos un <NuxtLink to="/admin/payment-methods" class="text-indigo-600 font-medium hover:underline">método de pago</NuxtLink>.</li>
+          <li>Configura al menos un <NuxtLink to="/admin/payment-methods" class="text-indigo-600 font-medium hover:underline">método de pago</NuxtLink> o habilita el pago con tarjeta vía Stripe.</li>
           <li>Opcional: crea <NuxtLink to="/admin/storefront/coupons" class="text-indigo-600 font-medium hover:underline">cupones de descuento</NuxtLink>.</li>
           <li>Las ventas llegan a <NuxtLink to="/admin/orders" class="text-indigo-600 font-medium hover:underline">Órdenes</NuxtLink> con origen «Tienda en línea».</li>
         </ul>
