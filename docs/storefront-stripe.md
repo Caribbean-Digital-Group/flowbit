@@ -51,7 +51,11 @@ la tienda sigue operando con los métodos de pago manuales.
      (service_role); el **monto sale siempre de la orden en BD**, nunca del
      cliente. El email debe coincidir con el de la compra (anti-enumeración).
    - Reutiliza la Checkout Session previa si sigue `open` (evita sesiones
-     huérfanas en reintentos) y crea una nueva si no existe.
+     huérfanas en reintentos) y crea una nueva si no existe. Las URLs de
+     retorno (`success_url`/`cancel_url`) se construyen con el dominio de la
+     petición (headers de proxy incluidos), no con `NUXT_PUBLIC_SITE_URL`;
+     si la sesión abierta apunta a otro dominio (ej. creada en localhost
+     contra la misma BD), se expira y se genera una nueva.
    - Guarda `order.stripe_session_id` (`record_storefront_stripe_session`) y
      devuelve la URL de pago; el navegador redirige a Stripe.
 4. Confirmación del cobro (dos caminos, ambos idempotentes):
