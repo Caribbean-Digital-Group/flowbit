@@ -76,7 +76,17 @@ export default defineEventHandler(async (event) => {
 
   const stripe = new Stripe(storeConfig.secret_key)
   const runtime = useRuntimeConfig(event)
-  const siteUrl = (runtime.public.siteUrl as string).replace(/\/$/, '')
+
+  // URLs de retorno sobre el dominio desde el que navega el cliente (con
+  // headers de proxy en producción); siteUrl solo como respaldo. Evita que
+  // un pago iniciado en producción regrese a localhost o viceversa.
+  const requestUrl = getRequestURL(event, { xForwardedHost: true, xForwardedProto: true })
+  const requestBase = `${requestUrl.protocol}//${requestUrl.host}`
+  const siteUrl = (
+    /^https?:$/.test(requestUrl.protocol) && requestUrl.host
+      ? requestBase
+      : (runtime.public.siteUrl as string)
+  ).replace(/\/$/, '')
   const confirmationUrl =
     `${siteUrl}/stores/${slug}/checkout/confirmation/${encodeURIComponent(order.order_ref)}`
 
@@ -99,7 +109,13 @@ export default defineEventHandler(async (event) => {
         return { status: 'already_paid' }
       }
       if (existing?.status === 'open' && existing.url) {
-        return { status: 'ok', url: existing.url }
+        // Reutilizar solo si sus URLs de retorno apuntan a este dominio; una
+        // sesión creada desde otro entorno (ej. localhost en dev, misma BD)
+        // regresaría al dominio equivocado: expirarla y crear una nueva
+        if (existing.success_url?.startsWith(confirmationUrl)) {
+          return { status: 'ok', url: existing.url }
+        }
+        await stripe.checkout.sessions.expire(existing.id).catch(() => null)
       }
     }
 
