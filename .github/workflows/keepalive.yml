@@ -1,0 +1,64 @@
+# Cron de respaldo para mantener despierta la base de datos.
+#
+# El despliegue en Netlify ya tiene su propia función programada
+# (netlify/functions/keepalive.mts). Este workflow cubre dos casos:
+#   - despliegues fuera de Netlify (Vercel, VPS, Docker…), donde no hay cron;
+#   - una caída del cron de Netlify: dos relojes independientes fallan menos.
+#
+# Configuración en el repositorio:
+#   Settings → Secrets and variables → Actions
+#     Variable  FLOWBIT_SITE_URL   → https://tu-dominio            (requerida)
+#     Secret    HEALTH_PING_TOKEN  → el mismo valor del despliegue (si se usa)
+#
+# Ojo: GitHub desactiva los workflows programados tras 60 días sin actividad
+# en el repositorio; en ese caso se reactivan con un clic desde la pestaña
+# Actions. Por eso el cron de Netlify sigue siendo el principal.
+name: Keepalive
+
+on:
+  schedule:
+    # Dos veces al día (UTC)
+    - cron: '0 3,15 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping keepalive endpoint
+        env:
+          SITE_URL: ${{ vars.FLOWBIT_SITE_URL }}
+          HEALTH_PING_TOKEN: ${{ secrets.HEALTH_PING_TOKEN }}
+        run: |
+          if [ -z "$SITE_URL" ]; then
+            echo "::warning::Falta la variable FLOWBIT_SITE_URL; no hay nada que consultar."
+            exit 0
+          fi
+
+          base="${SITE_URL%/}"
+          echo "Consultando $base/api/health/keepalive"
+
+          status=$(curl --silent --show-error --location \
+            --max-time 30 \
+            --request POST \
+            --header "Authorization: Bearer $HEALTH_PING_TOKEN" \
+            --write-out '%{http_code}' \
+            --output /tmp/keepalive.json \
+            "$base/api/health/keepalive?source=github-actions")
+
+          echo "HTTP $status"
+          cat /tmp/keepalive.json || true
+          echo
+
+          if [ "$status" -ge 400 ]; then
+            echo "::error::El latido falló con HTTP $status"
+            exit 1
+          fi
+
+      - name: Report health
+        if: always()
+        env:
+          SITE_URL: ${{ vars.FLOWBIT_SITE_URL }}
+        run: |
+          [ -z "$SITE_URL" ] && exit 0
+          curl --silent --max-time 30 --location "${SITE_URL%/}/health" || true

@@ -13,6 +13,9 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // Solo servidor: clave service_role para los RPCs de Stripe (nunca llega al cliente)
     supabaseSecretKey: process.env.SUPABASE_SECRET_KEY,
+    // Solo servidor: protege /api/health/keepalive (opcional; si está vacío el
+    // endpoint queda abierto pero estrangulado a un latido por minuto)
+    healthPingToken: process.env.HEALTH_PING_TOKEN || '',
     public: {
       supabaseUrl: process.env.SUPABASE_URL,
       supabasePublishableKey: process.env.SUPABASE_PUBLISHABLE_KEY,

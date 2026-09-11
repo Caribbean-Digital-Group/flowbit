@@ -1,0 +1,10 @@
+# Configuración mínima de Netlify.
+#
+# A propósito NO se declara [build]: el sitio ya se construye con la detección
+# automática de Nuxt (preset `netlify` de Nitro, que publica `dist/` y su
+# función de servidor en `.netlify/functions-internal/`). Aquí solo se declara
+# el directorio de funciones propias para que Netlify recoja el cron
+# anti-suspensión de `netlify/functions/keepalive.mts`; su horario se declara
+# dentro del propio archivo (Functions v2).
+[functions]
+  directory = "netlify/functions"
