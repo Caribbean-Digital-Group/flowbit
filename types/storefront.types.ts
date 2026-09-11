@@ -12,6 +12,13 @@ import type { Database } from './database.types'
  * `Tables<'storefront_settings'>`, etc., y este archivo puede eliminarse.
  */
 
+/** Beneficio editable que se muestra en la portada de la tienda. */
+export type StorefrontBenefit = {
+  icon: string
+  title: string
+  text: string
+}
+
 export type StorefrontSettingsRow = {
   id: string
   company_id: string
@@ -29,6 +36,26 @@ export type StorefrontSettingsRow = {
   policy_privacy: string | null
   policy_terms: string | null
   show_out_of_stock: boolean
+
+  // Diseño de la tienda (migración 20260910120000_add_theme_to_storefront)
+  theme: string
+  palette: string
+  font_pairing: string
+  color_primary: string | null
+  color_secondary: string | null
+  color_accent: string | null
+  radius_style: string | null
+  card_style: string | null
+  hero_layout: string | null
+  show_categories: boolean
+  show_featured: boolean
+  show_benefits: boolean
+  show_story: boolean
+  featured_limit: number
+  hero_cta_label: string | null
+  announcement_link: string | null
+  benefits: StorefrontBenefit[] | null
+
   stripe_enabled: boolean
   stripe_publishable_key: string | null
   stripe_secret_key: string | null

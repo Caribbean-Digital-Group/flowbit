@@ -33,6 +33,28 @@ export interface StorefrontInfo {
   policy_privacy: string | null
   policy_terms: string | null
   show_out_of_stock: boolean
+
+  /**
+   * Configuración de diseño. Es opcional porque una tienda creada antes de la
+   * migración de temas devuelve estos campos vacíos: el motor de temas aplica
+   * los valores por defecto y la tienda sigue funcionando igual.
+   */
+  theme?: string | null
+  palette?: string | null
+  font_pairing?: string | null
+  color_primary?: string | null
+  color_secondary?: string | null
+  color_accent?: string | null
+  radius_style?: string | null
+  card_style?: string | null
+  hero_layout?: string | null
+  show_categories?: boolean | null
+  show_featured?: boolean | null
+  show_benefits?: boolean | null
+  show_story?: boolean | null
+  hero_cta_label?: string | null
+  announcement_link?: string | null
+  benefits?: { icon: string; title: string; text: string }[] | null
 }
 
 export interface StorefrontCategory {

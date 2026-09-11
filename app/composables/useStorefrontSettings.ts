@@ -13,6 +13,9 @@ import type {
 export const useStorefrontSettings = () => {
   const supabase = useSupabase() as unknown as SupabaseClient<StorefrontDatabase>
 
+  /** Último error de escritura, para poder explicarlo en la interfaz. */
+  const lastError = ref<string | null>(null)
+
   const getByCompany = async (companyId: string): Promise<StorefrontSettingsRow | null> => {
     if (!companyId) return null
 
@@ -48,11 +51,16 @@ export const useStorefrontSettings = () => {
 
     if (error) {
       console.error('Error saving storefront settings:', error)
+      // 42703 = columna inexistente: falta aplicar una migración en la base.
+      lastError.value = error.code === '42703'
+        ? 'La base de datos no tiene las columnas de diseño de la tienda. Aplica las migraciones pendientes con «npm run db:push».'
+        : error.message
       return null
     }
 
+    lastError.value = null
     return data
   }
 
-  return { getByCompany, upsertForCompany }
+  return { getByCompany, upsertForCompany, lastError }
 }

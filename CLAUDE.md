@@ -32,6 +32,8 @@ flowbit/
 │   ├── error.vue                      # Error boundary global
 │   ├── assets/css/main.css            # Tailwind entry point
 │   ├── components/
+│   │   ├── Manual/                    # ArticleView, Wizard, Nav, ShareMenu, CopyButton,
+│   │   │                              # GuestCta, FloatingAssistant (Bit)
 │   │   ├── Form/                      # Input.vue, Select.vue, TextArea.vue, Login.vue
 │   │   ├── {Module}/Form.vue          # Formulario de cada módulo
 │   │   ├── Chart/MonthlyBars.vue      # Gráfico de barras mensual
@@ -48,12 +50,14 @@ flowbit/
 │   ├── composables/                   # use{Entity}.ts — acceso a Supabase
 │   ├── layouts/
 │   │   ├── admin.vue                  # Layout del panel (sidebar + header + notificaciones)
+│   │   ├── manual.vue                 # Layout del manual público (se adapta a invitado / con sesión)
 │   │   ├── default.vue
 │   │   └── public.vue
 │   ├── middleware/                    # Guards de navegación (a implementar)
 │   ├── pages/
 │   │   ├── index.vue                  # Landing / login
 │   │   ├── reset-password.vue
+│   │   ├── manual/                    # Manual público: index.vue + [id].vue
 │   │   ├── public/projects/[id].vue   # Vista pública de proyecto compartido
 │   │   └── admin/                     # Panel administrativo
 │   ├── plugins/                       # Plugins de Nuxt (a implementar)
@@ -83,7 +87,6 @@ flowbit/
 | Perfil | `/admin/profile` | — |
 | Configuración | `/admin/settings` | — |
 | Invitaciones | `/admin/invitations` | `useMembership` |
-| Manual | `/admin/manual` | `useManual` |
 
 ### CRM
 
@@ -146,6 +149,23 @@ flowbit/
 | Equipo | `/admin/team` | `useMembership` |
 | Empresa | — | `useCompany` |
 | Proyecto público | `/public/projects/[id]` | `usePublicProject` |
+
+### Ayuda (sección pública)
+
+| Módulo | Ruta | Acceso | Composable(s) |
+|---|---|---|---|
+| Índice del manual | `/manual` | Público | `useManual`, `useManualProgress`, `useManualShare` |
+| Guía individual | `/manual/[id]` | Público | `useManual`, `useManualProgress`, `useManualShare` |
+| Asistente Bit | flotante en los layouts `admin` y `manual` | Público | `useManual` |
+
+> El manual **no vive bajo `/admin`**: es una sección pública que se lee sin sesión.
+> `/admin/manual` y `/help/**` redirigen (301) a `/manual`; no agregues enlaces a esas rutas.
+> Con sesión iniciada se habilitan los accesos «Abrir en el panel» y las acciones de
+> los wizards; sin sesión se ofrece crear cuenta. Nunca se bloquea la lectura.
+>
+> Sistema Manual → Documentación → Bit → Compartir documentado en `docs/manual-bit.md`.
+> El contenido vive en `app/utils/manual/` y es la fuente única de las cuatro superficies:
+> al documentar un módulo nuevo, agrega su artículo ahí y no toques las vistas.
 
 ---
 

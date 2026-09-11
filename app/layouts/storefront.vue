@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
+import '~/assets/css/storefront.css'
 
 const route = useRoute()
 const router = useRouter()
@@ -9,9 +10,15 @@ const {
   isLoading,
   notFound,
   itemCount,
-  primaryColor,
   toastMessage
 } = storeToRefs(storefrontStore)
+
+// Tema de la tienda: variables CSS, tipografía y composición
+const { resolved, themeStyle, isDark, useThemeFonts } = useStorefrontTheme()
+useThemeFonts()
+
+/** La barra de anuncio puede llevar a una promoción concreta. */
+const announcementLink = computed(() => store.value?.announcement_link?.trim() || null)
 
 const companySlug = computed(() => {
   const raw = route.params.company_slug
@@ -85,22 +92,19 @@ const handleSearch = () => {
 </script>
 
 <template>
-  <div
-    class="min-h-screen flex flex-col bg-slate-50 text-slate-800"
-    :style="{ '--sf-primary': primaryColor }"
-  >
+  <div class="sf-root min-h-screen flex flex-col" :style="themeStyle">
     <!-- Tienda no encontrada / desactivada -->
     <div
       v-if="notFound"
       class="flex-1 flex flex-col items-center justify-center px-6 py-24 text-center"
     >
-      <div class="w-16 h-16 rounded-2xl bg-slate-200 flex items-center justify-center mb-6">
-        <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <div class="sf-surface-muted w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
+        <svg class="w-8 h-8 sf-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
         </svg>
       </div>
-      <h1 class="text-2xl font-bold text-slate-900 mb-2">Tienda no disponible</h1>
-      <p class="text-slate-500 max-w-md">
+      <h1 class="sf-heading text-2xl font-bold mb-2">Tienda no disponible</h1>
+      <p class="sf-muted max-w-md">
         La tienda que buscas no existe o está temporalmente desactivada.
       </p>
     </div>
@@ -108,8 +112,8 @@ const handleSearch = () => {
     <!-- Carga inicial -->
     <div v-else-if="isLoading && !store" class="flex-1 flex items-center justify-center py-32">
       <div
-        class="w-10 h-10 rounded-full border-4 border-slate-200 animate-spin"
-        :style="{ borderTopColor: primaryColor }"
+        class="w-10 h-10 rounded-full border-4 animate-spin"
+        :style="{ borderColor: 'var(--sf-border)', borderTopColor: 'var(--sf-primary)' }"
         role="status"
         aria-label="Cargando tienda"
       />
@@ -117,16 +121,26 @@ const handleSearch = () => {
 
     <template v-else-if="store">
       <!-- Barra de anuncio -->
-      <div
+      <component
+        :is="announcementLink ? 'a' : 'div'"
         v-if="store.announcement"
-        class="text-center text-xs sm:text-sm font-medium text-white px-4 py-2"
-        :style="{ backgroundColor: primaryColor }"
+        :href="announcementLink ?? undefined"
+        class="block text-center text-xs sm:text-sm font-medium px-4 py-2"
+        :class="announcementLink ? 'hover:opacity-90 transition-opacity' : ''"
+        :style="{
+          backgroundColor: 'var(--sf-primary-strong)',
+          color: 'var(--sf-primary-contrast)'
+        }"
       >
         {{ store.announcement }}
-      </div>
+        <span v-if="announcementLink" aria-hidden="true">&nbsp;→</span>
+      </component>
 
       <!-- Header -->
-      <header class="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
+      <header
+        class="sf-border backdrop-blur-md sticky top-0 z-40 border-x-0 border-t-0"
+        :style="{ backgroundColor: isDark ? 'rgba(2,6,23,0.82)' : 'rgba(255,255,255,0.88)' }"
+      >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex items-center justify-between gap-4 h-16">
             <NuxtLink :to="basePath" class="flex items-center gap-2.5 min-w-0 group">
@@ -138,12 +152,16 @@ const handleSearch = () => {
               />
               <div
                 v-else
-                class="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-sm"
-                :style="{ backgroundColor: primaryColor }"
+                class="w-9 h-9 flex items-center justify-center font-bold text-sm shadow-sm"
+                :style="{
+                  backgroundColor: 'var(--sf-primary-strong)',
+                  color: 'var(--sf-primary-contrast)',
+                  borderRadius: 'var(--sf-radius-md)'
+                }"
               >
                 {{ store.name.slice(0, 2).toUpperCase() }}
               </div>
-              <span class="text-lg font-semibold text-slate-900 truncate">{{ store.name }}</span>
+              <span class="sf-heading text-lg font-semibold truncate">{{ store.name }}</span>
             </NuxtLink>
 
             <nav class="hidden md:flex items-center gap-6" aria-label="Navegación de la tienda">
@@ -151,7 +169,7 @@ const handleSearch = () => {
                 v-for="link in navLinks"
                 :key="link.to"
                 :to="link.to"
-                class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-md px-1 py-0.5"
+                class="sf-muted text-sm font-medium transition-colors hover:opacity-70 rounded-md px-1 py-0.5"
               >
                 {{ link.label }}
               </NuxtLink>
@@ -161,7 +179,7 @@ const handleSearch = () => {
               <!-- Buscador -->
               <button
                 type="button"
-                class="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                class="sf-icon-btn"
                 :aria-expanded="isSearchOpen"
                 aria-label="Buscar productos"
                 @click="isSearchOpen = !isSearchOpen"
@@ -174,7 +192,7 @@ const handleSearch = () => {
               <!-- Cuenta -->
               <NuxtLink
                 :to="`${basePath}/account`"
-                class="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                class="sf-icon-btn"
                 aria-label="Mi cuenta"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -185,7 +203,7 @@ const handleSearch = () => {
               <!-- Carrito -->
               <NuxtLink
                 :to="`${basePath}/cart`"
-                class="relative p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                class="sf-icon-btn relative"
                 :aria-label="`Carrito de compra, ${itemCount} artículos`"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -193,8 +211,8 @@ const handleSearch = () => {
                 </svg>
                 <span
                   v-if="itemCount > 0"
-                  class="absolute -top-0.5 -right-0.5 min-w-[1.15rem] h-[1.15rem] px-1 rounded-full text-[0.65rem] font-bold text-white flex items-center justify-center"
-                  :style="{ backgroundColor: primaryColor }"
+                  class="absolute -top-0.5 -right-0.5 min-w-[1.15rem] h-[1.15rem] px-1 rounded-full text-[0.65rem] font-bold flex items-center justify-center"
+                  :style="{ backgroundColor: 'var(--sf-accent-strong)', color: 'var(--sf-accent-contrast)' }"
                 >
                   {{ itemCount > 99 ? '99+' : itemCount }}
                 </span>
@@ -214,13 +232,12 @@ const handleSearch = () => {
                 v-model="searchTerm"
                 type="search"
                 placeholder="Buscar productos..."
-                class="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+                class="sf-input flex-1"
                 aria-label="Buscar productos"
               />
               <button
                 type="submit"
-                class="px-4 py-2 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
-                :style="{ backgroundColor: primaryColor }"
+                class="sf-btn sf-btn--primary sf-btn--sm"
               >
                 Buscar
               </button>
@@ -233,7 +250,7 @@ const handleSearch = () => {
               v-for="link in navLinks"
               :key="link.to"
               :to="link.to"
-              class="text-sm font-medium text-slate-600 hover:text-slate-900 whitespace-nowrap transition-colors"
+              class="sf-muted text-sm font-medium whitespace-nowrap transition-opacity hover:opacity-70"
             >
               {{ link.label }}
             </NuxtLink>
@@ -246,45 +263,45 @@ const handleSearch = () => {
       </main>
 
       <!-- Footer -->
-      <footer class="bg-white border-t border-slate-200 mt-16">
+      <footer class="sf-border border-x-0 border-b-0 mt-16" :style="{ backgroundColor: 'var(--sf-surface)' }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
             <div>
-              <p class="text-sm font-semibold text-slate-900 mb-3">{{ store.name }}</p>
-              <p v-if="store.description" class="text-sm text-slate-500 leading-relaxed line-clamp-4">
+              <p class="sf-heading text-sm font-semibold mb-3">{{ store.name }}</p>
+              <p v-if="store.description" class="sf-muted text-sm leading-relaxed line-clamp-4">
                 {{ store.description }}
               </p>
             </div>
             <div>
-              <p class="text-sm font-semibold text-slate-900 mb-3">Información</p>
+              <p class="sf-heading text-sm font-semibold mb-3">Información</p>
               <ul class="space-y-2">
                 <li>
-                  <NuxtLink :to="`${basePath}/about`" class="text-sm text-slate-500 hover:text-slate-800 transition-colors">
+                  <NuxtLink :to="`${basePath}/about`" class="sf-muted text-sm transition-opacity hover:opacity-70">
                     Quiénes somos
                   </NuxtLink>
                 </li>
                 <li>
-                  <NuxtLink :to="`${basePath}/about#politicas`" class="text-sm text-slate-500 hover:text-slate-800 transition-colors">
+                  <NuxtLink :to="`${basePath}/about#politicas`" class="sf-muted text-sm transition-opacity hover:opacity-70">
                     Envíos y devoluciones
                   </NuxtLink>
                 </li>
                 <li>
-                  <NuxtLink :to="`${basePath}/about#politicas`" class="text-sm text-slate-500 hover:text-slate-800 transition-colors">
+                  <NuxtLink :to="`${basePath}/about#politicas`" class="sf-muted text-sm transition-opacity hover:opacity-70">
                     Privacidad y términos
                   </NuxtLink>
                 </li>
               </ul>
             </div>
             <div>
-              <p class="text-sm font-semibold text-slate-900 mb-3">Contacto</p>
-              <ul class="space-y-2 text-sm text-slate-500">
+              <p class="sf-heading text-sm font-semibold mb-3">Contacto</p>
+              <ul class="sf-muted space-y-2 text-sm">
                 <li v-if="store.contact_email">
-                  <a :href="`mailto:${store.contact_email}`" class="hover:text-slate-800 transition-colors">
+                  <a :href="`mailto:${store.contact_email}`" class="transition-opacity hover:opacity-70">
                     {{ store.contact_email }}
                   </a>
                 </li>
                 <li v-if="store.contact_phone">
-                  <a :href="`tel:${store.contact_phone}`" class="hover:text-slate-800 transition-colors">
+                  <a :href="`tel:${store.contact_phone}`" class="transition-opacity hover:opacity-70">
                     {{ store.contact_phone }}
                   </a>
                 </li>
@@ -292,12 +309,12 @@ const handleSearch = () => {
               </ul>
             </div>
           </div>
-          <div class="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <p class="text-xs text-slate-400">
+          <div class="sf-border mt-8 pt-6 border-x-0 border-b-0 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p class="sf-subtle text-xs">
               &copy; {{ new Date().getFullYear() }} {{ store.name }}. Todos los derechos reservados.
             </p>
-            <p class="text-xs text-slate-400">
-              Tienda en línea creada con <span class="font-semibold text-slate-500">Flowbit</span>
+            <p class="sf-subtle text-xs">
+              Tienda en línea creada con <span class="sf-muted font-semibold">Flowbit</span>
             </p>
           </div>
         </div>
@@ -326,7 +343,7 @@ const handleSearch = () => {
     <StorefrontCookieConsent
       v-if="store"
       :base-path="basePath"
-      :primary-color="primaryColor"
+      :primary-color="resolved.primaryStrong"
     />
 
     <!-- Toast de feedback -->

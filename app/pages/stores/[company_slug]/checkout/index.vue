@@ -18,9 +18,7 @@ const {
   coupon,
   subtotalFinal,
   couponDiscountFinal,
-  currency,
-  primaryColor
-} = storeToRefs(storefrontStore)
+  currency} = storeToRefs(storefrontStore)
 const { getCheckoutInfo, placeOrder } = useStorefront()
 
 const companySlug = computed(() => {
@@ -260,20 +258,20 @@ useHead(() => ({
 <template>
   <div v-if="store" class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <!-- Carrito vacío -->
-    <div v-if="!items.length" class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 py-20 text-center">
-      <p class="text-slate-600 font-medium">No hay productos para pagar</p>
-      <p class="text-sm text-slate-400 mt-1">Tu carrito está vacío.</p>
+    <div v-if="!items.length" class="sf-bg-surface rounded-2xl shadow-lg shadow-slate-200/50 py-20 text-center">
+      <p class="sf-muted font-medium">No hay productos para pagar</p>
+      <p class="text-sm sf-subtle mt-1">Tu carrito está vacío.</p>
       <NuxtLink
         :to="`${basePath}/products`"
         class="mt-6 inline-flex px-6 py-3 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
-        :style="{ backgroundColor: primaryColor }"
+        :style="{ backgroundColor: 'var(--sf-primary-strong)', color: 'var(--sf-primary-contrast)' }"
       >
         Ir al catálogo
       </NuxtLink>
     </div>
 
     <template v-else>
-      <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 mb-6">Finalizar compra</h1>
+      <h1 class="text-2xl sm:text-3xl font-bold sf-text-strong mb-6">Finalizar compra</h1>
 
       <!-- Indicador de pasos -->
       <ol class="flex items-center gap-1 sm:gap-2 mb-8" aria-label="Progreso del checkout">
@@ -281,8 +279,8 @@ useHead(() => ({
           <button
             type="button"
             class="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-colors"
-            :class="currentStep === step.id ? 'text-white' : currentStep > step.id ? 'text-slate-700 bg-slate-100 hover:bg-slate-200' : 'text-slate-400 bg-slate-100/60 cursor-default'"
-            :style="currentStep === step.id ? { backgroundColor: primaryColor } : {}"
+            :class="currentStep === step.id ? 'text-white' : currentStep > step.id ? 'sf-text-strong sf-bg-muted sf-hover-muted' : 'sf-subtle sf-bg-muted/60 cursor-default'"
+            :style="currentStep === step.id ? { backgroundColor: 'var(--sf-primary-strong)', color: 'var(--sf-primary-contrast)' } : {}"
             :disabled="currentStep <= step.id"
             :aria-current="currentStep === step.id ? 'step' : undefined"
             @click="currentStep > step.id && (currentStep = step.id)"
@@ -306,11 +304,11 @@ useHead(() => ({
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Formulario -->
         <div class="lg:col-span-2">
-          <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 sm:p-8">
+          <div class="sf-bg-surface rounded-2xl shadow-lg shadow-slate-200/50 p-6 sm:p-8">
             <!-- Paso 1: Contacto -->
             <section v-if="currentStep === 1">
-              <h2 class="text-lg font-bold text-slate-900 mb-1">Datos de contacto</h2>
-              <p class="text-sm text-slate-500 mb-6">
+              <h2 class="text-lg font-bold sf-text-strong mb-1">Datos de contacto</h2>
+              <p class="text-sm sf-muted mb-6">
                 Puedes comprar como invitado; solo necesitamos tu correo para enviarte la confirmación.
               </p>
 
@@ -339,9 +337,9 @@ useHead(() => ({
                 />
               </div>
 
-              <p v-if="!authStore.isAuthenticated" class="mt-5 text-xs text-slate-400">
+              <p v-if="!authStore.isAuthenticated" class="mt-5 text-xs sf-subtle">
                 ¿Ya tienes cuenta?
-                <NuxtLink :to="`${basePath}/account`" class="font-semibold" :style="{ color: primaryColor }">
+                <NuxtLink :to="`${basePath}/account`" class="font-semibold" :style="{ color: 'var(--sf-primary-readable)' }">
                   Inicia sesión
                 </NuxtLink>
                 para ver tu historial de pedidos.
@@ -350,7 +348,7 @@ useHead(() => ({
 
             <!-- Paso 2: Envío -->
             <section v-else-if="currentStep === 2">
-              <h2 class="text-lg font-bold text-slate-900 mb-6">Dirección y método de envío</h2>
+              <h2 class="text-lg font-bold sf-text-strong mb-6">Dirección y método de envío</h2>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="sm:col-span-2">
@@ -375,8 +373,8 @@ useHead(() => ({
                 <FormInput v-model="customer.zip" label="Código postal" required size="md" />
               </div>
 
-              <h3 class="text-sm font-semibold text-slate-900 mt-8 mb-3">Método de envío</h3>
-              <div v-if="isLoadingInfo" class="text-sm text-slate-400">Cargando métodos de envío…</div>
+              <h3 class="text-sm font-semibold sf-text-strong mt-8 mb-3">Método de envío</h3>
+              <div v-if="isLoadingInfo" class="text-sm sf-subtle">Cargando métodos de envío…</div>
               <p v-else-if="!shippingMethods.length" class="text-sm text-amber-600">
                 Esta tienda aún no tiene métodos de envío configurados. Contacta al vendedor.
               </p>
@@ -385,26 +383,26 @@ useHead(() => ({
                   v-for="method in shippingMethods"
                   :key="method.id"
                   class="flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors"
-                  :class="selectedShippingId === method.id ? 'border-slate-800 bg-slate-50' : 'border-slate-200 hover:border-slate-300'"
+                  :class="selectedShippingId === method.id ? 'border-slate-800 sf-bg-muted' : 'sf-border-c sf-hover-border'"
                 >
                   <input
                     v-model="selectedShippingId"
                     type="radio"
                     name="shipping"
                     :value="method.id"
-                    class="mt-1 w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500"
+                    class="mt-1 w-4 h-4 sf-link-color border-slate-300 focus:ring-indigo-500"
                   />
                   <span class="flex-1 min-w-0">
                     <span class="flex items-center justify-between gap-2">
-                      <span class="text-sm font-semibold text-slate-800">{{ method.name }}</span>
-                      <span class="text-sm font-bold text-slate-900">
+                      <span class="text-sm font-semibold sf-text-strong">{{ method.name }}</span>
+                      <span class="text-sm font-bold sf-text-strong">
                         {{ method.price > 0 ? formatStorefrontCurrency(method.price, currency) : 'Gratis' }}
                       </span>
                     </span>
-                    <span v-if="method.delivery_estimate" class="block text-xs text-slate-500 mt-0.5">
+                    <span v-if="method.delivery_estimate" class="block text-xs sf-muted mt-0.5">
                       {{ method.delivery_estimate }}
                     </span>
-                    <span v-if="method.description" class="block text-xs text-slate-400 mt-0.5">
+                    <span v-if="method.description" class="block text-xs sf-subtle mt-0.5">
                       {{ method.description }}
                     </span>
                   </span>
@@ -414,13 +412,13 @@ useHead(() => ({
 
             <!-- Paso 3: Pago -->
             <section v-else-if="currentStep === 3">
-              <h2 class="text-lg font-bold text-slate-900 mb-1">Método de pago</h2>
-              <p class="text-sm text-slate-500 mb-6">
+              <h2 class="text-lg font-bold sf-text-strong mb-1">Método de pago</h2>
+              <p class="text-sm sf-muted mb-6">
                 Selecciona cómo pagarás tu pedido. El vendedor confirmará el pago al procesarlo;
                 nunca capturamos ni almacenamos datos de tarjetas.
               </p>
 
-              <div v-if="isLoadingInfo" class="text-sm text-slate-400">Cargando métodos de pago…</div>
+              <div v-if="isLoadingInfo" class="text-sm sf-subtle">Cargando métodos de pago…</div>
               <p v-else-if="!paymentOptions.length" class="text-sm text-amber-600">
                 Esta tienda aún no tiene métodos de pago configurados. Contacta al vendedor.
               </p>
@@ -429,21 +427,21 @@ useHead(() => ({
                   v-for="method in paymentOptions"
                   :key="method.id"
                   class="flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors"
-                  :class="selectedPaymentId === method.id ? 'border-slate-800 bg-slate-50' : 'border-slate-200 hover:border-slate-300'"
+                  :class="selectedPaymentId === method.id ? 'border-slate-800 sf-bg-muted' : 'sf-border-c sf-hover-border'"
                 >
                   <input
                     v-model="selectedPaymentId"
                     type="radio"
                     name="payment"
                     :value="method.id"
-                    class="mt-1 w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500"
+                    class="mt-1 w-4 h-4 sf-link-color border-slate-300 focus:ring-indigo-500"
                   />
                   <span class="flex-1 min-w-0">
                     <span class="flex items-center gap-2">
-                      <span class="text-sm font-semibold text-slate-800">{{ method.name }}</span>
+                      <span class="text-sm font-semibold sf-text-strong">{{ method.name }}</span>
                       <svg
                         v-if="method.id === STRIPE_PAYMENT_ID"
-                        class="w-4 h-4 text-indigo-500 flex-shrink-0"
+                        class="w-4 h-4 sf-link-color flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -452,7 +450,7 @@ useHead(() => ({
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h2m4 0h4M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" />
                       </svg>
                     </span>
-                    <span v-if="method.description" class="block text-xs text-slate-500 mt-0.5">
+                    <span v-if="method.description" class="block text-xs sf-muted mt-0.5">
                       {{ method.description }}
                     </span>
                   </span>
@@ -472,58 +470,58 @@ useHead(() => ({
 
             <!-- Paso 4: Revisión -->
             <section v-else>
-              <h2 class="text-lg font-bold text-slate-900 mb-6">Revisa tu pedido</h2>
+              <h2 class="text-lg font-bold sf-text-strong mb-6">Revisa tu pedido</h2>
 
               <div class="space-y-5">
-                <div class="rounded-xl border border-slate-100 p-4">
+                <div class="rounded-xl border sf-border-c p-4">
                   <div class="flex items-center justify-between mb-2">
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Contacto</p>
-                    <button type="button" class="text-xs font-semibold" :style="{ color: primaryColor }" @click="currentStep = 1">
+                    <p class="text-xs font-semibold sf-muted uppercase tracking-wide">Contacto</p>
+                    <button type="button" class="text-xs font-semibold" :style="{ color: 'var(--sf-primary-readable)' }" @click="currentStep = 1">
                       Editar
                     </button>
                   </div>
-                  <p class="text-sm text-slate-800">{{ customer.name }}</p>
-                  <p class="text-sm text-slate-500">{{ customer.email }}<template v-if="customer.phone"> · {{ customer.phone }}</template></p>
+                  <p class="text-sm sf-text-strong">{{ customer.name }}</p>
+                  <p class="text-sm sf-muted">{{ customer.email }}<template v-if="customer.phone"> · {{ customer.phone }}</template></p>
                 </div>
 
-                <div class="rounded-xl border border-slate-100 p-4">
+                <div class="rounded-xl border sf-border-c p-4">
                   <div class="flex items-center justify-between mb-2">
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Envío</p>
-                    <button type="button" class="text-xs font-semibold" :style="{ color: primaryColor }" @click="currentStep = 2">
+                    <p class="text-xs font-semibold sf-muted uppercase tracking-wide">Envío</p>
+                    <button type="button" class="text-xs font-semibold" :style="{ color: 'var(--sf-primary-readable)' }" @click="currentStep = 2">
                       Editar
                     </button>
                   </div>
-                  <p class="text-sm text-slate-800">
+                  <p class="text-sm sf-text-strong">
                     {{ customer.street }}<template v-if="customer.street2">, {{ customer.street2 }}</template>
                   </p>
-                  <p class="text-sm text-slate-500">
+                  <p class="text-sm sf-muted">
                     {{ customer.city }}, {{ customer.state }}, C.P. {{ customer.zip }}
                   </p>
-                  <p v-if="selectedShipping" class="text-sm text-slate-500 mt-1.5">
+                  <p v-if="selectedShipping" class="text-sm sf-muted mt-1.5">
                     {{ selectedShipping.name }}
                     ({{ selectedShipping.price > 0 ? formatStorefrontCurrency(selectedShipping.price, currency) : 'Gratis' }})
                     <template v-if="selectedShipping.delivery_estimate"> — {{ selectedShipping.delivery_estimate }}</template>
                   </p>
                 </div>
 
-                <div class="rounded-xl border border-slate-100 p-4">
+                <div class="rounded-xl border sf-border-c p-4">
                   <div class="flex items-center justify-between mb-2">
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Pago</p>
-                    <button type="button" class="text-xs font-semibold" :style="{ color: primaryColor }" @click="currentStep = 3">
+                    <p class="text-xs font-semibold sf-muted uppercase tracking-wide">Pago</p>
+                    <button type="button" class="text-xs font-semibold" :style="{ color: 'var(--sf-primary-readable)' }" @click="currentStep = 3">
                       Editar
                     </button>
                   </div>
-                  <p class="text-sm text-slate-800">{{ selectedPayment?.name }}</p>
+                  <p class="text-sm sf-text-strong">{{ selectedPayment?.name }}</p>
                 </div>
 
-                <div class="rounded-xl border border-slate-100 p-4">
-                  <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+                <div class="rounded-xl border sf-border-c p-4">
+                  <p class="text-xs font-semibold sf-muted uppercase tracking-wide mb-3">
                     Productos ({{ items.length }})
                   </p>
                   <ul class="space-y-2">
                     <li v-for="item in items" :key="item.productId" class="flex justify-between text-sm">
-                      <span class="text-slate-600 truncate pr-4">{{ item.quantity }} × {{ item.name }}</span>
-                      <span class="font-medium text-slate-900 flex-shrink-0">
+                      <span class="sf-muted truncate pr-4">{{ item.quantity }} × {{ item.name }}</span>
+                      <span class="font-medium sf-text-strong flex-shrink-0">
                         {{ formatStorefrontCurrency(item.priceFinal * item.quantity, currency) }}
                       </span>
                     </li>
@@ -548,7 +546,7 @@ useHead(() => ({
               <button
                 v-if="currentStep > 1"
                 type="button"
-                class="px-5 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
+                class="px-5 py-2.5 rounded-xl text-sm font-medium sf-muted sf-hover-text transition-colors"
                 @click="goBack"
               >
                 ← Regresar
@@ -556,7 +554,7 @@ useHead(() => ({
               <NuxtLink
                 v-else
                 :to="`${basePath}/cart`"
-                class="px-5 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
+                class="px-5 py-2.5 rounded-xl text-sm font-medium sf-muted sf-hover-text transition-colors"
               >
                 ← Volver al carrito
               </NuxtLink>
@@ -565,7 +563,7 @@ useHead(() => ({
                 v-if="currentStep < 4"
                 type="button"
                 class="px-8 py-2.5 rounded-xl text-sm font-semibold text-white shadow-lg transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
-                :style="{ backgroundColor: primaryColor }"
+                :style="{ backgroundColor: 'var(--sf-primary-strong)', color: 'var(--sf-primary-contrast)' }"
                 @click="goNext"
               >
                 Continuar
@@ -574,7 +572,7 @@ useHead(() => ({
                 v-else
                 type="button"
                 class="px-8 py-2.5 rounded-xl text-sm font-semibold text-white shadow-lg transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:opacity-50 disabled:cursor-wait"
-                :style="{ backgroundColor: primaryColor }"
+                :style="{ backgroundColor: 'var(--sf-primary-strong)', color: 'var(--sf-primary-contrast)' }"
                 :disabled="isPlacing"
                 @click="handlePlaceOrder"
               >
@@ -586,47 +584,47 @@ useHead(() => ({
 
         <!-- Resumen lateral -->
         <aside class="lg:col-span-1 order-first lg:order-none">
-          <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 lg:sticky lg:top-24">
-            <h2 class="text-base font-bold text-slate-900 mb-4">Tu pedido</h2>
+          <div class="sf-bg-surface rounded-2xl shadow-lg shadow-slate-200/50 p-6 lg:sticky lg:top-24">
+            <h2 class="text-base font-bold sf-text-strong mb-4">Tu pedido</h2>
             <ul class="space-y-3 max-h-56 overflow-y-auto pr-1">
               <li v-for="item in items" :key="item.productId" class="flex items-center gap-3">
-                <div class="w-11 h-11 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0">
+                <div class="w-11 h-11 rounded-lg sf-bg-muted overflow-hidden flex-shrink-0">
                   <img v-if="item.imageUrl" :src="item.imageUrl" :alt="''" class="w-full h-full object-cover" />
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-xs font-medium text-slate-800 truncate">{{ item.name }}</p>
-                  <p class="text-xs text-slate-400">× {{ item.quantity }}</p>
+                  <p class="text-xs font-medium sf-text-strong truncate">{{ item.name }}</p>
+                  <p class="text-xs sf-subtle">× {{ item.quantity }}</p>
                 </div>
-                <p class="text-xs font-semibold text-slate-900 flex-shrink-0">
+                <p class="text-xs font-semibold sf-text-strong flex-shrink-0">
                   {{ formatStorefrontCurrency(item.priceFinal * item.quantity, currency) }}
                 </p>
               </li>
             </ul>
 
-            <dl class="mt-5 pt-4 border-t border-slate-100 space-y-2 text-sm">
+            <dl class="mt-5 pt-4 border-t sf-border-c space-y-2 text-sm">
               <div class="flex justify-between">
-                <dt class="text-slate-500">Subtotal</dt>
-                <dd class="font-medium text-slate-900">{{ formatStorefrontCurrency(subtotalFinal, currency) }}</dd>
+                <dt class="sf-muted">Subtotal</dt>
+                <dd class="font-medium sf-text-strong">{{ formatStorefrontCurrency(subtotalFinal, currency) }}</dd>
               </div>
               <div v-if="couponDiscountFinal > 0" class="flex justify-between text-emerald-600">
                 <dt>Cupón {{ coupon?.code }}</dt>
                 <dd>−{{ formatStorefrontCurrency(couponDiscountFinal, currency) }}</dd>
               </div>
               <div class="flex justify-between">
-                <dt class="text-slate-500">Envío</dt>
-                <dd class="font-medium text-slate-900">
+                <dt class="sf-muted">Envío</dt>
+                <dd class="font-medium sf-text-strong">
                   <template v-if="selectedShipping">
                     {{ selectedShipping.price > 0 ? formatStorefrontCurrency(selectedShipping.price, currency) : 'Gratis' }}
                   </template>
-                  <span v-else class="text-xs text-slate-400">Por seleccionar</span>
+                  <span v-else class="text-xs sf-subtle">Por seleccionar</span>
                 </dd>
               </div>
-              <div class="flex justify-between pt-2 border-t border-slate-100 text-base">
-                <dt class="font-bold text-slate-900">Total estimado</dt>
-                <dd class="font-bold text-slate-900">{{ formatStorefrontCurrency(estimatedTotal, currency) }}</dd>
+              <div class="flex justify-between pt-2 border-t sf-border-c text-base">
+                <dt class="font-bold sf-text-strong">Total estimado</dt>
+                <dd class="font-bold sf-text-strong">{{ formatStorefrontCurrency(estimatedTotal, currency) }}</dd>
               </div>
             </dl>
-            <p class="mt-3 text-[0.7rem] text-slate-400 leading-relaxed">
+            <p class="mt-3 text-[0.7rem] sf-subtle leading-relaxed">
               El total definitivo (con impuestos) se calcula y valida en el servidor al confirmar.
             </p>
           </div>

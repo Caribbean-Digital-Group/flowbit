@@ -1,4 +1,7 @@
 <script setup lang="ts">
+// Vista privada: no debe aparecer en buscadores aunque alguien enlace la URL
+useHead({ meta: [{ name: 'robots', content: 'noindex, nofollow' }] })
+
 const authStore = useAuthStore()
 const router = useRouter()
 
