@@ -149,6 +149,13 @@ flowbit/
 | Equipo | `/admin/team` | `useMembership` |
 | Empresa | — | `useCompany` |
 | Proyecto público | `/public/projects/[id]` | `usePublicProject` |
+| Salud de la plataforma | `/health` (público), `/api/health/keepalive` | — (rutas Nitro) |
+
+> `/health` reporta el estado de la plataforma (200 ok / 503 base caída) y
+> `/api/health/keepalive` escribe un latido que evita que Supabase Cloud pause
+> el proyecto por inactividad. Lo disparan la función programada de Netlify
+> (`netlify/functions/keepalive.mts`) y, como respaldo,
+> `.github/workflows/keepalive.yml`. Documentado en `docs/health.md`.
 
 ### Ayuda (sección pública)
 
@@ -503,8 +510,9 @@ Variables de entorno requeridas (`.env.local`):
 ```
 SUPABASE_URL=
 SUPABASE_PUBLISHABLE_KEY=
-SUPABASE_SECRET_KEY=      # service_role — solo servidor; requerida para pagos Stripe del storefront
+SUPABASE_SECRET_KEY=      # service_role — solo servidor; requerida para pagos Stripe del storefront y para el latido anti-suspensión
 NUXT_PUBLIC_SITE_URL=
+HEALTH_PING_TOKEN=        # opcional — protege /api/health/keepalive (ver docs/health.md)
 ```
 
 ---
