@@ -148,10 +148,10 @@ export const LEARNING_PATHS: LearningPath[] = [
     title: 'Controla tu inventario',
     emoji: '📦',
     description: 'Catálogo, almacenes, movimientos y trazabilidad para que el stock del sistema sea el real.',
-    estimatedMinutes: 25,
+    estimatedMinutes: 35,
     level: 'intermedio',
     accent: 'orange',
-    articleIds: ['products-create', 'warehouses-create', 'pickings-list', 'pickings-scan', 'picking-lines-list']
+    articleIds: ['products-create', 'warehouses-create', 'pickings-list', 'pickings-scan', 'inventory-report', 'inventory-traceability']
   },
   {
     id: 'path-team',

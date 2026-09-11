@@ -2221,6 +2221,159 @@ export const ARTICLES: DocArticle[] = [
     tags: ['líneas', 'orden', 'productos', 'análisis', 'ventas', 'consulta']
   },
   {
+    id: 'inventory-report',
+    routePatterns: ['/admin/inventory'],
+    module: 'pickings',
+    moduleLabel: 'Pickings / Movimientos',
+    moduleEmoji: '🚚',
+    title: 'Inventario: existencias y valoración',
+    viewType: 'analytics',
+    level: 'basico',
+    isNew: true,
+    summary: 'Cuántas unidades tienes de cada producto, cuánto valen y qué necesitas surtir, en una sola pantalla.',
+    description: 'Tablero de inventario: el valor total de tus existencias al costo promedio, el desglose por categoría y almacén, el semáforo de cada producto y las acciones para ajustar o pedir reabastecimiento.',
+    importance: 'Es la respuesta a las dos preguntas que todo negocio necesita contestar sin dudar: cuánto producto tengo y cuánto dinero representa. Al calcularse desde el libro de movimientos, el número no depende de que alguien lo haya actualizado a mano.',
+    tips: [
+      'El «Valor del inventario» usa el costo promedio ponderado, no el precio de venta: es lo que te costó la mercancía que tienes guardada.',
+      'Si aparece el aviso de productos sin costo registrado, tu valoración está por debajo de la real: esas unidades cuentan como cero.',
+      'Los filtros de estado (negativos, agotados, bajo mínimo) son tu lista de trabajo: empieza siempre por los negativos, que casi siempre indican un error de captura.',
+      'El botón «Sincronizar agenda» crea las tareas de reabastecimiento que falten y cierra las de los productos que ya se surtieron.',
+      'Exporta a CSV con los filtros aplicados: lo que ves en pantalla es lo que se descarga.',
+      'Las existencias por almacén salen del libro de movimientos, así que solo aparecen los almacenes que han tenido movimiento.',
+      'En «Ajustes» defines quién recibe las tareas de reabastecimiento y con cuántos días de plazo; sin responsable configurado se asignan al propietario del equipo.',
+      'Cada almacén valora sus unidades al costo de sus propias entradas, así que el mismo producto puede valer distinto en dos sucursales.'
+    ],
+    process: [
+      { step: 1, title: 'Revisa', description: 'Valor total y alertas.' },
+      { step: 2, title: 'Filtra', description: 'Negativos y agotados primero.' },
+      { step: 3, title: 'Corrige', description: 'Ajusta lo que no cuadre.' },
+      { step: 4, title: 'Surte', description: 'Sincroniza la agenda.' },
+      { step: 5, title: 'Verifica', description: 'Consulta el historial del producto.' }
+    ],
+    wizard: {
+      id: 'wz-inventory-trust',
+      title: 'Ten certeza de tu inventario',
+      description: 'De un número dudoso a existencias y valoración en las que puedes confiar.',
+      estimatedMinutes: 15,
+      steps: [
+        {
+          id: 'costs',
+          title: 'Captura los costos que falten',
+          description: 'Revisa el aviso de productos sin costo. Sin costo, esas unidades valen cero y la valoración total queda corta.',
+          action: { label: 'Ir a Productos', route: '/admin/products' },
+          tip: 'El costo es lo que te cuesta reponer el producto, no lo que lo vendes.'
+        },
+        {
+          id: 'negatives',
+          title: 'Resuelve los negativos',
+          description: 'Filtra por «Negativos». Un stock negativo casi siempre significa una salida registrada que nunca entró: cuenta el físico y ajusta.',
+          action: { label: 'Abrir Inventario', route: '/admin/inventory' },
+          warning: 'Antes de ajustar, revisa el historial del producto: si el error viene de un movimiento mal capturado, conviene entenderlo primero.'
+        },
+        {
+          id: 'count',
+          title: 'Haz un conteo físico',
+          description: 'Producto por producto, compara lo que dice el sistema con lo que hay en el almacén y registra el ajuste con su motivo.',
+          checklist: ['Conteo hecho', 'Ajustes registrados con motivo', 'Diferencias explicadas'],
+          tip: 'Empieza por los productos de mayor valor: son los que más mueven la aguja.'
+        },
+        {
+          id: 'minimums',
+          title: 'Define los mínimos',
+          description: 'Captura el stock mínimo de cada producto que no quieras que se agote. Sin mínimo, el sistema no puede avisarte a tiempo.',
+          action: { label: 'Ir a Productos', route: '/admin/products' },
+          tip: 'Un buen mínimo cubre lo que vendes mientras llega el reabastecimiento.'
+        },
+        {
+          id: 'responsible',
+          title: 'Asigna quién surte',
+          description: 'Las tareas de reabastecimiento aparecen en la agenda de la persona responsable. Sin responsable, nadie las ve.',
+          action: { label: 'Ver la agenda', route: '/admin/agenda' }
+        },
+        {
+          id: 'routine',
+          title: 'Conviértelo en rutina',
+          description: 'Revisa el tablero cada semana: alertas primero, valor después. El libro hace el resto solo.',
+          action: { label: 'Abrir Inventario', route: '/admin/inventory' }
+        }
+      ]
+    },
+    faqs: [
+      {
+        question: '¿Por qué ya no puedo editar el stock desde el producto?',
+        answer: 'Porque un stock que se puede reescribir a mano no da certeza de nada. Ahora cada cambio deja un movimiento con su motivo, su fecha y su autor. Para corregir existencias usa «Ajustar» desde el inventario.'
+      },
+      {
+        question: '¿Qué es el costo promedio ponderado?',
+        answer: 'El costo real de lo que tienes guardado. Si compraste 100 piezas a $10 y luego 50 a $16, tus 150 piezas valen $12 cada una en promedio. Se recalcula solo en cada entrada.'
+      },
+      {
+        question: '¿Cómo sé de dónde salió una unidad?',
+        answer: 'En «Historial» de cada producto: cada movimiento muestra su origen (venta, punto de venta, tienda en línea, compra, ajuste), el documento que lo generó y el saldo que quedó.'
+      },
+      {
+        question: '¿Las tareas de reabastecimiento se duplican?',
+        answer: 'No. Cada producto tiene como máximo una tarea abierta: si vuelve a caer, se actualiza la existente. Cuando lo surtes, la tarea se cierra sola.'
+      },
+      {
+        question: '¿Puedo elegir quién recibe las tareas de reabastecimiento?',
+        answer: 'Sí, en el botón «Ajustes» del inventario. Ahí eliges al responsable, los días de plazo de la tarea y si la automatización está encendida. Si no defines responsable, las tareas van al propietario del equipo.'
+      },
+      {
+        question: '¿Por qué el mismo producto vale distinto en dos almacenes?',
+        answer: 'Porque cada almacén valora sus unidades al costo con el que entraron ahí. Si Central recibió a $20 y la sucursal a $25, cada uno refleja lo que realmente costó su mercancía.'
+      },
+      {
+        question: '¿El valor del inventario incluye impuestos?',
+        answer: 'No. Es el costo de la mercancía. El «valor a precio de venta» que aparece al lado es lo que obtendrías si vendieras todo, y la diferencia es tu margen potencial.'
+      }
+    ],
+    relatedModules: [
+      { label: 'Movimientos', route: '/admin/pickings' },
+      { label: 'Productos', route: '/admin/products' },
+      { label: 'Agenda', route: '/admin/agenda' }
+    ],
+    relatedArticles: ['inventory-traceability', 'pickings-list', 'products-detail'],
+    tags: ['inventario', 'stock', 'existencias', 'valoración', 'costo', 'reporte', 'alertas', 'reabastecimiento']
+  },
+  {
+    id: 'inventory-traceability',
+    routePatterns: ['/admin/inventory/:id'],
+    module: 'pickings',
+    moduleLabel: 'Pickings / Movimientos',
+    moduleEmoji: '🚚',
+    title: 'Trazabilidad de un producto',
+    viewType: 'detail',
+    level: 'intermedio',
+    isNew: true,
+    summary: 'El historial completo de un producto: cada entrada y salida con su origen, su documento y el saldo que dejó.',
+    description: 'Historial de movimientos de un producto. Cada línea muestra cuándo ocurrió, qué lo originó, con qué documento, en qué almacén, a qué costo y con cuántas unidades quedó el saldo.',
+    importance: 'Cuando el inventario no cuadra, esta pantalla responde exactamente dónde se rompió. Reconstruye la historia del producto movimiento por movimiento, sin depender de la memoria de nadie.',
+    tips: [
+      'El saldo de cada línea es el que quedó después de ese movimiento: si vas de abajo hacia arriba, deberías llegar al stock actual.',
+      'Filtra por origen para aislar un canal: por ejemplo, todo lo que salió por el punto de venta.',
+      'Los movimientos con lote o número de serie muestran el identificador exacto de la pieza.',
+      'El historial no se puede editar ni borrar. Una corrección siempre es un movimiento nuevo, y eso es lo que lo hace confiable.',
+      'Los ajustes muestran el motivo que se escribió al registrarlos: úsalo para entender diferencias viejas.'
+    ],
+    faqs: [
+      {
+        question: '¿Puedo borrar un movimiento equivocado?',
+        answer: 'No. El libro es inmutable a propósito. Si un movimiento fue incorrecto, registra un ajuste que lo compense y explica el motivo; ambos quedan en el historial.'
+      },
+      {
+        question: '¿Qué significa «Saldo inicial»?',
+        answer: 'Es el asiento de apertura: las existencias que el producto tenía cuando se implantó el libro, o las que capturaste al darlo de alta.'
+      }
+    ],
+    relatedModules: [
+      { label: 'Inventario', route: '/admin/inventory' },
+      { label: 'Movimientos', route: '/admin/pickings' }
+    ],
+    relatedArticles: ['inventory-report', 'picking-lines-list', 'pickings-detail'],
+    tags: ['trazabilidad', 'historial', 'kardex', 'movimientos', 'auditoría', 'lote', 'serie']
+  },
+  {
     id: 'picking-lines-list',
     routePatterns: ['/admin/picking-lines'],
     module: 'pickings',
