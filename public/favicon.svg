@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Flowbit">
+  <title>Flowbit</title>
+  <defs>
+    <linearGradient id="bitBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="55%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#c026d3"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fondo de marca -->
+  <rect width="512" height="512" rx="116" fill="url(#bitBg)"/>
+
+  <!-- Antena: trazo grueso para que sobreviva a 16 px -->
+  <path d="M256 150 V108" stroke="#ffffff" stroke-width="26" stroke-linecap="round"/>
+  <circle cx="256" cy="88" r="28" fill="#ffffff"/>
+
+  <!-- Orejas -->
+  <rect x="66" y="228" width="34" height="88" rx="17" fill="#ffffff" fill-opacity="0.75"/>
+  <rect x="412" y="228" width="34" height="88" rx="17" fill="#ffffff" fill-opacity="0.75"/>
+
+  <!-- Cabeza -->
+  <rect x="104" y="148" width="304" height="252" rx="84" fill="#ffffff"/>
+
+  <!-- Ojos: el rasgo que identifica a Bit incluso diminuto -->
+  <circle cx="196" cy="258" r="46" fill="#4f46e5"/>
+  <circle cx="316" cy="258" r="46" fill="#4f46e5"/>
+  <circle cx="212" cy="242" r="14" fill="#ffffff"/>
+  <circle cx="332" cy="242" r="14" fill="#ffffff"/>
+
+  <!-- Sonrisa -->
+  <path d="M198 330 Q256 372 314 330" stroke="#4f46e5" stroke-width="24" stroke-linecap="round" fill="none"/>
+</svg>
