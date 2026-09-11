@@ -6,7 +6,7 @@ definePageMeta({ layout: 'storefront' })
 
 const route = useRoute()
 const storefrontStore = useStorefrontStore()
-const { store, lastOrder, primaryColor } = storeToRefs(storefrontStore)
+const { store, lastOrder} = storeToRefs(storefrontStore)
 const { getOrder } = useStorefront()
 
 const companySlug = computed(() => {
@@ -171,11 +171,11 @@ useHead(() => ({
 <template>
   <div v-if="store" class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <!-- Buscar orden por email -->
-    <div v-if="askEmail && !order" class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-8 text-center">
-      <h1 class="text-xl font-bold text-slate-900 mb-2">Consulta tu pedido</h1>
-      <p class="text-sm text-slate-500 mb-6">
+    <div v-if="askEmail && !order" class="sf-bg-surface rounded-2xl shadow-lg shadow-slate-200/50 p-8 text-center">
+      <h1 class="text-xl font-bold sf-text-strong mb-2">Consulta tu pedido</h1>
+      <p class="text-sm sf-muted mb-6">
         Escribe el correo con el que realizaste la compra
-        <span class="font-semibold text-slate-700">{{ orderRef }}</span> para ver el detalle.
+        <span class="font-semibold sf-text-strong">{{ orderRef }}</span> para ver el detalle.
       </p>
       <form class="flex gap-2 max-w-md mx-auto" @submit.prevent="handleLookup">
         <input
@@ -183,13 +183,13 @@ useHead(() => ({
           type="email"
           required
           placeholder="tucorreo@ejemplo.com"
-          class="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+          class="flex-1 rounded-xl border sf-border-c sf-bg-muted px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
           aria-label="Correo electrónico de la compra"
         />
         <button
           type="submit"
           class="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-          :style="{ backgroundColor: primaryColor }"
+          :style="{ backgroundColor: 'var(--sf-primary-strong)', color: 'var(--sf-primary-contrast)' }"
           :disabled="isLoading"
         >
           {{ isLoading ? '...' : 'Consultar' }}
@@ -203,8 +203,8 @@ useHead(() => ({
     <!-- Cargando -->
     <div v-else-if="isLoading" class="py-24 flex justify-center">
       <div
-        class="w-10 h-10 rounded-full border-4 border-slate-200 animate-spin"
-        :style="{ borderTopColor: primaryColor }"
+        class="w-10 h-10 rounded-full border-4 sf-border-c animate-spin"
+        :style="{ borderTopColor: 'var(--sf-primary)' }"
         role="status"
         aria-label="Cargando pedido"
       />
@@ -218,11 +218,11 @@ useHead(() => ({
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900">¡Gracias por tu compra!</h1>
-        <p class="mt-2 text-slate-500">
-          Tu pedido <span class="font-semibold text-slate-800">{{ order.order_ref }}</span> fue registrado correctamente.
+        <h1 class="text-2xl sm:text-3xl font-bold sf-text-strong">¡Gracias por tu compra!</h1>
+        <p class="mt-2 sf-muted">
+          Tu pedido <span class="font-semibold sf-text-strong">{{ order.order_ref }}</span> fue registrado correctamente.
         </p>
-        <p class="text-sm text-slate-400 mt-1">
+        <p class="text-sm sf-subtle mt-1">
           Enviamos la confirmación a {{ order.customer_email }}.
         </p>
       </div>
@@ -230,7 +230,7 @@ useHead(() => ({
       <!-- Avisos del pago con tarjeta (Stripe) -->
       <div
         v-if="isVerifyingPayment"
-        class="mb-6 rounded-2xl border border-indigo-100 bg-indigo-50 px-6 py-4 text-sm text-indigo-700"
+        class="mb-6 rounded-2xl border sf-border-primary sf-bg-primary-soft px-6 py-4 text-sm sf-link-color"
         role="status"
       >
         Confirmando tu pago con la pasarela…
@@ -250,90 +250,90 @@ useHead(() => ({
         {{ paymentError }}
       </div>
 
-      <div class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 overflow-hidden">
+      <div class="sf-bg-surface rounded-2xl shadow-lg shadow-slate-200/50 overflow-hidden">
         <!-- Estado -->
-        <div class="px-6 sm:px-8 py-5 border-b border-slate-100 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+        <div class="px-6 sm:px-8 py-5 border-b sf-border-c flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
           <div>
-            <span class="text-slate-400">Fecha:</span>
-            <span class="font-medium text-slate-800 ml-1">
+            <span class="sf-subtle">Fecha:</span>
+            <span class="font-medium sf-text-strong ml-1">
               {{ new Date(order.order_date).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }) }}
             </span>
           </div>
           <div>
-            <span class="text-slate-400">Pago:</span>
+            <span class="sf-subtle">Pago:</span>
             <span class="font-medium ml-1" :class="order.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'">
               {{ order.payment_status === 'paid' ? 'Pagado' : 'Pendiente de pago' }}
             </span>
           </div>
           <div>
-            <span class="text-slate-400">Entrega:</span>
-            <span class="font-medium ml-1" :class="order.is_delivered ? 'text-emerald-600' : 'text-slate-700'">
+            <span class="sf-subtle">Entrega:</span>
+            <span class="font-medium ml-1" :class="order.is_delivered ? 'text-emerald-600' : 'sf-text-strong'">
               {{ order.is_delivered ? 'Entregado' : 'En preparación' }}
             </span>
           </div>
         </div>
 
         <!-- Líneas -->
-        <ul class="divide-y divide-slate-100">
+        <ul class="divide-y sf-divide-c">
           <li v-for="(line, index) in lines" :key="index" class="px-6 sm:px-8 py-4 flex items-center gap-4">
-            <div class="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0">
+            <div class="w-12 h-12 rounded-lg sf-bg-muted overflow-hidden flex-shrink-0">
               <img v-if="line.image_url" :src="line.image_url" :alt="''" class="w-full h-full object-cover" />
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-slate-800 truncate">{{ line.description }}</p>
-              <p class="text-xs text-slate-400">
+              <p class="text-sm font-medium sf-text-strong truncate">{{ line.description }}</p>
+              <p class="text-xs sf-subtle">
                 {{ line.quantity }} × {{ formatStorefrontCurrency(line.unit_price, order.currency) }}
                 <template v-if="line.discount_percent > 0"> (−{{ line.discount_percent }}%)</template>
               </p>
             </div>
-            <p class="text-sm font-semibold text-slate-900 flex-shrink-0">
+            <p class="text-sm font-semibold sf-text-strong flex-shrink-0">
               {{ formatStorefrontCurrency(line.total, order.currency) }}
             </p>
           </li>
         </ul>
 
         <!-- Totales -->
-        <dl class="px-6 sm:px-8 py-5 border-t border-slate-100 space-y-2 text-sm">
+        <dl class="px-6 sm:px-8 py-5 border-t sf-border-c space-y-2 text-sm">
           <div class="flex justify-between">
-            <dt class="text-slate-500">Subtotal (sin impuestos)</dt>
-            <dd class="font-medium text-slate-900">{{ formatStorefrontCurrency(order.amount_untaxed, order.currency) }}</dd>
+            <dt class="sf-muted">Subtotal (sin impuestos)</dt>
+            <dd class="font-medium sf-text-strong">{{ formatStorefrontCurrency(order.amount_untaxed, order.currency) }}</dd>
           </div>
           <div v-if="order.amount_discount > 0" class="flex justify-between text-emerald-600">
             <dt>Descuentos<template v-if="order.coupon_code"> ({{ order.coupon_code }})</template></dt>
             <dd>−{{ formatStorefrontCurrency(order.amount_discount, order.currency) }}</dd>
           </div>
           <div class="flex justify-between">
-            <dt class="text-slate-500">Impuestos</dt>
-            <dd class="font-medium text-slate-900">{{ formatStorefrontCurrency(order.amount_tax, order.currency) }}</dd>
+            <dt class="sf-muted">Impuestos</dt>
+            <dd class="font-medium sf-text-strong">{{ formatStorefrontCurrency(order.amount_tax, order.currency) }}</dd>
           </div>
-          <div class="flex justify-between pt-3 border-t border-slate-100 text-base">
-            <dt class="font-bold text-slate-900">Total</dt>
-            <dd class="font-bold text-slate-900">{{ formatStorefrontCurrency(order.amount_total, order.currency) }}</dd>
+          <div class="flex justify-between pt-3 border-t sf-border-c text-base">
+            <dt class="font-bold sf-text-strong">Total</dt>
+            <dd class="font-bold sf-text-strong">{{ formatStorefrontCurrency(order.amount_total, order.currency) }}</dd>
           </div>
         </dl>
 
         <!-- Envío -->
-        <div class="px-6 sm:px-8 py-5 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+        <div class="px-6 sm:px-8 py-5 border-t sf-border-c grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div>
-            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Dirección de envío</p>
-            <p class="text-slate-800">{{ order.customer_name }}</p>
-            <p class="text-slate-500">
+            <p class="text-xs font-semibold sf-muted uppercase tracking-wide mb-1.5">Dirección de envío</p>
+            <p class="sf-text-strong">{{ order.customer_name }}</p>
+            <p class="sf-muted">
               {{ order.shipping_street }}<template v-if="order.shipping_street2">, {{ order.shipping_street2 }}</template>
             </p>
-            <p class="text-slate-500">
+            <p class="sf-muted">
               {{ order.shipping_city }}, {{ order.shipping_state }} C.P. {{ order.shipping_zip }}
             </p>
           </div>
           <div>
-            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Método de envío</p>
-            <p class="text-slate-800">{{ order.shipping_method_name ?? '—' }}</p>
+            <p class="text-xs font-semibold sf-muted uppercase tracking-wide mb-1.5">Método de envío</p>
+            <p class="sf-text-strong">{{ order.shipping_method_name ?? '—' }}</p>
           </div>
         </div>
       </div>
 
       <!-- Siguientes pasos -->
       <div class="mt-8 text-center">
-        <p class="text-sm text-slate-500 max-w-lg mx-auto">
+        <p class="text-sm sf-muted max-w-lg mx-auto">
           <template v-if="order.payment_status === 'paid'">
             Tu pago fue confirmado. El vendedor preparará tu pedido y te contactará para coordinar la entrega.
           </template>
@@ -343,14 +343,14 @@ useHead(() => ({
           <template v-else>
             El vendedor preparará tu pedido y te contactará para coordinar el pago y la entrega.
           </template>
-          Guarda tu número de pedido <span class="font-semibold text-slate-700">{{ order.order_ref }}</span> para cualquier aclaración.
+          Guarda tu número de pedido <span class="font-semibold sf-text-strong">{{ order.order_ref }}</span> para cualquier aclaración.
         </p>
 
         <button
           v-if="canPayWithStripe"
           type="button"
           class="mt-6 inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-sm font-semibold text-white shadow-lg transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:opacity-50 disabled:cursor-wait"
-          :style="{ backgroundColor: primaryColor }"
+          :style="{ backgroundColor: 'var(--sf-primary-strong)', color: 'var(--sf-primary-contrast)' }"
           :disabled="isStartingPayment || isVerifyingPayment"
           @click="payWithStripe"
         >
@@ -376,13 +376,13 @@ useHead(() => ({
           <NuxtLink
             :to="`${basePath}/products`"
             class="px-6 py-3 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
-            :style="{ backgroundColor: primaryColor }"
+            :style="{ backgroundColor: 'var(--sf-primary-strong)', color: 'var(--sf-primary-contrast)' }"
           >
             Seguir comprando
           </NuxtLink>
           <NuxtLink
             :to="`${basePath}/account`"
-            class="px-6 py-3 rounded-xl text-sm font-semibold border border-slate-200 text-slate-700 hover:bg-white transition-colors"
+            class="px-6 py-3 rounded-xl text-sm font-semibold border sf-border-c sf-text-strong sf-hover-surface transition-colors"
           >
             Ver mis pedidos
           </NuxtLink>

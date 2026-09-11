@@ -134,6 +134,71 @@ eliminar el shim.
 | Componentes | `Storefront/ProductCard.vue`, `StorefrontCoupon/Form.vue`, `StorefrontShippingMethod/Form.vue` |
 | Utils | `app/utils/storefront.ts` (`formatStorefrontCurrency`, `storefrontPath`) |
 
+## Diseño de la tienda (plantillas y paletas)
+
+Cada tienda elige una **plantilla** y una **paleta**, y puede sobrescribir
+colores, tipografía, esquinas, estilo de tarjeta y composición del hero desde
+**Tienda en línea → Ajustes → Diseño de la tienda**, con vista previa en vivo.
+
+### Motor de temas
+
+`app/utils/storefrontTheme.ts` es la fuente única: datos puros, sin Vue.
+Resuelve plantilla + paleta + ajustes del vendedor en un conjunto de variables
+CSS `--sf-*` que el layout aplica en el nodo raíz. `app/assets/css/storefront.css`
+define las clases (`sf-btn`, `sf-card`, `sf-heading`, `sf-bg-surface`…) que
+consumen esos tokens.
+
+> Regla del módulo: **ningún componente escribe un color literal**. Si hace
+> falta un tono nuevo, se agrega como token, no como clase de Tailwind.
+
+| Plantilla | Hero | Tarjeta | Superficie | Pensada para |
+|---|---|---|---|---|
+| `aurora` | split | elevated | clara | catálogos generales |
+| `boutique` | editorial | minimal | clara | moda, joyería, belleza |
+| `impulse` | banner | bordered | clara | electrónica y ofertas |
+| `mercado` | centered | elevated | clara | alimentos y venta local |
+| `noir` | banner | overlay | **oscura** | marcas premium y diseño |
+| `esencial` | compact | bordered | clara | mayoristas y catálogos extensos |
+
+Paletas incluidas: índigo, océano, bosque, coral, uva, ámbar, medianoche, rosa,
+turquesa y grafito. Tipografías: sistema, editorial, moderna, cercana y
+refinada (las que no son del sistema se cargan desde Google Fonts solo cuando
+se eligen).
+
+### Contraste garantizado
+
+El vendedor puede elegir cualquier color, incluidos tonos claros donde el texto
+blanco resulta ilegible. El motor lo resuelve sin quitarle el color:
+
+- `--sf-primary` conserva **exactamente** el color elegido y se usa en
+  superficies decorativas sin texto.
+- `--sf-primary-contrast` es blanco o casi negro, el que mejor contraste dé.
+- `--sf-primary-strong` es el color ajustado lo mínimo necesario para alcanzar
+  **4.5:1 (WCAG AA)** con ese texto; es el que usan botones y badges.
+- `--sf-primary-readable` es la versión utilizable como texto sobre el fondo.
+
+Los tonos medios (índigo `#6366f1`, océano `#0284c7`) no alcanzan AA ni con
+blanco ni con negro: por eso se ajusta el fondo y no el texto. Cuando eso
+ocurre, el panel avisa al vendedor y le dice qué color se usará.
+
+### Secciones configurables de la portada
+
+Toggles en `storefront_settings`: `show_categories`, `show_featured`,
+`show_story`, `show_benefits`, más `featured_limit` (4–12, aplicado en el RPC),
+`hero_cta_label`, `announcement_link` y `benefits` (JSONB editable con icono,
+título y texto). El hero muestra **imágenes reales del catálogo** en lugar de
+ilustraciones genéricas.
+
+### Archivos
+
+| Capa | Archivos |
+|---|---|
+| Motor | `app/utils/storefrontTheme.ts` |
+| Estilos | `app/assets/css/storefront.css` |
+| Composable | `app/composables/useStorefrontTheme.ts` |
+| Componentes | `Storefront/Hero.vue`, `Storefront/ProductCard.vue`, `Storefront/ThemePreview.vue` |
+| Migración | `supabase/migrations/20260910120000_add_theme_to_storefront.sql` |
+
 ## Analítica
 
 La tienda incluye analítica first-party (tracker propio, ingesta vía

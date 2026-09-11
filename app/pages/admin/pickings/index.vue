@@ -41,9 +41,20 @@ const columns: Column[] = [
       labels: statusLabels
     }
   },
+  {
+    key: 'origin',
+    label: 'Origen',
+    type: 'badge',
+    badgeConfig: {
+      labels: STOCK_ORIGIN_LABELS,
+      colors: STOCK_ORIGIN_CLASSES
+    }
+  },
   { key: 'warehouse_name', label: 'Almacén', type: 'text' },
   { key: 'line_count', label: 'Líneas', type: 'text', align: 'right' },
-  { key: 'total_quantity', label: 'Cantidad total', type: 'text', align: 'right' }
+  { key: 'total_quantity', label: 'Cantidad total', type: 'text', align: 'right' },
+  // Valor en dinero del movimiento, según los asientos que generó al confirmarse
+  { key: 'move_value', label: 'Valor', type: 'currency', align: 'right' }
 ]
 
 const authStore = useAuthStore()
@@ -66,9 +77,13 @@ const mapRow = (row: PickingRow): Record<string, unknown> => ({
   type: row.type ?? 'salida',
   status: row.status ?? 'borrador',
   is_partial: row.is_partial ?? false,
+  // `origin` llega null en pickings creados antes de la migración de trazabilidad
+  origin: (row as { origin?: string | null }).origin ?? 'manual',
   warehouse_name: row.warehouse_name ?? '—',
   line_count: row.line_count ?? 0,
-  total_quantity: row.total_quantity ?? 0
+  total_quantity: row.total_quantity ?? 0,
+  // Solo los pickings confirmados generan asientos: los demás valen 0
+  move_value: (row as { move_value?: number | null }).move_value ?? 0
 })
 
 const filteredPickings = computed(() =>

@@ -85,11 +85,17 @@ export const createEmptyProductForm = (): ProductFormData => ({
 <script setup lang="ts">
 interface Props {
   readonly?: boolean
+  /** Id del producto cuando se está editando uno existente. */
+  productId?: string | null
 }
 
-withDefaults(defineProps<Props>(), {
-  readonly: false
+const props = withDefaults(defineProps<Props>(), {
+  readonly: false,
+  productId: null
 })
+
+/** En edición el stock es de solo lectura: se cambia con un ajuste registrado. */
+const isExisting = computed(() => Boolean(props.productId))
 
 const formData = defineModel<ProductFormData>({ required: true })
 
@@ -336,14 +342,29 @@ const formatCurrency = (value: number): string => {
           </div>
 
           <template v-if="formData.is_stockable">
-            <FormInput
-              v-model="formData.stock_quantity"
-              type="number"
-              label="Cantidad en Stock"
-              placeholder="0"
-              :readonly="readonly"
-              size="md"
-            />
+            <div>
+              <FormInput
+                v-model="formData.stock_quantity"
+                type="number"
+                label="Cantidad en Stock"
+                placeholder="0"
+                :readonly="readonly || isExisting"
+                size="md"
+                :hint="isExisting
+                  ? 'Solo se modifica con un movimiento o un ajuste registrado.'
+                  : 'Existencias iniciales; quedan como primer movimiento del historial.'"
+              />
+              <NuxtLink
+                v-if="isExisting && productId"
+                :to="`/admin/inventory/${productId}`"
+                class="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+              >
+                Ver historial y ajustar
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                </svg>
+              </NuxtLink>
+            </div>
 
             <FormSelect
               v-model="formData.tracking"

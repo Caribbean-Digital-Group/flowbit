@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { WarehouseStock } from '~/types/inventory.types'
 import { storeToRefs } from 'pinia'
 import type { MenuOption } from '~/components/CardSheet.vue'
 import type { StatItem } from '~/components/StatGrid.vue'
@@ -35,6 +36,7 @@ const authStore = useAuthStore()
 const { selectedCompanyId, selectedCompany } = storeToRefs(authStore)
 const { getWarehouseById, updateWarehouse, archiveWarehouse } = useWarehouse()
 const { getPickingsByWarehouse } = usePicking()
+const { getWarehouseStock, lastError: inventoryError } = useInventory()
 const { getProductsByCompany } = useProduct()
 
 // ── Core state ──────────────────────────────────────────────────────────────
@@ -49,6 +51,16 @@ const initialForm = ref<WarehouseFormData>(createEmptyWarehouseForm())
 const dashboardLoading = ref(false)
 const pickings = ref<PickingView[]>([])
 const products = ref<WarehouseInventoryProduct[]>([])
+
+/** Saldo de este almacén en concreto, calculado desde stock_move. */
+const warehouseStock = ref<WarehouseStock | null>(null)
+const warehouseStockError = ref<string | null>(null)
+
+const warehouseMoney = (value: number | null | undefined): string =>
+  new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value ?? 0)
+
+const warehouseUnits = (value: number | null | undefined): string =>
+  new Intl.NumberFormat('es-MX', { maximumFractionDigits: 3 }).format(value ?? 0)
 
 // ── Computed ────────────────────────────────────────────────────────────────
 const rowId = computed(() => {
@@ -170,6 +182,12 @@ const loadDashboard = async () => {
     ])
     pickings.value = pickingData
     products.value = productData as WarehouseInventoryProduct[]
+
+    warehouseStockError.value = null
+    warehouseStock.value = await getWarehouseStock(id)
+    if (!warehouseStock.value) {
+      warehouseStockError.value = inventoryError.value ?? 'No se pudo calcular el saldo de este almacén.'
+    }
   } finally {
     dashboardLoading.value = false
   }
@@ -404,13 +422,99 @@ const menuOptions: MenuOption[] = [
           <div>
             <h2 class="text-xl font-bold text-slate-800">Métricas del Almacén</h2>
             <p class="text-sm text-slate-500 mt-1">
-              Movimientos confirmados de este almacén · Inventario de toda la empresa
+              Existencias de este almacén según el libro · Movimientos confirmados
             </p>
           </div>
         </div>
 
         <!-- KPI Cards -->
         <StatGrid :stats="dashboardStats" :columns="4" :loading="dashboardLoading" />
+
+        <!-- Existencias en este almacén (derivadas del libro de movimientos) -->
+        <div>
+          <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
+            <div>
+              <h3 class="text-base font-bold text-slate-800">Existencias en este almacén</h3>
+              <p class="text-xs text-slate-500 mt-0.5">
+                Calculadas sumando las entradas y salidas registradas aquí
+              </p>
+            </div>
+            <div v-if="warehouseStock" class="flex items-center gap-5">
+              <div class="text-right">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Unidades</p>
+                <p class="text-lg font-bold text-slate-800 tabular-nums">
+                  {{ warehouseUnits(warehouseStock.totals.units) }}
+                </p>
+              </div>
+              <div class="text-right">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Valor</p>
+                <p class="text-lg font-bold text-indigo-700 tabular-nums">
+                  {{ warehouseMoney(warehouseStock.totals.stock_value) }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="warehouseStockError" class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+            <p class="text-xs text-amber-800 leading-relaxed">{{ warehouseStockError }}</p>
+          </div>
+
+          <div
+            v-else-if="!warehouseStock?.products.length"
+            class="rounded-2xl border border-slate-200 bg-slate-50/60 py-10 text-center"
+          >
+            <p class="text-sm font-semibold text-slate-700">Sin existencias registradas aquí</p>
+            <p class="text-xs text-slate-500 mt-1">
+              Este almacén aún no tiene movimientos confirmados, o todo lo que entró ya salió.
+            </p>
+          </div>
+
+          <div v-else class="overflow-x-auto rounded-2xl border border-slate-200">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th class="px-5 py-3 text-left font-semibold">Producto</th>
+                  <th class="px-3 py-3 text-right font-semibold">En este almacén</th>
+                  <th class="px-3 py-3 text-right font-semibold">Total empresa</th>
+                  <th class="px-3 py-3 text-right font-semibold">Costo unit.</th>
+                  <th class="px-5 py-3 text-right font-semibold">Valor</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr
+                  v-for="item in warehouseStock.products"
+                  :key="item.product_id"
+                  class="hover:bg-slate-50/60 transition-colors"
+                >
+                  <td class="px-5 py-3">
+                    <NuxtLink
+                      :to="`/admin/inventory/${item.product_id}`"
+                      class="font-semibold text-slate-800 hover:text-indigo-700 leading-snug"
+                    >
+                      {{ item.name }}
+                    </NuxtLink>
+                    <p class="text-xs text-slate-400 mt-0.5">{{ item.sku || 'Sin SKU' }}</p>
+                  </td>
+                  <td
+                    class="px-3 py-3 text-right tabular-nums font-semibold"
+                    :class="item.quantity < 0 ? 'text-red-600' : 'text-slate-800'"
+                  >
+                    {{ warehouseUnits(item.quantity) }}
+                  </td>
+                  <td class="px-3 py-3 text-right tabular-nums text-slate-400">
+                    {{ warehouseUnits(item.company_total) }}
+                  </td>
+                  <td class="px-3 py-3 text-right tabular-nums text-slate-500">
+                    {{ warehouseMoney(item.unit_cost) }}
+                  </td>
+                  <td class="px-5 py-3 text-right tabular-nums font-semibold text-slate-800">
+                    {{ warehouseMoney(item.stock_value) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
         <!-- Inventory Valuation -->
         <div>
