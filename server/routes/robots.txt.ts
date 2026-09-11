@@ -21,6 +21,7 @@ export default defineEventHandler((event) => {
     'Disallow: /admin/',
     'Disallow: /pos/',
     'Disallow: /api/',
+    'Disallow: /health',
     'Disallow: /reset-password',
     'Disallow: /stores/*/cart',
     'Disallow: /stores/*/checkout',
