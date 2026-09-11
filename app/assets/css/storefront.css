@@ -1,0 +1,458 @@
+/**
+ * Capa de presentación de la tienda en línea.
+ *
+ * Todo se expresa con las variables `--sf-*` que genera `storefrontTheme.ts`,
+ * de modo que cambiar de plantilla o de paleta reestiliza la tienda completa
+ * sin tocar un solo componente.
+ *
+ * Convención: los colores nunca se escriben literales aquí. La única excepción
+ * son los blancos/negros de sombras y overlays, que no dependen de la marca.
+ */
+
+.sf-root {
+  background-color: var(--sf-bg);
+  color: var(--sf-text);
+  font-family: var(--sf-font-body);
+}
+
+/* ── Tipografía ──────────────────────────────────────────────────────────── */
+
+.sf-heading {
+  font-family: var(--sf-font-heading);
+  color: var(--sf-text);
+  letter-spacing: var(--sf-heading-tracking);
+  text-transform: var(--sf-heading-transform);
+  line-height: 1.1;
+}
+
+/* El hero mantiene las mayúsculas de la plantilla pero nunca deforma un
+   título largo del vendedor: se limita el tracking en pantallas chicas. */
+@media (max-width: 640px) {
+  .sf-heading {
+    letter-spacing: normal;
+  }
+}
+
+.sf-eyebrow {
+  font-family: var(--sf-font-body);
+  color: var(--sf-primary-readable);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  font-size: 0.7rem;
+}
+
+.sf-muted {
+  color: var(--sf-text-muted);
+}
+
+.sf-subtle {
+  color: var(--sf-text-subtle);
+}
+
+/* ── Superficies ─────────────────────────────────────────────────────────── */
+
+.sf-surface {
+  background-color: var(--sf-surface);
+  border-radius: var(--sf-radius-lg);
+}
+
+.sf-surface-muted {
+  background-color: var(--sf-surface-muted);
+}
+
+.sf-border {
+  border: 1px solid var(--sf-border);
+}
+
+.sf-divider {
+  border-color: var(--sf-border);
+}
+
+.sf-section {
+  padding-top: var(--sf-section-gap);
+}
+
+/* ── Botones ─────────────────────────────────────────────────────────────── */
+
+.sf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--sf-font-body);
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--sf-radius-pill);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease, color 0.2s ease;
+}
+
+.sf-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--sf-primary-ring);
+}
+
+.sf-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Usa el color corregido para contraste: la etiqueta siempre se lee. */
+.sf-btn--primary {
+  background-color: var(--sf-primary-strong);
+  color: var(--sf-primary-contrast);
+  box-shadow: 0 14px 30px -16px var(--sf-primary-glow);
+}
+
+.sf-btn--primary:hover:not(:disabled) {
+  background-color: var(--sf-primary-hover);
+  transform: translateY(-1px);
+}
+
+.sf-btn--outline {
+  background-color: transparent;
+  border-color: var(--sf-border);
+  color: var(--sf-text);
+}
+
+.sf-btn--outline:hover:not(:disabled) {
+  border-color: var(--sf-primary);
+  color: var(--sf-primary-readable);
+  transform: translateY(-1px);
+}
+
+.sf-btn--ghost {
+  background-color: var(--sf-primary-soft);
+  color: var(--sf-primary-readable);
+}
+
+.sf-btn--ghost:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+/* Variante para usarse encima de una imagen oscurecida */
+.sf-btn--on-media {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+.sf-btn--on-media:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 36px -18px rgba(0, 0, 0, 0.55);
+}
+
+.sf-btn--outline-on-media {
+  background-color: transparent;
+  border-color: rgba(255, 255, 255, 0.45);
+  color: #ffffff;
+}
+
+.sf-btn--outline-on-media:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.14);
+  transform: translateY(-1px);
+}
+
+.sf-btn--sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+}
+
+.sf-btn--icon {
+  padding: 0.625rem;
+  border-radius: var(--sf-radius-md);
+}
+
+/* ── Enlaces y controles ─────────────────────────────────────────────────── */
+
+.sf-link {
+  color: var(--sf-primary-readable);
+  font-weight: 600;
+  transition: opacity 0.2s ease;
+}
+
+.sf-link:hover {
+  opacity: 0.75;
+}
+
+.sf-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: var(--sf-radius-md);
+  color: var(--sf-text-muted);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.sf-icon-btn:hover {
+  background-color: var(--sf-surface-muted);
+  color: var(--sf-text);
+}
+
+.sf-icon-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--sf-primary-ring);
+}
+
+.sf-input {
+  width: 100%;
+  background-color: var(--sf-surface);
+  border: 1px solid var(--sf-border);
+  border-radius: var(--sf-radius-md);
+  color: var(--sf-text);
+  font-family: var(--sf-font-body);
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+}
+
+.sf-input::placeholder {
+  color: var(--sf-text-subtle);
+}
+
+.sf-input:focus {
+  outline: none;
+  border-color: var(--sf-primary);
+  box-shadow: 0 0 0 3px var(--sf-primary-ring);
+}
+
+/* ── Badges ──────────────────────────────────────────────────────────────── */
+
+.sf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--sf-radius-pill);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.sf-badge--accent {
+  background-color: var(--sf-accent-strong);
+  color: var(--sf-accent-contrast);
+}
+
+.sf-badge--soft {
+  background-color: var(--sf-primary-soft);
+  color: var(--sf-primary-readable);
+}
+
+.sf-badge--muted {
+  background-color: rgba(15, 23, 42, 0.72);
+  color: #ffffff;
+  backdrop-filter: blur(6px);
+}
+
+/* ── Tarjeta de producto ─────────────────────────────────────────────────── */
+
+.sf-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--sf-surface);
+  border-radius: var(--sf-radius-lg);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.sf-card--elevated {
+  border: 1px solid var(--sf-border);
+  box-shadow: var(--sf-shadow-sm);
+}
+
+.sf-card--elevated:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--sf-shadow-lg);
+}
+
+.sf-card--bordered {
+  border: 1px solid var(--sf-border);
+}
+
+.sf-card--bordered:hover {
+  border-color: var(--sf-primary);
+}
+
+.sf-card--minimal {
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.sf-card--minimal .sf-card__media {
+  border-radius: var(--sf-radius-sm);
+}
+
+.sf-card--minimal:hover .sf-card__image {
+  opacity: 0.88;
+}
+
+.sf-card--overlay {
+  border: 1px solid var(--sf-border);
+  box-shadow: var(--sf-shadow-md);
+}
+
+.sf-card--overlay:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--sf-shadow-lg);
+}
+
+.sf-card__media {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--sf-surface-muted);
+  aspect-ratio: 1 / 1;
+}
+
+.sf-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease, opacity 0.3s ease;
+}
+
+.sf-card:hover .sf-card__image {
+  transform: scale(1.06);
+}
+
+/* ── Hero ────────────────────────────────────────────────────────────────── */
+
+.sf-hero-dots {
+  background-image: radial-gradient(circle, var(--sf-primary-ring) 1px, transparent 1.4px);
+  background-size: 26px 26px;
+  -webkit-mask-image: radial-gradient(ellipse 75% 75% at 70% 20%, #000 30%, transparent 100%);
+  mask-image: radial-gradient(ellipse 75% 75% at 70% 20%, #000 30%, transparent 100%);
+  opacity: 0.5;
+}
+
+.sf-hero-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  background: var(--sf-primary);
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+.sf-hero-glow--secondary {
+  background: var(--sf-secondary);
+  opacity: 0.16;
+}
+
+/* ── Animaciones ─────────────────────────────────────────────────────────── */
+
+.sf-float {
+  animation: sf-float 7s ease-in-out infinite;
+}
+
+.sf-float-slow {
+  animation: sf-float 9s ease-in-out infinite;
+}
+
+@keyframes sf-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-float,
+  .sf-float-slow {
+    animation: none;
+  }
+
+  .sf-card,
+  .sf-card__image,
+  .sf-btn {
+    transition: none;
+  }
+}
+
+/* ── Utilidades de scroll ────────────────────────────────────────────────── */
+
+.sf-scroll-x {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sf-scroll-x > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+/* ── Utilidades de superficie ────────────────────────────────────────────── */
+/* Reemplazan a las clases fijas de Tailwind (bg-white, text-slate-*) en las
+   páginas de la tienda, para que cualquier plantilla —incluida la oscura—
+   se vea coherente en catálogo, carrito y checkout. */
+
+.sf-bg-surface {
+  background-color: var(--sf-surface);
+}
+
+.sf-bg-muted {
+  background-color: var(--sf-surface-muted);
+}
+
+.sf-bg-base {
+  background-color: var(--sf-bg);
+}
+
+.sf-text-strong {
+  color: var(--sf-text);
+}
+
+.sf-border-c {
+  border-color: var(--sf-border);
+}
+
+.sf-hover-muted:hover {
+  background-color: var(--sf-surface-muted);
+}
+
+.sf-hover-surface:hover {
+  background-color: var(--sf-surface);
+}
+
+.sf-hover-text:hover {
+  color: var(--sf-text);
+}
+
+.sf-divide-c > * {
+  border-color: var(--sf-border);
+}
+
+.sf-focus-ring:focus-visible,
+.sf-focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--sf-primary-ring);
+}
+
+.sf-link-color {
+  color: var(--sf-primary-readable);
+}
+
+.sf-bg-primary-soft {
+  background-color: var(--sf-primary-soft);
+}
+
+.sf-border-primary {
+  border-color: var(--sf-primary);
+}
+
+.sf-hover-border:hover {
+  border-color: var(--sf-primary);
+}

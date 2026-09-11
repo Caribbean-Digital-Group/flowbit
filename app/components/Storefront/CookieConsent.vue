@@ -39,8 +39,11 @@ const decline = () => setConsent('denied')
       <div class="rounded-2xl bg-white border border-slate-200 shadow-xl shadow-slate-300/40 p-5">
         <div class="flex items-start gap-3">
           <div
-            class="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-white"
-            :style="{ backgroundColor: props.primaryColor }"
+            class="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center"
+            :style="{
+              backgroundColor: 'var(--sf-primary-strong, ' + props.primaryColor + ')',
+              color: 'var(--sf-primary-contrast, #ffffff)'
+            }"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path
@@ -69,8 +72,7 @@ const decline = () => setConsent('denied')
         <div class="mt-4 flex gap-2">
           <button
             type="button"
-            class="flex-1 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
-            :style="{ backgroundColor: props.primaryColor }"
+            class="sf-btn sf-btn--primary sf-btn--sm flex-1"
             @click="accept"
           >
             Aceptar

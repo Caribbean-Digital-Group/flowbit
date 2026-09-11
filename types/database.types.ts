@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
   }
   graphql_public: {
     Tables: {
@@ -3121,25 +3121,42 @@ export type Database = {
           about_text: string | null
           active: boolean | null
           announcement: string | null
+          announcement_link: string | null
+          benefits: Json | null
+          card_style: string | null
+          color_accent: string | null
+          color_primary: string | null
+          color_secondary: string | null
           company_id: string
           contact_address: string | null
           contact_email: string | null
           contact_phone: string | null
           created_at: string | null
           created_by: string | null
+          featured_limit: number
+          font_pairing: string
+          hero_cta_label: string | null
+          hero_layout: string | null
           hero_subtitle: string | null
           hero_title: string | null
           id: string
           is_active: boolean
+          palette: string
           policy_privacy: string | null
           policy_returns: string | null
           policy_shipping: string | null
           policy_terms: string | null
+          radius_style: string | null
+          show_benefits: boolean
+          show_categories: boolean
+          show_featured: boolean
           show_out_of_stock: boolean
+          show_story: boolean
           stripe_enabled: boolean
           stripe_publishable_key: string | null
           stripe_secret_key: string | null
           stripe_webhook_secret: string | null
+          theme: string
           updated_at: string | null
           updated_by: string | null
           whatsapp_phone: string | null
@@ -3148,25 +3165,42 @@ export type Database = {
           about_text?: string | null
           active?: boolean | null
           announcement?: string | null
+          announcement_link?: string | null
+          benefits?: Json | null
+          card_style?: string | null
+          color_accent?: string | null
+          color_primary?: string | null
+          color_secondary?: string | null
           company_id: string
           contact_address?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string | null
           created_by?: string | null
+          featured_limit?: number
+          font_pairing?: string
+          hero_cta_label?: string | null
+          hero_layout?: string | null
           hero_subtitle?: string | null
           hero_title?: string | null
           id?: string
           is_active?: boolean
+          palette?: string
           policy_privacy?: string | null
           policy_returns?: string | null
           policy_shipping?: string | null
           policy_terms?: string | null
+          radius_style?: string | null
+          show_benefits?: boolean
+          show_categories?: boolean
+          show_featured?: boolean
           show_out_of_stock?: boolean
+          show_story?: boolean
           stripe_enabled?: boolean
           stripe_publishable_key?: string | null
           stripe_secret_key?: string | null
           stripe_webhook_secret?: string | null
+          theme?: string
           updated_at?: string | null
           updated_by?: string | null
           whatsapp_phone?: string | null
@@ -3175,25 +3209,42 @@ export type Database = {
           about_text?: string | null
           active?: boolean | null
           announcement?: string | null
+          announcement_link?: string | null
+          benefits?: Json | null
+          card_style?: string | null
+          color_accent?: string | null
+          color_primary?: string | null
+          color_secondary?: string | null
           company_id?: string
           contact_address?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string | null
           created_by?: string | null
+          featured_limit?: number
+          font_pairing?: string
+          hero_cta_label?: string | null
+          hero_layout?: string | null
           hero_subtitle?: string | null
           hero_title?: string | null
           id?: string
           is_active?: boolean
+          palette?: string
           policy_privacy?: string | null
           policy_returns?: string | null
           policy_shipping?: string | null
           policy_terms?: string | null
+          radius_style?: string | null
+          show_benefits?: boolean
+          show_categories?: boolean
+          show_featured?: boolean
           show_out_of_stock?: boolean
+          show_story?: boolean
           stripe_enabled?: boolean
           stripe_publishable_key?: string | null
           stripe_secret_key?: string | null
           stripe_webhook_secret?: string | null
+          theme?: string
           updated_at?: string | null
           updated_by?: string | null
           whatsapp_phone?: string | null
@@ -5060,12 +5111,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5089,11 +5140,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5114,11 +5165,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5139,11 +5190,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5156,11 +5207,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

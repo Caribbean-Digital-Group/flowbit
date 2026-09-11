@@ -7,7 +7,7 @@ definePageMeta({ layout: 'storefront' })
 const route = useRoute()
 const storefrontStore = useStorefrontStore()
 const authStore = useAuthStore()
-const { store, primaryColor } = storeToRefs(storefrontStore)
+const { store} = storeToRefs(storefrontStore)
 const { getMyOrders } = useStorefront()
 const { signIn, signUp, signOut } = useSupabaseAuth()
 
@@ -82,7 +82,7 @@ const handleSignOut = async () => {
 const stateLabel = (order: StorefrontMyOrder): { label: string; classes: string } => {
   if (order.order_state === 'cancel') return { label: 'Cancelado', classes: 'bg-rose-50 text-rose-600' }
   if (order.is_delivered) return { label: 'Entregado', classes: 'bg-emerald-50 text-emerald-600' }
-  return { label: 'En preparación', classes: 'bg-indigo-50 text-indigo-600' }
+  return { label: 'En preparación', classes: 'sf-bg-primary-soft sf-link-color' }
 }
 
 useHead(() => ({
@@ -93,17 +93,17 @@ useHead(() => ({
 
 <template>
   <div v-if="store" class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 mb-8">Mi cuenta</h1>
+    <h1 class="text-2xl sm:text-3xl font-bold sf-text-strong mb-8">Mi cuenta</h1>
 
     <!-- Sin sesión: login / registro -->
-    <div v-if="!authStore.isAuthenticated" class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-6 sm:p-10 max-w-md mx-auto">
-      <div class="flex rounded-xl bg-slate-100 p-1 mb-6" role="tablist">
+    <div v-if="!authStore.isAuthenticated" class="sf-bg-surface rounded-2xl shadow-lg shadow-slate-200/50 p-6 sm:p-10 max-w-md mx-auto">
+      <div class="flex rounded-xl sf-bg-muted p-1 mb-6" role="tablist">
         <button
           type="button"
           role="tab"
           :aria-selected="mode === 'login'"
           class="flex-1 py-2 rounded-lg text-sm font-semibold transition-colors"
-          :class="mode === 'login' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'"
+          :class="mode === 'login' ? 'sf-bg-surface sf-text-strong shadow-sm' : 'sf-muted'"
           @click="mode = 'login'"
         >
           Iniciar sesión
@@ -113,7 +113,7 @@ useHead(() => ({
           role="tab"
           :aria-selected="mode === 'register'"
           class="flex-1 py-2 rounded-lg text-sm font-semibold transition-colors"
-          :class="mode === 'register' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'"
+          :class="mode === 'register' ? 'sf-bg-surface sf-text-strong shadow-sm' : 'sf-muted'"
           @click="mode = 'register'"
         >
           Crear cuenta
@@ -144,14 +144,14 @@ useHead(() => ({
         <button
           type="submit"
           class="w-full py-3 rounded-xl text-sm font-semibold text-white shadow-lg transition-opacity hover:opacity-90 disabled:opacity-50"
-          :style="{ backgroundColor: primaryColor }"
+          :style="{ backgroundColor: 'var(--sf-primary-strong)', color: 'var(--sf-primary-contrast)' }"
           :disabled="isSubmitting"
         >
           {{ isSubmitting ? 'Procesando…' : mode === 'login' ? 'Entrar' : 'Registrarme' }}
         </button>
       </form>
 
-      <p class="mt-5 text-xs text-slate-400 text-center leading-relaxed">
+      <p class="mt-5 text-xs sf-subtle text-center leading-relaxed">
         Con tu cuenta puedes consultar el historial de pedidos que hiciste con tu correo en esta tienda.
         También puedes comprar como invitado sin registrarte.
       </p>
@@ -160,29 +160,29 @@ useHead(() => ({
     <!-- Con sesión: historial -->
     <template v-else>
       <div class="flex items-center justify-between mb-6">
-        <p class="text-sm text-slate-500">
+        <p class="text-sm sf-muted">
           Sesión iniciada como
-          <span class="font-semibold text-slate-800">{{ accountEmail ?? authStore.partnerEmail }}</span>
+          <span class="font-semibold sf-text-strong">{{ accountEmail ?? authStore.partnerEmail }}</span>
         </p>
         <button
           type="button"
-          class="text-sm font-medium text-slate-500 hover:text-rose-500 transition-colors"
+          class="text-sm font-medium sf-muted hover:text-rose-500 transition-colors"
           @click="handleSignOut"
         >
           Cerrar sesión
         </button>
       </div>
 
-      <div v-if="isLoadingOrders" class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 py-16 text-center text-sm text-slate-400">
+      <div v-if="isLoadingOrders" class="sf-bg-surface rounded-2xl shadow-lg shadow-slate-200/50 py-16 text-center text-sm sf-subtle">
         Cargando tus pedidos…
       </div>
 
-      <div v-else-if="!orders.length" class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 py-16 text-center">
-        <p class="text-slate-600 font-medium">Aún no tienes pedidos en esta tienda</p>
+      <div v-else-if="!orders.length" class="sf-bg-surface rounded-2xl shadow-lg shadow-slate-200/50 py-16 text-center">
+        <p class="sf-muted font-medium">Aún no tienes pedidos en esta tienda</p>
         <NuxtLink
           :to="`${basePath}/products`"
           class="mt-5 inline-flex px-6 py-3 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
-          :style="{ backgroundColor: primaryColor }"
+          :style="{ backgroundColor: 'var(--sf-primary-strong)', color: 'var(--sf-primary-contrast)' }"
         >
           Explorar productos
         </NuxtLink>
@@ -192,21 +192,21 @@ useHead(() => ({
         <li
           v-for="order in orders"
           :key="order.order_ref"
-          class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 px-6 py-4"
+          class="sf-bg-surface rounded-2xl shadow-lg shadow-slate-200/50 px-6 py-4"
         >
           <NuxtLink
             :to="`${basePath}/checkout/confirmation/${encodeURIComponent(order.order_ref)}`"
             class="flex items-center justify-between gap-4 group"
           >
             <div>
-              <p class="text-sm font-semibold text-slate-900 group-hover:underline">{{ order.order_ref }}</p>
-              <p class="text-xs text-slate-400 mt-0.5">
+              <p class="text-sm font-semibold sf-text-strong group-hover:underline">{{ order.order_ref }}</p>
+              <p class="text-xs sf-subtle mt-0.5">
                 {{ new Date(order.order_date).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }) }}
                 · {{ order.line_count }} artículo{{ order.line_count === 1 ? '' : 's' }}
               </p>
             </div>
             <div class="text-right flex-shrink-0">
-              <p class="text-sm font-bold text-slate-900">
+              <p class="text-sm font-bold sf-text-strong">
                 {{ formatStorefrontCurrency(order.amount_total, order.currency) }}
               </p>
               <span

@@ -7,7 +7,7 @@ definePageMeta({ layout: 'storefront' })
 const route = useRoute()
 const router = useRouter()
 const storefrontStore = useStorefrontStore()
-const { store, categories, primaryColor } = storeToRefs(storefrontStore)
+const { store, categories} = storeToRefs(storefrontStore)
 const { getProducts } = useStorefront()
 
 const companySlug = computed(() => {
@@ -162,10 +162,10 @@ useHead(() => ({
   <div v-if="store" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <!-- Encabezado -->
     <div class="mb-8">
-      <h1 class="text-2xl sm:text-3xl font-bold text-slate-900">
+      <h1 class="text-2xl sm:text-3xl font-bold sf-text-strong">
         {{ selectedCategoryName ?? 'Todos los productos' }}
       </h1>
-      <p class="mt-1 text-sm text-slate-500">
+      <p class="mt-1 text-sm sf-muted">
         <template v-if="isLoading">Buscando productos…</template>
         <template v-else>{{ total }} producto{{ total === 1 ? '' : 's' }} encontrado{{ total === 1 ? '' : 's' }}</template>
       </p>
@@ -176,23 +176,23 @@ useHead(() => ({
       <aside class="lg:w-64 flex-shrink-0">
         <button
           type="button"
-          class="lg:hidden w-full flex items-center justify-between px-4 py-3 bg-white rounded-2xl shadow-lg shadow-slate-200/50 text-sm font-semibold text-slate-800 mb-4"
+          class="lg:hidden w-full flex items-center justify-between px-4 py-3 sf-bg-surface rounded-2xl shadow-lg shadow-slate-200/50 text-sm font-semibold sf-text-strong mb-4"
           :aria-expanded="showFilters"
           @click="showFilters = !showFilters"
         >
           Filtros
-          <svg class="w-4 h-4 text-slate-400 transition-transform" :class="{ 'rotate-180': showFilters }" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <svg class="w-4 h-4 sf-subtle transition-transform" :class="{ 'rotate-180': showFilters }" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
 
         <div
-          class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-5 space-y-6"
+          class="sf-bg-surface rounded-2xl shadow-lg shadow-slate-200/50 p-5 space-y-6"
           :class="{ 'hidden lg:block': !showFilters }"
         >
           <!-- Búsqueda -->
           <div>
-            <label for="sf-search" class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-2">
+            <label for="sf-search" class="block text-xs font-semibold sf-text-strong uppercase tracking-wide mb-2">
               Buscar
             </label>
             <input
@@ -200,19 +200,19 @@ useHead(() => ({
               v-model="search"
               type="search"
               placeholder="Nombre o descripción..."
-              class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+              class="w-full rounded-xl border sf-border-c sf-bg-muted px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
               @keyup.enter="applyFilters"
             />
           </div>
 
           <!-- Categorías -->
           <div v-if="categories.length">
-            <p class="text-xs font-semibold text-slate-700 uppercase tracking-wide mb-2">Categoría</p>
+            <p class="text-xs font-semibold sf-text-strong uppercase tracking-wide mb-2">Categoría</p>
             <div class="space-y-1">
               <button
                 type="button"
                 class="w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors"
-                :class="!categoryId ? 'font-semibold text-slate-900 bg-slate-100' : 'text-slate-600 hover:bg-slate-50'"
+                :class="!categoryId ? 'font-semibold sf-text-strong sf-bg-muted' : 'sf-muted sf-hover-muted'"
                 @click="categoryId = null; applyFilters()"
               >
                 Todas
@@ -222,18 +222,18 @@ useHead(() => ({
                 :key="category.id"
                 type="button"
                 class="w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center justify-between"
-                :class="categoryId === category.id ? 'font-semibold text-slate-900 bg-slate-100' : 'text-slate-600 hover:bg-slate-50'"
+                :class="categoryId === category.id ? 'font-semibold sf-text-strong sf-bg-muted' : 'sf-muted sf-hover-muted'"
                 @click="categoryId = category.id; applyFilters()"
               >
                 <span>{{ category.name }}</span>
-                <span class="text-xs text-slate-400">{{ category.product_count }}</span>
+                <span class="text-xs sf-subtle">{{ category.product_count }}</span>
               </button>
             </div>
           </div>
 
           <!-- Precio -->
           <div>
-            <p class="text-xs font-semibold text-slate-700 uppercase tracking-wide mb-2">Precio</p>
+            <p class="text-xs font-semibold sf-text-strong uppercase tracking-wide mb-2">Precio</p>
             <div class="flex items-center gap-2">
               <input
                 v-model="minPrice"
@@ -241,16 +241,16 @@ useHead(() => ({
                 min="0"
                 placeholder="Mín"
                 aria-label="Precio mínimo"
-                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+                class="w-full rounded-xl border sf-border-c sf-bg-muted px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
               />
-              <span class="text-slate-400 text-sm">—</span>
+              <span class="sf-subtle text-sm">—</span>
               <input
                 v-model="maxPrice"
                 type="number"
                 min="0"
                 placeholder="Máx"
                 aria-label="Precio máximo"
-                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+                class="w-full rounded-xl border sf-border-c sf-bg-muted px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
               />
             </div>
           </div>
@@ -260,17 +260,17 @@ useHead(() => ({
             <input
               v-model="onlyInStock"
               type="checkbox"
-              class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+              class="w-4 h-4 sf-link-color rounded border-slate-300 focus:ring-indigo-500"
               @change="applyFilters"
             />
-            <span class="text-sm text-slate-700">Solo disponibles</span>
+            <span class="text-sm sf-text-strong">Solo disponibles</span>
           </label>
 
           <div class="flex flex-col gap-2 pt-2">
             <button
               type="button"
               class="w-full px-4 py-2 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
-              :style="{ backgroundColor: primaryColor }"
+              :style="{ backgroundColor: 'var(--sf-primary-strong)', color: 'var(--sf-primary-contrast)' }"
               @click="applyFilters"
             >
               Aplicar filtros
@@ -278,7 +278,7 @@ useHead(() => ({
             <button
               v-if="hasActiveFilters"
               type="button"
-              class="w-full px-4 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
+              class="w-full px-4 py-2 rounded-xl text-sm font-medium sf-muted sf-hover-text transition-colors"
               @click="clearFilters"
             >
               Limpiar filtros
@@ -291,11 +291,11 @@ useHead(() => ({
       <div class="flex-1 min-w-0">
         <!-- Ordenamiento -->
         <div class="flex items-center justify-end mb-5">
-          <label for="sf-sort" class="text-sm text-slate-500 mr-2">Ordenar por</label>
+          <label for="sf-sort" class="text-sm sf-muted mr-2">Ordenar por</label>
           <select
             id="sf-sort"
             v-model="sort"
-            class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            class="rounded-xl border sf-border-c sf-bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
             @change="applyFilters"
           >
             <option v-for="option in sortOptions" :key="option.value" :value="option.value">
@@ -309,12 +309,12 @@ useHead(() => ({
           <div
             v-for="n in 8"
             :key="n"
-            class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 overflow-hidden animate-pulse"
+            class="sf-bg-surface rounded-2xl shadow-lg shadow-slate-200/50 overflow-hidden animate-pulse"
           >
-            <div class="aspect-square bg-slate-100" />
+            <div class="aspect-square sf-bg-muted" />
             <div class="p-4 space-y-2">
-              <div class="h-3.5 bg-slate-100 rounded w-3/4" />
-              <div class="h-3 bg-slate-100 rounded w-1/2" />
+              <div class="h-3.5 sf-bg-muted rounded w-3/4" />
+              <div class="h-3 sf-bg-muted rounded w-1/2" />
             </div>
           </div>
         </div>
@@ -333,17 +333,17 @@ useHead(() => ({
         </div>
 
         <!-- Vacío -->
-        <div v-else class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 py-20 text-center">
-          <svg class="w-12 h-12 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <div v-else class="sf-bg-surface rounded-2xl shadow-lg shadow-slate-200/50 py-20 text-center">
+          <svg class="w-12 h-12 sf-subtle mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z" />
           </svg>
-          <p class="text-slate-600 font-medium">No encontramos productos</p>
-          <p class="text-sm text-slate-400 mt-1">Prueba con otros términos o quita algún filtro.</p>
+          <p class="sf-muted font-medium">No encontramos productos</p>
+          <p class="text-sm sf-subtle mt-1">Prueba con otros términos o quita algún filtro.</p>
           <button
             v-if="hasActiveFilters"
             type="button"
             class="mt-4 text-sm font-semibold transition-opacity hover:opacity-75"
-            :style="{ color: primaryColor }"
+            :style="{ color: 'var(--sf-primary-readable)' }"
             @click="clearFilters"
           >
             Limpiar filtros
@@ -358,18 +358,18 @@ useHead(() => ({
         >
           <button
             type="button"
-            class="px-4 py-2 rounded-xl bg-white shadow-lg shadow-slate-200/50 text-sm font-medium text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed hover:text-slate-900 transition-colors"
+            class="px-4 py-2 rounded-xl sf-bg-surface shadow-lg shadow-slate-200/50 text-sm font-medium sf-muted disabled:opacity-40 disabled:cursor-not-allowed sf-hover-text transition-colors"
             :disabled="page <= 1"
             @click="goToPage(page - 1)"
           >
             ← Anterior
           </button>
-          <span class="px-4 text-sm text-slate-500">
+          <span class="px-4 text-sm sf-muted">
             Página {{ page }} de {{ totalPages }}
           </span>
           <button
             type="button"
-            class="px-4 py-2 rounded-xl bg-white shadow-lg shadow-slate-200/50 text-sm font-medium text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed hover:text-slate-900 transition-colors"
+            class="px-4 py-2 rounded-xl sf-bg-surface shadow-lg shadow-slate-200/50 text-sm font-medium sf-muted disabled:opacity-40 disabled:cursor-not-allowed sf-hover-text transition-colors"
             :disabled="page >= totalPages"
             @click="goToPage(page + 1)"
           >

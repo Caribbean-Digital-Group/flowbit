@@ -6,7 +6,7 @@ definePageMeta({ layout: 'storefront' })
 
 const route = useRoute()
 const storefrontStore = useStorefrontStore()
-const { store, primaryColor } = storeToRefs(storefrontStore)
+const { store} = storeToRefs(storefrontStore)
 const { getProduct } = useStorefront()
 
 const companySlug = computed(() => {
@@ -208,22 +208,22 @@ useHead(() => ({
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <!-- Skeleton -->
     <div v-if="isLoading" class="grid grid-cols-1 lg:grid-cols-2 gap-10 animate-pulse">
-      <div class="aspect-square bg-slate-100 rounded-2xl" />
+      <div class="aspect-square sf-bg-muted rounded-2xl" />
       <div class="space-y-4 pt-4">
-        <div class="h-8 bg-slate-100 rounded w-3/4" />
-        <div class="h-5 bg-slate-100 rounded w-1/3" />
-        <div class="h-24 bg-slate-100 rounded" />
+        <div class="h-8 sf-bg-muted rounded w-3/4" />
+        <div class="h-5 sf-bg-muted rounded w-1/3" />
+        <div class="h-24 sf-bg-muted rounded" />
       </div>
     </div>
 
     <!-- No encontrado -->
     <div v-else-if="notFound" class="py-24 text-center">
-      <h1 class="text-2xl font-bold text-slate-900 mb-2">Producto no disponible</h1>
-      <p class="text-slate-500 mb-6">Este producto no existe o ya no está publicado.</p>
+      <h1 class="text-2xl font-bold sf-text-strong mb-2">Producto no disponible</h1>
+      <p class="sf-muted mb-6">Este producto no existe o ya no está publicado.</p>
       <NuxtLink
         :to="`${basePath}/products`"
         class="inline-flex px-6 py-3 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
-        :style="{ backgroundColor: primaryColor }"
+        :style="{ backgroundColor: 'var(--sf-primary-strong)', color: 'var(--sf-primary-contrast)' }"
       >
         Ver catálogo
       </NuxtLink>
@@ -231,35 +231,35 @@ useHead(() => ({
 
     <template v-else-if="product">
       <!-- Breadcrumb -->
-      <nav class="mb-6 text-sm text-slate-500 flex items-center gap-2 flex-wrap" aria-label="Migas de pan">
-        <NuxtLink :to="basePath" class="hover:text-slate-800 transition-colors">Inicio</NuxtLink>
+      <nav class="mb-6 text-sm sf-muted flex items-center gap-2 flex-wrap" aria-label="Migas de pan">
+        <NuxtLink :to="basePath" class="sf-hover-text transition-colors">Inicio</NuxtLink>
         <span aria-hidden="true">/</span>
-        <NuxtLink :to="`${basePath}/products`" class="hover:text-slate-800 transition-colors">Productos</NuxtLink>
+        <NuxtLink :to="`${basePath}/products`" class="sf-hover-text transition-colors">Productos</NuxtLink>
         <template v-if="product.category_name">
           <span aria-hidden="true">/</span>
           <NuxtLink
             :to="{ path: `${basePath}/products`, query: { category: product.category_id } }"
-            class="hover:text-slate-800 transition-colors"
+            class="sf-hover-text transition-colors"
           >
             {{ product.category_name }}
           </NuxtLink>
         </template>
         <span aria-hidden="true">/</span>
-        <span class="text-slate-800 font-medium truncate max-w-[12rem]">{{ product.name }}</span>
+        <span class="sf-text-strong font-medium truncate max-w-[12rem]">{{ product.name }}</span>
       </nav>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <!-- Galería -->
         <div>
-          <div class="aspect-square bg-white rounded-2xl shadow-lg shadow-slate-200/50 overflow-hidden">
+          <div class="aspect-square sf-bg-surface rounded-2xl shadow-lg shadow-slate-200/50 overflow-hidden">
             <img
               v-if="activeImage"
               :src="activeImage"
               :alt="product.name"
               class="w-full h-full object-cover"
             />
-            <div v-else class="w-full h-full flex items-center justify-center bg-slate-100">
-              <svg class="w-16 h-16 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <div v-else class="w-full h-full flex items-center justify-center sf-bg-muted">
+              <svg class="w-16 h-16 sf-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.6-4.6a2 2 0 012.8 0L16 16m-2-2l1.6-1.6a2 2 0 012.8 0L20 14M14 8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
@@ -283,23 +283,23 @@ useHead(() => ({
         <!-- Info -->
         <div>
           <div v-if="product.category_name" class="mb-3">
-            <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold" :style="{ backgroundColor: `${primaryColor}1a`, color: primaryColor }">
+            <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold" :style="{ backgroundColor: 'var(--sf-primary-soft)', color: 'var(--sf-primary-readable)' }">
               {{ product.category_name }}
             </span>
           </div>
 
-          <h1 class="text-2xl sm:text-3xl font-bold text-slate-900">{{ product.name }}</h1>
-          <p v-if="product.sku" class="mt-1 text-xs text-slate-400">SKU: {{ product.sku }}</p>
+          <h1 class="text-2xl sm:text-3xl font-bold sf-text-strong">{{ product.name }}</h1>
+          <p v-if="product.sku" class="mt-1 text-xs sf-subtle">SKU: {{ product.sku }}</p>
 
           <div class="mt-5 flex items-end gap-3">
-            <p class="text-3xl font-bold text-slate-900">
+            <p class="text-3xl font-bold sf-text-strong">
               {{ formatStorefrontCurrency(product.price_final, product.currency) }}
             </p>
-            <p v-if="hasDiscount" class="text-lg text-slate-400 line-through pb-0.5">
+            <p v-if="hasDiscount" class="text-lg sf-subtle line-through pb-0.5">
               {{ formatStorefrontCurrency(product.list_price_final, product.currency) }}
             </p>
           </div>
-          <p class="mt-1 text-xs text-slate-400">Impuestos incluidos.</p>
+          <p class="mt-1 text-xs sf-subtle">Impuestos incluidos.</p>
 
           <!-- Disponibilidad -->
           <div class="mt-4">
@@ -319,39 +319,39 @@ useHead(() => ({
             </span>
           </div>
 
-          <p v-if="product.short_description" class="mt-5 text-slate-600 leading-relaxed">
+          <p v-if="product.short_description" class="mt-5 sf-muted leading-relaxed">
             {{ product.short_description }}
           </p>
 
           <!-- Atributos -->
           <div v-if="attributeEntries.length" class="mt-6">
-            <p class="text-xs font-semibold text-slate-700 uppercase tracking-wide mb-2">Características</p>
+            <p class="text-xs font-semibold sf-text-strong uppercase tracking-wide mb-2">Características</p>
             <dl class="grid grid-cols-2 gap-x-6 gap-y-2">
               <div v-for="[key, value] in attributeEntries" :key="key" class="flex items-baseline gap-2 text-sm">
-                <dt class="text-slate-400 capitalize">{{ key }}:</dt>
-                <dd class="text-slate-700 font-medium">{{ value }}</dd>
+                <dt class="sf-subtle capitalize">{{ key }}:</dt>
+                <dd class="sf-text-strong font-medium">{{ value }}</dd>
               </div>
             </dl>
           </div>
 
           <!-- Cantidad + agregar -->
           <div class="mt-8 flex flex-col sm:flex-row gap-3">
-            <div class="flex items-center rounded-xl border border-slate-200 bg-white w-fit">
+            <div class="flex items-center rounded-xl border sf-border-c sf-bg-surface w-fit">
               <button
                 type="button"
-                class="px-4 py-3 text-slate-500 hover:text-slate-900 disabled:opacity-30 transition-colors"
+                class="px-4 py-3 sf-muted sf-hover-text disabled:opacity-30 transition-colors"
                 :disabled="quantity <= 1"
                 aria-label="Disminuir cantidad"
                 @click="adjustQuantity(-1)"
               >
                 −
               </button>
-              <span class="w-10 text-center text-sm font-semibold text-slate-900" aria-live="polite">
+              <span class="w-10 text-center text-sm font-semibold sf-text-strong" aria-live="polite">
                 {{ quantity }}
               </span>
               <button
                 type="button"
-                class="px-4 py-3 text-slate-500 hover:text-slate-900 disabled:opacity-30 transition-colors"
+                class="px-4 py-3 sf-muted sf-hover-text disabled:opacity-30 transition-colors"
                 :disabled="quantity >= maxQuantity"
                 aria-label="Aumentar cantidad"
                 @click="adjustQuantity(1)"
@@ -363,7 +363,7 @@ useHead(() => ({
             <button
               type="button"
               class="flex-1 sm:flex-none sm:min-w-[14rem] px-8 py-3 rounded-xl text-sm font-semibold text-white shadow-lg transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed"
-              :style="{ backgroundColor: primaryColor }"
+              :style="{ backgroundColor: 'var(--sf-primary-strong)', color: 'var(--sf-primary-contrast)' }"
               :disabled="!product.in_stock"
               @click="handleAddToCart"
             >
@@ -372,7 +372,7 @@ useHead(() => ({
 
             <button
               type="button"
-              class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:opacity-50"
+              class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold border sf-border-c sf-bg-surface sf-text-strong transition-colors sf-hover-muted sf-hover-text focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:opacity-50"
               :disabled="isSharing"
               aria-label="Compartir producto"
               @click="handleShare"
@@ -385,9 +385,9 @@ useHead(() => ({
           </div>
 
           <!-- Descripción -->
-          <div v-if="product.description" class="mt-10 pt-8 border-t border-slate-200">
-            <h2 class="text-lg font-bold text-slate-900 mb-3">Descripción</h2>
-            <p class="text-slate-600 leading-relaxed whitespace-pre-line">{{ product.description }}</p>
+          <div v-if="product.description" class="mt-10 pt-8 border-t sf-border-c">
+            <h2 class="text-lg font-bold sf-text-strong mb-3">Descripción</h2>
+            <p class="sf-muted leading-relaxed whitespace-pre-line">{{ product.description }}</p>
           </div>
 
           <!-- Tags -->
@@ -395,7 +395,7 @@ useHead(() => ({
             <span
               v-for="tag in product.tags"
               :key="tag"
-              class="px-3 py-1 rounded-full bg-slate-100 text-xs text-slate-500"
+              class="px-3 py-1 rounded-full sf-bg-muted text-xs sf-muted"
             >
               #{{ tag }}
             </span>
@@ -405,7 +405,7 @@ useHead(() => ({
 
       <!-- Relacionados -->
       <section v-if="relatedProducts.length" class="mt-16">
-        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mb-6">También te puede interesar</h2>
+        <h2 class="text-xl sm:text-2xl font-bold sf-text-strong mb-6">También te puede interesar</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           <StorefrontProductCard
             v-for="related in relatedProducts"

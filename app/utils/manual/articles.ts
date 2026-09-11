@@ -1335,6 +1335,107 @@ export const ARTICLES: DocArticle[] = [
     tags: ['pedido', 'tienda', 'cumplimiento', 'envío', 'entrega', 'inventario', 'fulfillment']
   },
   {
+    id: 'storefront-design',
+    routePatterns: [],
+    module: 'storefront',
+    moduleLabel: 'Tienda en línea',
+    moduleEmoji: '🛍️',
+    title: 'Diseño y plantillas de la tienda',
+    viewType: 'config',
+    level: 'basico',
+    isNew: true,
+    summary: 'Elige una plantilla, una paleta y una tipografía; la vista previa te muestra el resultado antes de guardar.',
+    description: 'Desde Ajustes de tienda puedes cambiar por completo el aspecto de tu tienda sin tocar código: seis plantillas, diez paletas de color, cinco tipografías y control de qué secciones aparecen en la portada.',
+    importance: 'El diseño es lo primero que juzga quien llega a tu tienda. Una plantilla acorde a lo que vendes y colores consistentes con tu marca transmiten confianza antes de que el cliente lea una sola descripción de producto.',
+    tips: [
+      'Empieza por la plantilla: cada una está pensada para un tipo de negocio y ya trae paleta, tipografía y composición que combinan entre sí.',
+      'Cambiar de plantilla reinicia tus personalizaciones de color y tipografía, así que elígela primero y afina después.',
+      'La vista previa refleja lo que estás editando en tiempo real; revísala también en «Celular», que es por donde llegará la mayoría de tus visitas.',
+      'Si eliges un color claro (amarillo, lima, cian), Flowbit ajusta automáticamente el tono de los botones para que el texto se lea, y te avisa cuando lo hace.',
+      'Las tipografías distintas de «Sistema» se descargan al abrir la tienda: se ven mejor, pero cargan un poco más lento en conexiones malas.',
+      'Los beneficios de la portada son editables: cámbialos por los tuyos reales (horario, garantía, cobertura de envío) en lugar de dejar los de ejemplo.',
+      'La plantilla «Noir» usa fondo oscuro en toda la tienda; revisa que las fotos de tus productos se vean bien sobre negro antes de publicarla.'
+    ],
+    fields: [
+      { label: 'Plantilla', required: true, type: 'select', description: 'Define hero, tarjetas, esquinas y tipografía base.', tip: 'Aurora para empezar, Boutique para moda, Impulso para ofertas, Mercado para alimentos, Noir para marcas premium, Esencial para catálogos grandes.' },
+      { label: 'Paleta de colores', required: false, type: 'select', description: 'Conjunto de tres colores que combinan entre sí.', tip: 'Elige la paleta más cercana a tu marca y personaliza solo si hace falta.' },
+      { label: 'Colores personalizados', required: false, type: 'text', description: 'Sobrescriben el color principal, secundario o de acento.', tip: 'Déjalos vacíos para usar los de la paleta; puedes personalizar solo uno.' },
+      { label: 'Tipografía', required: false, type: 'select', description: 'Par de fuentes para títulos y texto.', tip: '«Sistema» es la más rápida; las demás dan más personalidad.' },
+      { label: 'Composición del hero', required: false, type: 'select', description: 'Cómo se arma la parte superior de la portada.', tip: '«Banner a sangre» necesita que hayas cargado una imagen de banner.' },
+      { label: 'Tarjeta de producto', required: false, type: 'select', description: 'Aspecto de cada producto en las rejillas.', tip: '«Minimalista» luce mejor con fotos de fondo blanco y uniforme.' },
+      { label: 'Secciones de la portada', required: false, type: 'boolean', description: 'Qué bloques se muestran: categorías, destacados, historia y beneficios.', tip: 'Si tienes pocos productos, desactiva categorías y deja solo destacados.' },
+      { label: 'Productos destacados', required: false, type: 'number', description: 'Cuántos productos aparecen en la portada (entre 4 y 12).', tip: '8 funciona bien en casi todas las pantallas.' }
+    ],
+    wizard: {
+      id: 'wz-storefront-design',
+      title: 'Dale identidad a tu tienda',
+      description: 'De la plantilla por defecto a una tienda que parece tuya.',
+      estimatedMinutes: 10,
+      steps: [
+        {
+          id: 'template',
+          title: 'Elige tu plantilla',
+          description: 'Abre Ajustes de tienda y ve a «Diseño de la tienda». Elige la plantilla pensada para lo que vendes.',
+          action: { label: 'Ir a Ajustes de tienda', route: '/admin/storefront' },
+          warning: 'Cambiar de plantilla después reinicia los colores y la tipografía que hayas personalizado.'
+        },
+        {
+          id: 'colors',
+          title: 'Ajusta los colores',
+          description: 'Elige la paleta más cercana a tu marca. Si tienes un color corporativo exacto, pégalo en «Colores personalizados».',
+          tip: 'Si aparece el aviso de contraste, tu color se conserva: solo los botones usan un tono ajustado para que la etiqueta se lea.'
+        },
+        {
+          id: 'typography',
+          title: 'Define la tipografía',
+          description: 'Prueba los cinco pares tipográficos en la vista previa y quédate con el que mejor exprese tu marca.'
+        },
+        {
+          id: 'sections',
+          title: 'Arma tu portada',
+          description: 'Activa o desactiva categorías, destacados, tu historia y los beneficios. Decide cuántos productos destacados mostrar.',
+          checklist: ['Secciones elegidas', 'Número de destacados', 'Texto del botón principal']
+        },
+        {
+          id: 'benefits',
+          title: 'Escribe tus beneficios reales',
+          description: 'Sustituye los beneficios de ejemplo por los tuyos: cobertura de envío, garantía, horario de atención o formas de pago.',
+          tip: 'Tres beneficios concretos convencen más que seis genéricos.'
+        },
+        {
+          id: 'review',
+          title: 'Revisa en celular y publica',
+          description: 'Cambia la vista previa a «Celular», guarda y abre tu tienda real para confirmar que todo se ve como esperas.',
+          action: { label: 'Ver mis órdenes', route: '/admin/orders' }
+        }
+      ]
+    },
+    faqs: [
+      {
+        question: '¿Puedo usar mi color de marca exacto?',
+        answer: 'Sí. El color que capturas se conserva tal cual en fondos y detalles. Solo cuando un botón necesita texto encima y tu color no da contraste suficiente, se usa un tono ajustado de ese mismo color para que la etiqueta sea legible; el panel te avisa cuando ocurre.'
+      },
+      {
+        question: '¿Cambiar de plantilla afecta mis productos o pedidos?',
+        answer: 'No. El diseño solo cambia la presentación. Productos, precios, inventario, cupones y pedidos no se tocan.'
+      },
+      {
+        question: '¿Cuándo se ven los cambios en mi tienda?',
+        answer: 'En cuanto guardas. La vista previa del panel muestra el resultado antes de publicar.'
+      },
+      {
+        question: '¿Puedo volver al diseño anterior?',
+        answer: 'Sí, basta con volver a elegir la plantilla y los colores previos. No se borra nada al cambiar de diseño.'
+      }
+    ],
+    relatedModules: [
+      { label: 'Ajustes de tienda', route: '/admin/storefront' },
+      { label: 'Productos', route: '/admin/products' }
+    ],
+    relatedArticles: ['storefront-settings', 'storefront-public', 'storefront-analytics'],
+    tags: ['diseño', 'plantilla', 'tema', 'colores', 'paleta', 'tipografía', 'personalizar', 'branding', 'portada']
+  },
+  {
     id: 'storefront-coupons-list',
     routePatterns: ['/admin/storefront/coupons'],
     module: 'storefront',

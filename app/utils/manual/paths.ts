@@ -118,10 +118,10 @@ export const LEARNING_PATHS: LearningPath[] = [
     title: 'Vende en línea',
     emoji: '🛍️',
     description: 'Abre tu tienda, define envíos y cupones, cobra con tarjeta y mide los resultados.',
-    estimatedMinutes: 35,
+    estimatedMinutes: 45,
     level: 'intermedio',
     accent: 'violet',
-    articleIds: ['storefront-settings', 'storefront-shipping-create', 'storefront-coupons-create', 'storefront-stripe', 'storefront-fulfillment', 'storefront-analytics']
+    articleIds: ['storefront-settings', 'storefront-design', 'storefront-shipping-create', 'storefront-coupons-create', 'storefront-stripe', 'storefront-fulfillment', 'storefront-analytics']
   },
   {
     id: 'path-pos',
