@@ -590,7 +590,7 @@ const menuGroups: MenuGroup[] = [
       },
       {
         title: 'Manual',
-        to: '/admin/manual',
+        to: '/manual',
         iconPaths: [
           'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'
         ]
@@ -885,7 +885,7 @@ const handleLogout = async () => {
           <div class="flex items-center gap-3">
             <!-- Manual de usuario -->
             <NuxtLink
-              to="/admin/manual"
+              to="/manual"
               class="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-all hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
               title="Manual de usuario"
               aria-label="Abrir manual de usuario"

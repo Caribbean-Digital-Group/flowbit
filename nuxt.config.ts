@@ -17,6 +17,11 @@ export default defineNuxtConfig({
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://tryflowbit.netlify.app',
     },
   },
+  routeRules: {
+    // El manual pasó de /admin/manual y /help a la sección pública /manual.
+    '/help': { redirect: { to: '/manual', statusCode: 301 } },
+    '/help/**': { redirect: { to: '/manual/**', statusCode: 301 } },
+  },
   alias: {
     '~/types': '../types',
   },

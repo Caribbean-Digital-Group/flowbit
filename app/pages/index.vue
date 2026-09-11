@@ -157,6 +157,22 @@ const workflow = [
               </a>
             </div>
 
+            <!-- Acceso al manual público (no requiere cuenta) -->
+            <div class="-mt-8 mb-12 flex justify-center lg:justify-start">
+              <NuxtLink
+                to="/manual"
+                class="group inline-flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 transition-colors"
+              >
+                <svg class="w-4 h-4 text-slate-500 group-hover:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                <span>Explora el <span class="font-semibold text-slate-300 group-hover:text-white transition-colors">manual completo</span> sin crear cuenta</span>
+                <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                </svg>
+              </NuxtLink>
+            </div>
+
             <!-- Stats inline -->
             <div class="grid grid-cols-3 gap-6 max-w-md mx-auto lg:mx-0 pt-8 border-t border-white/10">
               <div>
@@ -656,7 +672,23 @@ const workflow = [
                 </svg>
                 Ver en GitHub
               </a>
+              <NuxtLink
+                to="/manual"
+                class="group inline-flex items-center justify-center px-8 py-4 bg-white/5 backdrop-blur-sm border border-white/20 text-white font-medium rounded-xl hover:bg-white/10 transition-all"
+              >
+                <svg class="mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                Leer el manual
+              </NuxtLink>
             </div>
+
+            <p class="mt-6 text-sm text-slate-400">
+              ¿Prefieres ver cómo funciona antes de registrarte?
+              <NuxtLink to="/manual" class="font-semibold text-indigo-300 hover:text-white underline underline-offset-4 decoration-indigo-400/40 hover:decoration-white transition-colors">
+                Las guías son públicas
+              </NuxtLink>.
+            </p>
           </div>
         </div>
       </div>
