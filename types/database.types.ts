@@ -549,13 +549,17 @@ export type Database = {
           description: string | null
           expected_close_date: string | null
           id: string
+          kanban_sequence: number
           lead_number: number | null
+          lost_notes: string | null
+          lost_reason_id: string | null
           name: string
           origin: Database["public"]["Enums"]["crm_lead_origin"]
           partner_id: string | null
           priority: Database["public"]["Enums"]["crm_lead_priority"]
           probability: number
           responsible_partner_id: string | null
+          stage_changed_at: string
           stage_id: string
           tags: string[]
           updated_at: string
@@ -576,13 +580,17 @@ export type Database = {
           description?: string | null
           expected_close_date?: string | null
           id?: string
+          kanban_sequence?: number
           lead_number?: number | null
+          lost_notes?: string | null
+          lost_reason_id?: string | null
           name: string
           origin?: Database["public"]["Enums"]["crm_lead_origin"]
           partner_id?: string | null
           priority?: Database["public"]["Enums"]["crm_lead_priority"]
           probability?: number
           responsible_partner_id?: string | null
+          stage_changed_at?: string
           stage_id: string
           tags?: string[]
           updated_at?: string
@@ -603,13 +611,17 @@ export type Database = {
           description?: string | null
           expected_close_date?: string | null
           id?: string
+          kanban_sequence?: number
           lead_number?: number | null
+          lost_notes?: string | null
+          lost_reason_id?: string | null
           name?: string
           origin?: Database["public"]["Enums"]["crm_lead_origin"]
           partner_id?: string | null
           priority?: Database["public"]["Enums"]["crm_lead_priority"]
           probability?: number
           responsible_partner_id?: string | null
+          stage_changed_at?: string
           stage_id?: string
           tags?: string[]
           updated_at?: string
@@ -621,6 +633,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_lost_reason_id_fkey"
+            columns: ["lost_reason_id"]
+            isOneToOne: false
+            referencedRelation: "crm_lost_reason"
             referencedColumns: ["id"]
           },
           {
@@ -702,6 +721,7 @@ export type Database = {
       crm_lead_stage: {
         Row: {
           active: boolean
+          color: string
           company_id: string
           created_at: string
           created_by: string | null
@@ -709,6 +729,65 @@ export type Database = {
           id: string
           is_lost: boolean
           is_won: boolean
+          name: string
+          probability: number | null
+          rotting_days: number | null
+          sequence: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          color?: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_lost?: boolean
+          is_won?: boolean
+          name: string
+          probability?: number | null
+          rotting_days?: number | null
+          sequence?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          color?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_lost?: boolean
+          is_won?: boolean
+          name?: string
+          probability?: number | null
+          rotting_days?: number | null
+          sequence?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_lead_stage_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_lost_reason: {
+        Row: {
+          active: boolean
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
           name: string
           sequence: number
           updated_at: string
@@ -721,8 +800,6 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
-          is_lost?: boolean
-          is_won?: boolean
           name: string
           sequence?: number
           updated_at?: string
@@ -735,8 +812,6 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
-          is_lost?: boolean
-          is_won?: boolean
           name?: string
           sequence?: number
           updated_at?: string
@@ -744,7 +819,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "crm_lead_stage_company_id_fkey"
+            foreignKeyName: "crm_lost_reason_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "company"
@@ -1611,6 +1686,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      platform_heartbeat: {
+        Row: {
+          created_at: string
+          last_ping_at: string
+          ping_count: number
+          previous_ping_at: string | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          last_ping_at?: string
+          ping_count?: number
+          previous_ping_at?: string | null
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          last_ping_at?: string
+          ping_count?: number
+          previous_ping_at?: string | null
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       pos_cash_movement: {
         Row: {
@@ -3789,13 +3891,25 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           currency: string | null
+          days_in_stage: number | null
           description: string | null
           expected_close_date: string | null
           id: string | null
           is_lost: boolean | null
+          is_rotting: boolean | null
           is_won: boolean | null
+          kanban_sequence: number | null
           lead_number: number | null
+          lost_notes: string | null
+          lost_reason_id: string | null
+          lost_reason_name: string | null
           name: string | null
+          next_activity_at: string | null
+          next_activity_id: string | null
+          next_activity_title: string | null
+          next_activity_type:
+            | Database["public"]["Enums"]["crm_activity_type"]
+            | null
           open_activity_count: number | null
           order_count: number | null
           orders_total: number | null
@@ -3809,8 +3923,12 @@ export type Database = {
           responsible_display_name: string | null
           responsible_name: string | null
           responsible_partner_id: string | null
+          stage_changed_at: string | null
+          stage_color: string | null
           stage_id: string | null
           stage_name: string | null
+          stage_probability: number | null
+          stage_rotting_days: number | null
           stage_sequence: number | null
           tags: string[] | null
           updated_at: string | null
@@ -3822,6 +3940,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_lead_lost_reason_id_fkey"
+            columns: ["lost_reason_id"]
+            isOneToOne: false
+            referencedRelation: "crm_lost_reason"
             referencedColumns: ["id"]
           },
           {
@@ -5345,6 +5470,9 @@ export type Database = {
         }
         Returns: Json
       }
+      platform_health_check: { Args: never; Returns: Json }
+      platform_health_ping: { Args: { p_source?: string }; Returns: Json }
+      platform_health_status: { Args: never; Returns: Json }
       post_order: { Args: { p_order_id: string }; Returns: boolean }
       preview_order_stock_shortages: {
         Args: { p_order_id: string }
@@ -5418,6 +5546,10 @@ export type Database = {
         Returns: boolean
       }
       run_storefront_analytics_jobs: { Args: never; Returns: Json }
+      seed_crm_lost_reasons: {
+        Args: { p_company_id: string }
+        Returns: undefined
+      }
       seed_crm_stages: { Args: { p_company_id: string }; Returns: undefined }
       seed_product_uoms: { Args: { p_company_id: string }; Returns: undefined }
       set_picking_status: {

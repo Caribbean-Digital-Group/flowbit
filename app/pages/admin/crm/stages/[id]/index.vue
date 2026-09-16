@@ -3,19 +3,19 @@ import { storeToRefs } from 'pinia'
 import type { MenuOption } from '~/components/CardSheet.vue'
 import {
   createEmptyCrmStageForm,
+  mapCrmStageFormToPayload,
+  mapCrmStageToForm,
   type CrmStageFormData
 } from '~/components/CrmStage/Form.vue'
-import type { Tables, TablesUpdate } from '~/types/database.types'
+import type { CrmLeadStageRow } from '~/types/crm.types'
 
 definePageMeta({ layout: 'admin' })
-
-type CrmLeadStage = Tables<'crm_lead_stage'>
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const { selectedCompanyId } = storeToRefs(authStore)
-const { getStageById, updateStage, archiveStage } = useCrmStage()
+const { getStageById, updateStage, archiveStage, countActiveLeadsInStage } = useCrmStage()
 
 const stageId = computed(() => {
   const raw = route.params.id
@@ -26,7 +26,7 @@ const isEditing = ref(false)
 const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
 
-const stageData = ref<CrmLeadStage | null>(null)
+const stageData = ref<CrmLeadStageRow | null>(null)
 const formData = ref<CrmStageFormData>(createEmptyCrmStageForm())
 const initialForm = ref<CrmStageFormData>(createEmptyCrmStageForm())
 
@@ -43,22 +43,6 @@ const stageTypeVariant = computed(() => {
   return 'secondary' as const
 })
 
-const mapToForm = (s: CrmLeadStage): CrmStageFormData => ({
-  name: s.name,
-  sequence: s.sequence,
-  description: s.description ?? '',
-  is_won: s.is_won,
-  is_lost: s.is_lost
-})
-
-const mapFormToUpdate = (value: CrmStageFormData): TablesUpdate<'crm_lead_stage'> => ({
-  name: value.name.trim(),
-  sequence: Number(value.sequence) || 10,
-  description: value.description.trim() || null,
-  is_won: value.is_won,
-  is_lost: value.is_lost
-})
-
 const loadStage = async () => {
   const companyId = selectedCompanyId.value
   if (!companyId || !stageId.value) return
@@ -68,8 +52,8 @@ const loadStage = async () => {
     const stage = await getStageById(stageId.value, companyId)
     if (!stage) { router.push('/admin/crm/stages'); return }
     stageData.value = stage
-    formData.value = mapToForm(stage)
-    initialForm.value = mapToForm(stage)
+    formData.value = mapCrmStageToForm(stage)
+    initialForm.value = mapCrmStageToForm(stage)
   } finally {
     isLoading.value = false
   }
@@ -89,11 +73,11 @@ const handleSave = async () => {
 
   isLoading.value = true
   try {
-    const updated = await updateStage(stageId.value, companyId, mapFormToUpdate(formData.value))
+    const updated = await updateStage(stageId.value, companyId, mapCrmStageFormToPayload(formData.value))
     if (!updated) { errorMessage.value = 'No se pudo guardar la etapa.'; return }
     stageData.value = updated
-    formData.value = mapToForm(updated)
-    initialForm.value = mapToForm(updated)
+    formData.value = mapCrmStageToForm(updated)
+    initialForm.value = mapCrmStageToForm(updated)
     isEditing.value = false
   } finally {
     isLoading.value = false
@@ -102,12 +86,28 @@ const handleSave = async () => {
 
 const menuOptions = computed<MenuOption[]>(() => [
   {
+    id: 'view-kanban',
+    label: 'Ver en el tablero',
+    icon: 'M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2',
+    action: () => { void router.push('/admin/crm/kanban') }
+  },
+  {
+    id: 'archive',
     label: 'Archivar etapa',
     variant: 'danger',
-    iconPath: 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
+    divider: true,
+    icon: 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
     action: async () => {
-      if (!stageId.value) return
-      await archiveStage(stageId.value)
+      const companyId = selectedCompanyId.value
+      if (!stageId.value || !companyId) return
+      errorMessage.value = null
+      const leadCount = await countActiveLeadsInStage(stageId.value, companyId)
+      if (leadCount > 0) {
+        errorMessage.value = `La etapa tiene ${leadCount} lead(s) activo(s). Muévelos a otra etapa desde el tablero antes de archivarla.`
+        return
+      }
+      const ok = await archiveStage(stageId.value, companyId)
+      if (!ok) { errorMessage.value = 'No se pudo archivar la etapa.'; return }
       router.push('/admin/crm/stages')
     }
   }

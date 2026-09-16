@@ -869,6 +869,53 @@ export const ARTICLES: DocArticle[] = [
 
   // ─── CRM ──────────────────────────────────────────────────────────────────────
   {
+    id: 'crm-kanban',
+    routePatterns: ['/admin/crm/kanban'],
+    module: 'crm',
+    moduleLabel: 'CRM',
+    moduleEmoji: '📊',
+    title: 'Tablero Kanban de oportunidades',
+    viewType: 'dashboard',
+    isNew: true,
+    level: 'basico',
+    summary: 'Arrastra cada oportunidad entre etapas y detecta de un vistazo qué leads están estancados o sin seguimiento.',
+    description: 'El tablero muestra tu pipeline como columnas, una por etapa. Cada tarjeta es un lead con su importe, probabilidad, responsable y próxima actividad. Arrastra una tarjeta para cambiarla de etapa o reordenarla dentro de la columna.',
+    importance: 'Ver el pipeline completo en una sola pantalla ayuda a priorizar: el valor por columna, los leads estancados y los seguimientos vencidos te dicen dónde actuar hoy.',
+    tips: [
+      'Arrastra la tarjeta a otra columna para cambiar su etapa; también puedes usar el menú ⋯ de la tarjeta → «Mover a etapa…» (ideal en celular o con teclado).',
+      'Al soltar un lead en una etapa de cierre perdido se pide el motivo; así podrás medir por qué se pierden las ventas.',
+      'Cada movimiento muestra un aviso con «Deshacer» durante unos segundos.',
+      'Las tarjetas con borde ámbar llevan más días sin avanzar que el límite configurado en la etapa.',
+      'Usa el botón + de una columna para crear un lead rápido con solo su nombre; quedará asignado a ti.',
+      'Pliega las columnas que no necesitas ver; el tablero recuerda tu preferencia en este navegador.',
+      'Presiona / para buscar por nombre, contacto, número o etiqueta.'
+    ],
+    process: [
+      { step: 1, title: 'Revisa los indicadores', description: 'Pipeline abierto, pronóstico ponderado, ganado, estancados y seguimientos vencidos se recalculan con los filtros activos.' },
+      { step: 2, title: 'Filtra tu trabajo', description: 'Elige «Mis leads» o un responsable, y activa «Solo estancados» para ver lo urgente.' },
+      { step: 3, title: 'Mueve las oportunidades', description: 'Arrastra cada tarjeta a la etapa que refleja su avance real; la probabilidad se ajusta según la etapa.' },
+      { step: 4, title: 'Programa el siguiente paso', description: 'Si una tarjeta dice «Sin seguimiento programado», haz clic para registrar la próxima actividad.' },
+      { step: 5, title: 'Cierra', description: 'Marca como ganado o perdido desde el menú de la tarjeta; el historial registra el cambio y la fecha de cierre.' }
+    ],
+    shortcuts: [
+      { keys: '/', action: 'Enfocar la búsqueda' },
+      { keys: 'Enter', action: 'Abrir la tarjeta enfocada' },
+      { keys: 'Esc', action: 'Cancelar el arrastre o cerrar menús' }
+    ],
+    faqs: [
+      { question: '¿Por qué un lead no aparece en el tablero?', answer: 'Revisa los filtros activos y la opción «Solo abiertos». Si el lead está en una etapa archivada, el tablero muestra un aviso para revisarlo desde la lista.' },
+      { question: '¿Qué significa «estancado»?', answer: 'Que el lead lleva en su etapa más días que la «alerta de estancamiento» configurada en esa etapa. Se reinicia cada vez que cambia de etapa.' },
+      { question: '¿Cambia la probabilidad al mover un lead?', answer: 'Sí, si la etapa destino tiene una probabilidad asignada. Si no, el lead conserva la suya.' }
+    ],
+    relatedModules: [
+      { label: 'Lista de Leads', route: '/admin/crm/leads' },
+      { label: 'Etapas del Pipeline', route: '/admin/crm/stages' },
+      { label: 'Motivos de pérdida', route: '/admin/crm/lost-reasons' }
+    ],
+    relatedArticles: ['crm-leads-list', 'crm-stages-list', 'crm-lost-reasons'],
+    tags: ['CRM', 'kanban', 'tablero', 'pipeline', 'arrastrar', 'etapas', 'oportunidades', 'estancado']
+  },
+  {
     id: 'crm-leads-list',
     routePatterns: ['/admin/crm/leads'],
     module: 'crm',
@@ -890,9 +937,10 @@ export const ARTICLES: DocArticle[] = [
       { step: 2, title: 'Asignar Responsable', description: 'Designa al vendedor o ejecutivo que dará seguimiento a la oportunidad.' },
       { step: 3, title: 'Actividades de Seguimiento', description: 'Registra llamadas, emails y reuniones para avanzar la negociación.' },
       { step: 4, title: 'Avanzar en Pipeline', description: 'Mueve el lead a la siguiente etapa conforme el prospecto muestre interés.' },
-      { step: 5, title: 'Ganar o Perder', description: 'Cierra el lead como Ganado (genera una orden) o Perdido (documenta la razón).' }
+      { step: 5, title: 'Ganar o Perder', description: 'Cierra el lead como Ganado (genera una orden) o Perdido (elige el motivo de pérdida).' }
     ],
     relatedModules: [
+      { label: 'Tablero Kanban', route: '/admin/crm/kanban' },
       { label: 'Crear Lead', route: '/admin/crm/leads/create' },
       { label: 'Etapas del Pipeline', route: '/admin/crm/stages' },
       { label: 'Socios', route: '/admin/partners' },
@@ -970,18 +1018,56 @@ export const ARTICLES: DocArticle[] = [
       'Entre 4 y 7 etapas es suficiente; demasiadas etapas crean fricción y confusión.',
       'El orden de las etapas define la secuencia lógica del pipeline.',
       'Las etapas "Ganado" y "Perdido" son finales; no deberían tener etapas siguientes.',
-      'Puedes sembrar etapas predeterminadas con el botón "Inicializar etapas" si aún no tienes ninguna.'
+      'Puedes sembrar etapas predeterminadas con el botón "Inicializar etapas" si aún no tienes ninguna.',
+      'Arrastra las etapas en «Flujo del pipeline» para cambiar el orden de las columnas del tablero.',
+      'Una etapa con leads activos no puede archivarse: muévelos primero a otra etapa.'
     ],
     fields: [
       { label: 'Nombre de la Etapa', required: true, type: 'text', description: 'Nombre de la fase del proceso de ventas.', tip: 'Ejemplos: "Primer Contacto", "Propuesta Enviada", "Negociación", "Cierre", "Ganado", "Perdido".' },
       { label: 'Orden', required: true, type: 'number', description: 'Posición de la etapa en el pipeline (menor número = antes en el proceso).', tip: 'Usa múltiplos de 10 (10, 20, 30) para poder insertar etapas intermedias después.' },
-      { label: 'Probabilidad de Cierre (%)', required: false, type: 'number', description: 'Probabilidad predeterminada para leads en esta etapa.', tip: 'Ayuda a calcular el forecast de ventas ponderado automáticamente.' },
+      { label: 'Color de la columna', required: false, type: 'select', description: 'Color con el que se identifica la etapa en el tablero Kanban.', tip: 'Usa tonos fríos para etapas tempranas y cálidos conforme se acerca el cierre.' },
+      { label: 'Probabilidad al entrar (%)', required: false, type: 'number', description: 'Probabilidad que se asigna al lead cuando se mueve a esta etapa. Si se deja sin asignar, el lead conserva la suya.', tip: 'Alimenta el pronóstico ponderado del tablero; súbela conforme avanza el pipeline.' },
+      { label: 'Alerta de estancamiento (días)', required: false, type: 'number', description: 'Días sin cambio de etapa tras los cuales el lead se resalta como estancado.', tip: 'Ajusta el valor al ciclo real de cada etapa: una propuesta suele tardar más que el primer contacto.' },
       { label: 'Descripción / Criterios', required: false, type: 'textarea', description: 'Criterios claros para que un lead esté en esta etapa.', tip: 'Define qué condiciones debe cumplir el lead para estar aquí; evita la ambigüedad.' }
     ],
     relatedModules: [
-      { label: 'Leads CRM', route: '/admin/crm/leads' }
+      { label: 'Leads CRM', route: '/admin/crm/leads' },
+      { label: 'Tablero Kanban', route: '/admin/crm/kanban' },
+      { label: 'Motivos de pérdida', route: '/admin/crm/lost-reasons' }
     ],
-    tags: ['CRM', 'etapas', 'pipeline', 'ventas', 'proceso', 'configuración']
+    tags: ['CRM', 'etapas', 'pipeline', 'ventas', 'proceso', 'configuración', 'color', 'probabilidad']
+  },
+  {
+    id: 'crm-lost-reasons',
+    routePatterns: ['/admin/crm/lost-reasons', '/admin/crm/lost-reasons/create', '/admin/crm/lost-reasons/:id'],
+    module: 'crm',
+    moduleLabel: 'CRM',
+    moduleEmoji: '📊',
+    title: 'Motivos de pérdida',
+    viewType: 'config',
+    isNew: true,
+    level: 'intermedio',
+    summary: 'Registra por qué se pierden las oportunidades para corregir precio, oferta o seguimiento con datos.',
+    description: 'Catálogo de razones por las que una oportunidad se cierra como perdida. Al mover un lead a una etapa de cierre perdido, el equipo elige uno de estos motivos y puede agregar un comentario.',
+    importance: 'Sin un motivo estructurado, las pérdidas quedan como anécdotas. Con él puedes ver qué porcentaje se pierde por precio, competencia o falta de respuesta y actuar en consecuencia.',
+    tips: [
+      'Usa entre 4 y 8 motivos cortos y excluyentes.',
+      'El botón «Cargar motivos sugeridos» crea un catálogo inicial que puedes editar.',
+      'La gráfica superior muestra los motivos más frecuentes entre los leads perdidos.',
+      'Archivar un motivo no modifica los leads que ya lo usan; solo deja de ofrecerse.',
+      'El motivo y el comentario quedan en el historial del lead.'
+    ],
+    fields: [
+      { label: 'Motivo de pérdida', required: true, type: 'text', description: 'Nombre corto de la razón.', tip: 'Ejemplos: «Precio fuera de presupuesto», «Eligió a la competencia», «Sin respuesta».' },
+      { label: 'Orden en la lista', required: false, type: 'number', description: 'Posición en la que aparece al elegir el motivo.', tip: 'Coloca primero los motivos más comunes.' },
+      { label: 'Descripción', required: false, type: 'textarea', description: 'Cuándo debe elegirse este motivo.', tip: 'Una definición clara evita que cada vendedor lo interprete distinto.' }
+    ],
+    relatedModules: [
+      { label: 'Tablero Kanban', route: '/admin/crm/kanban' },
+      { label: 'Etapas del Pipeline', route: '/admin/crm/stages' }
+    ],
+    relatedArticles: ['crm-kanban', 'crm-stages-list'],
+    tags: ['CRM', 'motivos', 'pérdida', 'perdido', 'cancelado', 'análisis', 'ventas']
   },
 
   // ─── EQUIPO ───────────────────────────────────────────────────────────────────

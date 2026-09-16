@@ -1,11 +1,14 @@
-import type { Database, Tables, TablesInsert, TablesUpdate } from '~/types/database.types'
-
-type CrmLeadStage = Tables<'crm_lead_stage'>
-type CrmLeadStageInsert = TablesInsert<'crm_lead_stage'>
-type CrmLeadStageUpdate = TablesUpdate<'crm_lead_stage'>
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type {
+  CrmDatabase,
+  CrmLeadStageRow as CrmLeadStage,
+  CrmLeadStageInsert,
+  CrmLeadStageUpdate
+} from '~/types/crm.types'
 
 export const useCrmStage = () => {
-  const supabase = useSupabase()
+  // Cast temporal hasta regenerar database.types.ts (ver types/crm.types.ts)
+  const supabase = useSupabase() as unknown as SupabaseClient<CrmDatabase>
 
   const getStagesByCompany = async (companyId: string): Promise<CrmLeadStage[]> => {
     if (!companyId) return []
@@ -91,14 +94,64 @@ export const useCrmStage = () => {
     return data
   }
 
-  const archiveStage = async (id: string): Promise<boolean> => {
-    const { error } = await supabase
+  const archiveStage = async (id: string, companyId?: string): Promise<boolean> => {
+    if (!id) return false
+    const user = await useSupabaseUser()
+
+    let query = supabase
       .from('crm_lead_stage')
-      .update({ active: false })
+      .update({ active: false, updated_by: user?.id })
       .eq('id', id)
+
+    if (companyId) query = query.eq('company_id', companyId)
+
+    const { error } = await query
 
     if (error) {
       console.error('Error archiving CRM stage:', error)
+      return false
+    }
+
+    return true
+  }
+
+  /** Leads activos en la etapa; una etapa con leads no debe archivarse. */
+  const countActiveLeadsInStage = async (stageId: string, companyId: string): Promise<number> => {
+    if (!stageId || !companyId) return 0
+
+    const { count, error } = await supabase
+      .from('crm_lead')
+      .select('id', { count: 'exact', head: true })
+      .eq('company_id', companyId)
+      .eq('stage_id', stageId)
+      .eq('active', true)
+
+    if (error) {
+      console.error('Error counting leads in CRM stage:', error)
+      return 0
+    }
+
+    return count ?? 0
+  }
+
+  /** Reordena etapas asignando `sequence` de 10 en 10 según el arreglo recibido. */
+  const reorderStages = async (companyId: string, orderedIds: string[]): Promise<boolean> => {
+    if (!companyId || orderedIds.length === 0) return false
+    const user = await useSupabaseUser()
+
+    const results = await Promise.all(
+      orderedIds.map((id, index) =>
+        supabase
+          .from('crm_lead_stage')
+          .update({ sequence: (index + 1) * 10, updated_by: user?.id })
+          .eq('id', id)
+          .eq('company_id', companyId)
+      )
+    )
+
+    const failed = results.find(r => r.error)
+    if (failed?.error) {
+      console.error('Error reordering CRM stages:', failed.error)
       return false
     }
 
@@ -122,6 +175,8 @@ export const useCrmStage = () => {
     createStage,
     updateStage,
     archiveStage,
+    countActiveLeadsInStage,
+    reorderStages,
     seedDefaultStages
   }
 }

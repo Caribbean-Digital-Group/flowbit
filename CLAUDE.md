@@ -92,8 +92,12 @@ flowbit/
 
 | Módulo | Ruta admin | Composable(s) |
 |---|---|---|
+| Tablero Kanban | `/admin/crm/kanban` | `useCrmLead`, `useCrmStage`, `useCrmLostReason` |
 | Leads | `/admin/crm/leads` | `useCrmLead`, `useCrmActivity` |
 | Pipeline (Stages) | `/admin/crm/stages` | `useCrmStage` |
+| Motivos de pérdida | `/admin/crm/lost-reasons` | `useCrmLostReason` |
+
+> Documentación del módulo (modelo, triggers, tablero Kanban): `docs/crm.md`.
 
 ### Ventas / Compras
 
@@ -468,7 +472,7 @@ El layout incluye:
 - **Sidebar colapsable** — 20 rem expandido / 5 rem colapsado en desktop, full-width en mobile
 - **Grupos de navegación colapsables** organizados por dominio:
   1. General (Dashboard, Agenda, Contactos)
-  2. CRM (Leads, Pipeline)
+  2. CRM (Tablero, Leads, Pipeline, Motivos de pérdida)
   3. Ventas/Compras (Órdenes, Líneas de orden, Métodos de pago)
   4. Inventario (Productos, Almacenes, Movimientos, Líneas de picking)
   5. Proyectos (Proyectos, Tareas)

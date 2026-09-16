@@ -1,48 +1,49 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import {
-  createEmptyCrmStageForm,
-  mapCrmStageFormToPayload,
-  type CrmStageFormData
-} from '~/components/CrmStage/Form.vue'
+  createEmptyCrmLostReasonForm,
+  type CrmLostReasonFormData
+} from '~/components/CrmLostReason/Form.vue'
 
 definePageMeta({ layout: 'admin' })
 
 const router = useRouter()
 const authStore = useAuthStore()
 const { selectedCompanyId } = storeToRefs(authStore)
-const { createStage } = useCrmStage()
+const { createLostReason } = useCrmLostReason()
 
-const formData = ref<CrmStageFormData>(createEmptyCrmStageForm())
+const formData = ref<CrmLostReasonFormData>(createEmptyCrmLostReasonForm())
 const isSaving = ref(false)
 const errorMessage = ref<string | null>(null)
 
-const handleBack = () => router.push('/admin/crm/stages')
+const handleBack = () => router.push('/admin/crm/lost-reasons')
 
 const handleSave = async () => {
   errorMessage.value = null
 
   const companyId = selectedCompanyId.value
   if (!companyId) { errorMessage.value = 'Selecciona una empresa.'; return }
-  if (!formData.value.name.trim()) { errorMessage.value = 'El nombre de la etapa es obligatorio.'; return }
+  if (!formData.value.name.trim()) { errorMessage.value = 'El nombre del motivo es obligatorio.'; return }
 
   isSaving.value = true
   try {
-    const stage = await createStage(companyId, mapCrmStageFormToPayload(formData.value))
-    if (!stage) { errorMessage.value = 'No se pudo crear la etapa. Verifica que el nombre no esté duplicado.'; return }
-    router.push(`/admin/crm/stages/${stage.id}`)
+    const created = await createLostReason(companyId, {
+      name: formData.value.name.trim(),
+      sequence: Number(formData.value.sequence) || 10,
+      description: formData.value.description.trim() || null
+    })
+    if (!created) { errorMessage.value = 'No se pudo crear el motivo. Verifica que el nombre no esté duplicado.'; return }
+    router.push('/admin/crm/lost-reasons')
   } finally {
     isSaving.value = false
   }
 }
-
-const handleCancel = () => router.push('/admin/crm/stages')
 </script>
 
 <template>
   <CardSheet
-    title="Nueva Etapa del Pipeline"
-    subtitle="Define una fase del proceso de ventas para clasificar leads"
+    title="Nuevo motivo de pérdida"
+    subtitle="Define una razón por la que una oportunidad puede cerrarse como perdida"
     :is-editing="true"
     :show-edit-button="false"
     :show-options-button="false"
@@ -50,14 +51,14 @@ const handleCancel = () => router.push('/admin/crm/stages')
     :is-loading="isSaving"
     @back="handleBack"
     @save="handleSave"
-    @cancel="handleCancel"
+    @cancel="handleBack"
   >
     <div
       v-if="!selectedCompanyId"
       class="mb-6 rounded-2xl border border-amber-100 bg-amber-50 px-6 py-4 text-amber-900"
     >
       <p class="font-semibold">Sin empresa seleccionada</p>
-      <p class="mt-1 text-sm text-amber-800/90">Elige una empresa para registrar etapas del pipeline.</p>
+      <p class="mt-1 text-sm text-amber-800/90">Elige una empresa para registrar motivos de pérdida.</p>
     </div>
 
     <div
@@ -67,6 +68,6 @@ const handleCancel = () => router.push('/admin/crm/stages')
       {{ errorMessage }}
     </div>
 
-    <CrmStageForm v-model="formData" />
+    <CrmLostReasonForm v-model="formData" />
   </CardSheet>
 </template>

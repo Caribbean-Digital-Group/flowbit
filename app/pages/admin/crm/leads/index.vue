@@ -2,10 +2,10 @@
 import { storeToRefs } from 'pinia'
 import type { Column } from '~/components/Datatable.vue'
 import type { Database } from '~/types/database.types'
+import type { CrmLeadView } from '~/types/crm.types'
 
 definePageMeta({ layout: 'admin' })
 
-type CrmLeadView = Database['public']['Views']['v_crm_leads']['Row']
 type CrmLeadPriority = Database['public']['Enums']['crm_lead_priority']
 
 const priorityLabels: Record<CrmLeadPriority, string> = {
@@ -17,6 +17,7 @@ const priorityLabels: Record<CrmLeadPriority, string> = {
 const columns: Column[] = [
   { key: 'name', label: 'Lead / Oportunidad', type: 'avatar', subtitleKey: 'lead_code' },
   { key: 'stage_name', label: 'Etapa', type: 'text' },
+  { key: 'next_activity_display', label: 'Próximo seguimiento', type: 'text' },
   { key: 'contact_display', label: 'Contacto', type: 'text' },
   { key: 'responsible_display', label: 'Responsable', type: 'text' },
   { key: 'priority', label: 'Prioridad', type: 'badge', badgeConfig: { labels: priorityLabels } },
@@ -32,6 +33,7 @@ const isLoading = ref(false)
 const leadsRaw = ref<CrmLeadView[]>([])
 const selectedPriorityFilters = ref<CrmLeadPriority[]>([])
 const showOnlyOpen = ref(false)
+const showOnlyRotting = ref(false)
 
 const formatCurrency = (value: number, currency: string = 'MXN'): string =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: currency || 'MXN', maximumFractionDigits: 0 }).format(value || 0)
@@ -40,7 +42,10 @@ const mapToRow = (raw: CrmLeadView): Record<string, unknown> => ({
   id: raw.id,
   name: raw.name ?? '—',
   lead_code: `#${raw.lead_number ?? '—'}`,
-  stage_name: raw.stage_name ?? '—',
+  stage_name: raw.is_rotting ? `${raw.stage_name ?? '—'} · ${raw.days_in_stage ?? 0} d sin avanzar` : (raw.stage_name ?? '—'),
+  next_activity_display: raw.next_activity_at
+    ? `${formatRelativeDay(raw.next_activity_at)} · ${raw.next_activity_title ?? ''}`
+    : (raw.is_won || raw.is_lost ? '—' : 'Sin programar'),
   contact_display: raw.partner_display_name?.trim() || raw.contact_name?.trim() || raw.contact_company?.trim() || '—',
   responsible_display: raw.responsible_display_name?.trim() || '—',
   priority: raw.priority ?? 'medium',
@@ -59,6 +64,7 @@ const filteredLeads = computed(() => {
       return false
     }
     if (showOnlyOpen.value && (l.is_won || l.is_lost)) return false
+    if (showOnlyRotting.value && !l.is_rotting) return false
     return true
   })
 })
@@ -201,21 +207,22 @@ const togglePriorityFilter = (value: CrmLeadPriority) => {
 const resetFilters = () => {
   selectedPriorityFilters.value = []
   showOnlyOpen.value = false
+  showOnlyRotting.value = false
 }
 
 const filtersLabel = computed(() => {
   const p = selectedPriorityFilters.value.length
-  return `${p} prioridad(es)${showOnlyOpen.value ? ' · solo abiertos' : ''}`
+  return `${p} prioridad(es)${showOnlyOpen.value ? ' · solo abiertos' : ''}${showOnlyRotting.value ? ' · estancados' : ''}`
 })
 
 const create = () => navigateTo('/admin/crm/leads/create')
 const edit = (row: Record<string, unknown>) => navigateTo(`/admin/crm/leads/${row.id as string}`)
 const remove = async (row: Record<string, unknown>) => {
-  const ok = await archiveLead(row.id as string)
+  const ok = await archiveLead(row.id as string, selectedCompanyId.value ?? undefined)
   if (ok) await loadLeads()
 }
 const deleteMany = async (selected: Record<string, unknown>[]) => {
-  for (const row of selected) await archiveLead(row.id as string)
+  for (const row of selected) await archiveLead(row.id as string, selectedCompanyId.value ?? undefined)
   await loadLeads()
 }
 </script>
@@ -311,7 +318,8 @@ const deleteMany = async (selected: Record<string, unknown>[]) => {
         @create="create"
       >
         <template #headerActions>
-          <div class="flex w-full items-center justify-center sm:w-auto sm:justify-end">
+          <div class="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto sm:justify-end">
+            <CrmLeadViewSwitch current="list" />
             <details class="relative w-full sm:w-auto">
               <summary class="flex cursor-pointer list-none items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 sm:min-w-48">
                 <span>Filtros: {{ filtersLabel }}</span>
@@ -346,6 +354,14 @@ const deleteMany = async (selected: Record<string, unknown>[]) => {
                       class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                     >
                     Solo leads abiertos (sin cerrar)
+                  </label>
+                  <label class="mt-2 flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                      v-model="showOnlyRotting"
+                      type="checkbox"
+                      class="h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                    >
+                    Solo estancados
                   </label>
                 </div>
                 <button

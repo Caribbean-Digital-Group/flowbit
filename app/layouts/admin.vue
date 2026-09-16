@@ -380,6 +380,13 @@ const menuGroups: MenuGroup[] = [
     accentColor: 'sky',
     items: [
       {
+        title: 'Tablero',
+        to: '/admin/crm/kanban',
+        iconPaths: [
+          'M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2'
+        ]
+      },
+      {
         title: 'Leads',
         to: '/admin/crm/leads',
         iconPaths: [
@@ -392,6 +399,13 @@ const menuGroups: MenuGroup[] = [
         to: '/admin/crm/stages',
         iconPaths: [
           'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
+        ]
+      },
+      {
+        title: 'Motivos de pérdida',
+        to: '/admin/crm/lost-reasons',
+        iconPaths: [
+          'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'
         ]
       },
     ]
