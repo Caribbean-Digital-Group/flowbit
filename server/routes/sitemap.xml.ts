@@ -1,10 +1,12 @@
 import { ARTICLES } from '../../app/utils/manual/articles'
+import { callWebsiteAnonRpc } from '../utils/websitePublic'
 
 /**
  * Sitemap dinámico.
  *
  * El estático solo listaba la portada. El manual público son decenas de
- * páginas indexables que no estaban declaradas en ningún lado.
+ * páginas indexables que no estaban declaradas en ningún lado. Los sitios web
+ * de las empresas se agregan dinámicamente desde la base.
  */
 interface SitemapEntry {
   loc: string
@@ -12,7 +14,7 @@ interface SitemapEntry {
   priority: string
 }
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
 
   const host = getRequestHeader(event, 'x-forwarded-host') ?? getRequestHeader(event, 'host')
@@ -31,6 +33,15 @@ export default defineEventHandler((event) => {
       priority: '0.6'
     }))
   ]
+
+  // Portada de cada sitio web activo; el detalle de cada sitio vive en su
+  // propio sitemap (/sites/{slug}/sitemap.xml), declarado en robots.txt.
+  const sites = await callWebsiteAnonRpc<{ slug: string }[]>(event, 'get_active_websites', {})
+  for (const site of sites ?? []) {
+    if (/^[a-z0-9-]{1,100}$/.test(site.slug)) {
+      entries.push({ loc: `/sites/${site.slug}`, changefreq: 'weekly', priority: '0.7' })
+    }
+  }
 
   const urls = entries
     .map(entry => [

@@ -150,6 +150,15 @@ consumen esos tokens.
 
 > Regla del módulo: **ningún componente escribe un color literal**. Si hace
 > falta un tono nuevo, se agrega como token, no como clase de Tailwind.
+>
+> `storefront.css` no está dentro de una capa de Tailwind, y en Tailwind v4 el
+> CSS sin capa gana a las utilidades. Por eso `sf-border` no se combina con
+> `border-x-0`/`border-b-0` (se dibujaría un marco completo): para un solo lado
+> se usan `sf-border-t`, `sf-border-b` o `sf-border-y`. Lo mismo aplica a
+> `display`: `sf-btn`, `sf-icon-btn`, `sf-badge` y `sf-card` lo fijan, así que
+> `hidden`/`lg:hidden` se ponen en un contenedor, nunca en el mismo elemento. El pie de página usa
+> `sf-footer`, `sf-footer-title`, `sf-footer-link` y `sf-footer-bar`, y lo
+> comparten la tienda y el sitio web.
 
 | Plantilla | Hero | Tarjeta | Superficie | Pensada para |
 |---|---|---|---|---|

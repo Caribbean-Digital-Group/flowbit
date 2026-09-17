@@ -2,9 +2,9 @@
 import { storeToRefs } from 'pinia'
 import {
   createEmptyCrmStageForm,
+  mapCrmStageFormToPayload,
   type CrmStageFormData
 } from '~/components/CrmStage/Form.vue'
-import type { TablesInsert } from '~/types/database.types'
 
 definePageMeta({ layout: 'admin' })
 
@@ -17,16 +17,6 @@ const formData = ref<CrmStageFormData>(createEmptyCrmStageForm())
 const isSaving = ref(false)
 const errorMessage = ref<string | null>(null)
 
-const mapFormToInsert = (
-  value: CrmStageFormData
-): Omit<TablesInsert<'crm_lead_stage'>, 'company_id'> => ({
-  name: value.name.trim(),
-  sequence: Number(value.sequence) || 10,
-  description: value.description.trim() || null,
-  is_won: value.is_won,
-  is_lost: value.is_lost
-})
-
 const handleBack = () => router.push('/admin/crm/stages')
 
 const handleSave = async () => {
@@ -38,7 +28,7 @@ const handleSave = async () => {
 
   isSaving.value = true
   try {
-    const stage = await createStage(companyId, mapFormToInsert(formData.value))
+    const stage = await createStage(companyId, mapCrmStageFormToPayload(formData.value))
     if (!stage) { errorMessage.value = 'No se pudo crear la etapa. Verifica que el nombre no esté duplicado.'; return }
     router.push(`/admin/crm/stages/${stage.id}`)
   } finally {

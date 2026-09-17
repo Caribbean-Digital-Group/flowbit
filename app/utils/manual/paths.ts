@@ -41,6 +41,13 @@ export const MODULE_META: ModuleMeta[] = [
     accent: 'violet'
   },
   {
+    id: 'website',
+    label: 'Sitio web',
+    emoji: '🌐',
+    description: 'Tu sitio web público: páginas por secciones, blog, galerías, contacto y SEO.',
+    accent: 'sky'
+  },
+  {
     id: 'pos',
     label: 'Punto de venta',
     emoji: '🧾',
@@ -122,6 +129,16 @@ export const LEARNING_PATHS: LearningPath[] = [
     level: 'intermedio',
     accent: 'violet',
     articleIds: ['storefront-settings', 'storefront-design', 'storefront-shipping-create', 'storefront-coupons-create', 'storefront-stripe', 'storefront-fulfillment', 'storefront-analytics']
+  },
+  {
+    id: 'path-website',
+    title: 'Publica tu sitio web',
+    emoji: '🌐',
+    description: 'Crea el sitio, ajusta su diseño, construye las páginas, escribe en el blog y publícalo.',
+    estimatedMinutes: 40,
+    level: 'intermedio',
+    accent: 'sky',
+    articleIds: ['website-settings', 'website-pages', 'website-menus', 'website-blog-posts', 'website-media', 'website-galleries']
   },
   {
     id: 'path-pos',

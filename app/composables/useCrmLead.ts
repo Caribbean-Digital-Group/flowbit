@@ -1,10 +1,21 @@
-import type { Database, Tables, TablesInsert, TablesUpdate } from '~/types/database.types'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Tables } from '~/types/database.types'
+import type {
+  CrmDatabase,
+  CrmLeadInsert,
+  CrmLeadRow as CrmLead,
+  CrmLeadUpdate,
+  CrmLeadView
+} from '~/types/crm.types'
 
-type CrmLead = Tables<'crm_lead'>
-type CrmLeadInsert = TablesInsert<'crm_lead'>
-type CrmLeadUpdate = TablesUpdate<'crm_lead'>
-type CrmLeadView = Database['public']['Views']['v_crm_leads']['Row']
 type CrmLeadOrder = Tables<'crm_lead_order'>
+
+export interface CrmLeadMovePayload {
+  stageId: string
+  kanbanSequence: number
+  lostReasonId?: string | null
+  lostNotes?: string | null
+}
 
 export interface CrmLeadMetrics {
   total: number
@@ -16,7 +27,8 @@ export interface CrmLeadMetrics {
 }
 
 export const useCrmLead = () => {
-  const supabase = useSupabase()
+  // Cast temporal hasta regenerar database.types.ts (ver types/crm.types.ts)
+  const supabase = useSupabase() as unknown as SupabaseClient<CrmDatabase>
 
   const getLeadsByCompany = async (
     companyId: string,
@@ -136,11 +148,18 @@ export const useCrmLead = () => {
     return data
   }
 
-  const archiveLead = async (id: string): Promise<boolean> => {
-    const { error } = await supabase
+  const archiveLead = async (id: string, companyId?: string): Promise<boolean> => {
+    if (!id) return false
+    const user = await useSupabaseUser()
+
+    let query = supabase
       .from('crm_lead')
-      .update({ active: false })
+      .update({ active: false, updated_by: user?.id })
       .eq('id', id)
+
+    if (companyId) query = query.eq('company_id', companyId)
+
+    const { error } = await query
 
     if (error) {
       console.error('Error archiving CRM lead:', error)
@@ -148,6 +167,26 @@ export const useCrmLead = () => {
     }
 
     return true
+  }
+
+  /**
+   * Mueve un lead de etapa y/o posición en el tablero Kanban.
+   * Al entrar a una etapa perdida se guarda el motivo; los triggers
+   * de la BD registran historial, fecha de cierre y probabilidad.
+   */
+  const moveLead = async (
+    id: string,
+    companyId: string,
+    payload: CrmLeadMovePayload
+  ): Promise<CrmLead | null> => {
+    const updates: CrmLeadUpdate = {
+      stage_id: payload.stageId,
+      kanban_sequence: payload.kanbanSequence
+    }
+    if (payload.lostReasonId !== undefined) updates.lost_reason_id = payload.lostReasonId
+    if (payload.lostNotes !== undefined) updates.lost_notes = payload.lostNotes?.trim() || null
+
+    return updateLead(id, companyId, updates)
   }
 
   const getLinkedOrders = async (leadId: string): Promise<CrmLeadOrder[]> => {
@@ -252,6 +291,7 @@ export const useCrmLead = () => {
     createLead,
     updateLead,
     archiveLead,
+    moveLead,
     getLinkedOrders,
     linkOrder,
     unlinkOrder,

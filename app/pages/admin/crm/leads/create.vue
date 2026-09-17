@@ -4,10 +4,11 @@ import {
   createEmptyCrmLeadForm,
   type CrmLeadFormData
 } from '~/components/CrmLead/Form.vue'
-import type { TablesInsert } from '~/types/database.types'
+import type { CrmLeadInsert, CrmLeadStageRow } from '~/types/crm.types'
 
 definePageMeta({ layout: 'admin' })
 
+const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const { selectedCompanyId } = storeToRefs(authStore)
@@ -22,6 +23,7 @@ const isSaving = ref(false)
 const isCreatingPartner = ref(false)
 const errorMessage = ref<string | null>(null)
 
+const stages = ref<CrmLeadStageRow[]>([])
 const stageOptions = ref<{ value: string; label: string }[]>([])
 const partnerOptions = ref<{ value: string; label: string }[]>([])
 const memberOptions = ref<{ value: string; label: string }[]>([])
@@ -30,13 +32,14 @@ const loadOptions = async () => {
   const companyId = selectedCompanyId.value
   if (!companyId) return
 
-  const [stages, partners, members] = await Promise.all([
+  const [stageList, partners, members] = await Promise.all([
     getStagesByCompany(companyId),
     getPartnersByCompany(companyId),
     getCompanyMembers(companyId, 'team')
   ])
 
-  stageOptions.value = stages.map(s => ({ value: s.id, label: s.name }))
+  stages.value = stageList
+  stageOptions.value = stageList.filter(s => !s.is_lost).map(s => ({ value: s.id, label: s.name }))
   partnerOptions.value = partners.map(p => ({
     value: p.id,
     label: (p.display_name?.trim() || p.name)?.trim() || p.id
@@ -48,16 +51,41 @@ const loadOptions = async () => {
       label: (m.partner_display_name?.trim() || m.partner_name)?.trim() || m.partner_id
     }))
 
-  if (stageOptions.value.length > 0 && !formData.value.stage_id) {
+  const requestedStage = typeof route.query.stage_id === 'string' ? route.query.stage_id : ''
+  if (requestedStage && stageOptions.value.some(o => o.value === requestedStage)) {
+    formData.value.stage_id = requestedStage
+  } else if (stageOptions.value.length > 0 && !formData.value.stage_id) {
     formData.value.stage_id = stageOptions.value[0]?.value ?? ''
+  }
+
+  if (!formData.value.responsible_partner_id && authStore.partner?.id
+    && memberOptions.value.some(m => m.value === authStore.partner?.id)) {
+    formData.value.responsible_partner_id = authStore.partner.id
   }
 }
 
 watch(selectedCompanyId, () => { void loadOptions() }, { immediate: true })
 
+// La probabilidad sugerida por la etapa se aplica mientras el usuario no la haya ajustado
+const probabilityTouched = ref(false)
+let applyingStageProbability = false
+
+watch(() => formData.value.stage_id, (stageId) => {
+  if (probabilityTouched.value) return
+  const stage = stages.value.find(s => s.id === stageId)
+  if (stage?.probability == null) return
+  applyingStageProbability = true
+  formData.value.probability = stage.probability
+  void nextTick(() => { applyingStageProbability = false })
+})
+
+watch(() => formData.value.probability, () => {
+  if (!applyingStageProbability) probabilityTouched.value = true
+})
+
 const mapFormToInsert = (
   value: CrmLeadFormData
-): Omit<TablesInsert<'crm_lead'>, 'company_id'> => ({
+): Omit<CrmLeadInsert, 'company_id'> => ({
   name: value.name.trim(),
   stage_id: value.stage_id,
   partner_id: value.partner_id || null,
