@@ -1,4 +1,4 @@
-import type { Database } from './database.types'
+import type { Database, Json } from './database.types'
 
 /**
  * Tipos temporales del módulo Website.
@@ -85,7 +85,7 @@ export type WebsitePageRow = Audit & {
   is_home: boolean
   layout: WebsitePageLayout
   show_title: boolean
-  content: unknown
+  content: Json
   content_version: number
   excerpt: string | null
   seo_title: string | null
@@ -106,7 +106,7 @@ export type WebsitePageRevisionRow = {
   page_id: string
   revision_no: number
   title: string
-  content: unknown
+  content: Json
   created_at: string | null
   created_by: string | null
 }
@@ -243,7 +243,7 @@ export type WebsitePostRow = Audit & {
   cover_url: string | null
   cover_alt: string | null
   excerpt: string | null
-  body: unknown
+  body: Json
   body_html: string
   body_text: string
   reading_minutes: number
@@ -277,7 +277,7 @@ export type WebsitePostRevisionRow = {
   post_id: string
   revision_no: number
   title: string
-  body: unknown
+  body: Json
   created_at: string | null
   created_by: string | null
 }
@@ -326,7 +326,7 @@ export type WebsiteContactSubmissionRow = {
   phone: string | null
   subject: string | null
   message: string
-  payload: Record<string, unknown>
+  payload: Json
   source_url: string | null
   visitor_id: string | null
   status: WebsiteSubmissionStatus

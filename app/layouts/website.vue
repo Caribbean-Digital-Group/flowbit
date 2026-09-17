@@ -49,6 +49,28 @@ const storefrontLink = computed(() =>
 )
 
 const headerLayout = computed(() => site.value?.header_layout ?? 'classic')
+
+/** La cabecera mínima usa el menú desplegable también en escritorio. */
+const isMinimalHeader = computed(() => headerLayout.value === 'minimal')
+
+// Si el menú móvil queda abierto y la ventana pasa a escritorio, se cierra
+// para no mostrar dos navegaciones a la vez.
+let desktopQuery: MediaQueryList | null = null
+const closeOnDesktop = (event: MediaQueryListEvent | MediaQueryList) => {
+  if (event.matches && !isMinimalHeader.value) {
+    isMenuOpen.value = false
+    openSubmenu.value = null
+  }
+}
+
+onMounted(() => {
+  desktopQuery = window.matchMedia('(min-width: 1024px)')
+  desktopQuery.addEventListener('change', closeOnDesktop)
+})
+
+onUnmounted(() => {
+  desktopQuery?.removeEventListener('change', closeOnDesktop)
+})
 const footerLayout = computed(() => site.value?.footer_layout ?? 'columns')
 
 const whatsappLink = computed(() =>
@@ -139,7 +161,7 @@ useHead(() => ({
       </div>
 
       <!-- Header -->
-      <header class="sf-border sticky top-0 z-40 border-x-0 border-t-0 backdrop-blur-md" :style="{ backgroundColor: 'color-mix(in srgb, var(--sf-bg) 88%, transparent)' }">
+      <header class="sf-border-b sticky top-0 z-40 backdrop-blur-md" :style="{ backgroundColor: 'color-mix(in srgb, var(--sf-bg) 88%, transparent)' }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div
             :class="[
@@ -161,7 +183,7 @@ useHead(() => ({
             </NuxtLink>
 
             <!-- Navegación desktop -->
-            <nav v-if="headerLayout !== 'minimal'" class="hidden lg:flex items-center gap-1" aria-label="Principal">
+            <nav v-if="!isMinimalHeader" class="hidden lg:flex items-center gap-1" aria-label="Principal">
               <div v-for="link in mainLinks" :key="link.id" class="relative group">
                 <component
                   :is="nav.isExternal(link.href, link.external) ? 'a' : NuxtLink"
@@ -201,17 +223,25 @@ useHead(() => ({
               <button type="button" class="sf-icon-btn" aria-label="Buscar" @click="isSearchOpen = !isSearchOpen">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.3-4.3M17 11a6 6 0 11-12 0 6 6 0 0112 0z" /></svg>
               </button>
-              <button
-                type="button"
-                :class="['sf-icon-btn', headerLayout === 'minimal' ? '' : 'lg:hidden']"
-                aria-label="Menú"
-                @click="isMenuOpen = !isMenuOpen"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path v-if="!isMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                  <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <!--
+                La visibilidad responsiva va en el contenedor: .sf-icon-btn fija
+                display fuera de las capas de Tailwind y anularía lg:hidden.
+              -->
+              <div :class="isMinimalHeader ? 'flex' : 'flex lg:hidden'">
+                <button
+                  type="button"
+                  class="sf-icon-btn"
+                  :aria-label="isMenuOpen ? 'Cerrar menú' : 'Abrir menú'"
+                  :aria-expanded="isMenuOpen"
+                  aria-controls="website-mobile-nav"
+                  @click="isMenuOpen = !isMenuOpen"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path v-if="!isMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -223,7 +253,13 @@ useHead(() => ({
         </div>
 
         <!-- Menú móvil -->
-        <nav v-if="isMenuOpen" class="sf-border border-x-0 border-b-0 px-4 py-3 space-y-1" :style="{ backgroundColor: 'var(--sf-bg)' }" aria-label="Menú móvil">
+        <nav
+          v-if="isMenuOpen"
+          id="website-mobile-nav"
+          :class="['sf-border-t px-4 py-3 space-y-1', isMinimalHeader ? '' : 'lg:hidden']"
+          :style="{ backgroundColor: 'var(--sf-bg)' }"
+          aria-label="Menú móvil"
+        >
           <div v-for="link in mainLinks" :key="link.id">
             <div class="flex items-center">
               <component
@@ -264,16 +300,24 @@ useHead(() => ({
       </main>
 
       <!-- Footer -->
-      <footer class="sf-border border-x-0 border-b-0 mt-auto" :style="{ backgroundColor: 'var(--sf-surface)' }">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div v-if="footerLayout === 'columns'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div class="lg:col-span-2">
-              <div class="flex items-center gap-3 mb-3">
-                <img v-if="site.logo_url" :src="site.logo_url" :alt="site.name" class="h-8 w-auto object-contain" />
-                <p class="sf-heading text-base font-semibold">{{ site.name }}</p>
-              </div>
-              <p v-if="site.tagline || site.description" class="sf-muted text-sm leading-relaxed max-w-md">{{ site.tagline || site.description }}</p>
-              <div v-if="site.social_links?.length" class="flex items-center gap-2 mt-4">
+      <footer :class="['sf-footer mt-auto', whatsappLink ? 'sf-footer--fab' : '']">
+        <div :class="['max-w-7xl mx-auto px-4 sm:px-6 lg:px-8', footerLayout === 'minimal' ? 'py-6' : 'pt-12 pb-8']">
+          <!-- Columnas -->
+          <div v-if="footerLayout === 'columns'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10">
+            <div class="sm:col-span-2">
+              <NuxtLink :to="nav.to('')" class="inline-flex items-center gap-3">
+                <img v-if="site.logo_url" :src="site.logo_url" :alt="site.name" class="h-9 w-auto max-w-[160px] object-contain" />
+                <span
+                  v-else
+                  class="w-9 h-9 flex items-center justify-center font-bold text-sm"
+                  :style="{ backgroundColor: 'var(--sf-primary-strong)', color: 'var(--sf-primary-contrast)', borderRadius: 'var(--sf-radius-md)' }"
+                >
+                  {{ site.name.slice(0, 2).toUpperCase() }}
+                </span>
+                <span class="sf-heading text-base font-semibold">{{ site.name }}</span>
+              </NuxtLink>
+              <p v-if="site.tagline || site.description" class="sf-muted text-sm leading-relaxed mt-4 max-w-md">{{ site.tagline || site.description }}</p>
+              <div v-if="site.social_links?.length" class="flex flex-wrap items-center gap-1 mt-5 -ml-2">
                 <a
                   v-for="social in site.social_links"
                   :key="social.network + social.url"
@@ -283,59 +327,68 @@ useHead(() => ({
                   class="sf-icon-btn"
                   :aria-label="social.network"
                 >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" :d="SOCIAL_ICONS[social.network] ?? SOCIAL_ICONS.website" /></svg>
+                  <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" :d="SOCIAL_ICONS[social.network] ?? SOCIAL_ICONS.website" /></svg>
                 </a>
               </div>
             </div>
-            <div v-if="footerLinks.length">
-              <p class="sf-heading text-sm font-semibold mb-3">Enlaces</p>
-              <ul class="space-y-2">
+
+            <nav v-if="footerLinks.length" aria-label="Enlaces del pie de página">
+              <p class="sf-footer-title">Enlaces</p>
+              <ul class="space-y-2.5">
                 <li v-for="link in footerLinks" :key="link.id">
                   <component
                     :is="nav.isExternal(link.href, link.external) ? 'a' : NuxtLink"
                     v-bind="nav.isExternal(link.href, link.external) ? { href: link.href, rel: 'noopener', target: link.new_tab ? '_blank' : undefined } : { to: nav.to(link.href, link.external) }"
-                    class="sf-muted text-sm sf-hover-text transition-colors"
+                    class="sf-footer-link"
                   >
                     {{ link.label }}
                   </component>
                 </li>
               </ul>
-            </div>
-            <div>
-              <p class="sf-heading text-sm font-semibold mb-3">Contacto</p>
-              <ul class="sf-muted space-y-2 text-sm">
-                <li v-if="site.contact_email"><a :href="`mailto:${site.contact_email}`" class="sf-hover-text">{{ site.contact_email }}</a></li>
-                <li v-if="site.contact_phone"><a :href="`tel:${site.contact_phone}`" class="sf-hover-text">{{ site.contact_phone }}</a></li>
-                <li v-if="site.contact_address" class="leading-relaxed">{{ site.contact_address }}</li>
-                <li v-if="site.contact_hours" class="leading-relaxed">{{ site.contact_hours }}</li>
+            </nav>
+
+            <div v-if="site.contact_email || site.contact_phone || site.contact_address || site.contact_hours">
+              <p class="sf-footer-title">Contacto</p>
+              <ul class="space-y-2.5">
+                <li v-if="site.contact_email"><a :href="`mailto:${site.contact_email}`" class="sf-footer-link break-all">{{ site.contact_email }}</a></li>
+                <li v-if="site.contact_phone"><a :href="`tel:${site.contact_phone}`" class="sf-footer-link">{{ site.contact_phone }}</a></li>
+                <li v-if="site.contact_address" class="sf-muted text-sm leading-relaxed">{{ site.contact_address }}</li>
+                <li v-if="site.contact_hours" class="sf-subtle text-sm leading-relaxed">{{ site.contact_hours }}</li>
               </ul>
             </div>
           </div>
 
-          <div v-else-if="footerLayout === 'simple'" class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div class="flex items-center gap-3">
+          <!-- Una fila -->
+          <div v-else-if="footerLayout === 'simple'" class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 text-center md:text-left">
+            <NuxtLink :to="nav.to('')" class="inline-flex items-center justify-center md:justify-start gap-3">
               <img v-if="site.logo_url" :src="site.logo_url" :alt="site.name" class="h-8 w-auto object-contain" />
-              <p class="sf-heading text-base font-semibold">{{ site.name }}</p>
-            </div>
-            <ul class="flex flex-wrap gap-x-5 gap-y-2">
+              <span class="sf-heading text-base font-semibold">{{ site.name }}</span>
+            </NuxtLink>
+            <ul v-if="footerLinks.length" class="flex flex-wrap justify-center gap-x-6 gap-y-2">
               <li v-for="link in footerLinks" :key="link.id">
                 <component
                   :is="nav.isExternal(link.href, link.external) ? 'a' : NuxtLink"
                   v-bind="nav.isExternal(link.href, link.external) ? { href: link.href, rel: 'noopener' } : { to: nav.to(link.href, link.external) }"
-                  class="sf-muted text-sm sf-hover-text"
+                  class="sf-footer-link"
                 >
                   {{ link.label }}
                 </component>
               </li>
             </ul>
-            <div v-if="site.social_links?.length" class="flex items-center gap-2">
+            <div v-if="site.social_links?.length" class="flex items-center justify-center gap-1">
               <a v-for="social in site.social_links" :key="social.network + social.url" :href="social.url" target="_blank" rel="noopener" class="sf-icon-btn" :aria-label="social.network">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" :d="SOCIAL_ICONS[social.network] ?? SOCIAL_ICONS.website" /></svg>
+                <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" :d="SOCIAL_ICONS[social.network] ?? SOCIAL_ICONS.website" /></svg>
               </a>
             </div>
           </div>
 
-          <div :class="['flex flex-col sm:flex-row items-center justify-between gap-2', footerLayout === 'minimal' ? '' : 'sf-border mt-8 pt-6 border-x-0 border-b-0']">
+          <!-- Derechos -->
+          <div
+            :class="[
+              'flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left',
+              footerLayout === 'minimal' ? 'sf-footer-bar sf-footer-bar--flat' : 'sf-footer-bar'
+            ]"
+          >
             <p class="sf-subtle text-xs">
               {{ site.footer_text || `© ${new Date().getFullYear()} ${site.company_name}. Todos los derechos reservados.` }}
             </p>

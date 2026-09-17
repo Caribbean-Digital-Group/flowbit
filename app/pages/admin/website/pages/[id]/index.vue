@@ -2,7 +2,7 @@
 import { storeToRefs } from 'pinia'
 import type { MenuOption } from '~/components/CardSheet.vue'
 import { createEmptyWebsitePageForm, type WebsitePageFormData } from '~/components/WebsitePage/Form.vue'
-import { normalizeSections, type WebsiteSection } from '~/utils/website/sections'
+import { normalizeSections, sectionsToJson, type WebsiteSection } from '~/utils/website/sections'
 import type { RadiusStyle } from '~/utils/storefrontTheme'
 import type { WebsitePageRevisionRow, WebsitePageRow, WebsitePageStatus } from '~/types/website.types'
 
@@ -21,7 +21,7 @@ const pageId = computed(() => String(Array.isArray(route.params.id) ? route.para
 const page = ref<WebsitePageRow | null>(null)
 const formData = ref<WebsitePageFormData>(createEmptyWebsitePageForm())
 const sections = ref<WebsiteSection[]>([])
-const revisions = ref<WebsitePageRevisionRow[]>([])
+const revisions = shallowRef<WebsitePageRevisionRow[]>([])
 const linkOptions = ref<{ value: string; label: string }[]>([])
 const themeOverrides = ref<{ themeId?: string | null; paletteId?: string | null; fontId?: string | null; primaryColor?: string | null; secondaryColor?: string | null; accentColor?: string | null; radius?: RadiusStyle | null }>({})
 
@@ -125,7 +125,7 @@ const persist = async (status?: WebsitePageStatus) => {
       noindex: f.noindex,
       show_in_search: f.show_in_search,
       display_order: f.display_order,
-      content: clean
+      content: sectionsToJson(clean)
     })
     if (!row) { errorMessage.value = lastError.value ?? 'No se pudo guardar la página.'; return }
     applyRow(row)

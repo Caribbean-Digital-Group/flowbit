@@ -10,6 +10,8 @@
  * Datos puros, sin Vue.
  */
 
+import type { Json } from '~/types/database.types'
+
 export type WebsiteSectionType =
   | 'hero'
   | 'text'
@@ -652,3 +654,7 @@ export const sectionPlainText = (section: WebsiteSection): string => {
   walk(section.props)
   return parts.join(' ').replace(/\s+/g, ' ').trim()
 }
+
+/** Copia serializable de las secciones para guardarla en website_page.content. */
+export const sectionsToJson = (sections: WebsiteSection[]): Json =>
+  JSON.parse(JSON.stringify(sections)) as Json

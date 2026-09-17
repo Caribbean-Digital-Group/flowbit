@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { createEmptyWebsitePageForm, type WebsitePageFormData } from '~/components/WebsitePage/Form.vue'
-import { createSection } from '~/utils/website/sections'
+import { createSection, sectionsToJson } from '~/utils/website/sections'
 
 definePageMeta({ layout: 'admin' })
 
@@ -57,7 +57,7 @@ const handleSave = async () => {
       noindex: formData.value.noindex,
       show_in_search: formData.value.show_in_search,
       display_order: formData.value.display_order,
-      content: buildContent()
+      content: sectionsToJson(buildContent())
     })
     if (!result) {
       errorMessage.value = lastError.value ?? 'No se pudo crear la página.'

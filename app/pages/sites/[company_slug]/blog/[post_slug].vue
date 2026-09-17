@@ -141,7 +141,7 @@ useHead(() => {
           <WebsiteSmartLink v-for="tag in post.tags" :key="tag.id" :href="`/blog/etiqueta/${tag.slug}`" class="ws-chip">#{{ tag.name }}</WebsiteSmartLink>
         </div>
 
-        <div class="flex flex-wrap items-center justify-between gap-4 mt-8 py-6 sf-border border-x-0">
+        <div class="flex flex-wrap items-center justify-between gap-4 mt-8 py-6 sf-border-y">
           <WebsiteClapButton v-if="site?.reactions_enabled" :post-slug="post.slug" :count="clapCount" @update="clapCount = $event" />
           <span v-else />
           <WebsiteShareBar :title="post.title" :path="pagePath" />

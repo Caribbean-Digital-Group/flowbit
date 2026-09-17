@@ -138,7 +138,7 @@ const handleSearch = () => {
 
       <!-- Header -->
       <header
-        class="sf-border backdrop-blur-md sticky top-0 z-40 border-x-0 border-t-0"
+        class="sf-border-b backdrop-blur-md sticky top-0 z-40"
         :style="{ backgroundColor: isDark ? 'rgba(2,6,23,0.82)' : 'rgba(255,255,255,0.88)' }"
       >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -263,53 +263,63 @@ const handleSearch = () => {
       </main>
 
       <!-- Footer -->
-      <footer class="sf-border border-x-0 border-b-0 mt-16" :style="{ backgroundColor: 'var(--sf-surface)' }">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
-            <div>
-              <p class="sf-heading text-sm font-semibold mb-3">{{ store.name }}</p>
-              <p v-if="store.description" class="sf-muted text-sm leading-relaxed line-clamp-4">
+      <footer :class="['sf-footer mt-16', whatsappLink ? 'sf-footer--fab' : '']">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10">
+            <!-- Marca -->
+            <div class="sm:col-span-2">
+              <NuxtLink :to="basePath" class="inline-flex items-center gap-3">
+                <img
+                  v-if="store.logo_url"
+                  :src="store.logo_url"
+                  :alt="store.name"
+                  class="h-9 w-auto max-w-[160px] object-contain"
+                />
+                <span
+                  v-else
+                  class="w-9 h-9 flex items-center justify-center font-bold text-sm"
+                  :style="{
+                    backgroundColor: 'var(--sf-primary-strong)',
+                    color: 'var(--sf-primary-contrast)',
+                    borderRadius: 'var(--sf-radius-md)'
+                  }"
+                >
+                  {{ store.name.slice(0, 2).toUpperCase() }}
+                </span>
+                <span class="sf-heading text-base font-semibold">{{ store.name }}</span>
+              </NuxtLink>
+              <p v-if="store.description" class="sf-muted text-sm leading-relaxed line-clamp-4 mt-4 max-w-md">
                 {{ store.description }}
               </p>
             </div>
-            <div>
-              <p class="sf-heading text-sm font-semibold mb-3">Información</p>
-              <ul class="space-y-2">
-                <li>
-                  <NuxtLink :to="`${basePath}/about`" class="sf-muted text-sm transition-opacity hover:opacity-70">
-                    Quiénes somos
-                  </NuxtLink>
-                </li>
-                <li>
-                  <NuxtLink :to="`${basePath}/about#politicas`" class="sf-muted text-sm transition-opacity hover:opacity-70">
-                    Envíos y devoluciones
-                  </NuxtLink>
-                </li>
-                <li>
-                  <NuxtLink :to="`${basePath}/about#politicas`" class="sf-muted text-sm transition-opacity hover:opacity-70">
-                    Privacidad y términos
-                  </NuxtLink>
-                </li>
+
+            <!-- Información -->
+            <nav aria-label="Información de la tienda">
+              <p class="sf-footer-title">Información</p>
+              <ul class="space-y-2.5">
+                <li><NuxtLink :to="`${basePath}/products`" class="sf-footer-link">Catálogo</NuxtLink></li>
+                <li><NuxtLink :to="`${basePath}/about`" class="sf-footer-link">Quiénes somos</NuxtLink></li>
+                <li><NuxtLink :to="`${basePath}/about#politicas`" class="sf-footer-link">Envíos y devoluciones</NuxtLink></li>
+                <li><NuxtLink :to="`${basePath}/about#politicas`" class="sf-footer-link">Privacidad y términos</NuxtLink></li>
               </ul>
-            </div>
-            <div>
-              <p class="sf-heading text-sm font-semibold mb-3">Contacto</p>
-              <ul class="sf-muted space-y-2 text-sm">
+            </nav>
+
+            <!-- Contacto -->
+            <div v-if="store.contact_email || store.contact_phone || store.contact_address">
+              <p class="sf-footer-title">Contacto</p>
+              <ul class="space-y-2.5">
                 <li v-if="store.contact_email">
-                  <a :href="`mailto:${store.contact_email}`" class="transition-opacity hover:opacity-70">
-                    {{ store.contact_email }}
-                  </a>
+                  <a :href="`mailto:${store.contact_email}`" class="sf-footer-link break-all">{{ store.contact_email }}</a>
                 </li>
                 <li v-if="store.contact_phone">
-                  <a :href="`tel:${store.contact_phone}`" class="transition-opacity hover:opacity-70">
-                    {{ store.contact_phone }}
-                  </a>
+                  <a :href="`tel:${store.contact_phone}`" class="sf-footer-link">{{ store.contact_phone }}</a>
                 </li>
-                <li v-if="store.contact_address">{{ store.contact_address }}</li>
+                <li v-if="store.contact_address" class="sf-muted text-sm leading-relaxed">{{ store.contact_address }}</li>
               </ul>
             </div>
           </div>
-          <div class="sf-border mt-8 pt-6 border-x-0 border-b-0 flex flex-col sm:flex-row items-center justify-between gap-2">
+
+          <div class="sf-footer-bar flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
             <p class="sf-subtle text-xs">
               &copy; {{ new Date().getFullYear() }} {{ store.name }}. Todos los derechos reservados.
             </p>

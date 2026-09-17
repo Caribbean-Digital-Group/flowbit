@@ -4,6 +4,7 @@ import type { JSONContent } from '@tiptap/core'
 import type { MenuOption } from '~/components/CardSheet.vue'
 import { createEmptyWebsitePostForm, toDateTimeLocal, type WebsitePostFormData } from '~/components/WebsitePost/Form.vue'
 import type { WebsitePostRow, WebsitePostStatus, WebsitePostRevisionRow } from '~/types/website.types'
+import type { Json } from '~/types/database.types'
 
 definePageMeta({ layout: 'admin' })
 
@@ -25,7 +26,7 @@ const body = ref<JSONContent | null>(null)
 const title = ref('')
 const subtitle = ref('')
 const stats = ref({ words: 0, characters: 0 })
-const revisions = ref<WebsitePostRevisionRow[]>([])
+const revisions = shallowRef<WebsitePostRevisionRow[]>([])
 
 const authors = ref<{ value: string; label: string }[]>([])
 const categories = ref<{ value: string; label: string }[]>([])
@@ -124,7 +125,7 @@ const persist = async (status?: WebsitePostStatus) => {
       cover_url: f.cover_url.trim() || null,
       cover_alt: f.cover_alt.trim() || null,
       excerpt: f.excerpt.trim() || rendered.excerpt || null,
-      body: body.value ?? { type: 'doc', content: [] },
+      body: JSON.parse(JSON.stringify(body.value ?? { type: 'doc', content: [] })) as Json,
       body_html: rendered.html,
       body_text: rendered.text,
       word_count: rendered.word_count,
@@ -161,7 +162,7 @@ const handleArchive = async () => {
 }
 
 const restoreRevision = (revision: WebsitePostRevisionRow) => {
-  body.value = revision.body as JSONContent
+  body.value = revision.body as unknown as JSONContent
   title.value = revision.title
   showRevisions.value = false
   successMessage.value = `Versión ${revision.revision_no} cargada. Guarda para aplicarla.`
