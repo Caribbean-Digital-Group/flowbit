@@ -1936,6 +1936,227 @@ export const ARTICLES: DocArticle[] = [
     relatedArticles: ['storefront-settings', 'storefront-fulfillment', 'storefront-analytics'],
     tags: ['tienda pública', 'catálogo', 'carrito', 'checkout', 'cliente', 'comprar']
   },
+  // ─── SITIO WEB ───────────────────────────────────────────────────────────────
+  {
+    id: 'website-settings',
+    routePatterns: ['/admin/website'],
+    module: 'website',
+    moduleLabel: 'Sitio web',
+    moduleEmoji: '🌐',
+    title: 'Ajustes del sitio web',
+    viewType: 'config',
+    level: 'basico',
+    isNew: true,
+    summary: 'Crea el sitio web de tu empresa en un clic, ajusta identidad, diseño, blog y SEO, y publícalo en /sites/tu-slug.',
+    description: 'Centro de control del sitio web público. Desde aquí se crea el sitio (con páginas de ejemplo, menús y tu perfil de autor), se define la URL, la identidad, el contacto, el tema visual, las opciones del blog, la comunidad (aplausos y comentarios) y el SEO global. El sitio permanece inactivo hasta que lo publicas; mientras tanto puedes revisarlo con «Vista previa».',
+    importance: 'El sitio web es la cara pública de la empresa y comparte el slug con la tienda en línea. Un sitio bien configurado (identidad, contacto, SEO) mejora la confianza de tus clientes y su posicionamiento en buscadores.',
+    tips: [
+      'Pulsa «Crear mi sitio web» la primera vez: se generan Inicio, Nosotros y Contacto con secciones de ejemplo, los menús y tu autor.',
+      'El slug de la URL es el mismo de la tienda en línea: cambiarlo mueve ambas direcciones.',
+      'Usa «Vista previa» mientras el sitio está inactivo: solo los miembros de la empresa ven esa versión.',
+      'Si ya tienes tienda, «Copiar el diseño de mi tienda» iguala plantilla, paleta y tipografía.',
+      'Los colores que no alcanzan contraste AA se ajustan automáticamente en botones; el panel te avisa cuál se usará.',
+      'Con «Los miembros del equipo pueden publicar» apagado, los miembros guardan borradores y un administrador publica.',
+      'La barra de anuncio es ideal para promociones o avisos temporales; déjala vacía para ocultarla.'
+    ],
+    fields: [
+      { label: 'Estado del sitio', required: true, type: 'boolean', description: 'Publicado o inactivo. Inactivo = solo vista previa para miembros.' },
+      { label: 'URL del sitio (slug)', required: true, type: 'text', description: 'Identificador de la empresa en /sites/{slug}. Solo minúsculas, números y guiones.', tip: 'Compartido con la tienda en línea.' },
+      { label: 'Nombre y eslogan', required: false, type: 'text', description: 'Identidad del sitio; vacío = nombre de la empresa.' },
+      { label: 'Logo, favicon e imagen para redes', required: false, type: 'text', description: 'Se eligen de la biblioteca de medios o por URL.', tip: 'Imagen para redes de 1200×630 px.' },
+      { label: 'Contacto público', required: false, type: 'text', description: 'Correo, teléfono, WhatsApp (botón flotante), dirección, horario y mapa.' },
+      { label: 'Plantilla, paleta y tipografía', required: false, type: 'select', description: 'Tema visual compartido con la tienda. Vista previa en vivo.' },
+      { label: 'Cabecera y pie de página', required: false, type: 'select', description: 'Distribución de la navegación y del pie.' },
+      { label: 'Blog', required: false, type: 'boolean', description: 'Habilitar el blog, título, descripción y posts por página.' },
+      { label: 'Comentarios y aplausos', required: false, type: 'boolean', description: 'Comunidad de lectores; los comentarios se moderan antes de publicarse.' },
+      { label: 'SEO global y página 404', required: false, type: 'textarea', description: 'Título y descripción por defecto, opción de no indexar y textos del error 404.' }
+    ],
+    process: [
+      { step: 1, title: 'Crea', description: 'Genera el sitio con páginas de ejemplo.' },
+      { step: 2, title: 'Personaliza', description: 'Identidad, contacto y diseño.' },
+      { step: 3, title: 'Construye', description: 'Páginas, menús y blog.' },
+      { step: 4, title: 'Publica', description: 'Activa el sitio y comparte el enlace.' }
+    ],
+    wizard: {
+      id: 'wz-website',
+      title: 'Publica tu sitio web',
+      description: 'De cero a un sitio publicado con páginas, menú y una primera publicación.',
+      estimatedMinutes: 40,
+      steps: [
+        { id: 'create', title: 'Crea el sitio y define la URL', description: 'Pulsa «Crear mi sitio web» y confirma el slug de la empresa.', action: { label: 'Ir a Ajustes del sitio', route: '/admin/website' }, checklist: ['Sitio creado', 'Slug definido'] },
+        { id: 'identity', title: 'Completa identidad, contacto y diseño', description: 'Logo, eslogan, contacto, redes y tema visual con vista previa.', action: { label: 'Ajustes del sitio', route: '/admin/website' }, checklist: ['Logo y eslogan', 'Contacto y WhatsApp', 'Plantilla y paleta'] },
+        { id: 'pages', title: 'Edita las páginas de ejemplo', description: 'Ajusta Inicio, Nosotros y Contacto con el constructor de secciones.', action: { label: 'Ir a Páginas', route: '/admin/website/pages' }, checklist: ['Inicio publicada', 'Nosotros revisada', 'Contacto con formulario'], tip: 'Cada sección tiene fondo, espaciado y alineación propios.' },
+        { id: 'menu', title: 'Organiza el menú', description: 'Ordena los enlaces de la cabecera y del pie; agrega la tienda si está activa.', action: { label: 'Ir a Menús', route: '/admin/website/menus' } },
+        { id: 'blog', title: 'Escribe tu primera publicación', description: 'Crea un post, agrega portada, categoría y etiquetas, y publícalo.', action: { label: 'Ir al Blog', route: '/admin/website/blog/posts' }, checklist: ['Post publicado', 'Categoría creada'] },
+        { id: 'publish', title: 'Activa el sitio', description: 'Revisa con «Vista previa», enciende el estado y comparte el enlace.', action: { label: 'Ajustes del sitio', route: '/admin/website' }, warning: 'Al activar, buscadores y visitantes pueden ver el contenido publicado.' }
+      ]
+    },
+    faqs: [
+      { question: '¿Necesito tener tienda en línea para usar el sitio web?', answer: 'No. Son módulos independientes que comparten el slug y el motor de temas. Si la tienda está activa, el sitio puede enlazarla y mostrar productos destacados.' },
+      { question: '¿Quién puede ver el sitio mientras está inactivo?', answer: 'Solo los miembros de la empresa con sesión iniciada, usando el enlace «Vista previa» (añade ?preview=1 a la URL).' },
+      { question: '¿Puedo usar mi propio dominio?', answer: 'Todavía no desde el panel. Por ahora el sitio vive en /sites/tu-slug y puedes redirigir tu dominio a esa dirección desde tu proveedor de DNS.' }
+    ],
+    relatedModules: [
+      { label: 'Páginas', route: '/admin/website/pages' },
+      { label: 'Blog', route: '/admin/website/blog/posts' },
+      { label: 'Tienda en línea', route: '/admin/storefront' }
+    ],
+    relatedArticles: ['website-pages', 'website-blog-posts', 'storefront-design'],
+    tags: ['sitio web', 'website', 'cms', 'publicar', 'diseño', 'seo', 'slug', 'vista previa']
+  },
+  {
+    id: 'website-pages',
+    routePatterns: ['/admin/website/pages', '/admin/website/pages/create', '/admin/website/pages/:id'],
+    module: 'website',
+    moduleLabel: 'Sitio web',
+    moduleEmoji: '🌐',
+    title: 'Páginas y constructor de secciones',
+    viewType: 'detail',
+    level: 'intermedio',
+    isNew: true,
+    summary: 'Construye páginas con secciones prediseñadas (portada, texto, características, testimonios, precios, galería, formulario…) y velas en vivo antes de publicar.',
+    description: 'Cada página se compone de secciones tipadas: eliges una del catálogo, editas sus campos en el formulario y ves el resultado al instante en la vista previa (escritorio o celular). Puedes reordenar, duplicar, ocultar y eliminar secciones; cada una tiene fondo, espaciado y alineación propios. La página tiene además metadatos SEO, distribución (estándar o landing) y un historial de las últimas 20 versiones.',
+    importance: 'Las secciones garantizan páginas coherentes con el tema del sitio sin escribir código: lo que ves en el editor es exactamente lo que se publica.',
+    tips: [
+      'Empieza desde una plantilla («Página informativa» o «Landing») y ajusta; es más rápido que partir en blanco.',
+      'Las secciones «Últimas publicaciones» y «Productos de la tienda» se llenan solas con datos reales.',
+      'El formulario de contacto guarda los mensajes en Sitio web → Mensajes y permite crear un lead del CRM.',
+      'Haz clic en una sección de la vista previa para seleccionarla y editarla.',
+      'Fondo «Color de marca» u «Oscuro» invierte el texto automáticamente para mantener el contraste.',
+      'Si cambias el slug de una página publicada, se crea una redirección 301 automática desde la ruta anterior.',
+      'Solo puede haber una página de inicio; marcar otra desmarca la anterior.'
+    ],
+    fields: [
+      { label: 'Título', required: true, type: 'text', description: 'Nombre de la página; genera el slug si no escribes uno.' },
+      { label: 'Estado', required: true, type: 'select', description: 'Borrador, publicada o archivada.', tip: 'Publicar requiere ser admin salvo que el sitio permita publicar a miembros.' },
+      { label: 'Distribución', required: false, type: 'select', description: 'Estándar (con título) o landing (secciones a todo lo ancho).' },
+      { label: 'Secciones', required: false, type: 'textarea', description: 'Catálogo: portada, texto, imagen y texto, características, cifras, galería, testimonios, precios, FAQ, equipo, CTA, logos, video, mapa, formulario, últimas publicaciones, productos, HTML, separador.' },
+      { label: 'SEO', required: false, type: 'textarea', description: 'Título, descripción, imagen para redes, canónica y no indexar.' }
+    ],
+    faqs: [
+      { question: '¿Puedo escribir HTML propio?', answer: 'Sí, con la sección «HTML personalizado». Se limpia en servidor: no se permiten scripts ni enlaces javascript:, solo texto, listas, imágenes, tablas e iframes de YouTube, Vimeo y Google Maps.' },
+      { question: '¿Cómo recupero una versión anterior?', answer: 'En el menú de la página abre «Historial», elige la versión y pulsa «Cargar»; luego guarda para aplicarla.' }
+    ],
+    relatedModules: [
+      { label: 'Menús', route: '/admin/website/menus' },
+      { label: 'Medios', route: '/admin/website/media' }
+    ],
+    relatedArticles: ['website-settings', 'website-menus', 'website-media'],
+    tags: ['páginas', 'secciones', 'constructor', 'landing', 'bloques', 'vista previa', 'seo']
+  },
+  {
+    id: 'website-menus',
+    routePatterns: ['/admin/website/menus'],
+    module: 'website',
+    moduleLabel: 'Sitio web',
+    moduleEmoji: '🌐',
+    title: 'Menús de navegación',
+    viewType: 'config',
+    level: 'basico',
+    isNew: true,
+    summary: 'Define los enlaces de la cabecera y del pie de página: páginas, blog, categorías, galerías, tienda o URL externa, con submenús.',
+    description: 'El sitio tiene dos menús: principal (cabecera) y pie de página. Cada elemento apunta a una página, al blog, a una categoría, a una publicación, a las galerías, a la tienda en línea o a una URL externa; puede anidarse un nivel, ocultarse o abrirse en nueva pestaña. Los enlaces a contenido no publicado se ocultan solos en el sitio.',
+    importance: 'Una navegación clara es lo que permite a los visitantes encontrar tu contenido; los menús se generan de forma dinámica y no requieren tocar las páginas.',
+    tips: [
+      'El elemento «Tienda en línea» solo se muestra cuando la tienda está activa.',
+      'Usa el botón «+» de un elemento para crear un submenú desplegable.',
+      'Ordena con las flechas; el orden se guarda al instante.'
+    ],
+    relatedModules: [{ label: 'Páginas', route: '/admin/website/pages' }],
+    relatedArticles: ['website-pages', 'website-settings'],
+    tags: ['menú', 'navegación', 'cabecera', 'pie de página', 'enlaces']
+  },
+  {
+    id: 'website-blog-posts',
+    routePatterns: ['/admin/website/blog/posts', '/admin/website/blog/posts/create', '/admin/website/blog/posts/:id', '/admin/website/blog/categories', '/admin/website/blog/categories/:id', '/admin/website/blog/tags', '/admin/website/blog/authors', '/admin/website/blog/authors/:id', '/admin/website/blog/comments'],
+    module: 'website',
+    moduleLabel: 'Sitio web',
+    moduleEmoji: '🌐',
+    title: 'Blog: publicaciones, categorías, etiquetas y autores',
+    viewType: 'detail',
+    level: 'intermedio',
+    isNew: true,
+    summary: 'Escribe con un editor enriquecido, organiza por categorías y etiquetas, programa la publicación y mide lecturas, aplausos y comentarios.',
+    description: 'El blog funciona como una plataforma de publicación completa: editor de texto enriquecido con imágenes, videos y enlaces; portada, extracto y tiempo de lectura automático; categorías jerárquicas y etiquetas; autores con perfil público; posts destacados o fijados; programación por fecha; relacionados automáticos o manuales; SEO por publicación; feed RSS; aplausos estilo Medium y comentarios con moderación.',
+    importance: 'El contenido es el motor del posicionamiento y de la relación con tus clientes. Un blog bien organizado (categorías, etiquetas, autores) hace que cada publicación se descubra y se comparta mejor.',
+    tips: [
+      'Crea el post con solo el título: entras directo al editor y todo lo demás se completa después.',
+      'El extracto y el tiempo de lectura se calculan automáticamente si los dejas vacíos.',
+      'Una fecha de publicación futura programa el post: aparece solo cuando llega la hora, sin tareas programadas.',
+      'Las etiquetas se crean al vuelo escribiendo y pulsando Enter; comparten nombre entre publicaciones.',
+      'Los relacionados se sugieren por etiquetas y categoría; puedes fijarlos a mano en el panel lateral.',
+      'Los comentarios llegan como pendientes a Blog → Comentarios; solo los aprobados se muestran.',
+      'Cambiar el slug de un post publicado crea una redirección automática desde la URL anterior.'
+    ],
+    fields: [
+      { label: 'Título y subtítulo', required: true, type: 'text', description: 'Encabezado de la publicación.' },
+      { label: 'Cuerpo', required: true, type: 'textarea', description: 'Editor enriquecido: títulos, listas, citas, código, imágenes, videos de YouTube, enlaces y separadores.' },
+      { label: 'Estado y fecha', required: true, type: 'date', description: 'Borrador, programado, publicado o archivado; fecha futura = programado.' },
+      { label: 'Autor y categoría', required: false, type: 'relation', description: 'Perfil que firma y tema principal.' },
+      { label: 'Etiquetas', required: false, type: 'text', description: 'Palabras clave transversales.' },
+      { label: 'Portada y extracto', required: false, type: 'text', description: 'Imagen de cabecera y resumen para tarjetas y buscadores.' },
+      { label: 'Destacado / fijado / comentarios', required: false, type: 'boolean', description: 'Resalta en la portada, fija al inicio, permite comentar.' },
+      { label: 'SEO', required: false, type: 'textarea', description: 'Título, descripción, imagen para redes, canónica y no indexar.' }
+    ],
+    faqs: [
+      { question: '¿Dónde está el RSS?', answer: 'En /sites/tu-slug/blog/rss.xml. Se enlaza automáticamente en la portada del blog.' },
+      { question: '¿Por qué no puedo publicar?', answer: 'Si el sitio no permite publicar a miembros, solo owner y admin pueden pasar un post a publicado. Guarda como borrador y pide a un administrador que lo publique, o activa la opción en Ajustes del sitio.' },
+      { question: '¿Se puede incrustar HTML libre en un post?', answer: 'No. El cuerpo se genera desde el editor y se limpia en servidor. Para HTML avanzado usa la sección «HTML personalizado» de una página.' }
+    ],
+    relatedModules: [
+      { label: 'Categorías', route: '/admin/website/blog/categories' },
+      { label: 'Etiquetas', route: '/admin/website/blog/tags' },
+      { label: 'Autores', route: '/admin/website/blog/authors' },
+      { label: 'Comentarios', route: '/admin/website/blog/comments' }
+    ],
+    relatedArticles: ['website-settings', 'website-media'],
+    tags: ['blog', 'publicaciones', 'posts', 'categorías', 'etiquetas', 'autores', 'comentarios', 'aplausos', 'rss', 'programar']
+  },
+  {
+    id: 'website-media',
+    routePatterns: ['/admin/website/media'],
+    module: 'website',
+    moduleLabel: 'Sitio web',
+    moduleEmoji: '🌐',
+    title: 'Biblioteca de medios',
+    viewType: 'list',
+    level: 'basico',
+    isNew: true,
+    summary: 'Sube imágenes, videos y PDF una vez y reutilízalos en páginas, posts, galerías y ajustes del sitio.',
+    description: 'Almacenamiento de archivos del sitio (bucket website-media). Cada archivo tiene título, texto alternativo y carpeta; se elige desde cualquier campo de imagen del módulo con «Elegir de la biblioteca». Límite de 10 MB por archivo; formatos JPG, PNG, WebP, GIF, SVG, AVIF, MP4 y PDF.',
+    importance: 'Centralizar los medios evita enlaces rotos y URLs externas; el texto alternativo mejora accesibilidad y SEO de las imágenes.',
+    tips: [
+      'Arrastra varios archivos a la vez sobre la biblioteca para subirlos en lote.',
+      'Completa el texto alternativo: lo usan lectores de pantalla y los buscadores de imágenes.',
+      'Eliminar un archivo lo borra del almacenamiento: las páginas que lo usen mostrarán una imagen rota.',
+      'Las carpetas son etiquetas libres (general, blog, galerias…) para organizar.'
+    ],
+    relatedModules: [{ label: 'Galerías', route: '/admin/website/galleries' }],
+    relatedArticles: ['website-galleries', 'website-pages'],
+    tags: ['medios', 'imágenes', 'archivos', 'subir', 'storage', 'biblioteca']
+  },
+  {
+    id: 'website-galleries',
+    routePatterns: ['/admin/website/galleries', '/admin/website/galleries/create', '/admin/website/galleries/:id'],
+    module: 'website',
+    moduleLabel: 'Sitio web',
+    moduleEmoji: '🌐',
+    title: 'Galerías de fotos',
+    viewType: 'detail',
+    level: 'basico',
+    isNew: true,
+    summary: 'Agrupa fotos en galerías con cuadrícula, mosaico o carrusel, visibles en /galeria y con visor a pantalla completa.',
+    description: 'Cada galería tiene nombre, descripción, portada, presentación (cuadrícula, mosaico o carrusel) y estado. Las fotos se suben directamente o se eligen de la biblioteca, se ordenan con flechas y admiten pie de foto. Se publican en /sites/tu-slug/galeria y pueden enlazarse desde la sección «Galería» de una página.',
+    importance: 'Las galerías muestran instalaciones, productos, eventos o trabajos realizados con una experiencia visual cuidada y sin depender de servicios externos.',
+    tips: [
+      'Una galería en borrador no aparece en el sitio; publícala cuando tenga fotos.',
+      'El mosaico respeta la proporción original de cada foto; la cuadrícula las recorta a 4:3.',
+      'Enlaza una galería desde el menú o desde la sección «Galería» de cualquier página.'
+    ],
+    relatedModules: [{ label: 'Medios', route: '/admin/website/media' }],
+    relatedArticles: ['website-media', 'website-pages'],
+    tags: ['galería', 'fotos', 'imágenes', 'carrusel', 'mosaico']
+  },
   // ─── PUNTO DE VENTA ──────────────────────────────────────────────────────────
   {
     id: 'pos-terminal',

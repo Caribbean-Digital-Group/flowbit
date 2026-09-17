@@ -55,6 +55,7 @@ flowbit/
 │   │   └── public.vue
 │   ├── middleware/                    # Guards de navegación (a implementar)
 │   ├── pages/
+│   │   ├── sites/[company_slug]/      # Sitio web público por empresa (CMS + blog)
 │   │   ├── index.vue                  # Landing / login
 │   │   ├── reset-password.vue
 │   │   ├── manual/                    # Manual público: index.vue + [id].vue
@@ -121,6 +122,22 @@ flowbit/
 > Analítica first-party (tracker propio + ingesta `/api/storefront/analytics` + rollups): `docs/storefront-analytics.md`.
 > Pagos con tarjeta por empresa (Stripe Checkout hosted + webhook + endpoints `/api/storefront/stripe/*`): `docs/storefront-stripe.md`.
 > Los eventos del storefront se emiten únicamente vía la fachada `useStorefrontTracker`.
+
+### Sitio web (CMS + blog)
+
+| Módulo | Ruta admin | Composable(s) |
+|---|---|---|
+| Ajustes del sitio | `/admin/website` | `useWebsiteSettings`, `useCompany` |
+| Páginas (constructor de secciones) | `/admin/website/pages` | `useWebsitePage`, `useWebsiteContent` |
+| Menús | `/admin/website/menus` | `useWebsiteMenu` |
+| Blog: posts, categorías, etiquetas, autores, comentarios | `/admin/website/blog/**` | `useWebsitePost`, `useWebsiteCategory`, `useWebsiteTag`, `useWebsiteAuthor`, `useWebsiteComment` |
+| Medios y galerías | `/admin/website/media`, `/admin/website/galleries` | `useWebsiteMedia`, `useWebsiteGallery` |
+| Mensajes y redirecciones | `/admin/website/submissions`, `/admin/website/redirects` | `useWebsiteSubmission`, `useWebsiteRedirect` |
+| Sitio público | `/sites/[company_slug]/**` | `useWebsite` (RPCs anon) + store Pinia `website` + `useWebsiteTheme`/`useWebsiteNav` |
+
+> Documentación completa en `docs/website.md`. El catálogo de secciones vive en
+> `app/utils/website/sections.ts`; el HTML de posts y secciones se sanea siempre en
+> servidor (`/api/website/render`). Primer módulo que usa Supabase Storage (bucket `website-media`).
 
 ### Inventario
 
@@ -477,7 +494,8 @@ El layout incluye:
   4. Inventario (Productos, Almacenes, Movimientos, Líneas de picking)
   5. Proyectos (Proyectos, Tareas)
   6. Aprobaciones (Solicitudes, Categorías, Aprobadores)
-  7. Sistema (Equipo, Manual, Configuración)
+  7. Sitio web (Ajustes, Páginas, Menús, Blog, Categorías, Etiquetas, Autores, Comentarios, Medios, Galerías, Mensajes, Redirecciones)
+  8. Sistema (Equipo, Manual, Configuración)
 - **Header sticky** con:
   - Botón hamburguesa (mobile)
   - Acceso al Manual de usuario

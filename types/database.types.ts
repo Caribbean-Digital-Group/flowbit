@@ -3722,6 +3722,1387 @@ export type Database = {
           },
         ]
       }
+      website_author: {
+        Row: {
+          active: boolean | null
+          avatar_url: string | null
+          bio: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          display_name: string
+          id: string
+          is_public: boolean
+          partner_id: string | null
+          role_title: string | null
+          slug: string | null
+          social_links: Json
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          avatar_url?: string | null
+          bio?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          display_name: string
+          id?: string
+          is_public?: boolean
+          partner_id?: string | null
+          role_title?: string | null
+          slug?: string | null
+          social_links?: Json
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          avatar_url?: string | null
+          bio?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          display_name?: string
+          id?: string
+          is_public?: boolean
+          partner_id?: string | null
+          role_title?: string | null
+          slug?: string | null
+          social_links?: Json
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_author_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_author_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_category: {
+        Row: {
+          active: boolean | null
+          color: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          display_order: number
+          id: string
+          image_url: string | null
+          is_featured: boolean
+          name: string
+          parent_id: string | null
+          slug: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          color?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean
+          name: string
+          parent_id?: string | null
+          slug?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          color?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean
+          name?: string
+          parent_id?: string | null
+          slug?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_category_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_category_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "website_category"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_comment: {
+        Row: {
+          active: boolean | null
+          author_email: string | null
+          author_name: string
+          author_user_id: string | null
+          body: string
+          company_id: string
+          created_at: string | null
+          id: string
+          parent_id: string | null
+          post_id: string
+          status: string
+          updated_at: string | null
+          updated_by: string | null
+          user_agent: string | null
+          visitor_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          author_email?: string | null
+          author_name: string
+          author_user_id?: string | null
+          body: string
+          company_id: string
+          created_at?: string | null
+          id?: string
+          parent_id?: string | null
+          post_id: string
+          status?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          user_agent?: string | null
+          visitor_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          author_email?: string | null
+          author_name?: string
+          author_user_id?: string | null
+          body?: string
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          parent_id?: string | null
+          post_id?: string
+          status?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          user_agent?: string | null
+          visitor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_comment_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_comment_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "website_comment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_comment_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "website_post"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_contact_submission: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          crm_lead_id: string | null
+          email: string | null
+          id: string
+          message: string
+          name: string
+          page_id: string | null
+          payload: Json
+          phone: string | null
+          source_url: string | null
+          status: string
+          subject: string | null
+          updated_at: string | null
+          updated_by: string | null
+          visitor_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string | null
+          crm_lead_id?: string | null
+          email?: string | null
+          id?: string
+          message: string
+          name: string
+          page_id?: string | null
+          payload?: Json
+          phone?: string | null
+          source_url?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          visitor_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          crm_lead_id?: string | null
+          email?: string | null
+          id?: string
+          message?: string
+          name?: string
+          page_id?: string | null
+          payload?: Json
+          phone?: string | null
+          source_url?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          visitor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_contact_submission_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_contact_submission_crm_lead_id_fkey"
+            columns: ["crm_lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_lead"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_contact_submission_crm_lead_id_fkey"
+            columns: ["crm_lead_id"]
+            isOneToOne: false
+            referencedRelation: "v_crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_contact_submission_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "website_page"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_gallery: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          cover_url: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          display_order: number
+          id: string
+          layout: string
+          name: string
+          slug: string | null
+          status: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          cover_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number
+          id?: string
+          layout?: string
+          name: string
+          slug?: string | null
+          status?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          cover_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number
+          id?: string
+          layout?: string
+          name?: string
+          slug?: string | null
+          status?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_gallery_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_gallery_item: {
+        Row: {
+          active: boolean | null
+          alt_text: string | null
+          caption: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          display_order: number
+          gallery_id: string
+          id: string
+          image_url: string
+          media_id: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          alt_text?: string | null
+          caption?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          display_order?: number
+          gallery_id: string
+          id?: string
+          image_url: string
+          media_id?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          alt_text?: string | null
+          caption?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          display_order?: number
+          gallery_id?: string
+          id?: string
+          image_url?: string
+          media_id?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_gallery_item_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_gallery_item_gallery_id_fkey"
+            columns: ["gallery_id"]
+            isOneToOne: false
+            referencedRelation: "website_gallery"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_gallery_item_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "website_media"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_media: {
+        Row: {
+          active: boolean | null
+          alt_text: string | null
+          bucket: string
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          file_name: string | null
+          folder: string
+          height: number | null
+          id: string
+          mime_type: string | null
+          path: string
+          public_url: string
+          size_bytes: number | null
+          title: string | null
+          updated_at: string | null
+          updated_by: string | null
+          width: number | null
+        }
+        Insert: {
+          active?: boolean | null
+          alt_text?: string | null
+          bucket?: string
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          file_name?: string | null
+          folder?: string
+          height?: number | null
+          id?: string
+          mime_type?: string | null
+          path: string
+          public_url: string
+          size_bytes?: number | null
+          title?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          width?: number | null
+        }
+        Update: {
+          active?: boolean | null
+          alt_text?: string | null
+          bucket?: string
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          file_name?: string | null
+          folder?: string
+          height?: number | null
+          id?: string
+          mime_type?: string | null
+          path?: string
+          public_url?: string
+          size_bytes?: number | null
+          title?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_media_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_menu: {
+        Row: {
+          active: boolean | null
+          code: string
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          name: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          code: string
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          code?: string
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_menu_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_menu_item: {
+        Row: {
+          active: boolean | null
+          category_id: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          display_order: number
+          gallery_id: string | null
+          id: string
+          is_visible: boolean
+          label: string
+          link_type: string
+          menu_id: string
+          open_in_new_tab: boolean
+          page_id: string | null
+          parent_id: string | null
+          post_id: string | null
+          updated_at: string | null
+          updated_by: string | null
+          url: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          category_id?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          display_order?: number
+          gallery_id?: string | null
+          id?: string
+          is_visible?: boolean
+          label: string
+          link_type?: string
+          menu_id: string
+          open_in_new_tab?: boolean
+          page_id?: string | null
+          parent_id?: string | null
+          post_id?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          url?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          category_id?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          display_order?: number
+          gallery_id?: string | null
+          id?: string
+          is_visible?: boolean
+          label?: string
+          link_type?: string
+          menu_id?: string
+          open_in_new_tab?: boolean
+          page_id?: string | null
+          parent_id?: string | null
+          post_id?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_menu_item_category_fk"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "website_category"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_menu_item_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_menu_item_gallery_fk"
+            columns: ["gallery_id"]
+            isOneToOne: false
+            referencedRelation: "website_gallery"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_menu_item_menu_id_fkey"
+            columns: ["menu_id"]
+            isOneToOne: false
+            referencedRelation: "website_menu"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_menu_item_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "website_page"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_menu_item_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "website_menu_item"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_menu_item_post_fk"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "website_post"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_page: {
+        Row: {
+          active: boolean | null
+          canonical_url: string | null
+          company_id: string
+          content: Json
+          content_version: number
+          created_at: string | null
+          created_by: string | null
+          display_order: number
+          excerpt: string | null
+          id: string
+          is_home: boolean
+          layout: string
+          noindex: boolean
+          og_image_url: string | null
+          published_at: string | null
+          seo_description: string | null
+          seo_title: string | null
+          show_in_search: boolean
+          show_title: boolean
+          slug: string | null
+          status: string
+          title: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          canonical_url?: string | null
+          company_id: string
+          content?: Json
+          content_version?: number
+          created_at?: string | null
+          created_by?: string | null
+          display_order?: number
+          excerpt?: string | null
+          id?: string
+          is_home?: boolean
+          layout?: string
+          noindex?: boolean
+          og_image_url?: string | null
+          published_at?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          show_in_search?: boolean
+          show_title?: boolean
+          slug?: string | null
+          status?: string
+          title: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          canonical_url?: string | null
+          company_id?: string
+          content?: Json
+          content_version?: number
+          created_at?: string | null
+          created_by?: string | null
+          display_order?: number
+          excerpt?: string | null
+          id?: string
+          is_home?: boolean
+          layout?: string
+          noindex?: boolean
+          og_image_url?: string | null
+          published_at?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          show_in_search?: boolean
+          show_title?: boolean
+          slug?: string | null
+          status?: string
+          title?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_page_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_page_revision: {
+        Row: {
+          company_id: string
+          content: Json
+          created_at: string | null
+          created_by: string | null
+          id: string
+          page_id: string
+          revision_no: number
+          title: string
+        }
+        Insert: {
+          company_id: string
+          content: Json
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          page_id: string
+          revision_no: number
+          title: string
+        }
+        Update: {
+          company_id?: string
+          content?: Json
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          page_id?: string
+          revision_no?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_page_revision_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_page_revision_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "website_page"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_post: {
+        Row: {
+          active: boolean | null
+          allow_comments: boolean
+          author_id: string | null
+          body: Json
+          body_html: string
+          body_text: string
+          canonical_url: string | null
+          category_id: string | null
+          clap_count: number
+          comment_count: number
+          company_id: string
+          cover_alt: string | null
+          cover_url: string | null
+          created_at: string | null
+          created_by: string | null
+          excerpt: string | null
+          id: string
+          is_featured: boolean
+          is_pinned: boolean
+          noindex: boolean
+          og_image_url: string | null
+          published_at: string | null
+          reading_minutes: number
+          related_post_ids: string[]
+          search_vector: unknown
+          seo_description: string | null
+          seo_title: string | null
+          slug: string | null
+          status: string
+          subtitle: string | null
+          title: string
+          updated_at: string | null
+          updated_by: string | null
+          view_count: number
+          word_count: number
+        }
+        Insert: {
+          active?: boolean | null
+          allow_comments?: boolean
+          author_id?: string | null
+          body?: Json
+          body_html?: string
+          body_text?: string
+          canonical_url?: string | null
+          category_id?: string | null
+          clap_count?: number
+          comment_count?: number
+          company_id: string
+          cover_alt?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          excerpt?: string | null
+          id?: string
+          is_featured?: boolean
+          is_pinned?: boolean
+          noindex?: boolean
+          og_image_url?: string | null
+          published_at?: string | null
+          reading_minutes?: number
+          related_post_ids?: string[]
+          search_vector?: unknown
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string | null
+          status?: string
+          subtitle?: string | null
+          title: string
+          updated_at?: string | null
+          updated_by?: string | null
+          view_count?: number
+          word_count?: number
+        }
+        Update: {
+          active?: boolean | null
+          allow_comments?: boolean
+          author_id?: string | null
+          body?: Json
+          body_html?: string
+          body_text?: string
+          canonical_url?: string | null
+          category_id?: string | null
+          clap_count?: number
+          comment_count?: number
+          company_id?: string
+          cover_alt?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          excerpt?: string | null
+          id?: string
+          is_featured?: boolean
+          is_pinned?: boolean
+          noindex?: boolean
+          og_image_url?: string | null
+          published_at?: string | null
+          reading_minutes?: number
+          related_post_ids?: string[]
+          search_vector?: unknown
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string | null
+          status?: string
+          subtitle?: string | null
+          title?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          view_count?: number
+          word_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_post_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "website_author"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_post_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "website_category"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_post_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_post_revision: {
+        Row: {
+          body: Json
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          post_id: string
+          revision_no: number
+          title: string
+        }
+        Insert: {
+          body: Json
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          post_id: string
+          revision_no: number
+          title: string
+        }
+        Update: {
+          body?: Json
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          post_id?: string
+          revision_no?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_post_revision_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_post_revision_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "website_post"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_post_tag: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          post_id: string
+          tag_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          post_id: string
+          tag_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          post_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_post_tag_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_post_tag_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "website_post"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_post_tag_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "website_tag"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_post_view: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          id: string
+          post_id: string
+          view_date: string
+          visitor_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          id?: string
+          post_id: string
+          view_date?: string
+          visitor_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          post_id?: string
+          view_date?: string
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_post_view_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_post_view_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "website_post"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_reaction: {
+        Row: {
+          company_id: string
+          count: number
+          created_at: string | null
+          id: string
+          post_id: string
+          updated_at: string | null
+          visitor_id: string
+        }
+        Insert: {
+          company_id: string
+          count?: number
+          created_at?: string | null
+          id?: string
+          post_id: string
+          updated_at?: string | null
+          visitor_id: string
+        }
+        Update: {
+          company_id?: string
+          count?: number
+          created_at?: string | null
+          id?: string
+          post_id?: string
+          updated_at?: string | null
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_reaction_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_reaction_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "website_post"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_redirect: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          from_path: string
+          hits: number
+          id: string
+          is_automatic: boolean
+          status_code: number
+          to_path: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          from_path: string
+          hits?: number
+          id?: string
+          is_automatic?: boolean
+          status_code?: number
+          to_path: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          from_path?: string
+          hits?: number
+          id?: string
+          is_automatic?: boolean
+          status_code?: number
+          to_path?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_redirect_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_settings: {
+        Row: {
+          active: boolean | null
+          announcement: string | null
+          announcement_link: string | null
+          blog_description: string | null
+          blog_enabled: boolean
+          blog_title: string | null
+          color_accent: string | null
+          color_primary: string | null
+          color_secondary: string | null
+          comments_auto_approve: boolean
+          comments_enabled: boolean
+          company_id: string
+          contact_address: string | null
+          contact_email: string | null
+          contact_hours: string | null
+          contact_phone: string | null
+          created_at: string | null
+          created_by: string | null
+          custom_domain: string | null
+          favicon_url: string | null
+          font_pairing: string
+          footer_layout: string
+          footer_text: string | null
+          gallery_enabled: boolean
+          header_layout: string
+          id: string
+          is_active: boolean
+          lang: string
+          logo_url: string | null
+          map_embed_url: string | null
+          members_can_publish: boolean
+          noindex: boolean
+          not_found_text: string | null
+          not_found_title: string | null
+          og_image_url: string | null
+          palette: string
+          posts_per_page: number
+          radius_style: string | null
+          reactions_enabled: boolean
+          seo_description: string | null
+          seo_title: string | null
+          show_powered_by: boolean
+          show_storefront_link: boolean
+          site_name: string | null
+          social_links: Json
+          storefront_link_label: string | null
+          tagline: string | null
+          theme: string
+          updated_at: string | null
+          updated_by: string | null
+          whatsapp_phone: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          announcement?: string | null
+          announcement_link?: string | null
+          blog_description?: string | null
+          blog_enabled?: boolean
+          blog_title?: string | null
+          color_accent?: string | null
+          color_primary?: string | null
+          color_secondary?: string | null
+          comments_auto_approve?: boolean
+          comments_enabled?: boolean
+          company_id: string
+          contact_address?: string | null
+          contact_email?: string | null
+          contact_hours?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          custom_domain?: string | null
+          favicon_url?: string | null
+          font_pairing?: string
+          footer_layout?: string
+          footer_text?: string | null
+          gallery_enabled?: boolean
+          header_layout?: string
+          id?: string
+          is_active?: boolean
+          lang?: string
+          logo_url?: string | null
+          map_embed_url?: string | null
+          members_can_publish?: boolean
+          noindex?: boolean
+          not_found_text?: string | null
+          not_found_title?: string | null
+          og_image_url?: string | null
+          palette?: string
+          posts_per_page?: number
+          radius_style?: string | null
+          reactions_enabled?: boolean
+          seo_description?: string | null
+          seo_title?: string | null
+          show_powered_by?: boolean
+          show_storefront_link?: boolean
+          site_name?: string | null
+          social_links?: Json
+          storefront_link_label?: string | null
+          tagline?: string | null
+          theme?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          whatsapp_phone?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          announcement?: string | null
+          announcement_link?: string | null
+          blog_description?: string | null
+          blog_enabled?: boolean
+          blog_title?: string | null
+          color_accent?: string | null
+          color_primary?: string | null
+          color_secondary?: string | null
+          comments_auto_approve?: boolean
+          comments_enabled?: boolean
+          company_id?: string
+          contact_address?: string | null
+          contact_email?: string | null
+          contact_hours?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          custom_domain?: string | null
+          favicon_url?: string | null
+          font_pairing?: string
+          footer_layout?: string
+          footer_text?: string | null
+          gallery_enabled?: boolean
+          header_layout?: string
+          id?: string
+          is_active?: boolean
+          lang?: string
+          logo_url?: string | null
+          map_embed_url?: string | null
+          members_can_publish?: boolean
+          noindex?: boolean
+          not_found_text?: string | null
+          not_found_title?: string | null
+          og_image_url?: string | null
+          palette?: string
+          posts_per_page?: number
+          radius_style?: string | null
+          reactions_enabled?: boolean
+          seo_description?: string | null
+          seo_title?: string | null
+          show_powered_by?: boolean
+          show_storefront_link?: boolean
+          site_name?: string | null
+          social_links?: Json
+          storefront_link_label?: string | null
+          tagline?: string | null
+          theme?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          whatsapp_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_tag: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          name: string
+          slug: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name: string
+          slug?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name?: string
+          slug?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_tag_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       v_approval_requests: {
@@ -5228,6 +6609,10 @@ export type Database = {
         Returns: Json
       }
       close_restock_task: { Args: { p_product_id: string }; Returns: number }
+      convert_website_submission_to_lead: {
+        Args: { p_submission_id: string }
+        Returns: Json
+      }
       create_order: {
         Args: {
           p_company_id: string
@@ -5303,6 +6688,7 @@ export type Database = {
       }
       ensure_restock_task: { Args: { p_product_id: string }; Returns: string }
       generate_restock_tasks: { Args: { p_company_id: string }; Returns: Json }
+      get_active_websites: { Args: never; Returns: Json }
       get_company_members: {
         Args: {
           p_company_id: string
@@ -5406,10 +6792,53 @@ export type Database = {
         Returns: Json
       }
       get_warehouse_stock: { Args: { p_warehouse_id: string }; Returns: Json }
+      get_website: {
+        Args: { p_preview?: boolean; p_slug: string }
+        Returns: Json
+      }
+      get_website_admin_stats: { Args: { p_company_id: string }; Returns: Json }
+      get_website_galleries: {
+        Args: { p_preview?: boolean; p_slug: string }
+        Returns: Json
+      }
+      get_website_gallery: {
+        Args: { p_gallery_slug: string; p_preview?: boolean; p_slug: string }
+        Returns: Json
+      }
+      get_website_page: {
+        Args: { p_page_slug?: string; p_preview?: boolean; p_slug: string }
+        Returns: Json
+      }
+      get_website_post: {
+        Args: { p_post_slug: string; p_preview?: boolean; p_slug: string }
+        Returns: Json
+      }
+      get_website_posts: {
+        Args: {
+          p_author?: string
+          p_category?: string
+          p_exclude_id?: string
+          p_featured_only?: boolean
+          p_page?: number
+          p_page_size?: number
+          p_preview?: boolean
+          p_search?: string
+          p_slug: string
+          p_sort?: string
+          p_tag?: string
+        }
+        Returns: Json
+      }
+      get_website_sitemap: { Args: { p_slug: string }; Returns: Json }
+      get_website_taxonomy: {
+        Args: { p_preview?: boolean; p_slug: string }
+        Returns: Json
+      }
       ingest_storefront_events: {
         Args: { p_context?: Json; p_events: Json; p_slug: string }
         Returns: Json
       }
+      initialize_website: { Args: { p_company_id: string }; Returns: Json }
       invite_partner_by_email: {
         Args: {
           p_company_id: string
@@ -5483,6 +6912,15 @@ export type Database = {
           requested: number
         }[]
       }
+      react_website_post: {
+        Args: {
+          p_count?: number
+          p_post_slug: string
+          p_slug: string
+          p_visitor_id: string
+        }
+        Returns: Json
+      }
       recompute_project_metrics: {
         Args: { p_project_id: string }
         Returns: undefined
@@ -5535,17 +6973,29 @@ export type Database = {
         }
         Returns: Json
       }
+      register_website_post_view: {
+        Args: { p_post_slug: string; p_slug: string; p_visitor_id: string }
+        Returns: Json
+      }
       remove_company_member: { Args: { p_rel_id: string }; Returns: boolean }
       resolve_picking_origin: {
         Args: { p_picking_id: string }
         Returns: Database["public"]["Enums"]["stock_move_origin"]
       }
       resolve_storefront_company: { Args: { p_slug: string }; Returns: string }
+      resolve_website_company: {
+        Args: { p_preview?: boolean; p_slug: string }
+        Returns: string
+      }
       respond_to_invitation: {
         Args: { p_accept: boolean; p_rel_id: string }
         Returns: boolean
       }
       run_storefront_analytics_jobs: { Args: never; Returns: Json }
+      search_website: {
+        Args: { p_limit?: number; p_q: string; p_slug: string }
+        Returns: Json
+      }
       seed_crm_lost_reasons: {
         Args: { p_company_id: string }
         Returns: undefined
@@ -5573,6 +7023,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      set_website_post_tags: {
+        Args: { p_post_id: string; p_tag_names: string[] }
+        Returns: Json
+      }
       storefront_analytics_cleanup: {
         Args: { p_keep_days?: number }
         Returns: Json
@@ -5594,6 +7048,35 @@ export type Database = {
         Returns: number
       }
       storefront_product_card: { Args: { p_product_id: string }; Returns: Json }
+      submit_website_comment: {
+        Args: {
+          p_author_email: string
+          p_author_name: string
+          p_body: string
+          p_honeypot?: string
+          p_parent_id?: string
+          p_post_slug: string
+          p_slug: string
+          p_visitor_id?: string
+        }
+        Returns: Json
+      }
+      submit_website_contact: {
+        Args: {
+          p_email: string
+          p_honeypot?: string
+          p_message: string
+          p_name: string
+          p_page_id?: string
+          p_payload?: Json
+          p_phone: string
+          p_slug: string
+          p_source_url?: string
+          p_subject: string
+          p_visitor_id?: string
+        }
+        Returns: Json
+      }
       sync_order_to_draft_picking: {
         Args: { p_is_return?: boolean; p_order_id: string }
         Returns: string
@@ -5657,6 +7140,21 @@ export type Database = {
         Args: { p_code: string; p_slug: string; p_subtotal: number }
         Returns: Json
       }
+      website_author_json: { Args: { p_author_id: string }; Returns: Json }
+      website_can_preview: { Args: { p_company_id: string }; Returns: boolean }
+      website_media_path_company: { Args: { p_name: string }; Returns: string }
+      website_menu_json: {
+        Args: {
+          p_code: string
+          p_company_id: string
+          p_company_slug: string
+          p_preview: boolean
+        }
+        Returns: Json
+      }
+      website_post_card: { Args: { p_post_id: string }; Returns: Json }
+      website_site_json: { Args: { p_company_id: string }; Returns: Json }
+      website_slugify: { Args: { p_text: string }; Returns: string }
     }
     Enums: {
       approval_request_status:
