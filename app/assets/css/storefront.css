@@ -65,6 +65,114 @@
   border: 1px solid var(--sf-border);
 }
 
+/*
+ * Bordes por lado.
+ *
+ * Este archivo no vive dentro de una capa de Tailwind, y en Tailwind v4 el CSS
+ * sin capa siempre gana a las utilidades (`@layer utilities`). Por eso
+ * `sf-border border-x-0` nunca quitaba los laterales y dibujaba un marco
+ * completo. Para un solo lado se usan estas clases, nunca la combinación.
+ */
+.sf-border-t {
+  border-top: 1px solid var(--sf-border);
+}
+
+.sf-border-b {
+  border-bottom: 1px solid var(--sf-border);
+}
+
+.sf-border-y {
+  border-top: 1px solid var(--sf-border);
+  border-bottom: 1px solid var(--sf-border);
+}
+
+/* ── Pie de página ───────────────────────────────────────────────────────── */
+
+/*
+ * El divisor superior se dibuja con un degradado que se desvanece hacia los
+ * extremos: en pantallas anchas evita la línea dura de borde a borde y en
+ * temas oscuros no compite con el contenido.
+ */
+.sf-footer {
+  position: relative;
+  background-color: var(--sf-surface);
+  color: var(--sf-text);
+}
+
+.sf-footer::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--sf-border) 12%,
+    var(--sf-border) 88%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+.sf-footer-title {
+  font-family: var(--sf-font-body);
+  color: var(--sf-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.875rem;
+}
+
+.sf-footer-link {
+  color: var(--sf-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  transition: color 0.2s ease;
+}
+
+.sf-footer-link:hover,
+.sf-footer-link:focus-visible {
+  color: var(--sf-primary-readable);
+}
+
+/* Barra inferior: mismo divisor, contenido dentro del contenedor */
+.sf-footer-bar {
+  position: relative;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+}
+
+.sf-footer-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background-color: var(--sf-border);
+}
+
+/* Pie mínimo: misma barra, sin divisor ni separación superior */
+.sf-footer-bar--flat {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.sf-footer-bar--flat::before {
+  display: none;
+}
+
+/* Deja espacio al botón flotante de WhatsApp para que no tape el texto */
+.sf-footer--fab .sf-footer-bar {
+  padding-bottom: 4.5rem;
+}
+
+@media (min-width: 640px) {
+  .sf-footer--fab .sf-footer-bar {
+    padding-bottom: 0;
+    padding-right: 4.5rem;
+  }
+}
+
 .sf-divider {
   border-color: var(--sf-border);
 }

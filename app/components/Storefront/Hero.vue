@@ -111,7 +111,7 @@ const onMediaText = { color: '#ffffff' }
 
     <!-- ══ Compacta ═════════════════════════════════════════════════════ -->
     <template v-else-if="layout === 'compact'">
-      <div class="sf-border border-x-0 border-t-0" :style="{ backgroundColor: 'var(--sf-surface)' }">
+      <div class="sf-border-b" :style="{ backgroundColor: 'var(--sf-surface)' }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
             <div class="min-w-0">

@@ -11,14 +11,14 @@ import {
   type CrmActivityFormData,
   crmActivityTypeOptions
 } from '~/components/CrmActivity/Form.vue'
-import type { Database, Tables, TablesUpdate } from '~/types/database.types'
+import type { CrmLostDialogResult } from '~/components/CrmKanban/LostDialog.vue'
+import type { Database } from '~/types/database.types'
+import type { CrmLeadStageRow, CrmLeadUpdate, CrmLeadView, CrmLostReasonRow } from '~/types/crm.types'
 
 definePageMeta({ layout: 'admin' })
 
-type CrmLeadView = Database['public']['Views']['v_crm_leads']['Row']
 type CrmActivityView = Database['public']['Views']['v_crm_activities']['Row']
 type CrmHistoryView = Database['public']['Views']['v_crm_history']['Row']
-type CrmLeadStage = Tables<'crm_lead_stage'>
 type OrderView = Database['public']['Views']['v_orders']['Row']
 
 const route = useRoute()
@@ -28,6 +28,7 @@ const { selectedCompanyId } = storeToRefs(authStore)
 
 const { getLeadViewById, updateLead, archiveLead, getLinkedOrders, linkOrder, unlinkOrder } = useCrmLead()
 const { getStagesByCompany } = useCrmStage()
+const { getLostReasonsByCompany } = useCrmLostReason()
 const { getActivitiesByLead, createActivity, updateActivity, markAsDone, archiveActivity, getHistoryByLead } = useCrmActivity()
 const { getPartnersByCompany, createPartner } = usePartner()
 const { getCompanyMembers } = useMembership()
@@ -50,7 +51,12 @@ const initialForm = ref<CrmLeadFormData>(createEmptyCrmLeadForm())
 const stageOptions = ref<{ value: string; label: string }[]>([])
 const partnerOptions = ref<{ value: string; label: string }[]>([])
 const memberOptions = ref<{ value: string; label: string }[]>([])
-const stages = ref<CrmLeadStage[]>([])
+const stages = ref<CrmLeadStageRow[]>([])
+const lostReasons = ref<CrmLostReasonRow[]>([])
+const pendingLostStageId = ref<string | null>(null)
+const isSavingLost = ref(false)
+
+const sortedStages = computed(() => [...stages.value].sort((a, b) => a.sequence - b.sequence))
 
 // Tabs
 const activeTab = ref<'activities' | 'orders' | 'history'>('activities')
@@ -125,7 +131,7 @@ const historyEventLabel = (event: string): string => {
     order_unlinked: 'Orden desvinculada',
     priority_changed: 'Cambio de prioridad',
     closed_won: 'Cerrado como Ganado',
-    closed_lost: 'Cerrado como Cancelado',
+    closed_lost: 'Cerrado como perdido',
     reopened: 'Lead reabierto'
   }
   return map[event] ?? event
@@ -170,7 +176,7 @@ const mapViewToForm = (v: CrmLeadView): CrmLeadFormData => ({
   tags: (v.tags ?? []).join(', ')
 })
 
-const mapFormToUpdate = (value: CrmLeadFormData): TablesUpdate<'crm_lead'> => ({
+const mapFormToUpdate = (value: CrmLeadFormData): CrmLeadUpdate => ({
   name: value.name.trim(),
   stage_id: value.stage_id,
   partner_id: value.partner_id || null,
@@ -195,17 +201,19 @@ const loadLead = async () => {
 
   isLoading.value = true
   try {
-    const [view, stagesList, partners, members] = await Promise.all([
+    const [view, stagesList, partners, members, reasons] = await Promise.all([
       getLeadViewById(leadId.value, companyId),
       getStagesByCompany(companyId),
       getPartnersByCompany(companyId),
-      getCompanyMembers(companyId, 'team')
+      getCompanyMembers(companyId, 'team'),
+      getLostReasonsByCompany(companyId)
     ])
 
     if (!view) { router.push('/admin/crm/leads'); return }
 
     leadView.value = view
     stages.value = stagesList
+    lostReasons.value = reasons
     stageOptions.value = stagesList.map(s => ({ value: s.id, label: s.name }))
     partnerOptions.value = partners.map(p => ({
       value: p.id,
@@ -268,6 +276,15 @@ watch([selectedCompanyId, leadId], () => {
   void loadOrdersData()
 }, { immediate: true })
 
+// Acceso directo desde el tablero: ?activity=new abre el formulario de actividad
+onMounted(() => {
+  if (route.query.activity === 'new') {
+    activeTab.value = 'activities'
+    openActivityForm()
+    void router.replace({ query: { ...route.query, activity: undefined } })
+  }
+})
+
 // ──────────────────────────────
 // LEAD ACTIONS
 // ──────────────────────────────
@@ -306,6 +323,12 @@ const handleSave = async () => {
   if (!formData.value.name.trim()) { errorMessage.value = 'El título es obligatorio.'; return }
   if (!formData.value.stage_id) { errorMessage.value = 'Selecciona una etapa.'; return }
 
+  const targetStage = stages.value.find(s => s.id === formData.value.stage_id)
+  if (targetStage?.is_lost && !leadView.value?.is_lost) {
+    pendingLostStageId.value = targetStage.id
+    return
+  }
+
   isLoading.value = true
   try {
     const updated = await updateLead(leadId.value, companyId, mapFormToUpdate(formData.value))
@@ -319,12 +342,25 @@ const handleSave = async () => {
   }
 }
 
-const moveToStage = async (stageId: string) => {
+const moveToStage = async (stageId: string, lost?: CrmLostDialogResult) => {
   const companyId = selectedCompanyId.value
-  if (!companyId || !leadId.value) return
+  if (!companyId || !leadId.value || stageId === leadView.value?.stage_id) return
+
+  const target = stages.value.find(s => s.id === stageId)
+  if (target?.is_lost && !lost) {
+    pendingLostStageId.value = stageId
+    return
+  }
+
   isLoading.value = true
   try {
-    await updateLead(leadId.value, companyId, { stage_id: stageId })
+    const updates: CrmLeadUpdate = { stage_id: stageId }
+    if (lost) {
+      updates.lost_reason_id = lost.lostReasonId
+      updates.lost_notes = lost.lostNotes.trim() || null
+    }
+    const updated = await updateLead(leadId.value, companyId, updates)
+    if (!updated) { errorMessage.value = 'No se pudo cambiar la etapa del lead.'; return }
     const view = await getLeadViewById(leadId.value, companyId)
     if (view) { leadView.value = view; formData.value = mapViewToForm(view); initialForm.value = mapViewToForm(view) }
     void loadHistory()
@@ -333,8 +369,47 @@ const moveToStage = async (stageId: string) => {
   }
 }
 
+const pendingLostStageName = computed(() =>
+  stages.value.find(s => s.id === pendingLostStageId.value)?.name ?? ''
+)
+
+const confirmLost = async (result: CrmLostDialogResult) => {
+  const stageId = pendingLostStageId.value
+  if (!stageId) return
+  isSavingLost.value = true
+  try {
+    if (isEditing.value) {
+      // Guardado del formulario con cambio a etapa perdida
+      const companyId = selectedCompanyId.value
+      if (!companyId || !leadId.value) return
+      const updated = await updateLead(leadId.value, companyId, {
+        ...mapFormToUpdate(formData.value),
+        lost_reason_id: result.lostReasonId,
+        lost_notes: result.lostNotes.trim() || null
+      })
+      if (!updated) { errorMessage.value = 'No se pudo guardar el lead.'; return }
+      const view = await getLeadViewById(leadId.value, companyId)
+      if (view) { leadView.value = view; formData.value = mapViewToForm(view); initialForm.value = mapViewToForm(view) }
+      isEditing.value = false
+      void loadHistory()
+    } else {
+      await moveToStage(stageId, result)
+    }
+    pendingLostStageId.value = null
+  } finally {
+    isSavingLost.value = false
+  }
+}
+
 const menuOptions = computed<MenuOption[]>(() => {
-  const opts: MenuOption[] = []
+  const opts: MenuOption[] = [
+    {
+      id: 'view-kanban',
+      label: 'Ver en el tablero',
+      icon: 'M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2',
+      action: () => { void router.push('/admin/crm/kanban') }
+    }
+  ]
   const wonStage = stages.value.find(s => s.is_won)
   const lostStage = stages.value.find(s => s.is_lost)
 
@@ -351,7 +426,7 @@ const menuOptions = computed<MenuOption[]>(() => {
   if (lostStage && !leadView.value?.is_lost) {
     opts.push({
       id: 'mark-lost',
-      label: 'Marcar como Cancelado',
+      label: 'Marcar como perdido…',
       variant: 'danger',
       icon: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z',
       action: () => moveToStage(lostStage.id)
@@ -359,7 +434,7 @@ const menuOptions = computed<MenuOption[]>(() => {
   }
 
   if (leadView.value?.is_won || leadView.value?.is_lost) {
-    const defaultStage = stages.value.find(s => !s.is_won && !s.is_lost)
+    const defaultStage = sortedStages.value.find(s => !s.is_won && !s.is_lost)
     if (defaultStage) {
       opts.push({
         id: 'reopen',
@@ -377,7 +452,7 @@ const menuOptions = computed<MenuOption[]>(() => {
     variant: 'danger',
     divider: true,
     icon: 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
-    action: async () => { if (leadId.value) { await archiveLead(leadId.value); router.push('/admin/crm/leads') } }
+    action: async () => { if (leadId.value) { await archiveLead(leadId.value, selectedCompanyId.value ?? undefined); router.push('/admin/crm/leads') } }
   })
 
   return opts
@@ -526,25 +601,54 @@ const handleUnlinkOrder = async (orderId: string) => {
       <div v-if="!isEditing && stages.length > 0" class="mb-6">
         <div class="flex items-center gap-1 overflow-x-auto pb-1">
           <button
-            v-for="stage in stages.sort((a, b) => a.sequence - b.sequence)"
+            v-for="stage in sortedStages"
             :key="stage.id"
             type="button"
             :title="`Mover a: ${stage.name}`"
+            :aria-current="stage.id === leadView?.stage_id ? 'step' : undefined"
             :class="[
-              'flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all',
+              'inline-flex flex-shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all',
               stage.id === leadView?.stage_id
-                ? stage.is_won
-                  ? 'bg-emerald-500 text-white shadow-sm'
-                  : stage.is_lost
-                    ? 'bg-red-500 text-white shadow-sm'
-                    : 'bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-sm'
+                ? `${getStagePalette(stage.color).bar} text-white shadow-sm`
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             ]"
             @click="moveToStage(stage.id)"
           >
+            <span
+              v-if="stage.id !== leadView?.stage_id"
+              :class="['h-2 w-2 rounded-full', getStagePalette(stage.color).dot]"
+            />
             {{ stage.name }}
           </button>
         </div>
+      </div>
+
+      <!-- CIERRE PERDIDO -->
+      <div
+        v-if="!isEditing && leadView?.is_lost"
+        class="mb-6 flex items-start gap-3 rounded-2xl border border-rose-100 bg-rose-50 px-5 py-4"
+      >
+        <svg class="mt-0.5 h-5 w-5 shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <div class="min-w-0 text-sm">
+          <p class="font-semibold text-rose-800">
+            Oportunidad perdida<template v-if="leadView.lost_reason_name">: {{ leadView.lost_reason_name }}</template>
+          </p>
+          <p v-if="leadView.lost_notes" class="mt-0.5 text-rose-700">{{ leadView.lost_notes }}</p>
+          <p v-if="leadView.actual_close_date" class="mt-0.5 text-xs text-rose-600/80">Cerrada el {{ formatDate(leadView.actual_close_date) }}</p>
+        </div>
+      </div>
+
+      <!-- ESTANCADO -->
+      <div
+        v-else-if="!isEditing && leadView?.is_rotting"
+        class="mb-6 flex items-center gap-3 rounded-2xl border border-amber-100 bg-amber-50 px-5 py-3 text-sm text-amber-800"
+      >
+        <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <span class="flex-1">
+          Lleva <strong>{{ leadView.days_in_stage }} días</strong> en «{{ leadView.stage_name }}» sin avanzar.
+          Programa un seguimiento para reactivarla.
+        </span>
+        <BtnApp variant="secondary" size="sm" @click="activeTab = 'activities'; openActivityForm()">Programar</BtnApp>
       </div>
 
       <!-- LEAD FORM -->
@@ -575,6 +679,10 @@ const handleUnlinkOrder = async (orderId: string) => {
           <span class="block font-medium text-slate-600">Órdenes vinculadas</span>
           {{ leadView.order_count ?? 0 }}
           <span v-if="leadView.orders_total" class="ml-1">({{ formatCurrency(Number(leadView.orders_total)) }})</span>
+        </div>
+        <div v-if="!leadView.is_won && !leadView.is_lost">
+          <span class="block font-medium text-slate-600">Tiempo en la etapa</span>
+          {{ leadView.days_in_stage ?? 0 }} día(s)
         </div>
         <div>
           <span class="block font-medium text-slate-600">Actividades abiertas</span>
@@ -927,6 +1035,7 @@ const handleUnlinkOrder = async (orderId: string) => {
                 </svg>
                 <span v-if="item.new_value" class="font-medium text-slate-700">{{ item.new_value }}</span>
               </div>
+              <p v-if="item.notes" class="mt-1 text-xs text-slate-600">{{ item.notes }}</p>
               <p class="mt-1 text-[11px] text-slate-400">
                 {{ formatDatetime(item.created_at ?? null) }}
                 <span v-if="item.created_by_display_name"> · {{ item.created_by_display_name }}</span>
@@ -936,6 +1045,17 @@ const handleUnlinkOrder = async (orderId: string) => {
         </ul>
       </div>
     </div>
+
+    <!-- MOTIVO DE PÉRDIDA -->
+    <CrmKanbanLostDialog
+      :open="pendingLostStageId !== null"
+      :lead-name="leadView?.name ?? ''"
+      :stage-name="pendingLostStageName"
+      :reasons="lostReasons"
+      :is-saving="isSavingLost"
+      @confirm="confirmLost"
+      @cancel="pendingLostStageId = null"
+    />
 
     <!-- ACTIVITY FORM SLIDE-OVER -->
     <Teleport to="body">

@@ -869,6 +869,53 @@ export const ARTICLES: DocArticle[] = [
 
   // ─── CRM ──────────────────────────────────────────────────────────────────────
   {
+    id: 'crm-kanban',
+    routePatterns: ['/admin/crm/kanban'],
+    module: 'crm',
+    moduleLabel: 'CRM',
+    moduleEmoji: '📊',
+    title: 'Tablero Kanban de oportunidades',
+    viewType: 'dashboard',
+    isNew: true,
+    level: 'basico',
+    summary: 'Arrastra cada oportunidad entre etapas y detecta de un vistazo qué leads están estancados o sin seguimiento.',
+    description: 'El tablero muestra tu pipeline como columnas, una por etapa. Cada tarjeta es un lead con su importe, probabilidad, responsable y próxima actividad. Arrastra una tarjeta para cambiarla de etapa o reordenarla dentro de la columna.',
+    importance: 'Ver el pipeline completo en una sola pantalla ayuda a priorizar: el valor por columna, los leads estancados y los seguimientos vencidos te dicen dónde actuar hoy.',
+    tips: [
+      'Arrastra la tarjeta a otra columna para cambiar su etapa; también puedes usar el menú ⋯ de la tarjeta → «Mover a etapa…» (ideal en celular o con teclado).',
+      'Al soltar un lead en una etapa de cierre perdido se pide el motivo; así podrás medir por qué se pierden las ventas.',
+      'Cada movimiento muestra un aviso con «Deshacer» durante unos segundos.',
+      'Las tarjetas con borde ámbar llevan más días sin avanzar que el límite configurado en la etapa.',
+      'Usa el botón + de una columna para crear un lead rápido con solo su nombre; quedará asignado a ti.',
+      'Pliega las columnas que no necesitas ver; el tablero recuerda tu preferencia en este navegador.',
+      'Presiona / para buscar por nombre, contacto, número o etiqueta.'
+    ],
+    process: [
+      { step: 1, title: 'Revisa los indicadores', description: 'Pipeline abierto, pronóstico ponderado, ganado, estancados y seguimientos vencidos se recalculan con los filtros activos.' },
+      { step: 2, title: 'Filtra tu trabajo', description: 'Elige «Mis leads» o un responsable, y activa «Solo estancados» para ver lo urgente.' },
+      { step: 3, title: 'Mueve las oportunidades', description: 'Arrastra cada tarjeta a la etapa que refleja su avance real; la probabilidad se ajusta según la etapa.' },
+      { step: 4, title: 'Programa el siguiente paso', description: 'Si una tarjeta dice «Sin seguimiento programado», haz clic para registrar la próxima actividad.' },
+      { step: 5, title: 'Cierra', description: 'Marca como ganado o perdido desde el menú de la tarjeta; el historial registra el cambio y la fecha de cierre.' }
+    ],
+    shortcuts: [
+      { keys: '/', action: 'Enfocar la búsqueda' },
+      { keys: 'Enter', action: 'Abrir la tarjeta enfocada' },
+      { keys: 'Esc', action: 'Cancelar el arrastre o cerrar menús' }
+    ],
+    faqs: [
+      { question: '¿Por qué un lead no aparece en el tablero?', answer: 'Revisa los filtros activos y la opción «Solo abiertos». Si el lead está en una etapa archivada, el tablero muestra un aviso para revisarlo desde la lista.' },
+      { question: '¿Qué significa «estancado»?', answer: 'Que el lead lleva en su etapa más días que la «alerta de estancamiento» configurada en esa etapa. Se reinicia cada vez que cambia de etapa.' },
+      { question: '¿Cambia la probabilidad al mover un lead?', answer: 'Sí, si la etapa destino tiene una probabilidad asignada. Si no, el lead conserva la suya.' }
+    ],
+    relatedModules: [
+      { label: 'Lista de Leads', route: '/admin/crm/leads' },
+      { label: 'Etapas del Pipeline', route: '/admin/crm/stages' },
+      { label: 'Motivos de pérdida', route: '/admin/crm/lost-reasons' }
+    ],
+    relatedArticles: ['crm-leads-list', 'crm-stages-list', 'crm-lost-reasons'],
+    tags: ['CRM', 'kanban', 'tablero', 'pipeline', 'arrastrar', 'etapas', 'oportunidades', 'estancado']
+  },
+  {
     id: 'crm-leads-list',
     routePatterns: ['/admin/crm/leads'],
     module: 'crm',
@@ -890,9 +937,10 @@ export const ARTICLES: DocArticle[] = [
       { step: 2, title: 'Asignar Responsable', description: 'Designa al vendedor o ejecutivo que dará seguimiento a la oportunidad.' },
       { step: 3, title: 'Actividades de Seguimiento', description: 'Registra llamadas, emails y reuniones para avanzar la negociación.' },
       { step: 4, title: 'Avanzar en Pipeline', description: 'Mueve el lead a la siguiente etapa conforme el prospecto muestre interés.' },
-      { step: 5, title: 'Ganar o Perder', description: 'Cierra el lead como Ganado (genera una orden) o Perdido (documenta la razón).' }
+      { step: 5, title: 'Ganar o Perder', description: 'Cierra el lead como Ganado (genera una orden) o Perdido (elige el motivo de pérdida).' }
     ],
     relatedModules: [
+      { label: 'Tablero Kanban', route: '/admin/crm/kanban' },
       { label: 'Crear Lead', route: '/admin/crm/leads/create' },
       { label: 'Etapas del Pipeline', route: '/admin/crm/stages' },
       { label: 'Socios', route: '/admin/partners' },
@@ -970,18 +1018,56 @@ export const ARTICLES: DocArticle[] = [
       'Entre 4 y 7 etapas es suficiente; demasiadas etapas crean fricción y confusión.',
       'El orden de las etapas define la secuencia lógica del pipeline.',
       'Las etapas "Ganado" y "Perdido" son finales; no deberían tener etapas siguientes.',
-      'Puedes sembrar etapas predeterminadas con el botón "Inicializar etapas" si aún no tienes ninguna.'
+      'Puedes sembrar etapas predeterminadas con el botón "Inicializar etapas" si aún no tienes ninguna.',
+      'Arrastra las etapas en «Flujo del pipeline» para cambiar el orden de las columnas del tablero.',
+      'Una etapa con leads activos no puede archivarse: muévelos primero a otra etapa.'
     ],
     fields: [
       { label: 'Nombre de la Etapa', required: true, type: 'text', description: 'Nombre de la fase del proceso de ventas.', tip: 'Ejemplos: "Primer Contacto", "Propuesta Enviada", "Negociación", "Cierre", "Ganado", "Perdido".' },
       { label: 'Orden', required: true, type: 'number', description: 'Posición de la etapa en el pipeline (menor número = antes en el proceso).', tip: 'Usa múltiplos de 10 (10, 20, 30) para poder insertar etapas intermedias después.' },
-      { label: 'Probabilidad de Cierre (%)', required: false, type: 'number', description: 'Probabilidad predeterminada para leads en esta etapa.', tip: 'Ayuda a calcular el forecast de ventas ponderado automáticamente.' },
+      { label: 'Color de la columna', required: false, type: 'select', description: 'Color con el que se identifica la etapa en el tablero Kanban.', tip: 'Usa tonos fríos para etapas tempranas y cálidos conforme se acerca el cierre.' },
+      { label: 'Probabilidad al entrar (%)', required: false, type: 'number', description: 'Probabilidad que se asigna al lead cuando se mueve a esta etapa. Si se deja sin asignar, el lead conserva la suya.', tip: 'Alimenta el pronóstico ponderado del tablero; súbela conforme avanza el pipeline.' },
+      { label: 'Alerta de estancamiento (días)', required: false, type: 'number', description: 'Días sin cambio de etapa tras los cuales el lead se resalta como estancado.', tip: 'Ajusta el valor al ciclo real de cada etapa: una propuesta suele tardar más que el primer contacto.' },
       { label: 'Descripción / Criterios', required: false, type: 'textarea', description: 'Criterios claros para que un lead esté en esta etapa.', tip: 'Define qué condiciones debe cumplir el lead para estar aquí; evita la ambigüedad.' }
     ],
     relatedModules: [
-      { label: 'Leads CRM', route: '/admin/crm/leads' }
+      { label: 'Leads CRM', route: '/admin/crm/leads' },
+      { label: 'Tablero Kanban', route: '/admin/crm/kanban' },
+      { label: 'Motivos de pérdida', route: '/admin/crm/lost-reasons' }
     ],
-    tags: ['CRM', 'etapas', 'pipeline', 'ventas', 'proceso', 'configuración']
+    tags: ['CRM', 'etapas', 'pipeline', 'ventas', 'proceso', 'configuración', 'color', 'probabilidad']
+  },
+  {
+    id: 'crm-lost-reasons',
+    routePatterns: ['/admin/crm/lost-reasons', '/admin/crm/lost-reasons/create', '/admin/crm/lost-reasons/:id'],
+    module: 'crm',
+    moduleLabel: 'CRM',
+    moduleEmoji: '📊',
+    title: 'Motivos de pérdida',
+    viewType: 'config',
+    isNew: true,
+    level: 'intermedio',
+    summary: 'Registra por qué se pierden las oportunidades para corregir precio, oferta o seguimiento con datos.',
+    description: 'Catálogo de razones por las que una oportunidad se cierra como perdida. Al mover un lead a una etapa de cierre perdido, el equipo elige uno de estos motivos y puede agregar un comentario.',
+    importance: 'Sin un motivo estructurado, las pérdidas quedan como anécdotas. Con él puedes ver qué porcentaje se pierde por precio, competencia o falta de respuesta y actuar en consecuencia.',
+    tips: [
+      'Usa entre 4 y 8 motivos cortos y excluyentes.',
+      'El botón «Cargar motivos sugeridos» crea un catálogo inicial que puedes editar.',
+      'La gráfica superior muestra los motivos más frecuentes entre los leads perdidos.',
+      'Archivar un motivo no modifica los leads que ya lo usan; solo deja de ofrecerse.',
+      'El motivo y el comentario quedan en el historial del lead.'
+    ],
+    fields: [
+      { label: 'Motivo de pérdida', required: true, type: 'text', description: 'Nombre corto de la razón.', tip: 'Ejemplos: «Precio fuera de presupuesto», «Eligió a la competencia», «Sin respuesta».' },
+      { label: 'Orden en la lista', required: false, type: 'number', description: 'Posición en la que aparece al elegir el motivo.', tip: 'Coloca primero los motivos más comunes.' },
+      { label: 'Descripción', required: false, type: 'textarea', description: 'Cuándo debe elegirse este motivo.', tip: 'Una definición clara evita que cada vendedor lo interprete distinto.' }
+    ],
+    relatedModules: [
+      { label: 'Tablero Kanban', route: '/admin/crm/kanban' },
+      { label: 'Etapas del Pipeline', route: '/admin/crm/stages' }
+    ],
+    relatedArticles: ['crm-kanban', 'crm-stages-list'],
+    tags: ['CRM', 'motivos', 'pérdida', 'perdido', 'cancelado', 'análisis', 'ventas']
   },
 
   // ─── EQUIPO ───────────────────────────────────────────────────────────────────
@@ -1849,6 +1935,227 @@ export const ARTICLES: DocArticle[] = [
     ],
     relatedArticles: ['storefront-settings', 'storefront-fulfillment', 'storefront-analytics'],
     tags: ['tienda pública', 'catálogo', 'carrito', 'checkout', 'cliente', 'comprar']
+  },
+  // ─── SITIO WEB ───────────────────────────────────────────────────────────────
+  {
+    id: 'website-settings',
+    routePatterns: ['/admin/website'],
+    module: 'website',
+    moduleLabel: 'Sitio web',
+    moduleEmoji: '🌐',
+    title: 'Ajustes del sitio web',
+    viewType: 'config',
+    level: 'basico',
+    isNew: true,
+    summary: 'Crea el sitio web de tu empresa en un clic, ajusta identidad, diseño, blog y SEO, y publícalo en /sites/tu-slug.',
+    description: 'Centro de control del sitio web público. Desde aquí se crea el sitio (con páginas de ejemplo, menús y tu perfil de autor), se define la URL, la identidad, el contacto, el tema visual, las opciones del blog, la comunidad (aplausos y comentarios) y el SEO global. El sitio permanece inactivo hasta que lo publicas; mientras tanto puedes revisarlo con «Vista previa».',
+    importance: 'El sitio web es la cara pública de la empresa y comparte el slug con la tienda en línea. Un sitio bien configurado (identidad, contacto, SEO) mejora la confianza de tus clientes y su posicionamiento en buscadores.',
+    tips: [
+      'Pulsa «Crear mi sitio web» la primera vez: se generan Inicio, Nosotros y Contacto con secciones de ejemplo, los menús y tu autor.',
+      'El slug de la URL es el mismo de la tienda en línea: cambiarlo mueve ambas direcciones.',
+      'Usa «Vista previa» mientras el sitio está inactivo: solo los miembros de la empresa ven esa versión.',
+      'Si ya tienes tienda, «Copiar el diseño de mi tienda» iguala plantilla, paleta y tipografía.',
+      'Los colores que no alcanzan contraste AA se ajustan automáticamente en botones; el panel te avisa cuál se usará.',
+      'Con «Los miembros del equipo pueden publicar» apagado, los miembros guardan borradores y un administrador publica.',
+      'La barra de anuncio es ideal para promociones o avisos temporales; déjala vacía para ocultarla.'
+    ],
+    fields: [
+      { label: 'Estado del sitio', required: true, type: 'boolean', description: 'Publicado o inactivo. Inactivo = solo vista previa para miembros.' },
+      { label: 'URL del sitio (slug)', required: true, type: 'text', description: 'Identificador de la empresa en /sites/{slug}. Solo minúsculas, números y guiones.', tip: 'Compartido con la tienda en línea.' },
+      { label: 'Nombre y eslogan', required: false, type: 'text', description: 'Identidad del sitio; vacío = nombre de la empresa.' },
+      { label: 'Logo, favicon e imagen para redes', required: false, type: 'text', description: 'Se eligen de la biblioteca de medios o por URL.', tip: 'Imagen para redes de 1200×630 px.' },
+      { label: 'Contacto público', required: false, type: 'text', description: 'Correo, teléfono, WhatsApp (botón flotante), dirección, horario y mapa.' },
+      { label: 'Plantilla, paleta y tipografía', required: false, type: 'select', description: 'Tema visual compartido con la tienda. Vista previa en vivo.' },
+      { label: 'Cabecera y pie de página', required: false, type: 'select', description: 'Distribución de la navegación y del pie.' },
+      { label: 'Blog', required: false, type: 'boolean', description: 'Habilitar el blog, título, descripción y posts por página.' },
+      { label: 'Comentarios y aplausos', required: false, type: 'boolean', description: 'Comunidad de lectores; los comentarios se moderan antes de publicarse.' },
+      { label: 'SEO global y página 404', required: false, type: 'textarea', description: 'Título y descripción por defecto, opción de no indexar y textos del error 404.' }
+    ],
+    process: [
+      { step: 1, title: 'Crea', description: 'Genera el sitio con páginas de ejemplo.' },
+      { step: 2, title: 'Personaliza', description: 'Identidad, contacto y diseño.' },
+      { step: 3, title: 'Construye', description: 'Páginas, menús y blog.' },
+      { step: 4, title: 'Publica', description: 'Activa el sitio y comparte el enlace.' }
+    ],
+    wizard: {
+      id: 'wz-website',
+      title: 'Publica tu sitio web',
+      description: 'De cero a un sitio publicado con páginas, menú y una primera publicación.',
+      estimatedMinutes: 40,
+      steps: [
+        { id: 'create', title: 'Crea el sitio y define la URL', description: 'Pulsa «Crear mi sitio web» y confirma el slug de la empresa.', action: { label: 'Ir a Ajustes del sitio', route: '/admin/website' }, checklist: ['Sitio creado', 'Slug definido'] },
+        { id: 'identity', title: 'Completa identidad, contacto y diseño', description: 'Logo, eslogan, contacto, redes y tema visual con vista previa.', action: { label: 'Ajustes del sitio', route: '/admin/website' }, checklist: ['Logo y eslogan', 'Contacto y WhatsApp', 'Plantilla y paleta'] },
+        { id: 'pages', title: 'Edita las páginas de ejemplo', description: 'Ajusta Inicio, Nosotros y Contacto con el constructor de secciones.', action: { label: 'Ir a Páginas', route: '/admin/website/pages' }, checklist: ['Inicio publicada', 'Nosotros revisada', 'Contacto con formulario'], tip: 'Cada sección tiene fondo, espaciado y alineación propios.' },
+        { id: 'menu', title: 'Organiza el menú', description: 'Ordena los enlaces de la cabecera y del pie; agrega la tienda si está activa.', action: { label: 'Ir a Menús', route: '/admin/website/menus' } },
+        { id: 'blog', title: 'Escribe tu primera publicación', description: 'Crea un post, agrega portada, categoría y etiquetas, y publícalo.', action: { label: 'Ir al Blog', route: '/admin/website/blog/posts' }, checklist: ['Post publicado', 'Categoría creada'] },
+        { id: 'publish', title: 'Activa el sitio', description: 'Revisa con «Vista previa», enciende el estado y comparte el enlace.', action: { label: 'Ajustes del sitio', route: '/admin/website' }, warning: 'Al activar, buscadores y visitantes pueden ver el contenido publicado.' }
+      ]
+    },
+    faqs: [
+      { question: '¿Necesito tener tienda en línea para usar el sitio web?', answer: 'No. Son módulos independientes que comparten el slug y el motor de temas. Si la tienda está activa, el sitio puede enlazarla y mostrar productos destacados.' },
+      { question: '¿Quién puede ver el sitio mientras está inactivo?', answer: 'Solo los miembros de la empresa con sesión iniciada, usando el enlace «Vista previa» (añade ?preview=1 a la URL).' },
+      { question: '¿Puedo usar mi propio dominio?', answer: 'Todavía no desde el panel. Por ahora el sitio vive en /sites/tu-slug y puedes redirigir tu dominio a esa dirección desde tu proveedor de DNS.' }
+    ],
+    relatedModules: [
+      { label: 'Páginas', route: '/admin/website/pages' },
+      { label: 'Blog', route: '/admin/website/blog/posts' },
+      { label: 'Tienda en línea', route: '/admin/storefront' }
+    ],
+    relatedArticles: ['website-pages', 'website-blog-posts', 'storefront-design'],
+    tags: ['sitio web', 'website', 'cms', 'publicar', 'diseño', 'seo', 'slug', 'vista previa']
+  },
+  {
+    id: 'website-pages',
+    routePatterns: ['/admin/website/pages', '/admin/website/pages/create', '/admin/website/pages/:id'],
+    module: 'website',
+    moduleLabel: 'Sitio web',
+    moduleEmoji: '🌐',
+    title: 'Páginas y constructor de secciones',
+    viewType: 'detail',
+    level: 'intermedio',
+    isNew: true,
+    summary: 'Construye páginas con secciones prediseñadas (portada, texto, características, testimonios, precios, galería, formulario…) y velas en vivo antes de publicar.',
+    description: 'Cada página se compone de secciones tipadas: eliges una del catálogo, editas sus campos en el formulario y ves el resultado al instante en la vista previa (escritorio o celular). Puedes reordenar, duplicar, ocultar y eliminar secciones; cada una tiene fondo, espaciado y alineación propios. La página tiene además metadatos SEO, distribución (estándar o landing) y un historial de las últimas 20 versiones.',
+    importance: 'Las secciones garantizan páginas coherentes con el tema del sitio sin escribir código: lo que ves en el editor es exactamente lo que se publica.',
+    tips: [
+      'Empieza desde una plantilla («Página informativa» o «Landing») y ajusta; es más rápido que partir en blanco.',
+      'Las secciones «Últimas publicaciones» y «Productos de la tienda» se llenan solas con datos reales.',
+      'El formulario de contacto guarda los mensajes en Sitio web → Mensajes y permite crear un lead del CRM.',
+      'Haz clic en una sección de la vista previa para seleccionarla y editarla.',
+      'Fondo «Color de marca» u «Oscuro» invierte el texto automáticamente para mantener el contraste.',
+      'Si cambias el slug de una página publicada, se crea una redirección 301 automática desde la ruta anterior.',
+      'Solo puede haber una página de inicio; marcar otra desmarca la anterior.'
+    ],
+    fields: [
+      { label: 'Título', required: true, type: 'text', description: 'Nombre de la página; genera el slug si no escribes uno.' },
+      { label: 'Estado', required: true, type: 'select', description: 'Borrador, publicada o archivada.', tip: 'Publicar requiere ser admin salvo que el sitio permita publicar a miembros.' },
+      { label: 'Distribución', required: false, type: 'select', description: 'Estándar (con título) o landing (secciones a todo lo ancho).' },
+      { label: 'Secciones', required: false, type: 'textarea', description: 'Catálogo: portada, texto, imagen y texto, características, cifras, galería, testimonios, precios, FAQ, equipo, CTA, logos, video, mapa, formulario, últimas publicaciones, productos, HTML, separador.' },
+      { label: 'SEO', required: false, type: 'textarea', description: 'Título, descripción, imagen para redes, canónica y no indexar.' }
+    ],
+    faqs: [
+      { question: '¿Puedo escribir HTML propio?', answer: 'Sí, con la sección «HTML personalizado». Se limpia en servidor: no se permiten scripts ni enlaces javascript:, solo texto, listas, imágenes, tablas e iframes de YouTube, Vimeo y Google Maps.' },
+      { question: '¿Cómo recupero una versión anterior?', answer: 'En el menú de la página abre «Historial», elige la versión y pulsa «Cargar»; luego guarda para aplicarla.' }
+    ],
+    relatedModules: [
+      { label: 'Menús', route: '/admin/website/menus' },
+      { label: 'Medios', route: '/admin/website/media' }
+    ],
+    relatedArticles: ['website-settings', 'website-menus', 'website-media'],
+    tags: ['páginas', 'secciones', 'constructor', 'landing', 'bloques', 'vista previa', 'seo']
+  },
+  {
+    id: 'website-menus',
+    routePatterns: ['/admin/website/menus'],
+    module: 'website',
+    moduleLabel: 'Sitio web',
+    moduleEmoji: '🌐',
+    title: 'Menús de navegación',
+    viewType: 'config',
+    level: 'basico',
+    isNew: true,
+    summary: 'Define los enlaces de la cabecera y del pie de página: páginas, blog, categorías, galerías, tienda o URL externa, con submenús.',
+    description: 'El sitio tiene dos menús: principal (cabecera) y pie de página. Cada elemento apunta a una página, al blog, a una categoría, a una publicación, a las galerías, a la tienda en línea o a una URL externa; puede anidarse un nivel, ocultarse o abrirse en nueva pestaña. Los enlaces a contenido no publicado se ocultan solos en el sitio.',
+    importance: 'Una navegación clara es lo que permite a los visitantes encontrar tu contenido; los menús se generan de forma dinámica y no requieren tocar las páginas.',
+    tips: [
+      'El elemento «Tienda en línea» solo se muestra cuando la tienda está activa.',
+      'Usa el botón «+» de un elemento para crear un submenú desplegable.',
+      'Ordena con las flechas; el orden se guarda al instante.'
+    ],
+    relatedModules: [{ label: 'Páginas', route: '/admin/website/pages' }],
+    relatedArticles: ['website-pages', 'website-settings'],
+    tags: ['menú', 'navegación', 'cabecera', 'pie de página', 'enlaces']
+  },
+  {
+    id: 'website-blog-posts',
+    routePatterns: ['/admin/website/blog/posts', '/admin/website/blog/posts/create', '/admin/website/blog/posts/:id', '/admin/website/blog/categories', '/admin/website/blog/categories/:id', '/admin/website/blog/tags', '/admin/website/blog/authors', '/admin/website/blog/authors/:id', '/admin/website/blog/comments'],
+    module: 'website',
+    moduleLabel: 'Sitio web',
+    moduleEmoji: '🌐',
+    title: 'Blog: publicaciones, categorías, etiquetas y autores',
+    viewType: 'detail',
+    level: 'intermedio',
+    isNew: true,
+    summary: 'Escribe con un editor enriquecido, organiza por categorías y etiquetas, programa la publicación y mide lecturas, aplausos y comentarios.',
+    description: 'El blog funciona como una plataforma de publicación completa: editor de texto enriquecido con imágenes, videos y enlaces; portada, extracto y tiempo de lectura automático; categorías jerárquicas y etiquetas; autores con perfil público; posts destacados o fijados; programación por fecha; relacionados automáticos o manuales; SEO por publicación; feed RSS; aplausos estilo Medium y comentarios con moderación.',
+    importance: 'El contenido es el motor del posicionamiento y de la relación con tus clientes. Un blog bien organizado (categorías, etiquetas, autores) hace que cada publicación se descubra y se comparta mejor.',
+    tips: [
+      'Crea el post con solo el título: entras directo al editor y todo lo demás se completa después.',
+      'El extracto y el tiempo de lectura se calculan automáticamente si los dejas vacíos.',
+      'Una fecha de publicación futura programa el post: aparece solo cuando llega la hora, sin tareas programadas.',
+      'Las etiquetas se crean al vuelo escribiendo y pulsando Enter; comparten nombre entre publicaciones.',
+      'Los relacionados se sugieren por etiquetas y categoría; puedes fijarlos a mano en el panel lateral.',
+      'Los comentarios llegan como pendientes a Blog → Comentarios; solo los aprobados se muestran.',
+      'Cambiar el slug de un post publicado crea una redirección automática desde la URL anterior.'
+    ],
+    fields: [
+      { label: 'Título y subtítulo', required: true, type: 'text', description: 'Encabezado de la publicación.' },
+      { label: 'Cuerpo', required: true, type: 'textarea', description: 'Editor enriquecido: títulos, listas, citas, código, imágenes, videos de YouTube, enlaces y separadores.' },
+      { label: 'Estado y fecha', required: true, type: 'date', description: 'Borrador, programado, publicado o archivado; fecha futura = programado.' },
+      { label: 'Autor y categoría', required: false, type: 'relation', description: 'Perfil que firma y tema principal.' },
+      { label: 'Etiquetas', required: false, type: 'text', description: 'Palabras clave transversales.' },
+      { label: 'Portada y extracto', required: false, type: 'text', description: 'Imagen de cabecera y resumen para tarjetas y buscadores.' },
+      { label: 'Destacado / fijado / comentarios', required: false, type: 'boolean', description: 'Resalta en la portada, fija al inicio, permite comentar.' },
+      { label: 'SEO', required: false, type: 'textarea', description: 'Título, descripción, imagen para redes, canónica y no indexar.' }
+    ],
+    faqs: [
+      { question: '¿Dónde está el RSS?', answer: 'En /sites/tu-slug/blog/rss.xml. Se enlaza automáticamente en la portada del blog.' },
+      { question: '¿Por qué no puedo publicar?', answer: 'Si el sitio no permite publicar a miembros, solo owner y admin pueden pasar un post a publicado. Guarda como borrador y pide a un administrador que lo publique, o activa la opción en Ajustes del sitio.' },
+      { question: '¿Se puede incrustar HTML libre en un post?', answer: 'No. El cuerpo se genera desde el editor y se limpia en servidor. Para HTML avanzado usa la sección «HTML personalizado» de una página.' }
+    ],
+    relatedModules: [
+      { label: 'Categorías', route: '/admin/website/blog/categories' },
+      { label: 'Etiquetas', route: '/admin/website/blog/tags' },
+      { label: 'Autores', route: '/admin/website/blog/authors' },
+      { label: 'Comentarios', route: '/admin/website/blog/comments' }
+    ],
+    relatedArticles: ['website-settings', 'website-media'],
+    tags: ['blog', 'publicaciones', 'posts', 'categorías', 'etiquetas', 'autores', 'comentarios', 'aplausos', 'rss', 'programar']
+  },
+  {
+    id: 'website-media',
+    routePatterns: ['/admin/website/media'],
+    module: 'website',
+    moduleLabel: 'Sitio web',
+    moduleEmoji: '🌐',
+    title: 'Biblioteca de medios',
+    viewType: 'list',
+    level: 'basico',
+    isNew: true,
+    summary: 'Sube imágenes, videos y PDF una vez y reutilízalos en páginas, posts, galerías y ajustes del sitio.',
+    description: 'Almacenamiento de archivos del sitio (bucket website-media). Cada archivo tiene título, texto alternativo y carpeta; se elige desde cualquier campo de imagen del módulo con «Elegir de la biblioteca». Límite de 10 MB por archivo; formatos JPG, PNG, WebP, GIF, SVG, AVIF, MP4 y PDF.',
+    importance: 'Centralizar los medios evita enlaces rotos y URLs externas; el texto alternativo mejora accesibilidad y SEO de las imágenes.',
+    tips: [
+      'Arrastra varios archivos a la vez sobre la biblioteca para subirlos en lote.',
+      'Completa el texto alternativo: lo usan lectores de pantalla y los buscadores de imágenes.',
+      'Eliminar un archivo lo borra del almacenamiento: las páginas que lo usen mostrarán una imagen rota.',
+      'Las carpetas son etiquetas libres (general, blog, galerias…) para organizar.'
+    ],
+    relatedModules: [{ label: 'Galerías', route: '/admin/website/galleries' }],
+    relatedArticles: ['website-galleries', 'website-pages'],
+    tags: ['medios', 'imágenes', 'archivos', 'subir', 'storage', 'biblioteca']
+  },
+  {
+    id: 'website-galleries',
+    routePatterns: ['/admin/website/galleries', '/admin/website/galleries/create', '/admin/website/galleries/:id'],
+    module: 'website',
+    moduleLabel: 'Sitio web',
+    moduleEmoji: '🌐',
+    title: 'Galerías de fotos',
+    viewType: 'detail',
+    level: 'basico',
+    isNew: true,
+    summary: 'Agrupa fotos en galerías con cuadrícula, mosaico o carrusel, visibles en /galeria y con visor a pantalla completa.',
+    description: 'Cada galería tiene nombre, descripción, portada, presentación (cuadrícula, mosaico o carrusel) y estado. Las fotos se suben directamente o se eligen de la biblioteca, se ordenan con flechas y admiten pie de foto. Se publican en /sites/tu-slug/galeria y pueden enlazarse desde la sección «Galería» de una página.',
+    importance: 'Las galerías muestran instalaciones, productos, eventos o trabajos realizados con una experiencia visual cuidada y sin depender de servicios externos.',
+    tips: [
+      'Una galería en borrador no aparece en el sitio; publícala cuando tenga fotos.',
+      'El mosaico respeta la proporción original de cada foto; la cuadrícula las recorta a 4:3.',
+      'Enlaza una galería desde el menú o desde la sección «Galería» de cualquier página.'
+    ],
+    relatedModules: [{ label: 'Medios', route: '/admin/website/media' }],
+    relatedArticles: ['website-media', 'website-pages'],
+    tags: ['galería', 'fotos', 'imágenes', 'carrusel', 'mosaico']
   },
   // ─── PUNTO DE VENTA ──────────────────────────────────────────────────────────
   {
