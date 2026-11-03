@@ -64,7 +64,10 @@ nuevo_promedio = (saldo × promedio_actual + entrada × costo_entrada)
                  ÷ (saldo + entrada)
 ```
 
-Las salidas se valoran al promedio vigente. El asiento guarda `unit_cost`,
+Las **recepciones de compra** entran al precio neto de la línea de la orden de
+compra (`subtotal / cantidad`, convertido con `exchange_rate` si la OC está en
+otra moneda); el resto de entradas usa el costo de reposición. Las salidas se
+valoran al promedio vigente. El asiento guarda `unit_cost`,
 `total_cost` y `avg_cost_after`, de modo que la valoración de cualquier fecha es
 reconstruible. `v_product_stock.stock_value = stock_quantity × unit_cost`.
 

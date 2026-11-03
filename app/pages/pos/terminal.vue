@@ -20,6 +20,8 @@ interface TicketLine {
   unit_cost: number
   discount_percent: number
   tax_rate: number
+  /** El precio del producto ya incluye el impuesto (product.tax_included). Opcional en tickets guardados antes del cambio. */
+  price_include_tax?: boolean
   is_stockable: boolean
   stock_quantity: number
   stock_min: number
@@ -193,11 +195,14 @@ const formatCurrency = (value: number): string =>
 const round2 = (n: number): number => Math.round((n + Number.EPSILON) * 100) / 100
 
 const lineAmounts = (line: TicketLine) => {
-  const gross = line.quantity * line.unit_price
-  const discount = round2(gross * line.discount_percent / 100)
-  const subtotal = round2(gross - discount)
-  const tax = round2(subtotal * line.tax_rate / 100)
-  return { discount, subtotal, tax, total: subtotal + tax }
+  const { discount, subtotal, tax, total } = computeOrderLineAmounts({
+    quantity: line.quantity,
+    unitPrice: line.unit_price,
+    discountPercent: line.discount_percent,
+    taxRate: line.tax_rate,
+    priceIncludesTax: line.price_include_tax === true
+  })
+  return { discount, subtotal, tax, total }
 }
 
 const ticketTotals = computed(() => {
@@ -323,6 +328,7 @@ const addProduct = (product: ProductView, quantity?: number): void => {
       unit_cost: Number(product.cost_price ?? 0),
       discount_percent: 0,
       tax_rate: Number(product.tax_rate ?? 0),
+      price_include_tax: product.tax_included === true,
       is_stockable: stockable,
       stock_quantity: stock,
       stock_min: Number(product.stock_min ?? 0),

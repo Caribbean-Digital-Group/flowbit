@@ -257,12 +257,21 @@ const openEditLine = (lineId: string) => {
 }
 
 const calculateLineFields = (data: OrderLineFormData) => {
-  const discountAmount = Math.round(data.quantity * data.unit_price * data.discount_percent / 100 * 100) / 100
-  const subtotal = Math.round((data.quantity * data.unit_price - discountAmount) * 100) / 100
-  const taxAmount = Math.round(subtotal * data.tax_rate / 100 * 100) / 100
-  const total = Math.round((subtotal + taxAmount) * 100) / 100
-  const marginVal = Math.round((subtotal - data.quantity * data.unit_cost) * 100) / 100
-  const marginPct = subtotal > 0 ? Math.round(marginVal / subtotal * 100 * 100) / 100 : 0
+  // Misma fórmula que la base de datos (respeta «precios con IVA»)
+  const amounts = computeOrderLineAmounts({
+    quantity: data.quantity,
+    unitPrice: data.unit_price,
+    discountPercent: data.discount_percent,
+    taxRate: data.tax_rate,
+    unitCost: data.unit_cost,
+    priceIncludesTax: formData.value.tax_included
+  })
+  const discountAmount = amounts.discount
+  const subtotal = amounts.subtotal
+  const taxAmount = amounts.tax
+  const total = amounts.total
+  const marginVal = amounts.margin
+  const marginPct = amounts.marginPercent
 
   return {
     product_id: data.product_id,
@@ -281,6 +290,15 @@ const calculateLineFields = (data: OrderLineFormData) => {
     margin_percent: marginPct
   }
 }
+
+// Al cambiar «precios con IVA» se recalculan las líneas mostradas, igual que
+// hace el servidor con las órdenes en borrador.
+watch(() => formData.value.tax_included, () => {
+  // Las órdenes confirmadas conservan sus importes históricos
+  if (formData.value.order_state !== 'draft') return
+  lines.value = lines.value.map(line => ({ ...line, ...calculateLineFields(line) }))
+  recalculateOrderTotals()
+})
 
 const recalculateOrderTotals = () => {
   formData.value.amount_untaxed = lines.value.reduce((sum, l) => sum + l.subtotal, 0)
@@ -1110,6 +1128,7 @@ const formatCurrency = (value: number): string => {
                   :company-id="companyId"
                   :order-type="formData.order_type"
                   :catalog-tax-fallback="formData.tax_rate"
+                  :price-includes-tax="formData.tax_included"
                 />
               </div>
 

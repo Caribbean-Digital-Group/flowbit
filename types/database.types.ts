@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.1"
   }
   graphql_public: {
     Tables: {
@@ -1133,6 +1133,7 @@ export type Database = {
           margin: number | null
           margin_percent: number | null
           order_id: string
+          price_include_tax: boolean | null
           product_id: string | null
           quantity: number
           quantity_delivered: number | null
@@ -1156,6 +1157,7 @@ export type Database = {
           margin?: number | null
           margin_percent?: number | null
           order_id: string
+          price_include_tax?: boolean | null
           product_id?: string | null
           quantity?: number
           quantity_delivered?: number | null
@@ -1179,6 +1181,7 @@ export type Database = {
           margin?: number | null
           margin_percent?: number | null
           order_id?: string
+          price_include_tax?: boolean | null
           product_id?: string | null
           quantity?: number
           quantity_delivered?: number | null
@@ -6884,6 +6887,10 @@ export type Database = {
           p_register_id: string
         }
         Returns: string
+      }
+      partner_shares_company_with_user: {
+        Args: { p_partner_id: string }
+        Returns: boolean
       }
       place_storefront_order: {
         Args: {
