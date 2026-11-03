@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { CHANNEL_LABELS, type OrderChannel, type RevenueLedgerKind, type SalesKpis } from '~/types/sales.types'
+import type { OrderChannel, RevenueLedgerKind, SalesKpis } from '~/types/sales.types'
+import { CHANNEL_LABELS } from '~/utils/sales'
 
 definePageMeta({ layout: 'admin' })
 

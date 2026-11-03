@@ -1,18 +1,20 @@
 <script setup lang="ts">
 import type { Database } from '~/types/database.types'
+import type {
+  DeliveryShortage,
+  DeliveryStatus,
+  OrderPaymentView,
+  OrderRefundView,
+  PaymentStatus,
+  RefundLineInput
+} from '~/types/sales.types'
 import {
   DELIVERY_STATUS_LABELS,
   DELIVERY_STATUS_VARIANTS,
   PAYMENT_SOURCE_LABELS,
   PAYMENT_STATUS_LABELS,
-  PAYMENT_STATUS_VARIANTS,
-  type DeliveryShortage,
-  type DeliveryStatus,
-  type OrderPaymentView,
-  type OrderRefundView,
-  type PaymentStatus,
-  type RefundLineInput
-} from '~/types/sales.types'
+  PAYMENT_STATUS_VARIANTS
+} from '~/utils/sales'
 
 type PickingView = Database['public']['Views']['v_pickings']['Row']
 

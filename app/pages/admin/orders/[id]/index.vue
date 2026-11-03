@@ -8,7 +8,7 @@ import {
 } from '~/components/Order/Form.vue'
 import type { Database, TablesUpdate } from '~/types/database.types'
 import type { DeliveryStatus } from '~/types/sales.types'
-import { DELIVERY_STATUS_LABELS, DELIVERY_STATUS_VARIANTS } from '~/types/sales.types'
+import { DELIVERY_STATUS_LABELS, DELIVERY_STATUS_VARIANTS } from '~/utils/sales'
 
 definePageMeta({
   layout: 'admin'
