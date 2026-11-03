@@ -303,7 +303,7 @@ Migración `20261103120000_fix_sales_flow_data_integrity.sql` (pendiente de
 | `calculate_order_line_totals` respeta `tax_included` | V5 |
 | `security_invoker = true` en `v_orders`, `v_pickings`, `v_stock_moves` y demás `v_*` | V9 |
 
-### Fase 2 — Entrega y pagos derivados de documentos
+### Fase 2 — Entrega y pagos derivados de documentos ✅ implementada
 
 | Tarea | Hallazgos |
 |---|---|
@@ -313,7 +313,7 @@ Migración `20261103120000_fix_sales_flow_data_integrity.sql` (pendiente de
 | Tabla `order_payment` + trigger de `payment_status`; POS y Stripe escriben ahí; modal de abono en el panel | V6 |
 | `order_refund` genérico; el POS lo usa; reingreso al costo original | P3, P5 |
 
-### Fase 3 — Inventario multi-almacén y reservas
+### Fase 3 — Inventario multi-almacén y reservas ✅ implementada
 
 | Tarea | Hallazgos |
 |---|---|
@@ -323,7 +323,7 @@ Migración `20261103120000_fix_sales_flow_data_integrity.sql` (pendiente de
 | POS: selección de lote/serie real (o bloqueo de productos rastreados sin captura) | P4 |
 | Cola de surtido de órdenes de tienda (`delivery_status = 'pending'`) | W3 |
 
-### Fase 4 — Reportes, CRM y atribución
+### Fase 4 — Reportes, CRM y atribución ✅ implementada
 
 | Tarea | Hallazgos |
 |---|---|
@@ -338,8 +338,8 @@ Migración `20261103120000_fix_sales_flow_data_integrity.sql` (pendiente de
 
 | Tema | Decisión necesaria |
 |---|---|
-| Ingreso reconocido | ¿Al confirmar la orden (devengado) o al cobrar (flujo de caja)? El ledger soporta ambos; hay que elegir cuál muestra el dashboard por defecto. |
-| Reserva en órdenes del panel | ¿Reservar al confirmar o solo al «Preparar entrega»? Reservar antes evita sobreventa pero inmoviliza stock de cotizaciones largas. |
+| Ingreso reconocido | **Decidido (2026-11-03): al cobrar** (base de caja). |
+| Reserva en órdenes del panel | **Decidido (2026-11-03): al «Preparar entrega»**. Las órdenes de la tienda se preparan solas al confirmarse, así que reservan al comprar. |
 | Datos históricos | Las órdenes antiguas no tienen pagos con monto ni `quantity_delivered`; el backfill propuesto asume pago total en `paid` y entrega total en pickings confirmados. |
 | Facturación (CFDI) | Fuera de alcance; `is_invoiced` sigue manual. El modelo deja lugar para un módulo de facturas que lea `order_payment`. |
 | Shims de tipos | `db:types` falla desde la sesión; cada fase añadirá columnas a los shims (`types/*.types.ts`) hasta regenerar. |
@@ -377,3 +377,86 @@ corte X del POS, y cuadre libro = saldo.
 navegador antes del despliegue y contenga productos con IVA incluido fallará al
 cobrar («Los pagos no cubren el total»); basta con descartarlo y volver a
 capturarlo.
+
+---
+
+## 8. Fases 2 a 4 — qué cambió
+
+Migraciones (pendientes de `db:push`, en este orden):
+
+| Migración | Fase |
+|---|---|
+| `20261103130000_sales_fulfillment_and_payments.sql` | 2 — entrega, libro de pagos, devoluciones |
+| `20261103140000_warehouse_stock_and_reservations.sql` | 3 — existencias por almacén, reservas, lotes FIFO, traspasos |
+| `20261103150000_sales_reports_crm_attribution.sql` | 4 — libro de ingresos, KPIs, CRM y atribución |
+
+### Fase 2
+
+| Cambio | Detalle |
+|---|---|
+| Campos del sistema | `delivery_status`, `is_delivered`, `payment_status`, `is_paid`, `paid_at`, `amount_paid`, `amount_refunded` solo los escriben funciones del sistema (bandera `flowbit.order_sync`); un `UPDATE` directo se ignora. |
+| Entrega | `prepare_order_delivery` crea o reconstruye el picking en borrador con lo pendiente. Al confirmar un picking, `apply_picking_to_order` actualiza `quantity_delivered`, `quantity_returned` y `cost_delivered` (costo real del libro) y recalcula el estado. Si queda pendiente se crea un **backorder** (`picking.backorder_of_id`). |
+| Pendiente por línea | `cantidad − acreditado − (entregado − devuelto)`; cubre entregas parciales, devoluciones con o sin reingreso y acreditaciones de lo nunca entregado. |
+| Libro de pagos | `order_payment` (cobros positivos, reembolsos negativos). El POS lo alimenta por trigger desde `pos_payment`; Stripe por `mark_storefront_order_paid` (idempotente por payment intent); el panel por `register_order_payment` (abonos con fecha, método y referencia). Anulación (`void_order_payment`) y condonación (`condone_order_balance`) solo para owner/admin. |
+| Devoluciones | `order_refund` + `order_refund_line` con `register_order_refund` para cualquier canal; `register_pos_refund` la usa por dentro. El reingreso va al costo con que salió la mercancía y el reembolso nunca supera lo cobrado. |
+| Cancelación | Bloqueada si hubo entregas o cobros. Cancelar libera el picking en borrador (y su reserva). |
+| Tienda | Al confirmarse, la orden se prepara sola (entra a «Por surtir» y reserva). Nunca bloquea el checkout. |
+| Compras | `post_order` deja preparada la recepción. |
+| Implantación | Entregado y costo desde `stock_move`; devoluciones POS previas convertidas a documentos; pagos POS al libro; órdenes marcadas como pagadas sin registro reciben un pago «Registro previo» por su total. |
+
+### Fase 3
+
+| Cambio | Detalle |
+|---|---|
+| `stock_quant` | Existencia por producto y almacén, mantenida por trigger sobre `stock_move`. Los asientos sin almacén se asignaron al predeterminado. |
+| Validación | Una salida no puede dejar en negativo un almacén (`inventory_settings.enforce_warehouse_stock`, activo por defecto). |
+| Reservas | Derivadas: líneas de pickings de salida en borrador o publicados. `v_stock_availability` = existencia, reservado, disponible. |
+| Almacén de salida | `order.warehouse_id` → caja del POS → `storefront_settings.warehouse_id` → predeterminado. |
+| Disponible en ventas | POS (`assert_stock_available`) y checkout de la tienda validan **disponible** en su almacén. |
+| Faltantes | `get_order_delivery_shortages` avisa en la orden qué no alcanza para surtir. |
+| Lotes y series | `build_picking_lines` asigna lotes y series reales FIFO en salidas (incluido el POS, que antes escribía «VENTA-POS»); lo que no alcanza queda con marcador para captura manual. |
+| Ajustes | `create_stock_adjustment` con almacén cuenta ese almacén (antes comparaba contra el total de la empresa). |
+| Traspasos | `transfer_stock` (origen `transfer`): salida + entrada al costo promedio. |
+
+### Fase 4
+
+| Cambio | Detalle |
+|---|---|
+| `v_revenue_ledger` | Cobros, reembolsos, pagos a proveedor y costo de lo vendido, por fecha y canal, en moneda de la empresa (IVA separado en proporción). |
+| `get_sales_kpis` | Cobrado neto, ingreso sin IVA, costo, margen, flujo neto, por canal, mes, método, producto y campaña; cartera con antigüedad, por pagar, entregas pendientes y devoluciones. |
+| Interfaz | `/admin/reports/sales` (con exportación CSV del libro) y el dashboard en base de caja. |
+| CRM | «Crear cotización» (`create_quotation_from_lead`); al confirmarse una orden vinculada el lead pasa a ganado; `won_amount` y `collected_amount` en el lead. Órdenes de tienda/POS se vinculan solas al único lead abierto del cliente. |
+| Atribución | `v_order_attribution` (sesión de la tienda o lead); los leads del sitio guardan `utm_*` de la URL. |
+| Sitio web | `website_settings.auto_convert_submissions` convierte cada mensaje en lead. |
+
+### Interfaz
+
+| Pantalla | Cambio |
+|---|---|
+| Orden | Panel de seguimiento (`Order/FulfillmentPanel.vue`): preparar entrega, pendiente por línea, movimientos, cobros/abonos, devoluciones, condonación. Entrega y pago ya no se editan. Selector de almacén. |
+| Órdenes | Columnas Entrega y Saldo; filtros «Por surtir» y «Con saldo por cobrar» (`?delivery=pending`); por cobrar con saldo real. |
+| Inventario | Existencias por almacén con reservado/disponible y traspasos; ajuste por almacén. |
+| Tienda, sitio, lead | Almacén de la tienda; conversión automática de mensajes; «Crear cotización» y vendido/cobrado. |
+| Manual | Artículos actualizados (orden, tienda, trazabilidad, lead, sitio) y nuevo «Reporte de ventas». |
+
+### Verificación
+
+Cadena completa de migraciones sobre PostgreSQL 17 (PGlite) con stubs de Supabase,
+con datos «legados» creados con las funciones anteriores para probar la
+implantación: 82 pasos entre las cuatro fases (entrega parcial y backorder,
+abonos y sobrepago, devolución al costo de salida y crédito sin reingreso, POS y
+corte, Stripe idempotente, compras, cancelación, traspasos, reservas, faltantes,
+negativo por almacén, lotes FIFO, checkout contra disponible, KPIs cuadrados con
+el libro, cotización y lead ganado/cobrado, auto‑vínculo, conversión del sitio
+con UTM y RLS de las vistas nuevas). `vue-tsc`: sin errores nuevos (26
+preexistentes).
+
+### Notas de operación
+
+- **Antes de vender tras el despliegue**, revisa en Inventario que cada almacén
+  tenga sus existencias: los asientos viejos sin almacén quedaron en el
+  predeterminado, y las cajas del POS solo venden de su almacén.
+- Las órdenes del panel que se marcaron «entregadas» a mano pero cuyo picking
+  nunca se confirmó vuelven a «Por entregar»: es el estado real.
+- Las órdenes del panel aplican el modo fiscal de la orden («Impuesto incluido»),
+  no el del producto; la tienda y el POS usan el del producto.

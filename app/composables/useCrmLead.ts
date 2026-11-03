@@ -284,7 +284,29 @@ export const useCrmLead = () => {
     return data ?? []
   }
 
+  /**
+   * «Crear cotización»: orden de venta en borrador para el contacto del lead
+   * (si no tiene cliente lo da de alta) y vinculada al lead.
+   */
+  const createQuotationFromLead = async (
+    leadId: string
+  ): Promise<{ orderId: string | null; errorMessage: string | null }> => {
+    const { data, error } = await supabase.rpc(
+      'create_quotation_from_lead' as never,
+      { p_lead_id: leadId } as never
+    )
+
+    if (error) {
+      console.error('Error creating quotation from lead:', error)
+      return { orderId: null, errorMessage: error.message?.trim() || 'No se pudo crear la cotización.' }
+    }
+
+    const result = data as unknown as { order_id?: string } | null
+    return { orderId: result?.order_id ?? null, errorMessage: null }
+  }
+
   return {
+    createQuotationFromLead,
     getLeadsByCompany,
     getLeadById,
     getLeadViewById,

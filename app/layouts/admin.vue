@@ -423,6 +423,20 @@ const menuGroups: MenuGroup[] = [
         ]
       },
       {
+        title: 'Por surtir',
+        to: '/admin/orders?delivery=pending',
+        iconPaths: [
+          'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4'
+        ]
+      },
+      {
+        title: 'Reporte de ventas',
+        to: '/admin/reports/sales',
+        iconPaths: [
+          'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
+        ]
+      },
+      {
         title: 'Líneas de orden',
         to: '/admin/order-lines',
         iconPaths: [

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import type { Database, Tables } from '~/types/database.types'
+import type { SalesKpiMonth, SalesKpis } from '~/types/sales.types'
 
 definePageMeta({
   layout: 'admin'
@@ -55,6 +56,27 @@ const { getPickingsByCompany } = usePicking()
 const { getRequestsByCompany } = useApprovalRequest()
 const { getTasksByCompany } = useProjectTask()
 const { getLeadsByCompany } = useCrmLead()
+const { getSalesKpis } = useSalesReport()
+
+/**
+ * Ingresos y egresos en base de caja (lo cobrado y lo pagado), calculados en
+ * el servidor para los últimos 12 meses. Si la base aún no tiene el módulo
+ * de reportes, el tablero conserva el cálculo anterior (órdenes confirmadas).
+ */
+const cashKpis = ref<SalesKpis | null>(null)
+const cashMonths = computed(() => {
+  const map = new Map<string, SalesKpiMonth>()
+  for (const m of cashKpis.value?.monthly ?? []) map.set(m.month, m)
+  return map
+})
+const isCashBasis = computed(() => cashKpis.value !== null)
+
+const cashRange = (): { from: string; to: string } => {
+  const now = new Date()
+  const start = new Date(now.getFullYear(), now.getMonth() - 11, 1)
+  const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  return { from: iso(start), to: iso(now) }
+}
 
 const isLoading = ref(false)
 const partners = ref<PartnerRow[]>([])
@@ -239,6 +261,17 @@ const monthlyComparison = computed(() => {
   let currentExpense = 0
   let previousExpense = 0
 
+  if (isCashBasis.value && currency === cashKpis.value?.totals.currency) {
+    const cur = cashMonths.value.get(currentKey)
+    const prev = cashMonths.value.get(previousKey)
+    return {
+      currentIncome: cur?.income ?? 0,
+      previousIncome: prev?.income ?? 0,
+      currentExpense: cur?.expense ?? 0,
+      previousExpense: prev?.expense ?? 0
+    }
+  }
+
   for (const order of orders.value) {
     if (order.order_state !== 'posted') continue
     if (normalizeCurrency(order.currency) !== currency) continue
@@ -313,8 +346,13 @@ const projectStats = computed(() => {
 const dashboardStats = computed<DashboardStat[]>(() => {
   const currency = primaryCurrency.value
   const metrics = primaryMetrics.value
-  const income = metrics?.salePosted ?? 0
-  const expense = metrics?.purchasePosted ?? 0
+  const cash = isCashBasis.value && currency === cashKpis.value?.totals.currency
+  const cashIncome = (cashKpis.value?.monthly ?? []).reduce((sum, m) => sum + m.income, 0)
+  const cashExpense = (cashKpis.value?.monthly ?? []).reduce((sum, m) => sum + m.expense, 0)
+  const cashIncomeCount = (cashKpis.value?.monthly ?? []).reduce((sum, m) => sum + m.income_count, 0)
+  const cashExpenseCount = (cashKpis.value?.monthly ?? []).reduce((sum, m) => sum + m.expense_count, 0)
+  const income = cash ? cashIncome : (metrics?.salePosted ?? 0)
+  const expense = cash ? cashExpense : (metrics?.purchasePosted ?? 0)
   const balance = income - expense
   const margin = income > 0 ? Math.round((balance / income) * 100) : 0
   const comparison = monthlyComparison.value
@@ -324,9 +362,11 @@ const dashboardStats = computed<DashboardStat[]>(() => {
   return [
     {
       key: 'income',
-      label: 'Ingresos confirmados',
+      label: cash ? 'Cobrado (12 meses)' : 'Ingresos confirmados',
       value: formatCurrency(income, currency),
-      sublabel: `${metrics?.salePostedCount ?? 0} ventas confirmadas`,
+      sublabel: cash
+        ? `${cashIncomeCount} órdenes cobradas · por cobrar ${formatCurrency(cashKpis.value?.receivables.total ?? 0, currency)}`
+        : `${metrics?.salePostedCount ?? 0} ventas confirmadas`,
       iconPath: ICONS.trendingUp,
       accent: 'emerald',
       to: '/admin/orders',
@@ -334,9 +374,11 @@ const dashboardStats = computed<DashboardStat[]>(() => {
     },
     {
       key: 'expense',
-      label: 'Egresos confirmados',
+      label: cash ? 'Pagado a proveedores (12 meses)' : 'Egresos confirmados',
       value: formatCurrency(expense, currency),
-      sublabel: `${metrics?.purchasePostedCount ?? 0} compras confirmadas`,
+      sublabel: cash
+        ? `${cashExpenseCount} compras pagadas · por pagar ${formatCurrency(cashKpis.value?.payables.total ?? 0, currency)}`
+        : `${metrics?.purchasePostedCount ?? 0} compras confirmadas`,
       iconPath: ICONS.trendingDown,
       accent: 'rose',
       to: '/admin/orders',
@@ -417,6 +459,18 @@ const chartData = computed<ChartBar[]>(() => {
 
   const monthMap = new Map(months.map((m) => [m.key, m]))
   const currency = chartCurrency.value
+
+  if (isCashBasis.value && currency === cashKpis.value?.totals.currency) {
+    for (const m of months) {
+      const cash = cashMonths.value.get(m.key)
+      if (!cash) continue
+      m.income = cash.income
+      m.expense = cash.expense
+      m.incomeCount = cash.income_count
+      m.expenseCount = cash.expense_count
+    }
+    return months
+  }
 
   for (const order of orders.value) {
     if (order.order_state !== 'posted') continue
@@ -660,7 +714,8 @@ const loadDashboard = async () => {
       pickingList,
       approvalList,
       recentTaskList,
-      leadList
+      leadList,
+      cashSummary
     ] = await Promise.all([
       getPartnersByCompany(companyId),
       getProductsByCompany(companyId),
@@ -673,7 +728,8 @@ const loadDashboard = async () => {
         orderByCreatedDesc: true,
         limit: 12
       }),
-      getLeadsByCompany(companyId)
+      getLeadsByCompany(companyId),
+      getSalesKpis(companyId, cashRange().from, cashRange().to)
     ])
 
     partners.value = partnerList
@@ -685,6 +741,7 @@ const loadDashboard = async () => {
     approvalRequests.value = approvalList
     projectTasks.value = recentTaskList
     leads.value = leadList
+    cashKpis.value = cashSummary
   } finally {
     isLoading.value = false
   }
@@ -883,11 +940,11 @@ watch(selectedCompanyId, () => {
         <div class="mt-3 flex flex-wrap items-center gap-5">
           <div class="flex items-center gap-1.5">
             <span class="inline-block h-3 w-3 rounded-sm bg-emerald-500" />
-            <span class="text-xs text-slate-600">Ingresos (ventas confirmadas)</span>
+            <span class="text-xs text-slate-600">{{ isCashBasis ? 'Ingresos (cobrado)' : 'Ingresos (ventas confirmadas)' }}</span>
           </div>
           <div class="flex items-center gap-1.5">
             <span class="inline-block h-3 w-3 rounded-sm bg-rose-500" />
-            <span class="text-xs text-slate-600">Egresos (compras confirmadas)</span>
+            <span class="text-xs text-slate-600">{{ isCashBasis ? 'Egresos (pagado a proveedores)' : 'Egresos (compras confirmadas)' }}</span>
           </div>
         </div>
       </div>

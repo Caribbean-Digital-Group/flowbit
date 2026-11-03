@@ -7,6 +7,8 @@ import {
   type OrderLine
 } from '~/components/Order/Form.vue'
 import type { Database, TablesUpdate } from '~/types/database.types'
+import type { DeliveryStatus } from '~/types/sales.types'
+import { DELIVERY_STATUS_LABELS, DELIVERY_STATUS_VARIANTS } from '~/types/sales.types'
 
 definePageMeta({
   layout: 'admin'
@@ -30,8 +32,8 @@ const {
   addOrderLineRpc
 } = useOrder()
 
-const { syncOrderToDraftPicking } = usePicking()
 const { getPartnersByCompany } = usePartner()
+const { getWarehousesByCompany } = useWarehouse()
 const { getProjectsByCompany } = useProject()
 const { getAllByCompany: getPaymentMethodsByCompany } = usePaymentMethod()
 const {
@@ -55,12 +57,24 @@ type StockShortageRow = {
 const isEditing = ref(false)
 const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
-const showPaymentModal = ref(false)
-const selectedPaymentMethodId = ref<string>('')
 const stockShortageLines = ref<StockShortageRow[]>([])
 const partnerOptions = ref<{ value: string; label: string }[]>([])
 const projectOptions = ref<{ value: string; label: string }[]>([])
 const paymentMethodOptions = ref<{ value: string; label: string }[]>([])
+const warehouseOptions = ref<{ value: string; label: string }[]>([])
+
+/** Panel de entregas, cobros y devoluciones (las acciones del menú lo abren). */
+const fulfillmentPanel = ref<{
+  openPayment: () => void
+  openRefund: () => void
+  handlePrepare: () => Promise<void>
+  openCondone: () => void
+} | null>(null)
+
+const isAdmin = computed(() => {
+  const role = authStore.companies.find(c => c.company.id === selectedCompanyId.value)?.role
+  return role === 'owner' || role === 'admin'
+})
 
 const formData = ref<OrderFormData>(createEmptyOrderForm())
 const orderLines = ref<OrderLine[]>([])
@@ -115,17 +129,32 @@ const canPost = computed(
   () => formData.value.order_state === 'draft' && orderLines.value.length > 0
 )
 
+// La base de datos rechaza cancelar si ya hubo entregas o cobros; aquí solo
+// se oculta la acción para no ofrecer algo que va a fallar.
 const canCancel = computed(
   () =>
     formData.value.order_state !== 'cancel'
-    && !formData.value.is_delivered
+    && !['partial', 'delivered'].includes(formData.value.delivery_status)
+    && formData.value.amount_paid <= 0.005
     && !formData.value.is_invoiced
 )
 
+const orderBalance = computed(() =>
+  formData.value.amount_total - formData.value.amount_refunded - formData.value.amount_paid
+)
+
 const canPay = computed(
+  () => formData.value.order_state === 'posted' && orderBalance.value > 0.005
+)
+
+const canPrepareDelivery = computed(
   () =>
     formData.value.order_state === 'posted'
-    && formData.value.payment_status !== 'paid'
+    && ['pending', 'partial'].includes(formData.value.delivery_status)
+)
+
+const canRefund = computed(
+  () => formData.value.order_state === 'posted' && formData.value.order_type === 'sale'
 )
 
 const menuOptions = computed<MenuOption[]>(() => {
@@ -160,13 +189,31 @@ const menuOptions = computed<MenuOption[]>(() => {
       variant: 'success'
     })
   }
+  if (canPrepareDelivery.value) {
+    opts.push({
+      id: 'prepare-delivery',
+      label: formData.value.order_type === 'purchase' ? 'Preparar recepción' : 'Preparar entrega',
+      icon: 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4',
+      action: () => void fulfillmentPanel.value?.handlePrepare(),
+      variant: 'default'
+    })
+  }
   if (canPay.value) {
     opts.push({
       id: 'pay-order',
-      label: 'Pagar Orden',
+      label: formData.value.order_type === 'purchase' ? 'Registrar pago' : 'Registrar cobro',
       icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
-      action: () => void handlePayOrder(),
+      action: () => fulfillmentPanel.value?.openPayment(),
       variant: 'success'
+    })
+  }
+  if (canRefund.value) {
+    opts.push({
+      id: 'refund-order',
+      label: 'Registrar devolución',
+      icon: 'M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6',
+      action: () => fulfillmentPanel.value?.openRefund(),
+      variant: 'default'
     })
   }
   if (canCancel.value) {
@@ -233,6 +280,10 @@ const mapViewToForm = (v: OrderViewRow): OrderFormData => {
     payment_method_id: pmId,
     payment_method_name: pmName,
     payment_status: paymentStatus,
+    delivery_status: ((row['delivery_status'] as DeliveryStatus | null) ?? 'pending'),
+    amount_paid: Number(row['amount_paid'] ?? 0),
+    amount_refunded: Number(row['amount_refunded'] ?? 0),
+    warehouse_id: (row['warehouse_id'] as string | null) ?? null,
     payment_term: v.payment_term ?? '',
     payment_due_date: v.payment_due_date ?? '',
     shipping_street: v.shipping_street ?? '',
@@ -292,15 +343,14 @@ const mapFormToOrderUpdate = (value: OrderFormData): TablesUpdate<'order'> => {
     notes: value.notes.trim() || null,
     terms: value.terms.trim() || null,
     is_invoiced: value.is_invoiced,
-    is_delivered: value.is_delivered,
-    is_paid: value.payment_status === 'paid',
     order_type: value.order_type
   }
-  // Los campos payment_method_id y payment_status se agregan al tipo
-  // después de correr: npm run db:migration:up && npm run db:types
+  // Entrega y pago no se envían: los deriva la base de datos de los pickings
+  // y del libro de pagos. payment_method_id (método preferido) y warehouse_id
+  // se agregan al tipo después de correr `npm run db:types`.
   const extended = base as Record<string, unknown>
   extended['payment_method_id'] = value.payment_method_id || null
-  extended['payment_status'] = value.payment_status
+  extended['warehouse_id'] = value.warehouse_id || null
   return base
 }
 
@@ -309,13 +359,18 @@ const loadPartners = async () => {
   partnerOptions.value = []
   projectOptions.value = []
   paymentMethodOptions.value = []
+  warehouseOptions.value = []
   if (!companyId) return
 
-  const [partners, projects, paymentMethods] = await Promise.all([
+  const [partners, projects, paymentMethods, warehouses] = await Promise.all([
     getPartnersByCompany(companyId),
     getProjectsByCompany(companyId),
-    getPaymentMethodsByCompany(companyId)
+    getPaymentMethodsByCompany(companyId),
+    getWarehousesByCompany(companyId)
   ])
+  warehouseOptions.value = warehouses
+    .filter(w => w.active !== false)
+    .map(w => ({ value: w.id, label: w.code ? `${w.name} (${w.code})` : w.name }))
   partnerOptions.value = partners.map((p) => ({
     value: p.id,
     label: (p.display_name?.trim() || p.name)?.trim() || p.id
@@ -421,10 +476,7 @@ const handlePostOrder = async () => {
 
     stockShortageLines.value = []
 
-    if (formData.value.order_type === 'purchase') {
-      await syncOrderToDraftPicking(id, false)
-    }
-
+    // Las compras quedan con su recepción preparada (lo hace post_order)
     await loadOrder()
   } finally {
     isLoading.value = false
@@ -446,57 +498,6 @@ const handleCancelOrder = async () => {
   } finally {
     isLoading.value = false
   }
-}
-
-const markOrderAsPaid = async (paymentMethodId: string | null) => {
-  const id = orderId.value
-  const companyId = selectedCompanyId.value
-  if (!id || !companyId || !canPay.value) return
-
-  isLoading.value = true
-  errorMessage.value = null
-  try {
-    const updates: TablesUpdate<'order'> = {
-      is_paid: true,
-      payment_status: 'paid',
-      payment_method_id: paymentMethodId
-    }
-
-    const updated = await updateOrder(id, companyId, updates)
-    if (!updated) {
-      errorMessage.value = 'No se pudo registrar el pago de la orden.'
-      return
-    }
-    await loadOrder()
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const handlePayOrder = async () => {
-  if (!canPay.value) return
-
-  if (formData.value.payment_method_id) {
-    await markOrderAsPaid(formData.value.payment_method_id)
-    return
-  }
-
-  selectedPaymentMethodId.value = ''
-  showPaymentModal.value = true
-}
-
-const closePaymentModal = () => {
-  if (isLoading.value) return
-  showPaymentModal.value = false
-}
-
-const handleConfirmPayment = async () => {
-  if (!selectedPaymentMethodId.value) {
-    errorMessage.value = 'Selecciona un método de pago para confirmar el pago.'
-    return
-  }
-  showPaymentModal.value = false
-  await markOrderAsPaid(selectedPaymentMethodId.value)
 }
 
 const handleEdit = () => {
@@ -1263,9 +1264,9 @@ const formatDate = (dateString: string | null): string => {
             variant="success"
           />
           <BadgeApp
-            v-if="formData.is_delivered"
-            label="Entregada"
-            variant="success"
+            v-if="formData.order_state === 'posted'"
+            :label="DELIVERY_STATUS_LABELS[formData.delivery_status] ?? formData.delivery_status"
+            :variant="DELIVERY_STATUS_VARIANTS[formData.delivery_status] ?? 'secondary'"
           />
           <BadgeApp
             v-if="formData.is_invoiced"
@@ -1309,88 +1310,29 @@ const formatDate = (dateString: string | null): string => {
         :partner-options="partnerOptions"
         :project-options="projectOptions"
         :payment-method-options="paymentMethodOptions"
+        :warehouse-options="warehouseOptions"
         :company-id="selectedCompanyId"
+      />
+
+      <OrderFulfillmentPanel
+        v-if="!isEditing && orderId && selectedCompanyId && formData.order_state !== 'draft'"
+        ref="fulfillmentPanel"
+        :order-id="orderId"
+        :company-id="selectedCompanyId"
+        :order-type="formData.order_type"
+        :order-state="formData.order_state"
+        :currency="formData.currency"
+        :amount-total="formData.amount_total"
+        :amount-paid="formData.amount_paid"
+        :amount-refunded="formData.amount_refunded"
+        :payment-status="formData.payment_status"
+        :delivery-status="formData.delivery_status"
+        :default-payment-method-id="formData.payment_method_id"
+        :payment-method-options="paymentMethodOptions"
+        :is-admin="isAdmin"
+        @changed="loadOrder"
       />
     </CardSheet>
 
-    <Teleport to="body">
-      <Transition
-        enter-active-class="transition-opacity duration-200"
-        enter-from-class="opacity-0"
-        enter-to-class="opacity-100"
-        leave-active-class="transition-opacity duration-150"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
-      >
-        <div
-          v-if="showPaymentModal"
-          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
-          @click.self="closePaymentModal"
-        >
-          <Transition
-            appear
-            enter-active-class="transition duration-200 ease-out"
-            enter-from-class="opacity-0 scale-95 translate-y-2"
-            enter-to-class="opacity-100 scale-100 translate-y-0"
-          >
-            <div class="w-full max-w-md rounded-2xl bg-white shadow-2xl shadow-slate-900/20 border border-slate-100 overflow-hidden">
-              <div class="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-indigo-50/80 to-violet-50/60 flex items-start justify-between gap-4">
-                <div class="min-w-0">
-                  <h3 class="text-lg font-semibold text-slate-900">
-                    Registrar pago
-                  </h3>
-                  <p class="mt-1 text-sm text-slate-500">
-                    Selecciona el método de pago para marcar esta orden como pagada.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  class="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-white hover:text-slate-800 transition-colors"
-                  :disabled="isLoading"
-                  aria-label="Cerrar"
-                  @click="closePaymentModal"
-                >
-                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <form class="px-6 py-6 space-y-5" @submit.prevent="handleConfirmPayment">
-                <FormSelect
-                  v-model="selectedPaymentMethodId"
-                  label="Método de pago"
-                  placeholder="Selecciona un método de pago"
-                  :options="paymentMethodOptions"
-                  required
-                  :disabled="isLoading"
-                  size="md"
-                />
-
-                <p
-                  v-if="paymentMethodOptions.length === 0"
-                  class="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800"
-                >
-                  No hay métodos de pago configurados. Crea uno antes de registrar el pago.
-                </p>
-
-                <div class="flex items-center justify-end gap-3 pt-2">
-                  <BtnApp variant="ghost" type="button" :disabled="isLoading" @click="closePaymentModal">
-                    Cancelar
-                  </BtnApp>
-                  <BtnApp
-                    variant="primary"
-                    type="submit"
-                    :disabled="isLoading || !selectedPaymentMethodId"
-                  >
-                    {{ isLoading ? 'Procesando…' : 'Confirmar pago' }}
-                  </BtnApp>
-                </div>
-              </form>
-            </div>
-          </Transition>
-        </div>
-      </Transition>
-    </Teleport>
   </div>
 </template>

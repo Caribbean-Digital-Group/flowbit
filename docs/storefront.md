@@ -73,24 +73,23 @@ empresa resuelta; nunca costos, márgenes ni datos de otras empresas.
 - La orden nace **`posted`** (venta confirmada), `payment_status='unpaid'`, no entregada.
 
 ### Inventario
-El stock **no** se descuenta en el checkout: igual que el resto del ERP, se
-descuenta al confirmar el picking de salida. Flujo de cumplimiento:
+Desde `20261103130000`/`20261103140000`:
 
-1. La orden llega a `/admin/orders` con badge «Tienda en línea».
-2. Al marcarla como entregada, el trigger existente crea el picking de salida.
-3. Confirmar el picking descuenta el inventario.
-
-El checkout valida disponibilidad al momento de comprar, pero entre la compra y
-el picking puede haber sobreventa si se vende por otros canales (mismo
-comportamiento que las órdenes de venta del panel).
+1. El checkout valida lo **disponible** (existencia − reservas) en el almacén de
+   la tienda (`storefront_settings.warehouse_id`, o el predeterminado).
+2. Al confirmarse, la orden **prepara su entrega sola**: crea el picking de salida
+   en borrador, que aparta el stock (ya no hay sobreventa entre canales) y la
+   pone en «Por surtir» (`/admin/orders?delivery=pending`).
+3. Confirmar el picking descuenta el inventario y marca la orden como entregada.
+   Si se surte parcialmente, se crea un backorder con lo pendiente.
 
 ### Pagos
 El checkout ofrece dos vías:
 
 - **Métodos manuales** — catálogo `payment_method` de la empresa
   (transferencia, contra entrega, etc.): registra `payment_method_id` en la
-  orden y la deja `unpaid`; el cobro se concilia desde el dashboard (acción
-  «pagar» existente).
+  orden y la deja `unpaid`; el cobro se registra desde la orden con «Registrar
+  cobro» (admite abonos), que escribe en el libro `order_payment`.
 - **Tarjeta vía Stripe** (opcional, por empresa) — Stripe Checkout hosted con
   confirmación por webhook y verificación al retorno. La orden se crea con
   `payment_provider='stripe'` y `payment_status` se actualiza en servidor.

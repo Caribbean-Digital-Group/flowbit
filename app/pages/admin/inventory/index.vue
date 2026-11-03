@@ -11,9 +11,11 @@ const {
   getSummary,
   getStockReport,
   adjustStock,
+  getStockAvailability,
   generateRestockTasks,
   lastError
 } = useInventory()
+const { getWarehousesByCompany } = useWarehouse()
 
 const isLoading = ref(false)
 const isWorking = ref(false)
@@ -123,13 +125,41 @@ const categoryShare = computed(() => {
 const adjustTarget = ref<ProductStockView | null>(null)
 const adjustQuantity = ref<number>(0)
 const adjustReason = ref('')
+/** '' = total de la empresa (comportamiento anterior); con almacén, se cuenta ese almacén. */
+const adjustWarehouseId = ref('')
+const adjustWarehouseOptions = ref<{ value: string; label: string }[]>([])
+const adjustWarehouseStock = ref<Record<string, number>>({})
 
-const openAdjust = (row: ProductStockView) => {
+/** Lo que el sistema tiene registrado en el ámbito elegido (empresa o almacén). */
+const adjustSystemQuantity = computed(() => {
+  if (!adjustTarget.value) return 0
+  return adjustWarehouseId.value
+    ? (adjustWarehouseStock.value[adjustWarehouseId.value] ?? 0)
+    : adjustTarget.value.stock_quantity
+})
+
+const openAdjust = async (row: ProductStockView) => {
   adjustTarget.value = row
   adjustQuantity.value = row.stock_quantity
   adjustReason.value = ''
+  adjustWarehouseId.value = ''
   errorMessage.value = null
+
+  const companyId = selectedCompanyId.value
+  if (!companyId) return
+  const [warehouses, availability] = await Promise.all([
+    getWarehousesByCompany(companyId),
+    getStockAvailability(companyId, row.id)
+  ])
+  adjustWarehouseOptions.value = warehouses
+    .filter(w => w.active !== false)
+    .map(w => ({ value: w.id, label: w.code ? `${w.name} (${w.code})` : w.name }))
+  adjustWarehouseStock.value = Object.fromEntries(availability.map(a => [a.warehouse_id, a.on_hand]))
 }
+
+watch(adjustWarehouseId, () => {
+  adjustQuantity.value = adjustSystemQuantity.value
+})
 
 const closeAdjust = () => {
   adjustTarget.value = null
@@ -137,7 +167,7 @@ const closeAdjust = () => {
 
 const adjustDifference = computed(() => {
   if (!adjustTarget.value) return 0
-  return Number(adjustQuantity.value ?? 0) - adjustTarget.value.stock_quantity
+  return Number(adjustQuantity.value ?? 0) - adjustSystemQuantity.value
 })
 
 const confirmAdjust = async () => {
@@ -152,7 +182,8 @@ const confirmAdjust = async () => {
     const result = await adjustStock(
       adjustTarget.value.id,
       Number(adjustQuantity.value ?? 0),
-      adjustReason.value.trim()
+      adjustReason.value.trim(),
+      adjustWarehouseId.value || null
     )
 
     if (!result) {
@@ -507,7 +538,7 @@ const statusTabs: { value: 'all' | StockStatus; label: string }[] = [
             <div class="grid grid-cols-2 gap-3">
               <div class="rounded-xl bg-slate-50 px-3 py-2.5">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Sistema</p>
-                <p class="text-lg font-bold text-slate-800 tabular-nums">{{ units(adjustTarget.stock_quantity) }}</p>
+                <p class="text-lg font-bold text-slate-800 tabular-nums">{{ units(adjustSystemQuantity) }}</p>
               </div>
               <div class="rounded-xl bg-indigo-50 px-3 py-2.5">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-indigo-500">Diferencia</p>
@@ -519,6 +550,15 @@ const statusTabs: { value: 'all' | StockStatus; label: string }[] = [
                 </p>
               </div>
             </div>
+
+            <FormSelect
+              v-if="adjustWarehouseOptions.length > 1"
+              v-model="adjustWarehouseId"
+              label="Almacén contado"
+              placeholder="Toda la empresa (almacén predeterminado)"
+              :options="adjustWarehouseOptions"
+              hint="Elige el almacén si contaste solo ese almacén."
+            />
 
             <FormInput
               v-model.number="adjustQuantity"

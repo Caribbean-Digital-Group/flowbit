@@ -1,11 +1,19 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import type { StockCard } from '~/types/inventory.types'
+import type { StockAvailabilityView } from '~/types/sales.types'
 
 definePageMeta({ layout: 'admin' })
 
 const route = useRoute()
 const router = useRouter()
-const { getStockCard, lastError } = useInventory()
+const { getStockCard, getStockAvailability, transferStock, lastError } = useInventory()
+const { getWarehousesByCompany } = useWarehouse()
+const { selectedCompanyId } = storeToRefs(useAuthStore())
+
+/** Existencia, reservado y disponible del producto en cada almacén. */
+const availability = ref<StockAvailabilityView[]>([])
+const warehouseOptions = ref<{ value: string; label: string }[]>([])
 
 const productId = computed(() => route.params.id as string)
 
@@ -20,13 +28,86 @@ const load = async () => {
   try {
     card.value = await getStockCard(productId.value, 300)
     if (!card.value && lastError.value) errorMessage.value = lastError.value
+    await loadAvailability()
   } finally {
     isLoading.value = false
   }
 }
 
+const loadAvailability = async () => {
+  const companyId = selectedCompanyId.value
+  if (!companyId) return
+  const [rows, warehouses] = await Promise.all([
+    getStockAvailability(companyId, productId.value),
+    getWarehousesByCompany(companyId)
+  ])
+  availability.value = rows
+  warehouseOptions.value = warehouses
+    .filter(w => w.active !== false)
+    .map(w => ({ value: w.id, label: w.code ? `${w.name} (${w.code})` : w.name }))
+}
+
 onMounted(load)
 watch(productId, load)
+watch(selectedCompanyId, () => { void loadAvailability() })
+
+// ── Traspaso entre almacenes ─────────────────────────────────────────────────
+const showTransfer = ref(false)
+const transferError = ref<string | null>(null)
+const isTransferring = ref(false)
+const transferForm = reactive({
+  fromWarehouseId: '',
+  toWarehouseId: '',
+  quantity: 1,
+  lotName: '',
+  serialNumber: '',
+  notes: ''
+})
+
+const productTracking = computed(() => availability.value[0]?.tracking ?? 'none')
+const fromAvailable = computed(() =>
+  availability.value.find(a => a.warehouse_id === transferForm.fromWarehouseId)?.available ?? 0
+)
+
+const openTransfer = (fromWarehouseId?: string) => {
+  transferForm.fromWarehouseId = fromWarehouseId ?? availability.value.find(a => a.available > 0)?.warehouse_id ?? ''
+  transferForm.toWarehouseId = warehouseOptions.value.find(w => w.value !== transferForm.fromWarehouseId)?.value ?? ''
+  transferForm.quantity = 1
+  transferForm.lotName = ''
+  transferForm.serialNumber = ''
+  transferForm.notes = ''
+  transferError.value = null
+  showTransfer.value = true
+}
+
+const submitTransfer = async () => {
+  if (isTransferring.value) return
+  if (!transferForm.fromWarehouseId || !transferForm.toWarehouseId) {
+    transferError.value = 'Elige el almacén de origen y el de destino.'
+    return
+  }
+  isTransferring.value = true
+  transferError.value = null
+  try {
+    const ok = await transferStock({
+      productId: productId.value,
+      fromWarehouseId: transferForm.fromWarehouseId,
+      toWarehouseId: transferForm.toWarehouseId,
+      quantity: Number(transferForm.quantity),
+      lotName: transferForm.lotName || null,
+      serialNumber: transferForm.serialNumber || null,
+      notes: transferForm.notes || null
+    })
+    if (!ok) {
+      transferError.value = lastError.value
+      return
+    }
+    showTransfer.value = false
+    await load()
+  } finally {
+    isTransferring.value = false
+  }
+}
 
 const money = (value: number | null | undefined): string =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value ?? 0)
@@ -140,6 +221,61 @@ const documentLink = (move: { picking_id: string | null; order_id: string | null
           </p>
         </div>
       </div>
+
+      <!-- Existencias por almacén -->
+      <section class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-200 overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-sm font-bold text-slate-800">Existencias por almacén</h2>
+            <p class="text-xs text-slate-500 mt-0.5">
+              «Reservado» son unidades de entregas ya preparadas que aún no salen del almacén.
+            </p>
+          </div>
+          <BtnApp
+            v-if="warehouseOptions.length > 1"
+            variant="secondary"
+            size="sm"
+            label="Traspasar"
+            @click="openTransfer()"
+          />
+        </div>
+        <div v-if="availability.length === 0" class="px-5 py-6 text-sm text-slate-400">
+          Sin existencias registradas en ningún almacén.
+        </div>
+        <div v-else class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <tr>
+                <th class="px-5 py-2 text-left">Almacén</th>
+                <th class="px-3 py-2 text-right">Existencia</th>
+                <th class="px-3 py-2 text-right">Reservado</th>
+                <th class="px-3 py-2 text-right">Disponible</th>
+                <th class="px-5 py-2" />
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="a in availability" :key="a.warehouse_id" class="border-t border-slate-100">
+                <td class="px-5 py-2 text-slate-700">{{ a.warehouse_name }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">{{ units(a.on_hand) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums text-amber-700">{{ a.reserved ? units(a.reserved) : '—' }}</td>
+                <td class="px-3 py-2 text-right tabular-nums font-semibold" :class="a.available < 0 ? 'text-red-600' : 'text-slate-800'">
+                  {{ units(a.available) }}
+                </td>
+                <td class="px-5 py-2 text-right">
+                  <button
+                    v-if="warehouseOptions.length > 1 && a.available > 0"
+                    type="button"
+                    class="text-xs font-medium text-indigo-600 hover:underline"
+                    @click="openTransfer(a.warehouse_id)"
+                  >
+                    Traspasar desde aquí
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <!-- Historial -->
       <section class="bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-200 overflow-hidden">
@@ -257,5 +393,44 @@ const documentLink = (move: { picking_id: string | null; order_id: string | null
         Volver al inventario
       </NuxtLink>
     </div>
+  
+    <!-- Modal: traspaso -->
+    <Teleport to="body">
+      <div
+        v-if="showTransfer"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
+        @click.self="showTransfer = false"
+      >
+        <form class="w-full max-w-md space-y-4 rounded-2xl bg-white p-6 shadow-2xl" @submit.prevent="submitTransfer">
+          <div>
+            <h3 class="text-lg font-semibold text-slate-900">Traspaso entre almacenes</h3>
+            <p class="mt-1 text-sm text-slate-500">
+              Se registra una salida y una entrada al costo promedio: el valor del inventario no cambia.
+            </p>
+          </div>
+          <FormSelect v-model="transferForm.fromWarehouseId" label="Desde" :options="warehouseOptions" required />
+          <FormSelect v-model="transferForm.toWarehouseId" label="Hacia" :options="warehouseOptions.filter(w => w.value !== transferForm.fromWarehouseId)" required />
+          <FormInput
+            v-model="transferForm.quantity"
+            type="number"
+            label="Cantidad"
+            :min="0.001"
+            :max="fromAvailable"
+            step="1"
+            :hint="`Disponible en origen: ${units(fromAvailable)}`"
+            :disabled="productTracking === 'serial'"
+            required
+          />
+          <FormInput v-if="productTracking === 'lot'" v-model="transferForm.lotName" label="Lote" required />
+          <FormInput v-if="productTracking === 'serial'" v-model="transferForm.serialNumber" label="Número de serie" required />
+          <FormTextArea v-model="transferForm.notes" label="Notas" :rows="2" />
+          <p v-if="transferError" class="text-sm text-red-600">{{ transferError }}</p>
+          <div class="flex justify-end gap-3">
+            <BtnApp variant="ghost" type="button" label="Cancelar" :disabled="isTransferring" @click="showTransfer = false" />
+            <BtnApp variant="primary" type="submit" :loading="isTransferring" label="Traspasar" />
+          </div>
+        </form>
+      </div>
+    </Teleport>
   </div>
 </template>

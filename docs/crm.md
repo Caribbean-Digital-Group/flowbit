@@ -65,3 +65,13 @@ Comportamiento:
 npm run db:push    # aplica 20260916120000_enhance_crm_pipeline_kanban.sql
 npm run db:types   # regenera types/database.types.ts
 ```
+
+## Conexión con la venta
+
+Migración `20261103150000_sales_reports_crm_attribution`:
+
+- **Crear cotización** (`create_quotation_from_lead`): orden en borrador para el contacto del lead (lo da de alta como cliente si no existe) vinculada en `crm_lead_order`.
+- Al confirmarse una orden vinculada, el lead pasa a la primera etapa ganada.
+- `crm_lead.won_amount` (vendido neto de devoluciones) y `collected_amount` (cobrado) se mantienen por trigger y se exponen en `v_crm_leads`.
+- Las órdenes de tienda y POS se vinculan solas al **único** lead abierto del cliente (por partner o email del checkout); con cero o varios candidatos no se adivina.
+- `crm_lead.utm_source/utm_medium/utm_campaign` alimentan el reporte de campañas.

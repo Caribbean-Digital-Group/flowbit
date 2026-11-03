@@ -79,6 +79,7 @@ const settings = ref({
   blog_description: '',
   posts_per_page: 9,
   comments_enabled: false,
+  auto_convert_submissions: false,
   comments_auto_approve: false,
   reactions_enabled: true,
   gallery_enabled: true,
@@ -186,6 +187,7 @@ const applyRow = (row: WebsiteSettingsRow) => {
     blog_description: row.blog_description ?? '',
     posts_per_page: row.posts_per_page ?? 9,
     comments_enabled: row.comments_enabled ?? false,
+    auto_convert_submissions: row.auto_convert_submissions ?? false,
     comments_auto_approve: row.comments_auto_approve ?? false,
     reactions_enabled: row.reactions_enabled ?? true,
     gallery_enabled: row.gallery_enabled ?? true,
@@ -305,6 +307,7 @@ const handleSave = async () => {
       blog_description: s.blog_description.trim() || null,
       posts_per_page: Math.min(Math.max(Number(s.posts_per_page) || 9, 3), 30),
       comments_enabled: s.comments_enabled,
+      auto_convert_submissions: s.auto_convert_submissions,
       comments_auto_approve: s.comments_auto_approve,
       reactions_enabled: s.reactions_enabled,
       gallery_enabled: s.gallery_enabled,
@@ -637,6 +640,13 @@ const radiusOptions = [
           <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg cursor-pointer select-none">
             <input v-model="settings.gallery_enabled" type="checkbox" class="w-4 h-4 text-indigo-600 rounded border-slate-300" />
             <span class="text-sm text-slate-700">Sección de galerías en <span class="font-mono">/galeria</span></span>
+          </label>
+          <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg cursor-pointer select-none">
+            <input v-model="settings.auto_convert_submissions" type="checkbox" class="w-4 h-4 text-indigo-600 rounded border-slate-300" />
+            <span class="text-sm text-slate-700">
+              Convertir cada mensaje de contacto en un lead del CRM automáticamente
+              <span class="block text-xs text-slate-500">Conserva la campaña (utm_source / utm_campaign) de la página desde la que escribieron.</span>
+            </span>
           </label>
         </section>
       </div>
