@@ -58,7 +58,7 @@ export const ARTICLES: DocArticle[] = [
           title: 'Registra tu primera operación',
           description: 'Crea una orden de venta real de principio a fin: cliente, líneas de producto, confirmación y entrega. Así ves cómo se conecta todo el sistema.',
           action: { label: 'Crear orden', route: '/admin/orders/create' },
-          tip: 'Al marcar la orden como entregada, Flowbit genera el picking de salida y el inventario se descuenta al confirmarlo.'
+          tip: 'Al confirmar la orden usa «Preparar entrega»: se crea el picking de salida y se aparta el stock; el inventario se descuenta cuando el almacén lo confirma.'
         },
         {
           id: 'team',
@@ -480,19 +480,86 @@ export const ARTICLES: DocArticle[] = [
     moduleEmoji: '🛒',
     title: 'Detalle de Orden',
     viewType: 'detail',
-    description: 'Vista completa de una orden con sus líneas de productos, totales, estado actual y pickings asociados.',
-    importance: 'Permite supervisar el estado de cada transacción y los movimientos de inventario generados. Es el registro central de cada operación comercial.',
+    isNew: true,
+    summary: 'Una orden cuenta su propia historia: qué se entregó, qué se cobró, qué se devolvió y cuánto falta.',
+    description: 'Vista completa de una orden: líneas, totales y, una vez confirmada, el panel de seguimiento con la entrega (movimientos de almacén y pendiente por línea), la cobranza (cada cobro o abono) y las devoluciones.',
+    importance: 'Entrega y pago ya no se marcan a mano: los calcula Flowbit a partir de lo que realmente pasó en el almacén y en caja. Por eso el estado de la orden siempre coincide con el inventario y con el dinero cobrado.',
     tips: [
-      'Una orden confirmada no puede modificarse; cancélala y crea una nueva si hay errores graves.',
-      'El picking asociado aparece en la sección inferior; haz clic para ver su detalle.',
-      'Si el picking no se generó automáticamente, usa el botón "Sincronizar Picking".',
-      'Puedes agregar notas en cualquier momento para documentar acuerdos o incidencias.'
+      '«Preparar entrega» crea el picking de salida con lo pendiente y aparta el stock en el almacén de la orden. Si falta mercancía, el panel te dice cuánta.',
+      'La orden queda «Entregada» cuando el almacén confirma el picking. Si se surtió parcialmente, Flowbit crea solo un backorder con lo que faltó.',
+      '«Registrar cobro» admite abonos: captura monto, fecha, método y referencia. El estado pasa a «Pago parcial» o «Pagado» según el saldo.',
+      'Una devolución acredita al cliente y, si eliges cuántas unidades regresan, las reingresa al almacén al mismo costo con que salieron.',
+      'Solo puedes cancelar una orden si nada salió del almacén ni se cobró; si no, registra una devolución.',
+      'Elige el almacén de salida en la orden si no es el predeterminado.'
+    ],
+    process: [
+      { step: 1, title: 'Confirmar', description: 'La orden queda en firme (una compra queda lista para recibir).' },
+      { step: 2, title: 'Preparar entrega', description: 'Se crea el picking y se aparta el stock.' },
+      { step: 3, title: 'Surtir', description: 'El almacén confirma el picking; se descuenta el inventario.' },
+      { step: 4, title: 'Cobrar', description: 'Registra cobros o abonos hasta liquidar el saldo.' },
+      { step: 5, title: 'Devolver (si aplica)', description: 'Crédito al cliente, reingreso al almacén y reembolso.' }
+    ],
+    faqs: [
+      {
+        question: '¿Por qué ya no puedo marcar la orden como pagada o entregada?',
+        answer: 'Porque ahora se calculan solos. «Entregada» depende de los pickings confirmados y «Pagado» de los cobros registrados. Así el reporte de ventas, el inventario y la orden nunca se contradicen.'
+      },
+      {
+        question: '¿Cuándo cuenta una venta como ingreso?',
+        answer: 'Cuando se cobra. El reporte de ventas trabaja en base de caja: suma los cobros en la fecha en que entraron, no la fecha en que se confirmó la orden.'
+      },
+      {
+        question: 'Registré un cobro por error, ¿cómo lo corrijo?',
+        answer: 'Un administrador puede anularlo desde la tabla de cobros indicando el motivo; queda en el historial marcado como anulado. Los cobros del punto de venta y de Stripe se corrigen con una devolución.'
+      }
     ],
     relatedModules: [
       { label: 'Lista de Órdenes', route: '/admin/orders' },
-      { label: 'Pickings', route: '/admin/pickings' }
+      { label: 'Por surtir', route: '/admin/orders?delivery=pending' },
+      { label: 'Pickings', route: '/admin/pickings' },
+      { label: 'Reporte de ventas', route: '/admin/reports/sales' }
     ],
-    tags: ['orden', 'detalle', 'estado', 'picking', 'líneas', 'totales']
+    relatedArticles: ['sales-report', 'pickings-detail', 'storefront-fulfillment'],
+    tags: ['orden', 'detalle', 'estado', 'picking', 'entrega', 'cobro', 'abono', 'devolución', 'backorder', 'reserva']
+  },
+
+  {
+    id: 'sales-report',
+    routePatterns: ['/admin/reports/sales'],
+    module: 'orders',
+    moduleLabel: 'Órdenes',
+    moduleEmoji: '🛒',
+    title: 'Reporte de ventas',
+    viewType: 'analytics',
+    level: 'intermedio',
+    isNew: true,
+    summary: 'Cuánto cobraste, cuánto te costó lo que vendiste y cuánto te deben, por canal, producto y campaña.',
+    description: 'Indicadores de ventas en base de caja para el periodo que elijas: cobrado neto, ingreso sin IVA, costo de lo vendido, margen bruto, cuentas por cobrar con antigüedad, entregas pendientes, devoluciones, desglose por canal, método de pago, producto y campaña, y exportación del libro de ingresos.',
+    importance: 'Es la única fuente de ingresos confiable del sistema: suma cobros reales (no órdenes confirmadas), resta devoluciones y compara contra el costo real con que salió la mercancía del almacén.',
+    tips: [
+      'El ingreso cuenta en la fecha del cobro. Una venta confirmada pero no cobrada aparece en «Por cobrar», no como ingreso.',
+      'El IVA se separa en proporción al de cada orden; «Ingreso sin IVA» es la base para el margen.',
+      'El costo de lo vendido se toma del libro de inventario: es el costo promedio real al momento de la salida, y las devoluciones lo revierten.',
+      'Las campañas salen de la sesión de la tienda en línea o del lead del CRM (formularios del sitio con utm_source y utm_campaign).',
+      'Exporta el libro en CSV para conciliar con tu contabilidad: cada fila es un cobro, reembolso o costo con su orden.'
+    ],
+    faqs: [
+      {
+        question: '¿Por qué el reporte no coincide con la suma de mis órdenes?',
+        answer: 'Porque suma lo cobrado, no lo vendido. Al pie del reporte verás como referencia el total de ventas confirmadas en el periodo, cobradas o no.'
+      },
+      {
+        question: '¿Qué pasa con las ventas en otra moneda?',
+        answer: 'Se convierten a la moneda de la empresa con el tipo de cambio capturado en la orden.'
+      }
+    ],
+    relatedModules: [
+      { label: 'Órdenes', route: '/admin/orders' },
+      { label: 'Inventario', route: '/admin/inventory' },
+      { label: 'Analítica de la tienda', route: '/admin/storefront/analytics' }
+    ],
+    relatedArticles: ['orders-detail', 'inventory-report', 'storefront-analytics'],
+    tags: ['reporte', 'ventas', 'ingresos', 'cobranza', 'margen', 'costo', 'cartera', 'campañas', 'kpi']
   },
 
   // ─── PICKINGS ─────────────────────────────────────────────────────────────────
@@ -991,6 +1058,7 @@ export const ARTICLES: DocArticle[] = [
     description: 'Vista completa de una oportunidad con su historial de actividades, etapa actual en el pipeline y órdenes vinculadas.',
     importance: 'Centraliza toda la información de la oportunidad: comunicaciones pasadas, propuestas, avance en el pipeline y órdenes generadas al ganarse.',
     tips: [
+      '«Crear cotización» abre una orden en borrador para el contacto del lead (lo da de alta como cliente si hace falta). Al confirmarla, el lead pasa solo a «Ganado» y verás lo vendido y lo cobrado.',
       'Registra cada interacción con el prospecto como una actividad (llamada, email, reunión, demo).',
       'Avanza la etapa del pipeline cuando el prospecto muestre señales claras de avance.',
       'Al ganar el lead, vincúlalo a la orden generada para mantener trazabilidad completa.',
@@ -1312,7 +1380,7 @@ export const ARTICLES: DocArticle[] = [
     faqs: [
       {
         question: '¿Las ventas de la tienda descuentan inventario automáticamente?',
-        answer: 'No en el momento de la compra. La orden llega al panel con origen «Tienda en línea»; al marcarla como entregada se genera el picking de salida y al confirmarlo se descuenta el stock, igual que en cualquier venta del ERP.'
+        answer: 'Se apartan en el momento de la compra y se descuentan al surtir. La orden llega confirmada con su entrega ya preparada: el stock queda reservado en el almacén de la tienda (nadie más puede venderlo) y se descuenta cuando el almacén confirma el picking de salida.'
       },
       {
         question: '¿Puedo tener la tienda visible pero sin vender?',
@@ -1351,17 +1419,17 @@ export const ARTICLES: DocArticle[] = [
     importance: 'La tienda no es un sistema aparte: sus pedidos son órdenes de venta reales. Entender el flujo evita el error más común, creer que el stock ya se descontó cuando en realidad se descuenta al confirmar el picking de salida.',
     tips: [
       'Los pedidos en línea llegan a Órdenes con el badge «Tienda en línea»; filtra por ese origen para atenderlos primero.',
-      'Un pedido nace confirmado y sin pagar, salvo que el cliente haya pagado con tarjeta: en ese caso queda pagado automáticamente.',
-      'Los pagos manuales (transferencia, contra entrega) se concilian a mano desde la orden cuando confirmes que el dinero entró.',
+      'Un pedido nace confirmado y con su entrega preparada: el stock queda apartado en el almacén de la tienda y aparece en «Por surtir».',
+      'Si el cliente pagó con tarjeta, el cobro se registra solo. Los pagos manuales (transferencia, contra entrega) se registran con «Registrar cobro» cuando confirmes que el dinero entró.',
       'El costo de envío se agrega como una línea más de la orden para que los totales e impuestos cuadren.',
-      'Entre la compra y el picking puede haber sobreventa si el mismo producto se vende por otro canal. Revisa existencias antes de prometer una fecha de entrega.'
+      'Como el stock se aparta al comprar, la tienda ya no vende unidades comprometidas con otro canal.'
     ],
     process: [
       { step: 1, title: 'Pedido', description: 'El cliente compra en la tienda.' },
-      { step: 2, title: 'Orden', description: 'Llega a Órdenes como venta confirmada.' },
-      { step: 3, title: 'Cobro', description: 'Automático con tarjeta o conciliado a mano.' },
-      { step: 4, title: 'Entrega', description: 'Marcas la orden como entregada.' },
-      { step: 5, title: 'Picking', description: 'Confirmas la salida y baja el inventario.' }
+      { step: 2, title: 'Orden', description: 'Llega confirmada y con el stock apartado.' },
+      { step: 3, title: 'Cobro', description: 'Automático con tarjeta o registrado a mano.' },
+      { step: 4, title: 'Surtido', description: 'El almacén confirma el picking; baja el inventario.' },
+      { step: 5, title: 'Entregada', description: 'La orden se marca sola como entregada.' }
     ],
     wizard: {
       id: 'wz-storefront-fulfillment',
@@ -1372,13 +1440,13 @@ export const ARTICLES: DocArticle[] = [
         {
           id: 'find',
           title: 'Localiza el pedido',
-          description: 'Abre Órdenes y busca las que tienen el badge «Tienda en línea». Ahí ves el cliente, las líneas, el método de envío y el estado de pago.',
-          action: { label: 'Ir a Órdenes', route: '/admin/orders' }
+          description: 'Abre «Por surtir»: ahí están las órdenes con entrega pendiente. Las de la tienda llevan el badge «Tienda en línea».',
+          action: { label: 'Ir a Por surtir', route: '/admin/orders?delivery=pending' }
         },
         {
           id: 'payment',
           title: 'Verifica el pago',
-          description: 'Si el cliente pagó con tarjeta, la orden ya aparece pagada. Si eligió un método manual, confirma que recibiste el dinero y márcala como pagada.',
+          description: 'Si el cliente pagó con tarjeta, la orden ya aparece pagada. Si eligió un método manual, confirma que recibiste el dinero y usa «Registrar cobro» con la referencia de la transferencia.',
           tip: 'No prepares el envío de un pago por transferencia sin verificar el comprobante en tu banco.'
         },
         {
@@ -1388,24 +1456,18 @@ export const ARTICLES: DocArticle[] = [
           action: { label: 'Ver Productos', route: '/admin/products' }
         },
         {
-          id: 'deliver',
-          title: 'Marca la orden como entregada',
-          description: 'Al hacerlo, Flowbit genera automáticamente el picking de salida asociado a la orden.',
-          tip: 'Registra la guía o número de rastreo en las notas de la orden para poder responder al cliente después.'
-        },
-        {
           id: 'picking',
-          title: 'Confirma el picking',
-          description: 'Abre el movimiento generado y confírmalo. Ese es el momento exacto en que el inventario se descuenta.',
+          title: 'Surte y confirma el picking',
+          description: 'En la orden, el panel de entrega enlaza el picking ya preparado. Escanéalo o confírmalo: en ese momento baja el inventario y la orden queda «Entregada». Si faltó algo, se crea un backorder con lo pendiente.',
           action: { label: 'Ir a Movimientos', route: '/admin/pickings' },
-          warning: 'Mientras el picking no se confirme, tu inventario seguirá mostrando unidades que ya vendiste.'
+          tip: 'Registra la guía o número de rastreo en las notas de la orden para poder responder al cliente después.'
         }
       ]
     },
     faqs: [
       {
         question: '¿Cómo cancelo un pedido en línea?',
-        answer: 'Cancela la orden desde su vista de detalle. Si ya fue pagada con tarjeta, el reembolso se gestiona desde tu panel de Stripe; Flowbit registra el evento de devolución en la analítica.'
+        answer: 'Si no se ha cobrado ni surtido, cancélala desde su detalle y el stock apartado se libera. Si ya se cobró, registra una devolución: el reembolso con tarjeta se hace en tu panel de Stripe y en Flowbit queda el documento de devolución, que también aparece en la analítica.'
       },
       {
         question: '¿El cliente recibe algún aviso?',
@@ -1951,6 +2013,7 @@ export const ARTICLES: DocArticle[] = [
     description: 'Centro de control del sitio web público. Desde aquí se crea el sitio (con páginas de ejemplo, menús y tu perfil de autor), se define la URL, la identidad, el contacto, el tema visual, las opciones del blog, la comunidad (aplausos y comentarios) y el SEO global. El sitio permanece inactivo hasta que lo publicas; mientras tanto puedes revisarlo con «Vista previa».',
     importance: 'El sitio web es la cara pública de la empresa y comparte el slug con la tienda en línea. Un sitio bien configurado (identidad, contacto, SEO) mejora la confianza de tus clientes y su posicionamiento en buscadores.',
     tips: [
+      'Activa «Convertir cada mensaje en un lead» para que los formularios lleguen directo al CRM con la campaña (utm) de la página desde la que escribieron.',
       'Pulsa «Crear mi sitio web» la primera vez: se generan Inicio, Nosotros y Contacto con secciones de ejemplo, los menús y tu autor.',
       'El slug de la URL es el mismo de la tienda en línea: cambiarlo mueve ambas direcciones.',
       'Usa «Vista previa» mientras el sitio está inactivo: solo los miembros de la empresa ven esa versión.',
@@ -2661,9 +2724,15 @@ export const ARTICLES: DocArticle[] = [
       'Filtra por origen para aislar un canal: por ejemplo, todo lo que salió por el punto de venta.',
       'Los movimientos con lote o número de serie muestran el identificador exacto de la pieza.',
       'El historial no se puede editar ni borrar. Una corrección siempre es un movimiento nuevo, y eso es lo que lo hace confiable.',
-      'Los ajustes muestran el motivo que se escribió al registrarlos: úsalo para entender diferencias viejas.'
+      'Los ajustes muestran el motivo que se escribió al registrarlos: úsalo para entender diferencias viejas.',
+      '«Existencias por almacén» separa lo que hay, lo apartado para entregas preparadas y lo disponible. Una venta nunca puede dejar un almacén en negativo.',
+      'Usa «Traspasar» para mover mercancía entre almacenes: queda como una salida y una entrada al mismo costo.'
     ],
     faqs: [
+      {
+        question: '¿Por qué el POS dice que no hay stock si el producto tiene existencias?',
+        answer: 'Porque cada caja vende del almacén que tiene asignado, y solo cuenta lo disponible ahí (existencia menos lo apartado). Traspasa mercancía a ese almacén o cambia el almacén de la caja.'
+      },
       {
         question: '¿Puedo borrar un movimiento equivocado?',
         answer: 'No. El libro es inmutable a propósito. Si un movimiento fue incorrecto, registra un ajuste que lo compense y explica el motivo; ambos quedan en el historial.'

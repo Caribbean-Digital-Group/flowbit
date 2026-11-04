@@ -26,7 +26,40 @@ const router = useRouter()
 const authStore = useAuthStore()
 const { selectedCompanyId } = storeToRefs(authStore)
 
-const { getLeadViewById, updateLead, archiveLead, getLinkedOrders, linkOrder, unlinkOrder } = useCrmLead()
+const { getLeadViewById, updateLead, archiveLead, getLinkedOrders, linkOrder, unlinkOrder, createQuotationFromLead } = useCrmLead()
+
+const isCreatingQuotation = ref(false)
+
+/**
+ * «Crear cotización»: orden en borrador para el contacto del lead (se da de
+ * alta como cliente si hace falta), vinculada al lead. Al confirmarla, el lead
+ * pasa solo a la etapa ganada; lo cobrado se refleja en el lead.
+ */
+const handleCreateQuotation = async () => {
+  const id = leadId.value
+  if (isCreatingQuotation.value || !id) return
+  isCreatingQuotation.value = true
+  errorMessage.value = null
+  try {
+    const { orderId, errorMessage: message } = await createQuotationFromLead(id)
+    if (!orderId) {
+      errorMessage.value = message
+      return
+    }
+    await router.push(`/admin/orders/${orderId}`)
+  } finally {
+    isCreatingQuotation.value = false
+  }
+}
+
+/** Vendido y cobrado del lead (columnas nuevas de v_crm_leads, aún fuera de los tipos generados). */
+const leadRevenue = computed(() => {
+  const row = (leadView.value ?? {}) as Record<string, unknown>
+  return {
+    won: Number(row['won_amount'] ?? 0),
+    collected: Number(row['collected_amount'] ?? 0)
+  }
+})
 const { getStagesByCompany } = useCrmStage()
 const { getLostReasonsByCompany } = useCrmLostReason()
 const { getActivitiesByLead, createActivity, updateActivity, markAsDone, archiveActivity, getHistoryByLead } = useCrmActivity()
@@ -404,6 +437,13 @@ const confirmLost = async (result: CrmLostDialogResult) => {
 const menuOptions = computed<MenuOption[]>(() => {
   const opts: MenuOption[] = [
     {
+      id: 'create-quotation',
+      label: 'Crear cotización',
+      variant: 'success',
+      icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+      action: () => { void handleCreateQuotation() }
+    },
+    {
       id: 'view-kanban',
       label: 'Ver en el tablero',
       icon: 'M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2',
@@ -680,6 +720,10 @@ const handleUnlinkOrder = async (orderId: string) => {
           {{ leadView.order_count ?? 0 }}
           <span v-if="leadView.orders_total" class="ml-1">({{ formatCurrency(Number(leadView.orders_total)) }})</span>
         </div>
+        <div v-if="leadRevenue.won > 0 || leadRevenue.collected > 0">
+          <span class="block font-medium text-slate-600">Vendido / cobrado</span>
+          {{ formatCurrency(leadRevenue.won) }} / {{ formatCurrency(leadRevenue.collected) }}
+        </div>
         <div v-if="!leadView.is_won && !leadView.is_lost">
           <span class="block font-medium text-slate-600">Tiempo en la etapa</span>
           {{ leadView.days_in_stage ?? 0 }} día(s)
@@ -837,14 +881,15 @@ const handleUnlinkOrder = async (orderId: string) => {
             <BtnApp
               variant="primary"
               size="sm"
-              @click="navigateTo({ path: '/admin/orders/create', query: leadView?.partner_id ? { partner_id: leadView.partner_id } : {} })"
+              :loading="isCreatingQuotation"
+              @click="handleCreateQuotation"
             >
               <template #iconLeft>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
               </template>
-              Nueva orden
+              Crear cotización
             </BtnApp>
             <BtnApp variant="secondary" size="sm" @click="showLinkOrderPanel = !showLinkOrderPanel">
               <template #iconLeft>

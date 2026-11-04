@@ -76,6 +76,28 @@ const columns: Column[] = [
     type: 'badge',
     badgeConfig: paymentStatusConfig
   },
+  {
+    key: 'delivery_status',
+    label: 'Entrega',
+    type: 'badge',
+    badgeConfig: {
+      labels: {
+        pending: 'Por entregar',
+        partial: 'Parcial',
+        delivered: 'Entregada',
+        no_delivery: 'Sin entrega',
+        draft: '—'
+      },
+      colors: {
+        pending: 'bg-slate-100 text-slate-600',
+        partial: 'bg-amber-100 text-amber-700',
+        delivered: 'bg-emerald-100 text-emerald-700',
+        no_delivery: 'bg-indigo-100 text-indigo-700',
+        draft: 'bg-slate-50 text-slate-400'
+      }
+    }
+  },
+  { key: 'balance_due', label: 'Saldo', type: 'currency', currencyKey: 'currency' },
   { key: 'amount_total', label: 'Total', type: 'currency', currencyKey: 'currency' },
   { key: 'order_date', label: 'Fecha', type: 'date' }
 ]
@@ -89,7 +111,12 @@ const orders = ref<Record<string, unknown>[]>([])
 const isLoadingOrders = ref(false)
 const selectedTypeFilters = ref<Array<'sale' | 'purchase'>>(['sale', 'purchase'])
 const selectedStateFilters = ref<Array<'draft' | 'posted' | 'cancel'>>(['draft', 'posted', 'cancel'])
-const selectedFulfillmentFilters = ref<Array<'compliant' | 'invoiced' | 'delivered'>>([])
+type FulfillmentFilter = 'compliant' | 'invoiced' | 'delivered' | 'to_deliver' | 'with_balance'
+const route = useRoute()
+// `/admin/orders?delivery=pending` abre la cola de surtido
+const selectedFulfillmentFilters = ref<FulfillmentFilter[]>(
+  route.query.delivery === 'pending' ? ['to_deliver'] : []
+)
 const selectedPaymentStatusFilters = ref<PaymentStatusValue[]>([...paymentStatusValues])
 const selectedCurrencyFilters = ref<string[]>([])
 
@@ -109,6 +136,11 @@ function mapOrderToTableRow(raw: OrderListRow): Record<string, unknown> {
     origin: (rowAny['origin'] as string | null) ?? 'dashboard',
     order_state: raw.order_state,
     payment_status: paymentStatus,
+    // Derivados en la base (pickings y libro de pagos); llegan desde v_orders
+    delivery_status: raw.order_state === 'posted'
+      ? ((rowAny['delivery_status'] as string | null) ?? 'pending')
+      : 'draft',
+    balance_due: raw.order_state === 'posted' ? Number(rowAny['balance_due'] ?? 0) : 0,
     amount_total: raw.amount_total ?? 0,
     currency: raw.currency ?? 'MXN',
     order_date: raw.order_date ?? '',
@@ -165,6 +197,9 @@ const filteredOrders = computed(() => {
     if (fulfillmentFilters.includes('compliant') && !isCompliant) return false
     if (fulfillmentFilters.includes('invoiced') && !isInvoiced) return false
     if (fulfillmentFilters.includes('delivered') && !isDelivered) return false
+    if (fulfillmentFilters.includes('to_deliver')
+        && !(orderState === 'posted' && ['pending', 'partial'].includes(String(row.delivery_status)))) return false
+    if (fulfillmentFilters.includes('with_balance') && !(Number(row.balance_due ?? 0) > 0.005)) return false
 
     return true
   })
@@ -240,18 +275,20 @@ const orderMetrics = computed(() => {
     const state = row.order_state as 'draft' | 'posted' | 'cancel' | null
     const pay = (row.payment_status as PaymentStatusValue) ?? 'unpaid'
     const amount = Number(row.amount_total ?? 0)
+    // Por cobrar = saldo real (total − devoluciones − cobrado), no el total
+    const balance = Number(row.balance_due ?? 0)
 
     if (state === 'draft') draftCount += 1
 
     if (state === 'posted' && type === 'sale') {
       salesPosted += amount
       salesPostedCount += 1
-      if (pay !== 'paid' && pay !== 'condoned') {
-        receivable += amount
+      if (pay !== 'paid' && pay !== 'condoned' && balance > 0.005) {
+        receivable += balance
         receivableCount += 1
       }
       if (pay === 'overdue') {
-        overdueAmount += amount
+        overdueAmount += balance
         overdueCount += 1
       }
     }
@@ -347,7 +384,7 @@ const toggleStateFilter = (value: 'draft' | 'posted' | 'cancel') => {
     : [...current, value]
 }
 
-const toggleFulfillmentFilter = (value: 'compliant' | 'invoiced' | 'delivered') => {
+const toggleFulfillmentFilter = (value: FulfillmentFilter) => {
   const current = selectedFulfillmentFilters.value
   selectedFulfillmentFilters.value = current.includes(value)
     ? current.filter((item) => item !== value)
@@ -596,6 +633,24 @@ const deleteMany = async (selected: Record<string, unknown>[]) => {
                       @change="toggleFulfillmentFilter('delivered')"
                     >
                     Entregada
+                  </label>
+                  <label class="flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      :checked="selectedFulfillmentFilters.includes('to_deliver')"
+                      class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      @change="toggleFulfillmentFilter('to_deliver')"
+                    >
+                    Por surtir (pendiente o parcial)
+                  </label>
+                  <label class="flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      :checked="selectedFulfillmentFilters.includes('with_balance')"
+                      class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      @change="toggleFulfillmentFilter('with_balance')"
+                    >
+                    Con saldo por cobrar
                   </label>
                 </div>
               </div>

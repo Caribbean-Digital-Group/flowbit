@@ -184,3 +184,9 @@ editor por secciones con vista previa en lugar de edición libre en lienzo,
 comentarios apagados por defecto con moderación, publicación restringida a
 admins salvo `members_can_publish`, tema independiente con copia desde la
 tienda y bucket público.
+
+## Mensajes → CRM
+
+`website_settings.auto_convert_submissions` (migración `20261103150000`) convierte
+cada mensaje del formulario en un lead al recibirlo, con los `utm_*` de la URL de
+origen. La conversión manual sigue disponible y usa la misma función interna.

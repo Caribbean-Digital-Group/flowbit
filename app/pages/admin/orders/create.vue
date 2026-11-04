@@ -26,12 +26,14 @@ const { createDraftOrder, updateOrder, addOrderLineRpc } = useOrder()
 const { getPartnersByCompany } = usePartner()
 const { getProjectsByCompany } = useProject()
 const { getAllByCompany: getPaymentMethodsByCompany } = usePaymentMethod()
+const { getWarehousesByCompany } = useWarehouse()
 
 const formData = ref<OrderFormData>(createEmptyOrderForm())
 const orderLines = ref<OrderLine[]>([])
 const partnerOptions = ref<{ value: string; label: string }[]>([])
 const projectOptions = ref<{ value: string; label: string }[]>([])
 const paymentMethodOptions = ref<{ value: string; label: string }[]>([])
+const warehouseOptions = ref<{ value: string; label: string }[]>([])
 const isSaving = ref(false)
 const errorMessage = ref<string | null>(null)
 
@@ -56,10 +58,9 @@ const mapFormToOrderUpdate = (value: OrderFormData): TablesUpdate<'order'> => ({
   notes: value.notes.trim() || null,
   terms: value.terms.trim() || null,
   is_invoiced: value.is_invoiced,
-  is_delivered: value.is_delivered,
-  is_paid: value.payment_status === 'paid',
   order_type: value.order_type,
-  ...({ payment_method_id: value.payment_method_id || null, payment_status: value.payment_status } as Record<string, unknown>)
+  // Entrega y pago los deriva la base de datos; warehouse_id llega con db:types
+  ...({ payment_method_id: value.payment_method_id || null, warehouse_id: value.warehouse_id || null } as Record<string, unknown>)
 } as TablesUpdate<'order'>)
 
 const loadPartners = async () => {
@@ -73,11 +74,15 @@ const loadPartners = async () => {
 
   if (!companyId) return
 
-  const [partners, projects, paymentMethods] = await Promise.all([
+  const [partners, projects, paymentMethods, warehouses] = await Promise.all([
     getPartnersByCompany(companyId),
     getProjectsByCompany(companyId),
-    getPaymentMethodsByCompany(companyId)
+    getPaymentMethodsByCompany(companyId),
+    getWarehousesByCompany(companyId)
   ])
+  warehouseOptions.value = warehouses
+    .filter(w => w.active !== false)
+    .map(w => ({ value: w.id, label: w.code ? `${w.name} (${w.code})` : w.name }))
   partnerOptions.value = partners.map((p) => ({
     value: p.id,
     label: (p.display_name?.trim() || p.name)?.trim() || p.id
@@ -217,6 +222,7 @@ const handleCancel = () => {
       :partner-options="partnerOptions"
       :project-options="projectOptions"
       :payment-method-options="paymentMethodOptions"
+      :warehouse-options="warehouseOptions"
       :company-id="selectedCompanyId"
     />
   </CardSheet>

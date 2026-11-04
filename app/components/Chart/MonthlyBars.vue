@@ -1,6 +1,8 @@
 <script setup lang="ts">
 interface MonthBar {
   label: string
+  /** Etiqueta completa para el tooltip (ej. «Semana del 3 nov al 9 nov»). */
+  fullLabel?: string
   income: number
   expense: number
   incomeCount: number
@@ -10,9 +12,16 @@ interface MonthBar {
 interface Props {
   data: MonthBar[]
   currency: string
+  /** Muestra una etiqueta del eje X cada N barras (series diarias largas). */
+  labelStep?: number
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  labelStep: 1
+})
+
+const showAxisLabel = (index: number): boolean =>
+  props.labelStep <= 1 || index % props.labelStep === 0
 
 const CHART_H = 200
 const CHART_W = 680
@@ -178,7 +187,7 @@ const tooltipBalance = computed(() => {
       class="w-full"
       preserveAspectRatio="xMidYMid meet"
       role="img"
-      aria-label="Gráfica de ingresos y egresos por mes"
+      aria-label="Gráfica de ingresos y egresos"
       @mousemove="updateTooltipPos"
     >
       <!-- Currency label top-left -->
@@ -288,6 +297,7 @@ const tooltipBalance = computed(() => {
 
         <!-- Month label -->
         <text
+          v-if="showAxisLabel(bar.index) || activeBarIndex === bar.index"
           :x="bar.centerX"
           :y="PAD_TOP + CHART_H + 18"
           text-anchor="middle"
@@ -323,7 +333,7 @@ const tooltipBalance = computed(() => {
       >
         <!-- Month header -->
         <p class="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-          {{ tooltip.bar.label }}
+          {{ tooltip.bar.fullLabel || tooltip.bar.label }}
         </p>
 
         <div class="space-y-2">
