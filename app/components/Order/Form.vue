@@ -21,6 +21,7 @@ export interface OrderLine {
 }
 
 export type PaymentStatus = 'unpaid' | 'partial' | 'paid' | 'condoned' | 'overdue'
+export type DeliveryStatus = 'pending' | 'partial' | 'delivered' | 'no_delivery'
 
 export interface OrderFormData {
   name: string
@@ -47,6 +48,12 @@ export interface OrderFormData {
   payment_method_id: string | null
   payment_method_name: string
   payment_status: PaymentStatus
+  /** Derivados por la base de datos (pickings y libro de pagos): solo lectura. */
+  delivery_status: DeliveryStatus
+  amount_paid: number
+  amount_refunded: number
+  /** Almacén de salida (venta) o recepción (compra); null = predeterminado. */
+  warehouse_id: string | null
   payment_term: string
   payment_due_date: string
   shipping_street: string
@@ -87,6 +94,10 @@ export const createEmptyOrderForm = (): OrderFormData => ({
   payment_method_id: null,
   payment_method_name: '',
   payment_status: 'unpaid',
+  delivery_status: 'pending',
+  amount_paid: 0,
+  amount_refunded: 0,
+  warehouse_id: null,
   payment_term: '',
   payment_due_date: '',
   shipping_street: '',
@@ -132,6 +143,7 @@ interface Props {
   partnerOptions?: { value: string; label: string }[]
   projectOptions?: { value: string; label: string }[]
   paymentMethodOptions?: { value: string; label: string }[]
+  warehouseOptions?: { value: string; label: string }[]
   /** Permite catálogo, autocompletado y alta de productos al guardar la línea. */
   companyId?: string | null
 }
@@ -141,6 +153,7 @@ const props = withDefaults(defineProps<Props>(), {
   partnerOptions: () => [],
   projectOptions: () => [],
   paymentMethodOptions: () => [],
+  warehouseOptions: () => [],
   companyId: null
 })
 
@@ -159,6 +172,29 @@ const paymentStatusBadgeVariant: Record<string, 'success' | 'warning' | 'danger'
   condoned: 'primary',
   unpaid:   'secondary'
 }
+
+const deliveryStatusLabels: Record<DeliveryStatus, string> = {
+  pending: 'Por entregar',
+  partial: 'Entrega parcial',
+  delivered: 'Entregada',
+  no_delivery: 'Sin entrega física'
+}
+
+const deliveryStatusBadgeVariant: Record<DeliveryStatus, 'success' | 'warning' | 'danger' | 'primary' | 'secondary'> = {
+  pending: 'secondary',
+  partial: 'warning',
+  delivered: 'success',
+  no_delivery: 'primary'
+}
+
+const warehouseSelectModel = computed({
+  get: () => formData.value.warehouse_id ?? '',
+  set: (v: string) => { formData.value.warehouse_id = v || null }
+})
+
+const warehouseLabel = computed(() =>
+  props.warehouseOptions.find(o => o.value === formData.value.warehouse_id)?.label ?? 'Predeterminado'
+)
 
 const paymentStatusLabel = computed(() =>
   paymentStatusOptions.find(o => o.value === formData.value.payment_status)?.label ?? formData.value.payment_status
@@ -257,12 +293,21 @@ const openEditLine = (lineId: string) => {
 }
 
 const calculateLineFields = (data: OrderLineFormData) => {
-  const discountAmount = Math.round(data.quantity * data.unit_price * data.discount_percent / 100 * 100) / 100
-  const subtotal = Math.round((data.quantity * data.unit_price - discountAmount) * 100) / 100
-  const taxAmount = Math.round(subtotal * data.tax_rate / 100 * 100) / 100
-  const total = Math.round((subtotal + taxAmount) * 100) / 100
-  const marginVal = Math.round((subtotal - data.quantity * data.unit_cost) * 100) / 100
-  const marginPct = subtotal > 0 ? Math.round(marginVal / subtotal * 100 * 100) / 100 : 0
+  // Misma fórmula que la base de datos (respeta «precios con IVA»)
+  const amounts = computeOrderLineAmounts({
+    quantity: data.quantity,
+    unitPrice: data.unit_price,
+    discountPercent: data.discount_percent,
+    taxRate: data.tax_rate,
+    unitCost: data.unit_cost,
+    priceIncludesTax: formData.value.tax_included
+  })
+  const discountAmount = amounts.discount
+  const subtotal = amounts.subtotal
+  const taxAmount = amounts.tax
+  const total = amounts.total
+  const marginVal = amounts.margin
+  const marginPct = amounts.marginPercent
 
   return {
     product_id: data.product_id,
@@ -281,6 +326,15 @@ const calculateLineFields = (data: OrderLineFormData) => {
     margin_percent: marginPct
   }
 }
+
+// Al cambiar «precios con IVA» se recalculan las líneas mostradas, igual que
+// hace el servidor con las órdenes en borrador.
+watch(() => formData.value.tax_included, () => {
+  // Las órdenes confirmadas conservan sus importes históricos
+  if (formData.value.order_state !== 'draft') return
+  lines.value = lines.value.map(line => ({ ...line, ...calculateLineFields(line) }))
+  recalculateOrderTotals()
+})
 
 const recalculateOrderTotals = () => {
   formData.value.amount_untaxed = lines.value.reduce((sum, l) => sum + l.subtotal, 0)
@@ -544,25 +598,39 @@ const formatCurrency = (value: number): string => {
         />
       </div>
 
-      <!-- Estado de Pago -->
+      <!-- Almacén -->
+      <div>
+        <FormSelect
+          v-if="isEditing"
+          v-model="warehouseSelectModel"
+          :label="formData.order_type === 'purchase' ? 'Almacén de recepción' : 'Almacén de salida'"
+          :options="warehouseOptions"
+          placeholder="Predeterminado"
+          size="md"
+        />
+        <FormInput
+          v-else
+          :model-value="warehouseLabel"
+          :label="formData.order_type === 'purchase' ? 'Almacén de recepción' : 'Almacén de salida'"
+          readonly
+          size="md"
+        />
+      </div>
+
+      <!-- Estado de Pago (derivado del libro de pagos) -->
       <div>
         <label class="block text-sm font-medium text-slate-700 mb-1.5">Estado de Pago</label>
-        <template v-if="isEditing">
-          <FormSelect
-            v-model="formData.payment_status"
-            :options="paymentStatusOptions"
-            :readonly="false"
-            size="md"
+        <div class="pt-1 flex flex-wrap items-center gap-2">
+          <BadgeApp
+            :variant="paymentStatusBadgeVariant[formData.payment_status] ?? 'secondary'"
+            :label="paymentStatusLabel"
           />
-        </template>
-        <template v-else>
-          <div class="pt-1">
-            <BadgeApp
-              :variant="paymentStatusBadgeVariant[formData.payment_status] ?? 'secondary'"
-              :label="paymentStatusLabel"
-            />
-          </div>
-        </template>
+          <BadgeApp
+            v-if="formData.order_state === 'posted'"
+            :variant="deliveryStatusBadgeVariant[formData.delivery_status] ?? 'secondary'"
+            :label="deliveryStatusLabels[formData.delivery_status] ?? formData.delivery_status"
+          />
+        </div>
       </div>
     </div>
 
@@ -818,20 +886,19 @@ const formatCurrency = (value: number): string => {
                   </div>
                 </label>
 
-                <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors">
-                  <input
-                    v-model="formData.is_delivered"
-                    type="checkbox"
-                    :disabled="readonly"
-                    class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
-                  />
-                  <div class="flex items-center gap-2">
-                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                    </svg>
-                    <span class="text-sm text-slate-700">Entregada</span>
+                <div class="flex items-center gap-3 p-2 rounded-lg">
+                  <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                  </svg>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-slate-600 mb-1.5">Entrega</p>
+                    <BadgeApp
+                      :variant="deliveryStatusBadgeVariant[formData.delivery_status] ?? 'secondary'"
+                      :label="deliveryStatusLabels[formData.delivery_status] ?? formData.delivery_status"
+                    />
+                    <p class="mt-1 text-xs text-slate-400">La marca el almacén al confirmar el movimiento.</p>
                   </div>
-                </label>
+                </div>
 
                 <div class="flex items-start gap-3 p-2 rounded-lg">
                   <svg class="w-5 h-5 text-slate-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -839,18 +906,11 @@ const formatCurrency = (value: number): string => {
                   </svg>
                   <div class="flex-1 min-w-0">
                     <p class="text-sm text-slate-600 mb-1.5">Estatus de pago</p>
-                    <FormSelect
-                      v-if="isEditing"
-                      v-model="formData.payment_status"
-                      :options="paymentStatusOptions"
-                      :readonly="false"
-                      size="sm"
-                    />
                     <BadgeApp
-                      v-else
                       :variant="paymentStatusBadgeVariant[formData.payment_status] ?? 'secondary'"
                       :label="paymentStatusLabel"
                     />
+                    <p class="mt-1 text-xs text-slate-400">Se calcula con los pagos registrados.</p>
                   </div>
                 </div>
               </div>
@@ -1110,6 +1170,7 @@ const formatCurrency = (value: number): string => {
                   :company-id="companyId"
                   :order-type="formData.order_type"
                   :catalog-tax-fallback="formData.tax_rate"
+                  :price-includes-tax="formData.tax_included"
                 />
               </div>
 

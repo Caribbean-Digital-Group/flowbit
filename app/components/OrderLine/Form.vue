@@ -34,6 +34,8 @@ interface Props {
   orderType?: 'sale' | 'purchase'
   /** Tasa fiscal por defecto de la orden para nuevas líneas al elegir catálogo. */
   catalogTaxFallback?: number
+  /** La orden captura precios con IVA incluido (order.tax_included). */
+  priceIncludesTax?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -41,7 +43,8 @@ const props = withDefaults(defineProps<Props>(), {
   currency: 'MXN',
   companyId: null,
   orderType: 'sale',
-  catalogTaxFallback: 16
+  catalogTaxFallback: 16,
+  priceIncludesTax: false
 })
 
 const formData = defineModel<OrderLineFormData>({ required: true })
@@ -246,29 +249,21 @@ async function onDiscountAmountInput() {
   skipAmountSync = false
 }
 
-const subtotal = computed(() => {
-  const base = formData.value.quantity * formData.value.unit_price
-  return Math.round((base - discountAmount.value) * 100) / 100
-})
+// Misma fórmula que la base de datos (respeta «precios con IVA»)
+const lineAmounts = computed(() => computeOrderLineAmounts({
+  quantity: formData.value.quantity,
+  unitPrice: formData.value.unit_price,
+  discountPercent: formData.value.discount_percent,
+  taxRate: formData.value.tax_rate,
+  unitCost: formData.value.unit_cost,
+  priceIncludesTax: props.priceIncludesTax
+}))
 
-const taxAmount = computed(() => {
-  return Math.round(subtotal.value * formData.value.tax_rate / 100 * 100) / 100
-})
-
-const total = computed(() => {
-  return Math.round((subtotal.value + taxAmount.value) * 100) / 100
-})
-
-const margin = computed(() => {
-  return Math.round((subtotal.value - (formData.value.quantity * formData.value.unit_cost)) * 100) / 100
-})
-
-const marginPercent = computed(() => {
-  if (subtotal.value > 0) {
-    return Math.round((margin.value / subtotal.value) * 100 * 100) / 100
-  }
-  return 0
-})
+const subtotal = computed(() => lineAmounts.value.subtotal)
+const taxAmount = computed(() => lineAmounts.value.tax)
+const total = computed(() => lineAmounts.value.total)
+const margin = computed(() => lineAmounts.value.margin)
+const marginPercent = computed(() => lineAmounts.value.marginPercent)
 
 const formatCurrency = (value: number): string => {
   return new Intl.NumberFormat('es-MX', {

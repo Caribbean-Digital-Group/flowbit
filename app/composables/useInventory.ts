@@ -12,6 +12,7 @@ import type {
   StockStatus,
   WarehouseStock
 } from '~/types/inventory.types'
+import type { SalesDatabase, StockAvailabilityView } from '~/types/sales.types'
 
 /** Etiquetas en español de cada origen de movimiento. */
 export const STOCK_ORIGIN_LABELS: Record<StockMoveOrigin, string> = {
@@ -23,7 +24,8 @@ export const STOCK_ORIGIN_LABELS: Record<StockMoveOrigin, string> = {
   return_in: 'Devolución de cliente',
   return_out: 'Devolución a proveedor',
   adjustment: 'Ajuste',
-  manual: 'Movimiento manual'
+  manual: 'Movimiento manual',
+  transfer: 'Traspaso entre almacenes'
 }
 
 /** Color de cada origen, para distinguirlos de un vistazo en las tablas. */
@@ -36,7 +38,8 @@ export const STOCK_ORIGIN_CLASSES: Record<StockMoveOrigin, string> = {
   return_in: 'bg-teal-100 text-teal-700',
   return_out: 'bg-orange-100 text-orange-700',
   adjustment: 'bg-amber-100 text-amber-700',
-  manual: 'bg-slate-100 text-slate-600'
+  manual: 'bg-slate-100 text-slate-600',
+  transfer: 'bg-sky-100 text-sky-700'
 }
 
 export const STOCK_STATUS_LABELS: Record<StockStatus, string> = {
@@ -138,7 +141,8 @@ export const useInventory = () => {
       .order('occurred_at', { ascending: false })
       .limit(options.limit ?? 50)
 
-    if (options.origin) query = query.eq('origin', options.origin)
+    // 'transfer' aún no está en el enum generado (llega con db:types)
+    if (options.origin) query = query.eq('origin', options.origin as never)
     if (options.productId) query = query.eq('product_id', options.productId)
     if (options.warehouseId) query = query.eq('warehouse_id', options.warehouseId)
 
@@ -263,8 +267,74 @@ export const useInventory = () => {
     return data
   }
 
+  // ── Existencias por almacén ───────────────────────────────────────────────
+
+  /** Existencia, reservado (entregas preparadas) y disponible por almacén. */
+  const getStockAvailability = async (
+    companyId: string,
+    productId?: string | null
+  ): Promise<StockAvailabilityView[]> => {
+    if (!companyId) return []
+    lastError.value = null
+
+    const salesDb = supabase as unknown as SupabaseClient<SalesDatabase>
+    let query = salesDb
+      .from('v_stock_availability')
+      .select('*')
+      .eq('company_id', companyId)
+      .order('warehouse_name')
+
+    if (productId) query = query.eq('product_id', productId)
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error('Error fetching stock availability:', error)
+      lastError.value = describeError(error)
+      return []
+    }
+
+    return (data ?? []) as StockAvailabilityView[]
+  }
+
+  /** Traspasa existencias entre almacenes (salida + entrada al costo promedio). */
+  const transferStock = async (params: {
+    productId: string
+    fromWarehouseId: string
+    toWarehouseId: string
+    quantity: number
+    lotName?: string | null
+    serialNumber?: string | null
+    notes?: string | null
+  }): Promise<boolean> => {
+    lastError.value = null
+
+    const { error } = await supabase.rpc(
+      'transfer_stock' as never,
+      {
+        p_product_id: params.productId,
+        p_from_warehouse_id: params.fromWarehouseId,
+        p_to_warehouse_id: params.toWarehouseId,
+        p_quantity: params.quantity,
+        p_lot_name: params.lotName ?? null,
+        p_serial_number: params.serialNumber ?? null,
+        p_notes: params.notes ?? null
+      } as never
+    )
+
+    if (error) {
+      console.error('Error transferring stock:', error)
+      lastError.value = describeError(error)
+      return false
+    }
+
+    return true
+  }
+
   return {
     lastError,
+    getStockAvailability,
+    transferStock,
     getSummary,
     getStockReport,
     getStockCard,

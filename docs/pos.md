@@ -82,3 +82,15 @@ El historial de cortes está en **Punto de Venta → Sesiones de caja** del pane
   métodos de efectivo para que participen del fondo, movimientos y cambio.
 - **Roles**: los miembros (`member`) operan como cajeros; `admin`/`owner` actúan como supervisores
   (descuentos sin límite, gestión de cajas).
+- **Validación en servidor**: `register_pos_sale` ignora el precio, costo e IVA enviados por la terminal y
+  los toma del producto; el límite de descuento de la caja también se valida ahí. Si el precio de un
+  producto cambió mientras estaba en un ticket, el cobro se rechaza y hay que volver a agregarlo.
+- **IVA incluido**: si el producto tiene «precio con IVA incluido», el ticket desglosa el impuesto en
+  lugar de sumarlo (la fórmula vive en `app/utils/orderMath.ts`, réplica de la de la base de datos).
+
+## Almacén, lotes y libro de pagos
+
+- Cada caja vende **lo disponible en su almacén** (existencia menos lo apartado para entregas preparadas).
+- Los productos con lote o serie salen con el lote/serie real más antiguo del almacén (FIFO).
+- Cada cobro y reembolso del POS se refleja en el libro de pagos general (`order_payment`), que es la fuente del reporte de ventas; el corte de caja sigue usando `pos_payment`.
+- Las devoluciones generan un documento `RF-…` (`order_refund`) y reingresan al costo con que salió la mercancía.

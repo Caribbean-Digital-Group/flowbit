@@ -104,9 +104,14 @@ flowbit/
 
 | Módulo | Ruta admin | Composable(s) |
 |---|---|---|
-| Órdenes | `/admin/orders` | `useOrder`, `useOrderLine` |
+| Órdenes | `/admin/orders` (`?delivery=pending` = por surtir) | `useOrder`, `useOrderLine`, `useOrderPayment`, `useOrderRefund` |
 | Líneas de orden | `/admin/order-lines` | `useOrderLine` |
 | Métodos de pago | `/admin/payment-methods` | `usePaymentMethod` |
+| Reporte de ventas | `/admin/reports/sales` | `useSalesReport` |
+
+> Flujo comercial (entrega derivada de pickings, libro de pagos `order_payment`,
+> devoluciones, reservas por almacén, ingreso en base de caja): `docs/sales-flow-analysis.md`.
+> Entrega y pago de una orden **no se escriben a mano**: los deriva la base de datos.
 
 ### Tienda en línea (Storefront)
 
@@ -490,7 +495,7 @@ El layout incluye:
 - **Grupos de navegación colapsables** organizados por dominio:
   1. General (Dashboard, Agenda, Contactos)
   2. CRM (Tablero, Leads, Pipeline, Motivos de pérdida)
-  3. Ventas/Compras (Órdenes, Líneas de orden, Métodos de pago)
+  3. Ventas/Compras (Órdenes, Por surtir, Reporte de ventas, Líneas de orden, Métodos de pago)
   4. Inventario (Productos, Almacenes, Movimientos, Líneas de picking)
   5. Proyectos (Proyectos, Tareas)
   6. Aprobaciones (Solicitudes, Categorías, Aprobadores)

@@ -63,6 +63,8 @@ export type WebsiteSettingsRow = Audit & {
   blog_description: string | null
   posts_per_page: number
   comments_enabled: boolean
+  /** Convierte cada mensaje de contacto en lead del CRM (20261103150000). */
+  auto_convert_submissions: boolean
   comments_auto_approve: boolean
   reactions_enabled: boolean
   gallery_enabled: boolean

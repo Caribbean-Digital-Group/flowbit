@@ -36,6 +36,8 @@ export type StorefrontSettingsRow = {
   policy_privacy: string | null
   policy_terms: string | null
   show_out_of_stock: boolean
+  /** Almacén que surte la tienda (20261103140000). NULL = predeterminado. */
+  warehouse_id: string | null
 
   // Diseño de la tienda (migración 20260910120000_add_theme_to_storefront)
   theme: string

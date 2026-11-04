@@ -1,4 +1,5 @@
 import type { Database, Tables, TablesUpdate } from '~/types/database.types'
+import type { DeliveryShortage, PrepareDeliveryResult } from '~/types/sales.types'
 
 type Order = Tables<'order'>
 type OrderRowView = Database['public']['Views']['v_orders']['Row']
@@ -233,7 +234,44 @@ export const useOrder = () => {
     return data ?? []
   }
 
+  /**
+   * «Preparar entrega»: crea (o actualiza) el picking en borrador con lo
+   * pendiente. Es el momento en que se reserva el stock.
+   */
+  const prepareDelivery = async (
+    orderId: string
+  ): Promise<{ result: PrepareDeliveryResult | null; errorMessage: string | null }> => {
+    const { data, error } = await supabase.rpc(
+      'prepare_order_delivery' as never,
+      { p_order_id: orderId } as never
+    )
+
+    if (error) {
+      console.error('Error preparing order delivery:', error)
+      return { result: null, errorMessage: error.message?.trim() || 'No se pudo preparar la entrega.' }
+    }
+
+    return { result: data as unknown as PrepareDeliveryResult, errorMessage: null }
+  }
+
+  /** Productos cuyo pendiente supera lo disponible en el almacén de la orden. */
+  const getDeliveryShortages = async (orderId: string): Promise<DeliveryShortage[]> => {
+    const { data, error } = await supabase.rpc(
+      'get_order_delivery_shortages' as never,
+      { p_order_id: orderId } as never
+    )
+
+    if (error) {
+      console.error('Error fetching delivery shortages:', error)
+      return []
+    }
+
+    return (data as unknown as DeliveryShortage[]) ?? []
+  }
+
   return {
+    prepareDelivery,
+    getDeliveryShortages,
     getOrdersByCompany,
     getOrderById,
     getOrderViewById,

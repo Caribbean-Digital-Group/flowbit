@@ -22,6 +22,7 @@ export type StockMoveOrigin =
   | 'return_out'
   | 'adjustment'
   | 'manual'
+  | 'transfer'
 
 export type StockStatus = 'ok' | 'low' | 'out' | 'negative'
 

@@ -19,6 +19,8 @@ const authStore = useAuthStore()
 const { selectedCompanyId, selectedCompany } = storeToRefs(authStore)
 const { getByCompany, upsertForCompany, lastError: settingsError } = useStorefrontSettings()
 const { getCompanyById, updateCompany } = useCompany()
+const { getWarehousesByCompany } = useWarehouse()
+const warehouseOptions = ref<{ value: string; label: string }[]>([])
 
 const isLoading = ref(false)
 const isSaving = ref(false)
@@ -41,6 +43,7 @@ const settings = ref({
   policy_privacy: '',
   policy_terms: '',
   show_out_of_stock: true,
+  warehouse_id: '' as string,
   // Diseño de la tienda
   theme: 'aurora',
   palette: 'indigo',
@@ -167,7 +170,14 @@ const load = async () => {
   isLoading.value = true
   errorMessage.value = null
   try {
-    const [row, company] = await Promise.all([getByCompany(cid), getCompanyById(cid)])
+    const [row, company, warehouses] = await Promise.all([
+      getByCompany(cid),
+      getCompanyById(cid),
+      getWarehousesByCompany(cid)
+    ])
+    warehouseOptions.value = warehouses
+      .filter(w => w.active !== false)
+      .map(w => ({ value: w.id, label: w.code ? `${w.name} (${w.code})` : w.name }))
 
     settings.value = {
       is_active: row?.is_active ?? false,
@@ -184,6 +194,7 @@ const load = async () => {
       policy_privacy: row?.policy_privacy ?? '',
       policy_terms: row?.policy_terms ?? '',
       show_out_of_stock: row?.show_out_of_stock ?? true,
+      warehouse_id: row?.warehouse_id ?? '',
       theme: row?.theme ?? 'aurora',
       palette: row?.palette ?? 'indigo',
       font_pairing: row?.font_pairing ?? 'system',
@@ -281,6 +292,7 @@ const handleSave = async () => {
       policy_privacy: settings.value.policy_privacy.trim() || null,
       policy_terms: settings.value.policy_terms.trim() || null,
       show_out_of_stock: settings.value.show_out_of_stock,
+      warehouse_id: settings.value.warehouse_id || null,
       theme: settings.value.theme,
       palette: settings.value.palette,
       font_pairing: settings.value.font_pairing,
@@ -424,6 +436,16 @@ const copyWebhookUrl = async () => {
           />
           <span class="text-sm text-slate-700">Mostrar productos agotados en el catálogo</span>
         </label>
+
+        <div class="mt-5 max-w-md">
+          <FormSelect
+            v-model="settings.warehouse_id"
+            label="Almacén que surte la tienda"
+            placeholder="Almacén predeterminado"
+            :options="warehouseOptions"
+            hint="El checkout solo vende lo disponible en este almacén (existencia menos lo ya apartado para otras entregas)."
+          />
+        </div>
       </section>
 
       <!-- Branding -->

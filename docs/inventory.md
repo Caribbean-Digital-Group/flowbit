@@ -64,7 +64,10 @@ nuevo_promedio = (saldo × promedio_actual + entrada × costo_entrada)
                  ÷ (saldo + entrada)
 ```
 
-Las salidas se valoran al promedio vigente. El asiento guarda `unit_cost`,
+Las **recepciones de compra** entran al precio neto de la línea de la orden de
+compra (`subtotal / cantidad`, convertido con `exchange_rate` si la OC está en
+otra moneda); el resto de entradas usa el costo de reposición. Las salidas se
+valoran al promedio vigente. El asiento guarda `unit_cost`,
 `total_cost` y `avg_cost_after`, de modo que la valoración de cualquier fecha es
 reconstruible. `v_product_stock.stock_value = stock_quantity × unit_cost`.
 
@@ -155,3 +158,21 @@ bloqueo de edición directa, promedio ponderado, ajuste con y sin motivo,
 cuadre libro/saldo, inmutabilidad del libro, creación y cierre idempotente de
 tareas, deducción de origen (panel/POS), rechazo de salida sin existencias,
 kardex y resumen.
+
+## Existencias por almacén, reservas y traspasos
+
+Migración `20261103140000_warehouse_stock_and_reservations` (ver
+`docs/sales-flow-analysis.md` §8).
+
+| Pieza | Qué hace |
+|---|---|
+| `stock_quant` | Existencia por producto y almacén; la mantiene un trigger sobre `stock_move`. `product.stock_quantity` sigue siendo el total. |
+| Validación | Una salida no puede dejar en negativo el almacén (`inventory_settings.enforce_warehouse_stock`). |
+| Reservado | Líneas de pickings de salida en borrador o publicados. Nace con «Preparar entrega» (o al comprar en la tienda). |
+| `v_stock_availability` | Existencia, reservado y disponible por almacén. |
+| `transfer_stock` | Traspaso (origen `transfer`): salida + entrada al costo promedio. |
+| Lotes y series | Las salidas toman lotes/series reales FIFO del almacén (`build_picking_lines`). |
+| Ajuste por almacén | `create_stock_adjustment(..., p_warehouse_id)` compara contra lo contado en ese almacén. |
+
+Las devoluciones de venta reingresan al costo con el que salió la mercancía y
+las recepciones de compra al precio neto de la orden de compra.
