@@ -26,6 +26,7 @@ const authStore = useAuthStore()
 const { selectedCompanyId, isSelectedCompanyAdmin } = storeToRefs(authStore)
 const { getAll, getById, getPrivate, update, updatePrivate, archive, lastError } = useEmployee()
 const { getAll: getDepartments } = useEmployeeDepartment()
+const { getAll: getSchedules } = useWorkSchedule()
 
 const employee = ref<EmployeeViewRow | null>(null)
 const workForm = ref<EmployeeFormData>(createEmptyEmployeeForm())
@@ -35,6 +36,7 @@ const initialPrivate = ref<EmployeePrivateFormData>(createEmptyEmployeePrivateFo
 const hasPrivateData = ref(false)
 const departmentOptions = ref<EmployeeOption[]>([])
 const managerOptions = ref<EmployeeOption[]>([])
+const scheduleOptions = ref<EmployeeOption[]>([])
 const activeTab = ref<TabId>('work')
 const isEditing = ref(false)
 const isLoading = ref(false)
@@ -74,11 +76,12 @@ const load = async () => {
   isLoading.value = true
   errorMessage.value = null
   try {
-    const [row, sensitive, departments, employees] = await Promise.all([
+    const [row, sensitive, departments, employees, schedules] = await Promise.all([
       getById(id, companyId),
       getPrivate(id, companyId),
       getDepartments(companyId),
-      getAll(companyId)
+      getAll(companyId),
+      getSchedules(companyId)
     ])
 
     if (!row) {
@@ -97,6 +100,7 @@ const load = async () => {
     }
 
     departmentOptions.value = departments.map(d => ({ value: d.id, label: d.name }))
+    scheduleOptions.value = schedules.map(sc => ({ value: sc.id, label: sc.name }))
     managerOptions.value = employees
       .filter(e => e.id !== id)
       .map(e => ({ value: e.id, label: e.partner_name ?? '—' }))
@@ -227,6 +231,23 @@ watch([employeeId, selectedCompanyId], () => {
         </BtnApp>
       </section>
 
+      <section class="mb-6 flex flex-wrap gap-2">
+        <BtnApp variant="secondary" size="sm" @click="navigateTo(`/admin/attendances?employee=${employee?.id}`)">
+          Asistencia
+        </BtnApp>
+        <BtnApp variant="secondary" size="sm" @click="navigateTo('/admin/leave-allocations')">
+          Vacaciones
+        </BtnApp>
+        <template v-if="isSelectedCompanyAdmin">
+          <BtnApp variant="secondary" size="sm" @click="navigateTo(`/admin/salaries?employee=${employee?.id}`)">
+            Salarios
+          </BtnApp>
+          <BtnApp variant="secondary" size="sm" @click="navigateTo('/admin/kiosks')">
+            NIP del kiosco
+          </BtnApp>
+        </template>
+      </section>
+
       <div class="mb-6 flex items-center gap-2 overflow-x-auto border-b border-slate-200">
         <button
           v-for="tab in tabs"
@@ -253,6 +274,7 @@ watch([employeeId, selectedCompanyId], () => {
         :show-status="true"
         :department-options="departmentOptions"
         :manager-options="managerOptions"
+        :schedule-options="scheduleOptions"
       />
       <EmployeeSensitiveForm
         v-else

@@ -844,6 +844,7 @@ export type Database = {
           work_email: string | null
           work_location: string | null
           work_phone: string | null
+          work_schedule_id: string | null
         }
         Insert: {
           active?: boolean | null
@@ -864,6 +865,7 @@ export type Database = {
           work_email?: string | null
           work_location?: string | null
           work_phone?: string | null
+          work_schedule_id?: string | null
         }
         Update: {
           active?: boolean | null
@@ -884,6 +886,7 @@ export type Database = {
           work_email?: string | null
           work_location?: string | null
           work_phone?: string | null
+          work_schedule_id?: string | null
         }
         Relationships: [
           {
@@ -915,11 +918,25 @@ export type Database = {
             referencedColumns: ["company_id", "id"]
           },
           {
+            foreignKeyName: "employee_manager_fk"
+            columns: ["company_id", "manager_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+          {
             foreignKeyName: "employee_partner_id_fkey"
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "partner"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_work_schedule_fk"
+            columns: ["company_id", "work_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "hr_work_schedule"
+            referencedColumns: ["company_id", "id"]
           },
         ]
       }
@@ -983,6 +1000,13 @@ export type Database = {
             referencedColumns: ["company_id", "id"]
           },
           {
+            foreignKeyName: "employee_department_manager_fk"
+            columns: ["company_id", "manager_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+          {
             foreignKeyName: "employee_department_parent_fk"
             columns: ["company_id", "parent_id"]
             isOneToOne: false
@@ -1024,6 +1048,9 @@ export type Database = {
           gender: string | null
           hr_notes: string | null
           id: string
+          infonavit_credit_number: string | null
+          infonavit_discount_type: string
+          infonavit_discount_value: number
           marital_status: string | null
           monthly_salary: number | null
           nationality: string | null
@@ -1067,6 +1094,9 @@ export type Database = {
           gender?: string | null
           hr_notes?: string | null
           id?: string
+          infonavit_credit_number?: string | null
+          infonavit_discount_type?: string
+          infonavit_discount_value?: number
           marital_status?: string | null
           monthly_salary?: number | null
           nationality?: string | null
@@ -1110,6 +1140,9 @@ export type Database = {
           gender?: string | null
           hr_notes?: string | null
           id?: string
+          infonavit_credit_number?: string | null
+          infonavit_discount_type?: string
+          infonavit_discount_value?: number
           marital_status?: string | null
           monthly_salary?: number | null
           nationality?: string | null
@@ -1141,6 +1174,1008 @@ export type Database = {
             columns: ["company_id", "employee_id"]
             isOneToOne: false
             referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "employee_private_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+        ]
+      }
+      hr_absence: {
+        Row: {
+          absence_date: string
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          deduct_from_pay: boolean
+          employee_id: string
+          id: string
+          kind: string
+          leave_request_id: string | null
+          reason: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          absence_date: string
+          active?: boolean | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          deduct_from_pay?: boolean
+          employee_id: string
+          id?: string
+          kind?: string
+          leave_request_id?: string | null
+          reason?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          absence_date?: string
+          active?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          deduct_from_pay?: boolean
+          employee_id?: string
+          id?: string
+          kind?: string
+          leave_request_id?: string | null
+          reason?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_absence_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_absence_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_absence_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_absence_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+          {
+            foreignKeyName: "hr_absence_leave_fk"
+            columns: ["company_id", "leave_request_id"]
+            isOneToOne: false
+            referencedRelation: "hr_leave_request"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_absence_leave_fk"
+            columns: ["company_id", "leave_request_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_requests"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      hr_attendance: {
+        Row: {
+          active: boolean | null
+          check_in: string
+          check_out: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          employee_id: string
+          id: string
+          kiosk_id: string | null
+          missing_check_out: boolean
+          notes: string | null
+          source: string
+          updated_at: string | null
+          updated_by: string | null
+          work_date: string
+          worked_minutes: number
+        }
+        Insert: {
+          active?: boolean | null
+          check_in: string
+          check_out?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          employee_id: string
+          id?: string
+          kiosk_id?: string | null
+          missing_check_out?: boolean
+          notes?: string | null
+          source?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          work_date: string
+          worked_minutes?: number
+        }
+        Update: {
+          active?: boolean | null
+          check_in?: string
+          check_out?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          employee_id?: string
+          id?: string
+          kiosk_id?: string | null
+          missing_check_out?: boolean
+          notes?: string | null
+          source?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          work_date?: string
+          worked_minutes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_attendance_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_attendance_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_attendance_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_attendance_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+          {
+            foreignKeyName: "hr_attendance_kiosk_fk"
+            columns: ["company_id", "kiosk_id"]
+            isOneToOne: false
+            referencedRelation: "hr_kiosk"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      hr_attendance_day: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          employee_id: string
+          first_check_in: string | null
+          id: string
+          is_holiday: boolean
+          is_open: boolean
+          is_rest_day: boolean
+          last_check_out: string | null
+          late_minutes: number
+          missing_check_out: boolean
+          overtime_approved_minutes: number
+          overtime_minutes: number
+          overtime_status: string
+          punches: number
+          scheduled_minutes: number
+          updated_at: string | null
+          updated_by: string | null
+          work_date: string
+          worked_minutes: number
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          employee_id: string
+          first_check_in?: string | null
+          id?: string
+          is_holiday?: boolean
+          is_open?: boolean
+          is_rest_day?: boolean
+          last_check_out?: string | null
+          late_minutes?: number
+          missing_check_out?: boolean
+          overtime_approved_minutes?: number
+          overtime_minutes?: number
+          overtime_status?: string
+          punches?: number
+          scheduled_minutes?: number
+          updated_at?: string | null
+          updated_by?: string | null
+          work_date: string
+          worked_minutes?: number
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          employee_id?: string
+          first_check_in?: string | null
+          id?: string
+          is_holiday?: boolean
+          is_open?: boolean
+          is_rest_day?: boolean
+          last_check_out?: string | null
+          late_minutes?: number
+          missing_check_out?: boolean
+          overtime_approved_minutes?: number
+          overtime_minutes?: number
+          overtime_status?: string
+          punches?: number
+          scheduled_minutes?: number
+          updated_at?: string | null
+          updated_by?: string | null
+          work_date?: string
+          worked_minutes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_attendance_day_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_attendance_day_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_attendance_day_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_attendance_day_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+        ]
+      }
+      hr_holiday: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          holiday_date: string
+          id: string
+          is_statutory: boolean
+          name: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          holiday_date: string
+          id?: string
+          is_statutory?: boolean
+          name: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          holiday_date?: string
+          id?: string
+          is_statutory?: boolean
+          name?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_holiday_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_kiosk: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          last_used_at: string | null
+          location: string | null
+          name: string
+          token_hash: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          last_used_at?: string | null
+          location?: string | null
+          name: string
+          token_hash: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          last_used_at?: string | null
+          location?: string | null
+          name?: string
+          token_hash?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_kiosk_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_kiosk_attempt: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          kiosk_id: string
+          success: boolean
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          kiosk_id: string
+          success: boolean
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          kiosk_id?: string
+          success?: boolean
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_kiosk_attempt_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_kiosk_attempt_kiosk_fk"
+            columns: ["company_id", "kiosk_id"]
+            isOneToOne: false
+            referencedRelation: "hr_kiosk"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      hr_kiosk_pin: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          employee_id: string
+          pin_hash: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          employee_id: string
+          pin_hash: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          employee_id?: string
+          pin_hash?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_kiosk_pin_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_kiosk_pin_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_kiosk_pin_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_kiosk_pin_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+        ]
+      }
+      hr_leave_allocation: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          days: number
+          employee_id: string
+          id: string
+          leave_type_id: string
+          notes: string | null
+          service_year: number | null
+          updated_at: string | null
+          updated_by: string | null
+          valid_from: string | null
+          valid_to: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          days: number
+          employee_id: string
+          id?: string
+          leave_type_id: string
+          notes?: string | null
+          service_year?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          days?: number
+          employee_id?: string
+          id?: string
+          leave_type_id?: string
+          notes?: string | null
+          service_year?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_leave_allocation_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_leave_allocation_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_leave_allocation_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_leave_allocation_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+          {
+            foreignKeyName: "hr_leave_allocation_type_fk"
+            columns: ["company_id", "leave_type_id"]
+            isOneToOne: false
+            referencedRelation: "hr_leave_type"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      hr_leave_request: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          days: number
+          employee_id: string
+          end_date: string
+          half_day: boolean
+          id: string
+          leave_type_id: string
+          reason: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          start_date: string
+          status: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          days?: number
+          employee_id: string
+          end_date: string
+          half_day?: boolean
+          id?: string
+          leave_type_id: string
+          reason?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          start_date: string
+          status?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          days?: number
+          employee_id?: string
+          end_date?: string
+          half_day?: boolean
+          id?: string
+          leave_type_id?: string
+          reason?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_leave_request_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_leave_request_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_leave_request_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_leave_request_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+          {
+            foreignKeyName: "hr_leave_request_type_fk"
+            columns: ["company_id", "leave_type_id"]
+            isOneToOne: false
+            referencedRelation: "hr_leave_type"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      hr_leave_type: {
+        Row: {
+          active: boolean | null
+          color: string
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          deducts_balance: boolean
+          description: string | null
+          id: string
+          kind: string
+          name: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          color?: string
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          deducts_balance?: boolean
+          description?: string | null
+          id?: string
+          kind: string
+          name: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          color?: string
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          deducts_balance?: boolean
+          description?: string | null
+          id?: string
+          kind?: string
+          name?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_leave_type_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_salary: {
+        Row: {
+          active: boolean | null
+          amount: number
+          company_id: string
+          contribution_base: number | null
+          created_at: string | null
+          created_by: string | null
+          currency: string
+          daily_salary: number
+          effective_date: string
+          employee_id: string
+          id: string
+          integrated_daily_wage: number | null
+          monthly_salary: number
+          notes: string | null
+          reason: string
+          salary_type: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          amount: number
+          company_id: string
+          contribution_base?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string
+          daily_salary?: number
+          effective_date: string
+          employee_id: string
+          id?: string
+          integrated_daily_wage?: number | null
+          monthly_salary?: number
+          notes?: string | null
+          reason?: string
+          salary_type?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          amount?: number
+          company_id?: string
+          contribution_base?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string
+          daily_salary?: number
+          effective_date?: string
+          employee_id?: string
+          id?: string
+          integrated_daily_wage?: number | null
+          monthly_salary?: number
+          notes?: string | null
+          reason?: string
+          salary_type?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_salary_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_salary_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_salary_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_salary_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+        ]
+      }
+      hr_settings: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          kiosk_pin_min_length: number
+          late_tolerance_minutes: number
+          overtime_min_minutes: number
+          overtime_requires_approval: boolean
+          payroll_frequency: string
+          pin_salt: string
+          timezone: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          kiosk_pin_min_length?: number
+          late_tolerance_minutes?: number
+          overtime_min_minutes?: number
+          overtime_requires_approval?: boolean
+          payroll_frequency?: string
+          pin_salt?: string
+          timezone?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          kiosk_pin_min_length?: number
+          late_tolerance_minutes?: number
+          overtime_min_minutes?: number
+          overtime_requires_approval?: boolean
+          payroll_frequency?: string
+          pin_salt?: string
+          timezone?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_work_schedule: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          late_tolerance_minutes: number | null
+          name: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          late_tolerance_minutes?: number | null
+          name: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          late_tolerance_minutes?: number | null
+          name?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_work_schedule_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_work_schedule_line: {
+        Row: {
+          active: boolean | null
+          break_minutes: number
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          end_time: string
+          id: string
+          schedule_id: string
+          start_time: string
+          updated_at: string | null
+          updated_by: string | null
+          weekday: number
+        }
+        Insert: {
+          active?: boolean | null
+          break_minutes?: number
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          end_time: string
+          id?: string
+          schedule_id: string
+          start_time: string
+          updated_at?: string | null
+          updated_by?: string | null
+          weekday: number
+        }
+        Update: {
+          active?: boolean | null
+          break_minutes?: number
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          end_time?: string
+          id?: string
+          schedule_id?: string
+          start_time?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_work_schedule_line_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_work_schedule_line_schedule_fk"
+            columns: ["company_id", "schedule_id"]
+            isOneToOne: false
+            referencedRelation: "hr_work_schedule"
             referencedColumns: ["company_id", "id"]
           },
         ]
@@ -2208,6 +3243,515 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "company"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_adjustment: {
+        Row: {
+          active: boolean | null
+          amount: number
+          code: string
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          employee_id: string
+          id: string
+          is_taxable: boolean
+          kind: string
+          name: string
+          notes: string | null
+          period_id: string
+          sat_code: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          amount: number
+          code: string
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          employee_id: string
+          id?: string
+          is_taxable?: boolean
+          kind: string
+          name: string
+          notes?: string | null
+          period_id: string
+          sat_code?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          amount?: number
+          code?: string
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          employee_id?: string
+          id?: string
+          is_taxable?: boolean
+          kind?: string
+          name?: string
+          notes?: string | null
+          period_id?: string
+          sat_code?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_adjustment_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_adjustment_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "payroll_adjustment_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "payroll_adjustment_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+          {
+            foreignKeyName: "payroll_adjustment_period_fk"
+            columns: ["company_id", "period_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_period"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      payroll_fiscal_config: {
+        Row: {
+          active: boolean | null
+          aguinaldo_days: number
+          aguinaldo_exempt_umas: number
+          cesantia_employer_table: Json
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          employer_registration: string | null
+          employer_state: string | null
+          fiscal_year: number
+          id: string
+          imss_rates: Json
+          infonavit_employer_rate: number
+          isn_rate: number
+          isr_monthly_table: Json
+          minimum_wage_border_daily: number
+          minimum_wage_daily: number
+          notes: string | null
+          overtime_exempt_umas_weekly: number
+          risk_premium_rate: number
+          sbc_cap_umas: number
+          subsidy_income_limit: number
+          subsidy_uma_rate: number
+          sunday_premium_rate: number
+          uma_daily: number
+          updated_at: string | null
+          updated_by: string | null
+          use_border_zone: boolean
+          vacation_premium_exempt_umas: number
+          vacation_premium_rate: number
+        }
+        Insert: {
+          active?: boolean | null
+          aguinaldo_days?: number
+          aguinaldo_exempt_umas?: number
+          cesantia_employer_table: Json
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          employer_registration?: string | null
+          employer_state?: string | null
+          fiscal_year: number
+          id?: string
+          imss_rates: Json
+          infonavit_employer_rate?: number
+          isn_rate?: number
+          isr_monthly_table: Json
+          minimum_wage_border_daily: number
+          minimum_wage_daily: number
+          notes?: string | null
+          overtime_exempt_umas_weekly?: number
+          risk_premium_rate?: number
+          sbc_cap_umas?: number
+          subsidy_income_limit?: number
+          subsidy_uma_rate?: number
+          sunday_premium_rate?: number
+          uma_daily: number
+          updated_at?: string | null
+          updated_by?: string | null
+          use_border_zone?: boolean
+          vacation_premium_exempt_umas?: number
+          vacation_premium_rate?: number
+        }
+        Update: {
+          active?: boolean | null
+          aguinaldo_days?: number
+          aguinaldo_exempt_umas?: number
+          cesantia_employer_table?: Json
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          employer_registration?: string | null
+          employer_state?: string | null
+          fiscal_year?: number
+          id?: string
+          imss_rates?: Json
+          infonavit_employer_rate?: number
+          isn_rate?: number
+          isr_monthly_table?: Json
+          minimum_wage_border_daily?: number
+          minimum_wage_daily?: number
+          notes?: string | null
+          overtime_exempt_umas_weekly?: number
+          risk_premium_rate?: number
+          sbc_cap_umas?: number
+          subsidy_income_limit?: number
+          subsidy_uma_rate?: number
+          sunday_premium_rate?: number
+          uma_daily?: number
+          updated_at?: string | null
+          updated_by?: string | null
+          use_border_zone?: boolean
+          vacation_premium_exempt_umas?: number
+          vacation_premium_rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_fiscal_config_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_period: {
+        Row: {
+          active: boolean | null
+          approved_at: string | null
+          approved_by: string | null
+          calculated_at: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          employee_count: number
+          end_date: string
+          fiscal_year: number
+          frequency: string
+          id: string
+          name: string
+          notes: string | null
+          paid_at: string | null
+          payment_date: string | null
+          start_date: string
+          status: string
+          total_deductions: number
+          total_employer_cost: number
+          total_net: number
+          total_perceptions: number
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          approved_at?: string | null
+          approved_by?: string | null
+          calculated_at?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          employee_count?: number
+          end_date: string
+          fiscal_year: number
+          frequency?: string
+          id?: string
+          name: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_date?: string | null
+          start_date: string
+          status?: string
+          total_deductions?: number
+          total_employer_cost?: number
+          total_net?: number
+          total_perceptions?: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          approved_at?: string | null
+          approved_by?: string | null
+          calculated_at?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          employee_count?: number
+          end_date?: string
+          fiscal_year?: number
+          frequency?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_date?: string | null
+          start_date?: string
+          status?: string
+          total_deductions?: number
+          total_employer_cost?: number
+          total_net?: number
+          total_perceptions?: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_period_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_slip: {
+        Row: {
+          absence_days: number
+          active: boolean | null
+          company_id: string
+          contribution_base: number
+          created_at: string | null
+          created_by: string | null
+          daily_salary: number
+          employee_id: string
+          employer_cost: number
+          id: string
+          imss_employee: number
+          imss_employer: number
+          infonavit_employer: number
+          isn: number
+          isr: number
+          net_pay: number
+          overtime_double_hours: number
+          overtime_triple_hours: number
+          paid_days: number
+          period_days: number
+          period_id: string
+          rest_days_worked: number
+          subsidy: number
+          sundays_worked: number
+          total_deductions: number
+          total_exempt: number
+          total_perceptions: number
+          total_taxable: number
+          updated_at: string | null
+          updated_by: string | null
+          vacation_days: number
+        }
+        Insert: {
+          absence_days?: number
+          active?: boolean | null
+          company_id: string
+          contribution_base?: number
+          created_at?: string | null
+          created_by?: string | null
+          daily_salary?: number
+          employee_id: string
+          employer_cost?: number
+          id?: string
+          imss_employee?: number
+          imss_employer?: number
+          infonavit_employer?: number
+          isn?: number
+          isr?: number
+          net_pay?: number
+          overtime_double_hours?: number
+          overtime_triple_hours?: number
+          paid_days?: number
+          period_days?: number
+          period_id: string
+          rest_days_worked?: number
+          subsidy?: number
+          sundays_worked?: number
+          total_deductions?: number
+          total_exempt?: number
+          total_perceptions?: number
+          total_taxable?: number
+          updated_at?: string | null
+          updated_by?: string | null
+          vacation_days?: number
+        }
+        Update: {
+          absence_days?: number
+          active?: boolean | null
+          company_id?: string
+          contribution_base?: number
+          created_at?: string | null
+          created_by?: string | null
+          daily_salary?: number
+          employee_id?: string
+          employer_cost?: number
+          id?: string
+          imss_employee?: number
+          imss_employer?: number
+          infonavit_employer?: number
+          isn?: number
+          isr?: number
+          net_pay?: number
+          overtime_double_hours?: number
+          overtime_triple_hours?: number
+          paid_days?: number
+          period_days?: number
+          period_id?: string
+          rest_days_worked?: number
+          subsidy?: number
+          sundays_worked?: number
+          total_deductions?: number
+          total_exempt?: number
+          total_perceptions?: number
+          total_taxable?: number
+          updated_at?: string | null
+          updated_by?: string | null
+          vacation_days?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_slip_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_slip_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "payroll_slip_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "payroll_slip_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+          {
+            foreignKeyName: "payroll_slip_period_fk"
+            columns: ["company_id", "period_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_period"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      payroll_slip_line: {
+        Row: {
+          active: boolean | null
+          amount: number
+          category: string
+          code: string
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          exempt_amount: number
+          id: string
+          name: string
+          quantity: number
+          sat_code: string | null
+          sequence: number
+          slip_id: string
+          taxable_amount: number
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          amount?: number
+          category: string
+          code: string
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          exempt_amount?: number
+          id?: string
+          name: string
+          quantity?: number
+          sat_code?: string | null
+          sequence?: number
+          slip_id: string
+          taxable_amount?: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          amount?: number
+          category?: string
+          code?: string
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          exempt_amount?: number
+          id?: string
+          name?: string
+          quantity?: number
+          sat_code?: string | null
+          sequence?: number
+          slip_id?: string
+          taxable_amount?: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_slip_line_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_slip_line_slip_fk"
+            columns: ["company_id", "slip_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_slip"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "payroll_slip_line_slip_fk"
+            columns: ["company_id", "slip_id"]
+            isOneToOne: false
+            referencedRelation: "v_payroll_slips"
+            referencedColumns: ["company_id", "id"]
           },
         ]
       }
@@ -6242,6 +7786,8 @@ export type Database = {
           work_email: string | null
           work_location: string | null
           work_phone: string | null
+          work_schedule_id: string | null
+          work_schedule_name: string | null
         }
         Relationships: [
           {
@@ -6273,11 +7819,407 @@ export type Database = {
             referencedColumns: ["company_id", "id"]
           },
           {
+            foreignKeyName: "employee_manager_fk"
+            columns: ["company_id", "manager_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+          {
             foreignKeyName: "employee_partner_id_fkey"
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "partner"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_work_schedule_fk"
+            columns: ["company_id", "work_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "hr_work_schedule"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      v_hr_absences: {
+        Row: {
+          absence_date: string | null
+          active: boolean | null
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          deduct_from_pay: boolean | null
+          department_name: string | null
+          employee_id: string | null
+          employee_name: string | null
+          employee_number: string | null
+          id: string | null
+          kind: string | null
+          leave_request_id: string | null
+          reason: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_absence_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_absence_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_absence_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_absence_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+          {
+            foreignKeyName: "hr_absence_leave_fk"
+            columns: ["company_id", "leave_request_id"]
+            isOneToOne: false
+            referencedRelation: "hr_leave_request"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_absence_leave_fk"
+            columns: ["company_id", "leave_request_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_requests"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      v_hr_attendance_days: {
+        Row: {
+          active: boolean | null
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          department_id: string | null
+          department_name: string | null
+          employee_id: string | null
+          employee_name: string | null
+          employee_number: string | null
+          first_check_in: string | null
+          id: string | null
+          is_holiday: boolean | null
+          is_open: boolean | null
+          is_rest_day: boolean | null
+          last_check_out: string | null
+          late_minutes: number | null
+          missing_check_out: boolean | null
+          overtime_approved_minutes: number | null
+          overtime_minutes: number | null
+          overtime_status: string | null
+          punches: number | null
+          scheduled_minutes: number | null
+          updated_at: string | null
+          updated_by: string | null
+          work_date: string | null
+          worked_minutes: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_attendance_day_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_attendance_day_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_attendance_day_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_attendance_day_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+        ]
+      }
+      v_hr_attendances: {
+        Row: {
+          active: boolean | null
+          check_in: string | null
+          check_out: string | null
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          employee_id: string | null
+          employee_name: string | null
+          employee_number: string | null
+          id: string | null
+          kiosk_id: string | null
+          kiosk_name: string | null
+          missing_check_out: boolean | null
+          notes: string | null
+          source: string | null
+          updated_at: string | null
+          updated_by: string | null
+          work_date: string | null
+          worked_minutes: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_attendance_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_attendance_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_attendance_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_attendance_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+          {
+            foreignKeyName: "hr_attendance_kiosk_fk"
+            columns: ["company_id", "kiosk_id"]
+            isOneToOne: false
+            referencedRelation: "hr_kiosk"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      v_hr_leave_allocations: {
+        Row: {
+          active: boolean | null
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          days: number | null
+          employee_id: string | null
+          employee_name: string | null
+          id: string | null
+          leave_type_id: string | null
+          leave_type_name: string | null
+          notes: string | null
+          service_year: number | null
+          updated_at: string | null
+          updated_by: string | null
+          valid_from: string | null
+          valid_to: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_leave_allocation_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_leave_allocation_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_leave_allocation_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_leave_allocation_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+          {
+            foreignKeyName: "hr_leave_allocation_type_fk"
+            columns: ["company_id", "leave_type_id"]
+            isOneToOne: false
+            referencedRelation: "hr_leave_type"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      v_hr_leave_balances: {
+        Row: {
+          allocated_days: number | null
+          company_id: string | null
+          employee_id: string | null
+          employee_name: string | null
+          hire_date: string | null
+          leave_type_id: string | null
+          leave_type_name: string | null
+          pending_days: number | null
+          remaining_days: number | null
+          taken_days: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_hr_leave_requests: {
+        Row: {
+          active: boolean | null
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          days: number | null
+          employee_id: string | null
+          employee_name: string | null
+          end_date: string | null
+          half_day: boolean | null
+          id: string | null
+          leave_color: string | null
+          leave_kind: string | null
+          leave_type_id: string | null
+          leave_type_name: string | null
+          reason: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          start_date: string | null
+          status: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_leave_request_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_leave_request_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_leave_request_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_leave_request_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+          {
+            foreignKeyName: "hr_leave_request_type_fk"
+            columns: ["company_id", "leave_type_id"]
+            isOneToOne: false
+            referencedRelation: "hr_leave_type"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      v_hr_salaries: {
+        Row: {
+          active: boolean | null
+          amount: number | null
+          company_id: string | null
+          contribution_base: number | null
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          daily_salary: number | null
+          effective_date: string | null
+          employee_id: string | null
+          employee_name: string | null
+          employee_number: string | null
+          id: string | null
+          integrated_daily_wage: number | null
+          job_title: string | null
+          monthly_salary: number | null
+          notes: string | null
+          reason: string | null
+          salary_type: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_salary_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_salary_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_salary_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "hr_salary_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
           },
         ]
       }
@@ -6849,6 +8791,88 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "partner"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_payroll_slips: {
+        Row: {
+          absence_days: number | null
+          active: boolean | null
+          company_id: string | null
+          contribution_base: number | null
+          created_at: string | null
+          created_by: string | null
+          daily_salary: number | null
+          department_name: string | null
+          employee_id: string | null
+          employee_name: string | null
+          employee_number: string | null
+          employee_rfc: string | null
+          employer_cost: number | null
+          id: string | null
+          imss_employee: number | null
+          imss_employer: number | null
+          infonavit_employer: number | null
+          isn: number | null
+          isr: number | null
+          job_title: string | null
+          net_pay: number | null
+          overtime_double_hours: number | null
+          overtime_triple_hours: number | null
+          paid_days: number | null
+          payment_date: string | null
+          period_days: number | null
+          period_end: string | null
+          period_id: string | null
+          period_name: string | null
+          period_start: string | null
+          period_status: string | null
+          rest_days_worked: number | null
+          subsidy: number | null
+          sundays_worked: number | null
+          total_deductions: number | null
+          total_exempt: number | null
+          total_perceptions: number | null
+          total_taxable: number | null
+          updated_at: string | null
+          updated_by: string | null
+          vacation_days: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_slip_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_slip_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "payroll_slip_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "payroll_slip_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_hr_leave_balances"
+            referencedColumns: ["company_id", "employee_id"]
+          },
+          {
+            foreignKeyName: "payroll_slip_period_fk"
+            columns: ["company_id", "period_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_period"
+            referencedColumns: ["company_id", "id"]
           },
         ]
       }
@@ -8206,6 +10230,182 @@ export type Database = {
         Args: { p_preview?: boolean; p_slug: string }
         Returns: Json
       }
+      hr_attendance_summary: {
+        Args: { p_company_id: string; p_from: string; p_to: string }
+        Returns: {
+          absences_justified: number
+          absences_unjustified: number
+          days_worked: number
+          department_name: string
+          employee_id: string
+          employee_name: string
+          employee_number: string
+          holidays_worked: number
+          late_count: number
+          late_minutes: number
+          leave_days: number
+          missing_check_outs: number
+          overtime_approved_minutes: number
+          overtime_minutes: number
+          overtime_pending_minutes: number
+          rest_days_worked: number
+          scheduled_minutes: number
+          sundays_worked: number
+          worked_minutes: number
+        }[]
+      }
+      hr_count_leave_days: {
+        Args: {
+          p_employee_id: string
+          p_end: string
+          p_half_day?: boolean
+          p_start: string
+        }
+        Returns: number
+      }
+      hr_create_kiosk: {
+        Args: { p_company_id: string; p_location?: string; p_name: string }
+        Returns: Json
+      }
+      hr_detect_absences: {
+        Args: { p_company_id: string; p_from: string; p_to: string }
+        Returns: number
+      }
+      hr_ensure_defaults: { Args: { p_company_id: string }; Returns: undefined }
+      hr_generate_vacation_allocations: {
+        Args: { p_as_of?: string; p_company_id: string }
+        Returns: number
+      }
+      hr_is_own_employee: { Args: { p_employee_id: string }; Returns: boolean }
+      hr_kiosk_pin_employees: {
+        Args: { p_company_id: string }
+        Returns: string[]
+      }
+      hr_lft_vacation_days: { Args: { p_years: number }; Returns: number }
+      hr_new_kiosk_token: { Args: never; Returns: string }
+      hr_recompute_attendance_day: {
+        Args: { p_employee_id: string; p_work_date: string }
+        Returns: undefined
+      }
+      hr_regenerate_kiosk_token: { Args: { p_kiosk_id: string }; Returns: Json }
+      hr_review_leave_request: {
+        Args: { p_approve: boolean; p_notes?: string; p_request_id: string }
+        Returns: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          days: number
+          employee_id: string
+          end_date: string
+          half_day: boolean
+          id: string
+          leave_type_id: string
+          reason: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          start_date: string
+          status: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "hr_leave_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      hr_review_overtime: {
+        Args: { p_approve: boolean; p_day_id: string; p_minutes?: number }
+        Returns: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          employee_id: string
+          first_check_in: string | null
+          id: string
+          is_holiday: boolean
+          is_open: boolean
+          is_rest_day: boolean
+          last_check_out: string | null
+          late_minutes: number
+          missing_check_out: boolean
+          overtime_approved_minutes: number
+          overtime_minutes: number
+          overtime_status: string
+          punches: number
+          scheduled_minutes: number
+          updated_at: string | null
+          updated_by: string | null
+          work_date: string
+          worked_minutes: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "hr_attendance_day"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      hr_save_work_schedule: {
+        Args: {
+          p_company_id: string
+          p_lines: Json
+          p_schedule: Json
+          p_schedule_id: string
+        }
+        Returns: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          late_tolerance_minutes: number | null
+          name: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "hr_work_schedule"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      hr_set_kiosk_pin: {
+        Args: { p_employee_id: string; p_pin: string }
+        Returns: boolean
+      }
+      hr_settings_for: {
+        Args: { p_company_id: string }
+        Returns: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          kiosk_pin_min_length: number
+          late_tolerance_minutes: number
+          overtime_min_minutes: number
+          overtime_requires_approval: boolean
+          payroll_frequency: string
+          pin_salt: string
+          timezone: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "hr_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      hr_sha256: { Args: { p_value: string }; Returns: string }
       ingest_storefront_events: {
         Args: { p_context?: Json; p_events: Json; p_slug: string }
         Returns: Json
@@ -8239,6 +10439,8 @@ export type Database = {
         Returns: boolean
       }
       is_own_partner: { Args: { p_partner_id: string }; Returns: boolean }
+      kiosk_info: { Args: { p_token: string }; Returns: Json }
+      kiosk_punch: { Args: { p_pin: string; p_token: string }; Returns: Json }
       mark_lead_won: { Args: { p_lead_id: string }; Returns: undefined }
       mark_storefront_order_paid: {
         Args: {
@@ -8270,6 +10472,87 @@ export type Database = {
       partner_shares_company_with_user: {
         Args: { p_partner_id: string }
         Returns: boolean
+      }
+      payroll_period_header: {
+        Args: { p_period_id: string }
+        Returns: {
+          end_date: string
+          name: string
+          payment_date: string
+          start_date: string
+          status: string
+        }[]
+      }
+      payroll_period_status: { Args: { p_period_id: string }; Returns: string }
+      payroll_save_calculation: {
+        Args: { p_period_id: string; p_slips: Json }
+        Returns: {
+          active: boolean | null
+          approved_at: string | null
+          approved_by: string | null
+          calculated_at: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          employee_count: number
+          end_date: string
+          fiscal_year: number
+          frequency: string
+          id: string
+          name: string
+          notes: string | null
+          paid_at: string | null
+          payment_date: string | null
+          start_date: string
+          status: string
+          total_deductions: number
+          total_employer_cost: number
+          total_net: number
+          total_perceptions: number
+          updated_at: string | null
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payroll_period"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      payroll_set_period_status: {
+        Args: { p_period_id: string; p_status: string }
+        Returns: {
+          active: boolean | null
+          approved_at: string | null
+          approved_by: string | null
+          calculated_at: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          employee_count: number
+          end_date: string
+          fiscal_year: number
+          frequency: string
+          id: string
+          name: string
+          notes: string | null
+          paid_at: string | null
+          payment_date: string | null
+          start_date: string
+          status: string
+          total_deductions: number
+          total_employer_cost: number
+          total_net: number
+          total_perceptions: number
+          updated_at: string | null
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payroll_period"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       place_storefront_order: {
         Args: {
@@ -8374,6 +10657,7 @@ export type Database = {
           work_email: string | null
           work_location: string | null
           work_phone: string | null
+          work_schedule_id: string | null
         }
         SetofOptions: {
           from: "*"

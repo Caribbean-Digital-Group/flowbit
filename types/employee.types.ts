@@ -57,6 +57,8 @@ export type EmployeeRow = Audit & {
   hire_date: string | null
   termination_date: string | null
   status: EmployeeStatus
+  /** Agregado en 20261107180000_create_hr_payroll_suite. */
+  work_schedule_id: string | null
 }
 
 export type EmployeeUpdate = Partial<Omit<EmployeeRow, 'id' | 'company_id' | 'partner_id'>>
@@ -69,6 +71,7 @@ export type EmployeeViewRow = EmployeeRow & {
   partner_avatar_url: string | null
   department_name: string | null
   manager_name: string | null
+  work_schedule_name: string | null
 }
 
 export type EmployeePrivateRow = Audit & {
@@ -108,6 +111,10 @@ export type EmployeePrivateRow = Audit & {
   cfdi_contribution_base: number | null
   cfdi_integrated_daily_wage: number | null
   cfdi_state: string | null
+  /** Crédito INFONAVIT (20261107180000_create_hr_payroll_suite). */
+  infonavit_credit_number: string | null
+  infonavit_discount_type: 'none' | 'percentage' | 'fixed' | 'factor'
+  infonavit_discount_value: number
 }
 
 export type EmployeePrivateUpdate = Partial<Omit<EmployeePrivateRow, 'id' | 'company_id' | 'employee_id'>>
