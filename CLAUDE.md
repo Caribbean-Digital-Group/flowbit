@@ -409,7 +409,7 @@ useSupabaseAuth()      // Retorna { signIn, signUp, signInOrSignUp, signInOrCrea
 
 ## Base de datos — Supabase Cloud
 
-> **Importante:** Supabase corre en la nube. No hay instancia local activa. Usar `db:push` para aplicar migraciones y `db:types` con `--linked` (ya configurado en el script).
+> **Importante:** Supabase corre en la nube. No hay instancia local activa. Usar `db:push` para aplicar migraciones y `db:types` para regenerar los tipos (el script ya apunta al proyecto).
 
 ### Crear una migración
 
@@ -460,8 +460,11 @@ CREATE INDEX idx_entity_active  ON public.entity(active);
 
 ```bash
 npm run db:push    # Aplicar migraciones en Supabase Cloud
-npm run db:types   # Regenerar types/database.types.ts (usa --linked)
+npm run db:types   # Regenerar types/database.types.ts (usa la Management API)
 ```
+
+En producción este paso es automático: al llegar migraciones a `main`, `.github/workflows/db-migrations.yml`
+ejecuta `db push` y sube los tipos regenerados a `develop`. Los PR hacia `main` muestran un `--dry-run`.
 
 ---
 
