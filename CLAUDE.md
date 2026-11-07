@@ -168,6 +168,40 @@ flowbit/
 | Categorías | `/admin/approval-categories` | `useApprovalCategory` |
 | Aprobadores | `/admin/approval-managers` | `useApprovalManager` |
 
+### Recursos Humanos
+
+| Módulo | Ruta admin | Composable(s) |
+|---|---|---|
+| Empleados | `/admin/employees` | `useEmployee` |
+| Departamentos | `/admin/departments` | `useEmployeeDepartment` |
+| Horarios de trabajo | `/admin/work-schedules` | `useWorkSchedule` |
+| Asistencias y reporte | `/admin/attendances`, `/admin/attendances/report` | `useAttendance` |
+| Inasistencias | `/admin/absences` | `useAbsence` |
+| Vacaciones y permisos | `/admin/leaves`, `/admin/leave-allocations`, `/admin/leave-types` | `useLeave` |
+| Días festivos | `/admin/holidays` | `useHrSettings` |
+| Kioscos y NIP | `/admin/kiosks` | `useKiosk` |
+| Kiosco público (sin sesión) | `/kiosk/[token]` | `useKioskPublic` (RPCs anon) |
+
+> Un empleado es un `partner` marcado por empresa: los datos del contacto no se duplican.
+> `employee` lo lee todo el equipo; `employee_private` (privados, RR. HH. y CFDI) solo owner/admin.
+> Asistencia, faltas y solicitudes: owner/admin y la propia persona (`hr_is_own_employee`).
+> Retardos, horas extra y días de vacaciones los calcula la base a partir del horario: no se escriben a mano.
+> Documentación en `docs/employees.md` y `docs/hr.md`.
+
+### Nómina
+
+| Módulo | Ruta admin | Composable(s) |
+|---|---|---|
+| Periodos, cálculo y aprobación | `/admin/payroll`, `/admin/payroll/[id]` | `usePayroll` |
+| Recibos y «Mis recibos» | `/admin/payroll/slips/[id]`, `/admin/payroll/my-payslips` | `usePayroll` |
+| Salarios (SDI / SBC) | `/admin/salaries` | `useSalary` |
+| Configuración fiscal (ISR, IMSS, INFONAVIT, ISN) y de asistencia | `/admin/payroll/settings` | `usePayroll`, `useHrSettings` |
+
+> El motor de cálculo es puro y probado (`app/utils/payroll.ts`, `tests/utils/payroll.test.ts`).
+> Los parámetros fiscales son por empresa y año (`payroll_fiscal_config`) y deben verificarse contra el DOF/SAT.
+> Una nómina aprobada o pagada es inmutable; estado y totales solo cambian por RPC. No hay timbrado CFDI.
+> Documentación en `docs/payroll.md`.
+
 ### Sistema
 
 | Módulo | Ruta admin | Composable(s) |
@@ -503,7 +537,9 @@ El layout incluye:
   5. Proyectos (Proyectos, Tareas)
   6. Aprobaciones (Solicitudes, Categorías, Aprobadores)
   7. Sitio web (Ajustes, Páginas, Menús, Blog, Categorías, Etiquetas, Autores, Comentarios, Medios, Galerías, Mensajes, Redirecciones)
-  8. Sistema (Equipo, Manual, Configuración)
+  8. Recursos Humanos (Empleados, Departamentos, Asistencias, Reporte de asistencias, Inasistencias, Vacaciones y permisos, Saldos de vacaciones, Tipos de ausencia, Horarios, Días festivos, Kioscos)
+  9. Nómina (Periodos de nómina, Salarios, Mis recibos, Configuración fiscal)
+  10. Sistema (Equipo, Manual, Configuración)
 - **Header sticky** con:
   - Botón hamburguesa (mobile)
   - Acceso al Manual de usuario
@@ -588,6 +624,20 @@ Tipos: `feat`, `fix`, `refactor`, `docs`, `style`, `chore`, `test`, `perf`
 | `feat/{nombre}` | Nuevas funcionalidades |
 | `fix/{nombre}` | Correcciones de bugs |
 | `refactor/{nombre}` | Refactorizaciones |
+
+---
+
+## Trazabilidad en Linear
+
+Toda implementación pedida directamente a Claude Code queda registrada en Linear igual que las de la rutina programada: tarea, comentario con el motivo, rama y PR que concuerdan. Workspace: https://linear.app/tryflowbit, equipo `TRY`, proyecto `P-TRY-1`.
+
+- **Aplica** cuando se agrega o modifica funcionalidad: features, correcciones, refactors y migraciones. Hazlo **antes** de escribir código.
+- **No aplica** a preguntas, análisis, cambios solo de documentación o de configuración de herramientas, ni cuando el usuario pida no registrar el cambio.
+- **Protocolo completo:** `.claude/commands/linear-track.md` (también disponible como `/linear-track`).
+- **Respaldo:** el hook `Stop` de `.claude/settings.json` avisa si quedan cambios de código en una rama sin `try-N`.
+- **`develop` y `main` no se modifican nunca:** solo el dueño lo hace. Todo el trabajo va en ramas `{tipo}/try-{N}-{slug}` con PR hacia `develop`.
+
+Sin acceso a Linear (contribuidores externos), implementa normalmente y avísalo en el mensaje final.
 
 ---
 

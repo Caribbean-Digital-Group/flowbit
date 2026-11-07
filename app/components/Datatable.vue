@@ -167,11 +167,13 @@
               :class="[
                 'transition-colors',
                 isSelected(row) ? 'bg-indigo-50/50' : 'hover:bg-slate-50',
-                striped && index % 2 === 1 ? 'bg-slate-50/50' : ''
+                striped && index % 2 === 1 ? 'bg-slate-50/50' : '',
+                hasRowClickListener ? 'cursor-pointer' : ''
               ]"
+              @click="handleRowClick(row)"
             >
               <!-- Checkbox cell -->
-              <td v-if="selectable" class="px-6 py-5">
+              <td v-if="selectable" class="px-6 py-5" @click.stop>
                 <input
                   type="checkbox"
                   :checked="isSelected(row)"
@@ -268,7 +270,7 @@
               </td>
 
               <!-- Actions cell -->
-              <td v-if="$slots.actions" class="px-6 py-5 text-center">
+              <td v-if="$slots.actions" class="px-6 py-5 text-center" @click.stop>
                 <slot name="actions" :row="row" :index="index" />
               </td>
             </tr>
@@ -381,7 +383,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, getCurrentInstance } from 'vue'
 
 // Types
 export interface Column {
@@ -707,13 +709,25 @@ const formatCurrency = (value: number, currency: string): string => {
 }
 
 const formatDate = (value: string | Date, format?: string): string => {
+  // Una fecha sin hora (`2026-11-15`) se interpreta como medianoche UTC; en México
+  // se mostraría el día anterior. Se formatea en UTC para conservar el día.
+  const isDateOnly = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
   const date = new Date(value)
   if (isNaN(date.getTime())) return value?.toString() || ''
-  
+
   return new Intl.DateTimeFormat('es-MX', {
     dateStyle: 'medium',
-    timeStyle: format === 'datetime' ? 'short' : undefined
+    timeStyle: format === 'datetime' && !isDateOnly ? 'short' : undefined,
+    timeZone: isDateOnly ? 'UTC' : undefined
   }).format(date)
+}
+
+// La fila es clicable solo si el padre escucha `row-click`.
+const instance = getCurrentInstance()
+const hasRowClickListener = computed(() => Boolean(instance?.vnode.props?.onRowClick))
+
+const handleRowClick = (row: Record<string, any>) => {
+  if (hasRowClickListener.value) emit('row-click', row)
 }
 
 const getInitials = (name: string): string => {
