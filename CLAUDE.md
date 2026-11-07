@@ -168,6 +168,17 @@ flowbit/
 | Categorías | `/admin/approval-categories` | `useApprovalCategory` |
 | Aprobadores | `/admin/approval-managers` | `useApprovalManager` |
 
+### Recursos Humanos
+
+| Módulo | Ruta admin | Composable(s) |
+|---|---|---|
+| Empleados | `/admin/employees` | `useEmployee` |
+| Departamentos | `/admin/departments` | `useEmployeeDepartment` |
+
+> Un empleado es un `partner` marcado por empresa: los datos del contacto no se duplican.
+> `employee` lo lee todo el equipo; `employee_private` (privados, RR. HH. y CFDI) solo owner/admin.
+> Documentación en `docs/employees.md`. El CFDI solo captura datos: no hay nómina ni timbrado.
+
 ### Sistema
 
 | Módulo | Ruta admin | Composable(s) |
@@ -503,7 +514,8 @@ El layout incluye:
   5. Proyectos (Proyectos, Tareas)
   6. Aprobaciones (Solicitudes, Categorías, Aprobadores)
   7. Sitio web (Ajustes, Páginas, Menús, Blog, Categorías, Etiquetas, Autores, Comentarios, Medios, Galerías, Mensajes, Redirecciones)
-  8. Sistema (Equipo, Manual, Configuración)
+  8. Recursos Humanos (Empleados, Departamentos)
+  9. Sistema (Equipo, Manual, Configuración)
 - **Header sticky** con:
   - Botón hamburguesa (mobile)
   - Acceso al Manual de usuario

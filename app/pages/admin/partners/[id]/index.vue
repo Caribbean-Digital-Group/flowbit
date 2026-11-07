@@ -234,6 +234,11 @@ watch([partnerId, selectedCompanyId], () => {
 
     <PartnerForm v-model="partnerForm" :readonly="!isEditing" />
 
+    <PartnerEmployeeCard
+      v-if="partner && partner.company_type !== 'company'"
+      :partner-id="partner.id"
+    />
+
     <PartnerMetricsPanel
       :orders="partnerOrders"
       :leads="partnerLeads"

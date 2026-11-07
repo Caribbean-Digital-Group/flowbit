@@ -63,6 +63,12 @@ export const useAuthStore = defineStore('auth', () => {
     return null
   })
 
+  /** Owner o admin de la empresa seleccionada. La autorización real la aplica RLS. */
+  const isSelectedCompanyAdmin = computed(() => {
+    const entry = companies.value.find(c => c.company.id === selectedCompanyId.value)
+    return entry?.role === 'owner' || entry?.role === 'admin'
+  })
+
   const partnerDisplayName = computed(() => {
     if (partner.value?.display_name) return partner.value.display_name
     if (partner.value?.name) return partner.value.name
@@ -252,6 +258,7 @@ export const useAuthStore = defineStore('auth', () => {
     pendingInvitationCount,
     isAuthenticated,
     selectedCompany,
+    isSelectedCompanyAdmin,
     partnerDisplayName,
     partnerEmail,
     loadSession,

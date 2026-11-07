@@ -30,6 +30,7 @@ const columns: Column[] = [
       labels: { active: 'Activo', inactive: 'Inactivo' }
     }
   },
+  { key: 'employee', label: 'Empleado', type: 'text' },
   { key: 'phone', label: 'Teléfono', type: 'text' },
   { key: 'created_at', label: 'Alta', type: 'date' }
 ]
@@ -38,11 +39,12 @@ const authStore = useAuthStore()
 const { selectedCompanyId } = storeToRefs(authStore)
 
 const { getPartnersByCompany, archivePartner } = usePartner()
+const { getAll: getEmployees } = useEmployee()
 
 const partners = ref<Record<string, unknown>[]>([])
 const isLoadingPartners = ref(false)
 
-function mapPartnerToTableRow(raw: PartnerRow): Record<string, unknown> {
+function mapPartnerToTableRow(raw: PartnerRow, employeeIds: Set<string>): Record<string, unknown> {
   const displayName = raw.display_name?.trim() || raw.name
   return {
     id: raw.id,
@@ -51,6 +53,7 @@ function mapPartnerToTableRow(raw: PartnerRow): Record<string, unknown> {
     avatar_url: raw.avatar_url ?? '',
     tipo: raw.company_type === 'company' ? 'Empresa' : 'Persona',
     status: raw.active === false ? 'inactive' : 'active',
+    employee: employeeIds.has(raw.id) ? 'Sí' : '—',
     phone: raw.phone?.trim() ? raw.phone : '—',
     created_at: raw.created_at ?? ''
   }
@@ -65,8 +68,12 @@ const loadPartners = async () => {
 
   isLoadingPartners.value = true
   try {
-    const list = await getPartnersByCompany(companyId)
-    partners.value = list.map(mapPartnerToTableRow)
+    const [list, employees] = await Promise.all([
+      getPartnersByCompany(companyId),
+      getEmployees(companyId)
+    ])
+    const employeeIds = new Set(employees.map(e => e.partner_id))
+    partners.value = list.map(row => mapPartnerToTableRow(row, employeeIds))
   } finally {
     isLoadingPartners.value = false
   }
