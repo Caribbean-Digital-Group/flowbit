@@ -1,0 +1,95 @@
+# Aplica las migraciones de supabase/migrations en Supabase Cloud y regenera los tipos.
+#
+#   PR hacia main con migraciones → db push --dry-run (lista lo que se aplicaría)
+#   Push a main con migraciones   → db push + commit de types en develop
+#   Ejecución manual              → igual que el push; solo desde main
+#
+# Configuración en el repositorio:
+#   Settings → Secrets and variables → Actions
+#     Secret  SUPABASE_ACCESS_TOKEN → token con alcance limitado al proyecto flowbit
+#     Secret  SUPABASE_DB_PASSWORD  → contraseña de Postgres del proyecto
+#   Settings → Environments → production (opcional)
+#     Required reviewers para pedir aprobación antes de tocar la base
+#
+# Permisos del token: Project Settings, API Keys, API Key Secrets y Database, en lectura.
+# Si develop tiene protección de rama, permite el push de github-actions[bot].
+name: DB migrations
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['supabase/migrations/**']
+  push:
+    branches: [main]
+    paths: ['supabase/migrations/**']
+  workflow_dispatch:
+
+concurrency:
+  group: db-migrations
+  cancel-in-progress: false
+
+env:
+  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+  SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+  SUPABASE_PROJECT_ID: pmnurkwkqchxbofottyn
+  SUPABASE_CLI_VERSION: 2.75.0
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Revisar migraciones pendientes
+    # Los PR desde forks no reciben secretos
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v3
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+      - run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+      - run: supabase db push --dry-run --linked
+
+  apply:
+    name: Aplicar migraciones
+    # Una ejecución manual desde otra rama no debe llegar a producción
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v3
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+      - run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+      - run: supabase migration list --linked
+      - run: supabase db push --yes --linked
+
+  sync-types:
+    name: Regenerar tipos
+    needs: apply
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+      - uses: supabase/setup-cli@v3
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+      - run: npm run db:types
+      - name: Commit types
+        run: |
+          if git diff --quiet -- types/database.types.ts; then
+            echo "Los tipos ya estaban al día."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898319+github-actions[bot]@users.noreply.github.com'
+          git add types/database.types.ts
+          git commit -m 'chore(types): regenerate database types'
+          git push origin develop
