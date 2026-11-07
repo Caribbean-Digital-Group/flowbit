@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { breadcrumbJsonLd, serializeJsonLd } from '~/utils/seo'
+
 definePageMeta({ layout: 'manual' })
 
 const route = useRoute()
@@ -34,7 +36,33 @@ useSeoMeta({
 })
 
 useHead({
-  link: [{ rel: 'canonical', href: canonical }]
+  link: [{ rel: 'canonical', href: canonical }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: computed(() => {
+        const current = article.value
+        if (!current) return ''
+        const siteUrl = config.public.siteUrl as string
+        return serializeJsonLd([
+          breadcrumbJsonLd(siteUrl, [
+            { name: 'Inicio', path: '/' },
+            { name: 'Manual', path: '/manual' },
+            { name: current.title, path: `/manual/${current.id}` }
+          ]),
+          {
+            '@type': 'TechArticle',
+            headline: current.title,
+            description: current.summary ?? current.description,
+            url: canonical.value,
+            inLanguage: 'es-MX',
+            about: { '@type': 'SoftwareApplication', name: 'Flowbit' },
+            publisher: { '@id': `${siteUrl}/#organization` }
+          }
+        ])
+      })
+    }
+  ]
 })
 
 function openArticle(id: string) {

@@ -33,6 +33,12 @@ onMounted(async () => {
 
           <div class="flex items-center gap-1.5">
             <NuxtLink
+              to="/funcionalidades"
+              class="hidden md:inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 transition-colors"
+            >
+              Funcionalidades
+            </NuxtLink>
+            <NuxtLink
               to="/manual"
               class="hidden sm:inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 transition-colors"
             >
@@ -79,7 +85,7 @@ onMounted(async () => {
     <footer class="bg-white border-t border-slate-200 print:hidden">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
         <p class="text-xs text-slate-500 text-center sm:text-left">
-          Manual de Flowbit, el ERP open source de Caribbean Digital Group. Comparte estas guías libremente.
+          Manual de Flowbit, el ERP gratis y open source. Comparte estas guías libremente.
         </p>
         <p class="text-xs text-slate-400">&copy; {{ new Date().getFullYear() }} Flowbit</p>
       </div>

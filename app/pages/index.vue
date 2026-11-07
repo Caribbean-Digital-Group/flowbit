@@ -1,21 +1,29 @@
 <script setup lang="ts">
+import { FEATURE_MODULES, PLATFORM_FAQS } from '~/utils/features'
+import { faqJsonLd, organizationJsonLd, serializeJsonLd } from '~/utils/seo'
+
+definePageMeta({ layout: 'marketing' })
+
 const config = useRuntimeConfig()
+const route = useRoute()
+const router = useRouter()
 const siteUrl = config.public.siteUrl as string
 
-const pageTitle = 'Flowbit — ERP gratuito y open source para gestionar tu empresa'
-const pageDescription = 'Plataforma todo-en-uno para gestionar clientes, proyectos, órdenes, inventario y almacenes. Gratis para siempre, código abierto con licencia MIT. Sin límites, sin fricciones.'
+// Marca primero: las búsquedas de «Flowbit» deben reconocer el sitio oficial.
+const pageTitle = 'Flowbit: ERP gratis y open source para pymes'
+const pageDescription = 'ERP gratis y open source: CRM, ventas, punto de venta, inventario, tienda en línea, sitio web, RR. HH. y nómina en una plataforma. Sin límite de usuarios.'
 const ogImage = `${siteUrl}/og-image.png`
 
 useSeoMeta({
   title: pageTitle,
   description: pageDescription,
-  keywords: 'ERP gratuito, gestión operativa, open source, proyectos, inventario, órdenes, clientes, almacén, picking, MIT, Nuxt, Supabase',
+  keywords: 'ERP gratis, ERP open source, software para pymes, CRM gratis, punto de venta gratis, control de inventario, tienda en línea, software de nómina México, Flowbit',
   ogTitle: pageTitle,
   ogDescription: pageDescription,
   ogImage,
   ogUrl: siteUrl,
   twitterTitle: pageTitle,
-  twitterDescription: 'Gestiona clientes, proyectos, órdenes, inventario y almacenes — gratis y sin límites. Open source MIT.',
+  twitterDescription: pageDescription,
   twitterImage: ogImage,
 })
 
@@ -24,37 +32,36 @@ useHead({
   script: [
     {
       type: 'application/ld+json',
-      innerHTML: JSON.stringify({
-        '@context': 'https://schema.org',
-        '@graph': [
-          {
-            '@type': 'Organization',
-            '@id': `${siteUrl}/#organization`,
-            name: 'Flowbit',
-            url: siteUrl,
-            sameAs: ['https://github.com/Caribbean-Digital-Group/flowbit'],
-          },
-          {
-            '@type': 'WebSite',
-            '@id': `${siteUrl}/#website`,
-            url: siteUrl,
-            name: 'Flowbit',
-            description: pageDescription,
-            publisher: { '@id': `${siteUrl}/#organization` },
-            inLanguage: 'es-ES',
-          },
-          {
-            '@type': 'SoftwareApplication',
-            name: 'Flowbit',
-            operatingSystem: 'Web',
-            applicationCategory: 'BusinessApplication',
-            offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-            description: pageDescription,
-            url: siteUrl,
-            license: 'https://opensource.org/licenses/MIT',
-          },
-        ],
-      }),
+      innerHTML: serializeJsonLd([
+        organizationJsonLd(siteUrl),
+        {
+          '@type': 'WebSite',
+          '@id': `${siteUrl}/#website`,
+          url: siteUrl,
+          name: 'Flowbit',
+          alternateName: ['Flowbit ERP', 'Try Flowbit'],
+          description: pageDescription,
+          publisher: { '@id': `${siteUrl}/#organization` },
+          inLanguage: 'es-MX',
+        },
+        {
+          '@type': 'SoftwareApplication',
+          '@id': `${siteUrl}/#software`,
+          name: 'Flowbit',
+          operatingSystem: 'Web',
+          applicationCategory: 'BusinessApplication',
+          applicationSubCategory: 'ERP',
+          isAccessibleForFree: true,
+          offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' },
+          description: pageDescription,
+          url: siteUrl,
+          inLanguage: 'es-MX',
+          license: 'https://opensource.org/licenses/MIT',
+          featureList: FEATURE_MODULES.map(module => module.name),
+          publisher: { '@id': `${siteUrl}/#organization` },
+        },
+        faqJsonLd(PLATFORM_FAQS),
+      ]),
     },
   ],
 })
@@ -74,16 +81,21 @@ const openRegisterForm = () => {
   document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth' })
 }
 
-const modules = [
-  { name: 'Partners', label: 'Clientes', icon: 'users' },
-  { name: 'Products', label: 'Productos', icon: 'box' },
-  { name: 'Orders', label: 'Órdenes', icon: 'doc' },
-  { name: 'Projects', label: 'Proyectos', icon: 'rocket' },
-  { name: 'Tasks', label: 'Tareas', icon: 'check' },
-  { name: 'Pickings', label: 'Pickings', icon: 'truck' },
-  { name: 'Warehouses', label: 'Almacenes', icon: 'building' },
-  { name: 'Reports', label: 'Reportes', icon: 'chart' },
-]
+/**
+ * Las demás páginas públicas enlazan a `/?registro=1` para abrir el registro.
+ * Se atiende al montar (llegada desde otra página) y al cambiar la query
+ * (enlace del header o footer estando ya en la landing).
+ */
+const handleRegisterQuery = () => {
+  if (!route.query.registro) return
+  openRegisterForm()
+  router.replace({ query: {}, hash: route.hash })
+}
+
+onMounted(handleRegisterQuery)
+watch(() => route.query.registro, handleRegisterQuery)
+
+const modules = FEATURE_MODULES.map(module => ({ name: module.slug, label: module.name }))
 
 const workflow = [
   { step: '01', title: 'Cliente', description: 'Registra socios comerciales con toda su información fiscal y de contacto.', color: 'from-indigo-500 to-indigo-600' },
@@ -129,6 +141,9 @@ const workflow = [
 
             <!-- Title -->
             <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.05] mb-6 tracking-tight">
+              <span class="block text-base sm:text-lg font-semibold tracking-normal text-indigo-300 mb-4">
+                ERP gratis y open source para pymes
+              </span>
               Operación
               <span class="block">
                 en <span class="relative inline-block">
@@ -148,7 +163,8 @@ const workflow = [
             </h1>
 
             <p class="text-lg sm:text-xl text-slate-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Una plataforma todo-en-uno para gestionar clientes, proyectos, órdenes, inventario y almacenes.
+              Flowbit reúne CRM, ventas, punto de venta, inventario, tienda en línea, sitio web,
+              Recursos Humanos y nómina en una sola plataforma para tu empresa.
               <span class="text-slate-200 font-medium">Sin licencias. Sin límites. Sin fricciones.</span>
             </p>
 
@@ -191,7 +207,7 @@ const workflow = [
             <!-- Stats inline -->
             <div class="grid grid-cols-3 gap-6 max-w-md mx-auto lg:mx-0 pt-8 border-t border-white/10">
               <div>
-                <div class="text-3xl font-bold text-white">8+</div>
+                <div class="text-3xl font-bold text-white">{{ FEATURE_MODULES.length }}</div>
                 <div class="text-sm text-slate-400 mt-1">Módulos integrados</div>
               </div>
               <div>
@@ -403,6 +419,50 @@ const workflow = [
             <h3 class="text-lg font-bold text-slate-900 mb-1">Almacenes</h3>
             <p class="text-sm text-slate-600">Múltiples bodegas con picking integrado.</p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TODOS LOS MÓDULOS (enlazan a /funcionalidades) -->
+    <!-- ============================================ -->
+    <section id="modulos" class="relative bg-slate-50 px-4 sm:px-6 lg:px-8 py-24 scroll-mt-20">
+      <div class="max-w-7xl mx-auto">
+        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-12">
+          <div class="max-w-3xl">
+            <h2 class="text-4xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-4">
+              {{ FEATURE_MODULES.length }} módulos incluidos, gratis
+            </h2>
+            <p class="text-xl text-slate-600 leading-relaxed">
+              Del primer contacto con un cliente hasta la nómina de tu equipo. Conoce qué hace cada módulo y cómo te ayuda.
+            </p>
+          </div>
+          <NuxtLink
+            to="/funcionalidades"
+            class="inline-flex items-center gap-2 self-start lg:self-auto px-5 py-3 rounded-xl text-sm font-semibold text-indigo-700 bg-white border border-indigo-200 hover:border-indigo-400 transition-colors"
+          >
+            Ver todas las funcionalidades
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </NuxtLink>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <NuxtLink
+            v-for="module in FEATURE_MODULES"
+            :key="module.slug"
+            :to="`/funcionalidades/${module.slug}`"
+            class="group flex items-start gap-4 bg-white rounded-2xl p-5 border border-slate-200 shadow-lg shadow-slate-200/50 hover:border-indigo-300 hover:-translate-y-0.5 transition-all"
+          >
+            <div :class="['w-11 h-11 flex-shrink-0 rounded-xl bg-gradient-to-br flex items-center justify-center text-white shadow-md', module.gradient]">
+              <FeatureIcon :icon="module.icon" icon-class="w-5 h-5" />
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">{{ module.name }}</h3>
+              <p class="text-sm text-slate-500 leading-relaxed mt-0.5">{{ module.tagline }}</p>
+            </div>
+          </NuxtLink>
         </div>
       </div>
     </section>
@@ -644,6 +704,17 @@ const workflow = [
     </section>
 
     <!-- ============================================ -->
+    <!-- PREGUNTAS FRECUENTES -->
+    <!-- ============================================ -->
+    <section id="preguntas-frecuentes" class="relative bg-slate-950 px-4 sm:px-6 lg:px-8 py-24 scroll-mt-20">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-4 text-center">Preguntas frecuentes</h2>
+        <p class="text-lg text-slate-400 text-center mb-10">Lo que más nos preguntan antes de empezar con Flowbit.</p>
+        <FeatureFaqList :faqs="PLATFORM_FAQS" dark />
+      </div>
+    </section>
+
+    <!-- ============================================ -->
     <!-- CTA FINAL -->
     <!-- ============================================ -->
     <section id="cta-final" class="relative px-4 sm:px-6 lg:px-8 py-24 bg-white overflow-hidden">
@@ -712,90 +783,6 @@ const workflow = [
         </div>
       </div>
     </section>
-    <!-- ============================================ -->
-    <!-- FOOTER -->
-    <!-- ============================================ -->
-    <footer class="relative bg-slate-950 border-t border-white/10">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <div class="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
-          <!-- Marca -->
-          <div>
-            <div class="flex items-center gap-2.5 mb-4">
-              <img src="/favicon.svg" alt="" aria-hidden="true" class="w-9 h-9 rounded-xl" width="36" height="36" />
-              <span class="text-lg font-semibold text-white">Flowbit</span>
-            </div>
-            <p class="text-sm text-slate-400 leading-relaxed max-w-xs">
-              ERP open source para gestionar clientes, proyectos, órdenes, inventario,
-              punto de venta y tienda en línea. Gratis y sin límites de usuarios.
-            </p>
-            <p class="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.6-2.6A11.95 11.95 0 0112 2.9a11.95 11.95 0 01-8.6 3.5A12 12 0 0012 21.8a12 12 0 008.6-16.4z" />
-              </svg>
-              Licencia MIT · Tus datos son tuyos
-            </p>
-          </div>
-
-          <!-- Plataforma -->
-          <nav aria-label="Plataforma">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Plataforma</h2>
-            <ul class="space-y-2.5">
-              <li><a href="#ecosistema" class="text-sm text-slate-400 hover:text-white transition-colors">Módulos</a></li>
-              <li><a href="#workflow" class="text-sm text-slate-400 hover:text-white transition-colors">Cómo funciona</a></li>
-              <li><a href="#ventajas" class="text-sm text-slate-400 hover:text-white transition-colors">Por qué Flowbit</a></li>
-              <li>
-                <button type="button" class="text-sm text-slate-400 hover:text-white transition-colors" @click="openRegisterForm">
-                  Crear cuenta
-                </button>
-              </li>
-            </ul>
-          </nav>
-
-          <!-- Recursos -->
-          <nav aria-label="Recursos">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Recursos</h2>
-            <ul class="space-y-2.5">
-              <li><NuxtLink to="/manual" class="text-sm text-slate-400 hover:text-white transition-colors">Manual de usuario</NuxtLink></li>
-              <li><NuxtLink to="/manual/getting-started" class="text-sm text-slate-400 hover:text-white transition-colors">Primeros pasos</NuxtLink></li>
-              <li><NuxtLink to="/manual/storefront-settings" class="text-sm text-slate-400 hover:text-white transition-colors">Tienda en línea</NuxtLink></li>
-              <li><NuxtLink to="/manual/pos-terminal" class="text-sm text-slate-400 hover:text-white transition-colors">Punto de venta</NuxtLink></li>
-            </ul>
-          </nav>
-
-          <!-- Proyecto -->
-          <nav aria-label="Proyecto">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Proyecto</h2>
-            <ul class="space-y-2.5">
-              <li>
-                <a href="https://github.com/Caribbean-Digital-Group/flowbit" target="_blank" rel="noopener" class="text-sm text-slate-400 hover:text-white transition-colors">
-                  Código en GitHub
-                </a>
-              </li>
-              <li>
-                <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener" class="text-sm text-slate-400 hover:text-white transition-colors">
-                  Licencia MIT
-                </a>
-              </li>
-              <li>
-                <a href="https://github.com/Caribbean-Digital-Group/flowbit/issues" target="_blank" rel="noopener" class="text-sm text-slate-400 hover:text-white transition-colors">
-                  Reportar un problema
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </div>
-
-        <div class="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p class="text-xs text-slate-500">
-            &copy; {{ new Date().getFullYear() }} Flowbit · Desarrollado por Caribbean Digital Group
-          </p>
-          <p class="text-xs text-slate-500">
-            Hecho con Nuxt y Supabase
-          </p>
-        </div>
-      </div>
-    </footer>
-
     <!-- Asistente Bit (guía de landing) -->
     <LandingAssistant />
   </div>

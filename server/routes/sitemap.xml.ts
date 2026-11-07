@@ -1,4 +1,5 @@
 import { ARTICLES } from '../../app/utils/manual/articles'
+import { FEATURE_MODULES } from '../../app/utils/features'
 import { callWebsiteAnonRpc } from '../utils/websitePublic'
 
 /**
@@ -25,6 +26,13 @@ export default defineEventHandler(async (event) => {
 
   const entries: SitemapEntry[] = [
     { loc: '/', changefreq: 'weekly', priority: '1.0' },
+    // Páginas comerciales por módulo: las que compiten por búsquedas como «CRM gratis»
+    { loc: '/funcionalidades', changefreq: 'weekly', priority: '0.9' },
+    ...FEATURE_MODULES.map((module): SitemapEntry => ({
+      loc: `/funcionalidades/${module.slug}`,
+      changefreq: 'monthly',
+      priority: '0.9'
+    })),
     { loc: '/manual', changefreq: 'weekly', priority: '0.8' },
     // Cada guía del manual es una página pública con contenido propio
     ...ARTICLES.map((article): SitemapEntry => ({
