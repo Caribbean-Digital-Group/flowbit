@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       approval_category: {
@@ -846,6 +821,327 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "company"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          department_id: string | null
+          employee_number: string | null
+          hire_date: string | null
+          id: string
+          job_title: string | null
+          manager_id: string | null
+          partner_id: string
+          status: string
+          termination_date: string | null
+          updated_at: string | null
+          updated_by: string | null
+          work_email: string | null
+          work_location: string | null
+          work_phone: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          department_id?: string | null
+          employee_number?: string | null
+          hire_date?: string | null
+          id?: string
+          job_title?: string | null
+          manager_id?: string | null
+          partner_id: string
+          status?: string
+          termination_date?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          work_email?: string | null
+          work_location?: string | null
+          work_phone?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          department_id?: string | null
+          employee_number?: string | null
+          hire_date?: string | null
+          id?: string
+          job_title?: string | null
+          manager_id?: string | null
+          partner_id?: string
+          status?: string
+          termination_date?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          work_email?: string | null
+          work_location?: string | null
+          work_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_department_fk"
+            columns: ["company_id", "department_id"]
+            isOneToOne: false
+            referencedRelation: "employee_department"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "employee_manager_fk"
+            columns: ["company_id", "manager_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "employee_manager_fk"
+            columns: ["company_id", "manager_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "employee_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_department: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          manager_id: string | null
+          name: string
+          parent_id: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          manager_id?: string | null
+          name: string
+          parent_id?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          manager_id?: string | null
+          name?: string
+          parent_id?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_department_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_department_manager_fk"
+            columns: ["company_id", "manager_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "employee_department_manager_fk"
+            columns: ["company_id", "manager_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "employee_department_parent_fk"
+            columns: ["company_id", "parent_id"]
+            isOneToOne: false
+            referencedRelation: "employee_department"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      employee_private: {
+        Row: {
+          active: boolean | null
+          bank_account: string | null
+          bank_clabe: string | null
+          bank_name: string | null
+          birth_date: string | null
+          birth_place: string | null
+          cfdi_contract_type: string | null
+          cfdi_contribution_base: number | null
+          cfdi_employer_registration: string | null
+          cfdi_integrated_daily_wage: number | null
+          cfdi_job_risk: string | null
+          cfdi_payment_frequency: string | null
+          cfdi_payroll_regime: string | null
+          cfdi_state: string | null
+          cfdi_tax_regime: string | null
+          cfdi_tax_zip: string | null
+          cfdi_unionized: boolean
+          cfdi_workday_type: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          curp: string | null
+          dependents_count: number
+          education_level: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          employee_id: string
+          employee_type: string
+          gender: string | null
+          hr_notes: string | null
+          id: string
+          marital_status: string | null
+          monthly_salary: number | null
+          nationality: string | null
+          nss: string | null
+          salary_currency: string
+          termination_reason: string | null
+          updated_at: string | null
+          updated_by: string | null
+          vacation_days: number | null
+          weekly_hours: number | null
+        }
+        Insert: {
+          active?: boolean | null
+          bank_account?: string | null
+          bank_clabe?: string | null
+          bank_name?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          cfdi_contract_type?: string | null
+          cfdi_contribution_base?: number | null
+          cfdi_employer_registration?: string | null
+          cfdi_integrated_daily_wage?: number | null
+          cfdi_job_risk?: string | null
+          cfdi_payment_frequency?: string | null
+          cfdi_payroll_regime?: string | null
+          cfdi_state?: string | null
+          cfdi_tax_regime?: string | null
+          cfdi_tax_zip?: string | null
+          cfdi_unionized?: boolean
+          cfdi_workday_type?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          curp?: string | null
+          dependents_count?: number
+          education_level?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_id: string
+          employee_type?: string
+          gender?: string | null
+          hr_notes?: string | null
+          id?: string
+          marital_status?: string | null
+          monthly_salary?: number | null
+          nationality?: string | null
+          nss?: string | null
+          salary_currency?: string
+          termination_reason?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          vacation_days?: number | null
+          weekly_hours?: number | null
+        }
+        Update: {
+          active?: boolean | null
+          bank_account?: string | null
+          bank_clabe?: string | null
+          bank_name?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          cfdi_contract_type?: string | null
+          cfdi_contribution_base?: number | null
+          cfdi_employer_registration?: string | null
+          cfdi_integrated_daily_wage?: number | null
+          cfdi_job_risk?: string | null
+          cfdi_payment_frequency?: string | null
+          cfdi_payroll_regime?: string | null
+          cfdi_state?: string | null
+          cfdi_tax_regime?: string | null
+          cfdi_tax_zip?: string | null
+          cfdi_unionized?: boolean
+          cfdi_workday_type?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          curp?: string | null
+          dependents_count?: number
+          education_level?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_id?: string
+          employee_type?: string
+          gender?: string | null
+          hr_notes?: string | null
+          id?: string
+          marital_status?: string | null
+          monthly_salary?: number | null
+          nationality?: string | null
+          nss?: string | null
+          salary_currency?: string
+          termination_reason?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          vacation_days?: number | null
+          weekly_hours?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_private_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_private_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "employee_private_employee_fk"
+            columns: ["company_id", "employee_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
           },
         ]
       }
@@ -5919,6 +6215,72 @@ export type Database = {
           },
         ]
       }
+      v_employees: {
+        Row: {
+          active: boolean | null
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          department_id: string | null
+          department_name: string | null
+          employee_number: string | null
+          hire_date: string | null
+          id: string | null
+          job_title: string | null
+          manager_id: string | null
+          manager_name: string | null
+          partner_avatar_url: string | null
+          partner_email: string | null
+          partner_id: string | null
+          partner_mobile: string | null
+          partner_name: string | null
+          partner_phone: string | null
+          status: string | null
+          termination_date: string | null
+          updated_at: string | null
+          updated_by: string | null
+          work_email: string | null
+          work_location: string | null
+          work_phone: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_department_fk"
+            columns: ["company_id", "department_id"]
+            isOneToOne: false
+            referencedRelation: "employee_department"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "employee_manager_fk"
+            columns: ["company_id", "manager_id"]
+            isOneToOne: false
+            referencedRelation: "employee"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "employee_manager_fk"
+            columns: ["company_id", "manager_id"]
+            isOneToOne: false
+            referencedRelation: "v_employees"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "employee_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_low_stock_products: {
         Row: {
           company_id: string | null
@@ -7986,6 +8348,40 @@ export type Database = {
         Args: { p_order_id: string; p_session_id: string }
         Returns: Json
       }
+      register_employee: {
+        Args: {
+          p_company_id: string
+          p_employee?: Json
+          p_partner?: Json
+          p_partner_id?: string
+        }
+        Returns: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          department_id: string | null
+          employee_number: string | null
+          hire_date: string | null
+          id: string
+          job_title: string | null
+          manager_id: string | null
+          partner_id: string
+          status: string
+          termination_date: string | null
+          updated_at: string | null
+          updated_by: string | null
+          work_email: string | null
+          work_location: string | null
+          work_phone: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "employee"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       register_order_payment: {
         Args: {
           p_amount: number
@@ -8439,9 +8835,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       approval_request_status: [

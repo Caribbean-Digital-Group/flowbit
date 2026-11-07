@@ -1138,6 +1138,108 @@ export const ARTICLES: DocArticle[] = [
     tags: ['CRM', 'motivos', 'pérdida', 'perdido', 'cancelado', 'análisis', 'ventas']
   },
 
+  // ─── EMPLEADOS ───────────────────────────────────────────────────────────────
+  {
+    id: 'employees-list',
+    routePatterns: ['/admin/employees'],
+    module: 'employees',
+    moduleLabel: 'Empleados',
+    moduleEmoji: '🪪',
+    title: 'Empleados',
+    viewType: 'list',
+    summary: 'Marca tus contactos como empleados y lleva su expediente laboral sin duplicar sus datos.',
+    description: 'Un empleado es un contacto marcado como tal en tu empresa. Nombre, correo, teléfono, dirección y RFC siguen en Contactos; el expediente agrega lo laboral.',
+    importance: 'Tener a las personas en un solo registro evita datos duplicados. Si cambia el teléfono de un empleado, se actualiza en un solo lugar.',
+    tips: [
+      'Puedes marcar a un contacto desde su ficha con «Marcar como empleado».',
+      'Los miembros del equipo también pueden ser empleados, aunque no aparezcan en Contactos.',
+      'Dar de baja cambia el estado laboral y conserva el expediente en la lista.',
+      '«Quitar de empleados» saca a la persona de la lista, pero su contacto sigue activo. Si la vuelves a marcar, recuperas su expediente.'
+    ],
+    relatedModules: [
+      { label: 'Nuevo empleado', route: '/admin/employees/create' },
+      { label: 'Departamentos', route: '/admin/departments' },
+      { label: 'Contactos', route: '/admin/partners' }
+    ],
+    relatedArticles: ['employees-create', 'employees-detail', 'departments-list'],
+    tags: ['empleados', 'recursos humanos', 'rrhh', 'personal', 'expediente', 'colaboradores'],
+    isNew: true
+  },
+  {
+    id: 'employees-create',
+    routePatterns: ['/admin/employees/create'],
+    module: 'employees',
+    moduleLabel: 'Empleados',
+    moduleEmoji: '🪪',
+    title: 'Registrar un empleado',
+    viewType: 'create',
+    description: 'Elige un contacto existente o crea uno nuevo y captura sus datos de trabajo. Solo propietarios y administradores pueden hacerlo.',
+    importance: 'Partir de un contacto existente evita tener a la misma persona dos veces. Busca primero antes de crear un contacto nuevo.',
+    tips: [
+      'Si el contacto ya tiene un cargo, se usa como puesto cuando dejas ese campo vacío.',
+      'Las empresas no pueden ser empleados: en la lista solo aparecen personas.',
+      'Crea tus departamentos antes para poder asignarlos desde aquí.'
+    ],
+    fields: [
+      { label: 'Contacto', required: true, type: 'relation', description: 'Persona que trabaja en la empresa. Puede ser existente o nueva.' },
+      { label: 'Puesto', required: false, type: 'text', description: 'Cargo que ocupa en la empresa.' },
+      { label: 'Número de empleado', required: false, type: 'text', description: 'Identificador interno, único por empresa.' },
+      { label: 'Departamento', required: false, type: 'relation', description: 'Área a la que pertenece.' },
+      { label: 'Jefe directo', required: false, type: 'relation', description: 'Otro empleado de la empresa.' },
+      { label: 'Fecha de ingreso', required: false, type: 'date', description: 'Inicio de la relación laboral.' }
+    ],
+    relatedArticles: ['employees-list', 'employees-detail'],
+    tags: ['empleados', 'alta', 'registrar', 'contratar']
+  },
+  {
+    id: 'employees-detail',
+    routePatterns: ['/admin/employees/:id'],
+    module: 'employees',
+    moduleLabel: 'Empleados',
+    moduleEmoji: '🪪',
+    title: 'Expediente del empleado',
+    viewType: 'detail',
+    description: 'El expediente se divide en información del trabajo, información privada, ajustes de RR. HH. y CFDI.',
+    importance: 'La información del trabajo la ve todo el equipo. La privada, los ajustes de RR. HH. y el CFDI incluyen CURP, NSS, sueldo y cuenta bancaria, por lo que solo la ven propietarios y administradores.',
+    tips: [
+      'Para editar nombre, correo, dirección o RFC usa «Abrir contacto».',
+      'Para dar de baja, cambia el estado a Baja e indica la fecha. El motivo se captura en Ajustes de RR. HH.',
+      'Los datos de CFDI se guardan para la nómina. Flowbit todavía no calcula nómina ni timbra comprobantes.',
+      'Un miembro no ve sus propios datos sensibles; pídelos a un administrador.'
+    ],
+    faqs: [
+      {
+        question: '¿Por qué no veo las pestañas de información privada?',
+        answer: 'Solo los propietarios y administradores de la empresa pueden ver esos datos.'
+      },
+      {
+        question: '¿Qué pasa con el contacto si quito a alguien de empleados?',
+        answer: 'Nada: el contacto sigue activo y sus órdenes, leads y proyectos no cambian.'
+      }
+    ],
+    relatedArticles: ['employees-list', 'partners-detail', 'team-list'],
+    tags: ['empleados', 'expediente', 'curp', 'nss', 'cfdi', 'nómina', 'sueldo', 'baja']
+  },
+  {
+    id: 'departments-list',
+    routePatterns: ['/admin/departments', '/admin/departments/create', '/admin/departments/:id'],
+    module: 'employees',
+    moduleLabel: 'Empleados',
+    moduleEmoji: '🪪',
+    title: 'Departamentos',
+    viewType: 'list',
+    description: 'Define las áreas de tu empresa, cómo se relacionan entre sí y quién es responsable de cada una.',
+    importance: 'Un catálogo evita variantes del mismo nombre, como «Ventas» y «ventas», y mantiene ordenada la estructura de la empresa.',
+    tips: [
+      'Usa el departamento padre para representar subáreas.',
+      'El responsable debe estar registrado antes como empleado.',
+      'Archivar un departamento no modifica a los empleados que ya lo tienen asignado.'
+    ],
+    relatedModules: [{ label: 'Empleados', route: '/admin/employees' }],
+    relatedArticles: ['employees-list'],
+    tags: ['departamentos', 'áreas', 'organigrama', 'estructura']
+  },
+
   // ─── EQUIPO ───────────────────────────────────────────────────────────────────
   {
     id: 'team-list',

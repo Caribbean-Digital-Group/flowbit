@@ -97,6 +97,13 @@ export const MODULE_META: ModuleMeta[] = [
     accent: 'amber'
   },
   {
+    id: 'employees',
+    label: 'Empleados',
+    emoji: '🪪',
+    description: 'Expedientes laborales, departamentos y datos para el CFDI de nómina.',
+    accent: 'fuchsia'
+  },
+  {
     id: 'team',
     label: 'Equipo',
     emoji: '👨‍💼',

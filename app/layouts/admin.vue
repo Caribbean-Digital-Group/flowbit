@@ -343,6 +343,7 @@ const groupAccentClasses: Record<string, { bar: string; text: string; dot: strin
   violet: { bar: 'bg-violet-500', text: 'text-violet-600', dot: 'bg-violet-400' },
   amber: { bar: 'bg-amber-500', text: 'text-amber-600', dot: 'bg-amber-400' },
   fuchsia: { bar: 'bg-fuchsia-500', text: 'text-fuchsia-600', dot: 'bg-fuchsia-400' },
+  rose: { bar: 'bg-rose-500', text: 'text-rose-600', dot: 'bg-rose-400' },
 }
 
 const menuGroups: MenuGroup[] = [
@@ -686,6 +687,27 @@ const menuGroups: MenuGroup[] = [
         iconPaths: [
           'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V8m8 0V6',
           'M12 12a3 3 0 110-6 3 3 0 010 6z'
+        ]
+      },
+    ]
+  },
+  {
+    id: 'recursos-humanos',
+    title: 'Recursos Humanos',
+    accentColor: 'rose',
+    items: [
+      {
+        title: 'Empleados',
+        to: '/admin/employees',
+        iconPaths: [
+          'M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2'
+        ]
+      },
+      {
+        title: 'Departamentos',
+        to: '/admin/departments',
+        iconPaths: [
+          'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'
         ]
       },
     ]
