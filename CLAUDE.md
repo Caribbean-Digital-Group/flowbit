@@ -591,6 +591,20 @@ Tipos: `feat`, `fix`, `refactor`, `docs`, `style`, `chore`, `test`, `perf`
 
 ---
 
+## Trazabilidad en Linear
+
+Toda implementación pedida directamente a Claude Code queda registrada en Linear igual que las de la rutina programada: tarea, comentario con el motivo, rama y PR que concuerdan. Workspace: https://linear.app/tryflowbit, equipo `TRY`, proyecto `P-TRY-1`.
+
+- **Aplica** cuando se agrega o modifica funcionalidad: features, correcciones, refactors y migraciones. Hazlo **antes** de escribir código.
+- **No aplica** a preguntas, análisis, cambios solo de documentación o de configuración de herramientas, ni cuando el usuario pida no registrar el cambio.
+- **Protocolo completo:** `.claude/commands/linear-track.md` (también disponible como `/linear-track`).
+- **Respaldo:** el hook `Stop` de `.claude/settings.json` avisa si quedan cambios de código en una rama sin `try-N`.
+- **`develop` y `main` no se modifican nunca:** solo el dueño lo hace. Todo el trabajo va en ramas `{tipo}/try-{N}-{slug}` con PR hacia `develop`.
+
+Sin acceso a Linear (contribuidores externos), implementa normalmente y avísalo en el mensaje final.
+
+---
+
 ## Archivos sensibles — NO commitear
 
 - `.env`, `.env.local`, `.env.production`
