@@ -2,6 +2,26 @@
 
 Plan para que Flowbit aparezca en los buscadores, tanto cuando alguien busca la marca como cuando busca lo que el producto resuelve («CRM gratis», «software de nómina México»).
 
+## Posicionamiento
+
+> **Flowbit ERP: el ERP open source en español hecho para México.**
+
+- **Marca compuesta «Flowbit ERP».** «Flowbit» a secas ya lo ocupan flowbit.com y flowbit.mx, con el dominio exacto y más antigüedad. Por eso se compite por «Flowbit ERP», que nadie más usa.
+- **Nicho «open source + español + México».** Pelear «ERP» contra Odoo o SAP no es realista. En cambio, un ERP open source en español que ya incluye la nómina mexicana, la LFT, el IVA y los datos del SAT casi no tiene competencia.
+- **Las constantes viven en el código.** `BRAND_NAME`, `BRAND_POSITIONING` y `MEXICO_HIGHLIGHTS` están en `app/utils/features.ts`. Usa las mismas palabras en redes, en GitHub y en directorios.
+
+Dónde aparece:
+
+| Lugar | Cómo |
+|---|---|
+| Landing | Title `Flowbit ERP: ERP open source en español hecho para México`, la frase encima del H1 y la sección «Hecho para México» (`#hecho-para-mexico`) |
+| Páginas de módulo | Titles con `| Flowbit ERP` y un bloque «Hecho para México» distinto en cada módulo (campo `mexico`) |
+| Hub | `Módulos del ERP open source para México | Flowbit ERP` |
+| Datos estructurados | `alternateName: Flowbit ERP`, `areaServed: México`, `availableLanguage: es` |
+| Global | `og:site_name` y el manifiesto como «Flowbit ERP»; los títulos del manual terminan en «Flowbit ERP» |
+
+Lo que no existe no se afirma. Por ejemplo, Flowbit todavía no timbra CFDI, y la landing y las preguntas frecuentes lo dicen.
+
 ## Diagnóstico (noviembre 2026)
 
 | Problema | Efecto |
@@ -62,7 +82,7 @@ Ordenadas por impacto. Ningún cambio de código sustituye las dos primeras.
 
 1. **Dominio propio**, por ejemplo `flowbit.mx` o `tryflowbit.com`. Configúralo en Netlify como dominio principal con redirección 301 desde `tryflowbit.netlify.app` y actualiza `NUXT_PUBLIC_SITE_URL`. Todos los canonical, el sitemap y los datos estructurados lo toman de esa variable.
 2. **Google Search Console**: verifica la propiedad con la variable de arriba, envía `https://{dominio}/sitemap.xml` y solicita la indexación de `/`, `/funcionalidades` y las páginas de módulo. Haz lo mismo en **Bing Webmaster Tools**, que también alimenta a ChatGPT Search y DuckDuckGo.
-3. **Enlaces entrantes (backlinks)**, la señal de autoridad que hoy falta:
+3. **Enlaces entrantes (backlinks)**, la señal de autoridad que hoy falta. Usa siempre «Flowbit ERP» y la frase de posicionamiento:
    - `README` del repositorio en GitHub con enlace al sitio y a `/funcionalidades`. Agrega *topics* al repo (`erp`, `crm`, `pos`, `nuxt`, `supabase`, `open-source`, `mexico`).
    - Directorios de software: AlternativeTo (como alternativa a Odoo, Zoho y Bind ERP), Product Hunt, Capterra, G2, SaaSHub y la lista `awesome-selfhosted`.
    - Publicaciones en comunidades: dev.to, Reddit (r/selfhosted, r/mexico_emprendedores), grupos de pymes y foros de Nuxt y Supabase.

@@ -91,9 +91,9 @@ onUnmounted(() => {
 })
 
 useSeoMeta({
-  title: 'Manual de Flowbit — guías de uso del ERP open source',
+  title: 'Manual de Flowbit ERP: guías del ERP open source en español',
   description: `${articles.length} guías paso a paso para usar Flowbit: ventas, tienda en línea, punto de venta, inventario, CRM, proyectos y aprobaciones.`,
-  ogTitle: 'Manual de usuario de Flowbit',
+  ogTitle: 'Manual de usuario de Flowbit ERP',
   ogDescription: 'Guías paso a paso para operar tu empresa con Flowbit: tienda en línea, punto de venta, inventario, CRM y más.',
   ogUrl: `${config.public.siteUrl}/manual`,
   ogType: 'website'

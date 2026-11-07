@@ -100,8 +100,8 @@ const registerLink = '/?registro=1'
               <span class="text-lg font-semibold text-white">Flowbit</span>
             </div>
             <p class="text-sm text-slate-400 leading-relaxed max-w-xs">
-              ERP gratuito y open source para pymes: CRM, ventas, punto de venta, inventario,
-              tienda en línea, sitio web, Recursos Humanos y nómina en una sola plataforma.
+              Flowbit ERP es el ERP open source en español hecho para México: nómina, CRM, ventas,
+              punto de venta, inventario, tienda en línea, sitio web y Recursos Humanos.
             </p>
             <p class="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

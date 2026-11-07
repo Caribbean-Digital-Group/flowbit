@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FEATURE_MODULES, PLATFORM_FAQS } from '~/utils/features'
+import { BRAND_NAME, BRAND_POSITIONING, FEATURE_MODULES, MEXICO_HIGHLIGHTS, PLATFORM_FAQS } from '~/utils/features'
 import { faqJsonLd, organizationJsonLd, serializeJsonLd } from '~/utils/seo'
 
 definePageMeta({ layout: 'marketing' })
@@ -9,15 +9,16 @@ const route = useRoute()
 const router = useRouter()
 const siteUrl = config.public.siteUrl as string
 
-// Marca primero: las búsquedas de «Flowbit» deben reconocer el sitio oficial.
-const pageTitle = 'Flowbit: ERP gratis y open source para pymes'
-const pageDescription = 'ERP gratis y open source: CRM, ventas, punto de venta, inventario, tienda en línea, sitio web, RR. HH. y nómina en una plataforma. Sin límite de usuarios.'
+// Marca compuesta primero: «Flowbit» a secas lo ocupan otros dominios, así que se
+// compite por «Flowbit ERP» + el posicionamiento (ver docs/seo.md).
+const pageTitle = `${BRAND_NAME}: ${BRAND_POSITIONING}`
+const pageDescription = 'ERP gratis y open source para pymes mexicanas: nómina con ISR e IMSS, CRM, punto de venta, inventario, tienda en línea y RR. HH. en una plataforma.'
 const ogImage = `${siteUrl}/og-image.png`
 
 useSeoMeta({
   title: pageTitle,
   description: pageDescription,
-  keywords: 'ERP gratis, ERP open source, software para pymes, CRM gratis, punto de venta gratis, control de inventario, tienda en línea, software de nómina México, Flowbit',
+  keywords: 'ERP open source, ERP en español, ERP para México, ERP gratis, software para pymes México, software de nómina México, punto de venta gratis, CRM gratis, Flowbit ERP',
   ogTitle: pageTitle,
   ogDescription: pageDescription,
   ogImage,
@@ -39,7 +40,7 @@ useHead({
           '@id': `${siteUrl}/#website`,
           url: siteUrl,
           name: 'Flowbit',
-          alternateName: ['Flowbit ERP', 'Try Flowbit'],
+          alternateName: [BRAND_NAME, 'Try Flowbit'],
           description: pageDescription,
           publisher: { '@id': `${siteUrl}/#organization` },
           inLanguage: 'es-MX',
@@ -47,7 +48,8 @@ useHead({
         {
           '@type': 'SoftwareApplication',
           '@id': `${siteUrl}/#software`,
-          name: 'Flowbit',
+          name: BRAND_NAME,
+          alternateName: 'Flowbit',
           operatingSystem: 'Web',
           applicationCategory: 'BusinessApplication',
           applicationSubCategory: 'ERP',
@@ -57,7 +59,13 @@ useHead({
           url: siteUrl,
           inLanguage: 'es-MX',
           license: 'https://opensource.org/licenses/MIT',
-          featureList: FEATURE_MODULES.map(module => module.name),
+          featureList: [
+            ...FEATURE_MODULES.map(module => module.name),
+            ...MEXICO_HIGHLIGHTS.map(item => item.title),
+          ],
+          areaServed: { '@type': 'Country', name: 'México' },
+          availableLanguage: 'es',
+          keywords: BRAND_POSITIONING,
           publisher: { '@id': `${siteUrl}/#organization` },
         },
         faqJsonLd(PLATFORM_FAQS),
@@ -136,13 +144,13 @@ const workflow = [
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-fuchsia-400 opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-2 w-2 bg-fuchsia-500"></span>
               </span>
-              <span class="text-sm font-medium text-slate-300">Open Source · MIT License · v1.0</span>
+              <span class="text-sm font-medium text-slate-300">Open source · Licencia MIT · Hecho en México</span>
             </div>
 
             <!-- Title -->
             <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.05] mb-6 tracking-tight">
               <span class="block text-base sm:text-lg font-semibold tracking-normal text-indigo-300 mb-4">
-                ERP gratis y open source para pymes
+                {{ BRAND_POSITIONING }}
               </span>
               Operación
               <span class="block">
@@ -163,8 +171,8 @@ const workflow = [
             </h1>
 
             <p class="text-lg sm:text-xl text-slate-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Flowbit reúne CRM, ventas, punto de venta, inventario, tienda en línea, sitio web,
-              Recursos Humanos y nómina en una sola plataforma para tu empresa.
+              Flowbit ERP reúne nómina con ISR e IMSS, CRM, ventas, punto de venta, inventario,
+              tienda en línea, sitio web y Recursos Humanos en una sola plataforma para tu empresa.
               <span class="text-slate-200 font-medium">Sin licencias. Sin límites. Sin fricciones.</span>
             </p>
 
@@ -424,13 +432,55 @@ const workflow = [
     </section>
 
     <!-- ============================================ -->
+    <!-- HECHO PARA MÉXICO (eje del posicionamiento) -->
+    <!-- ============================================ -->
+    <section id="hecho-para-mexico" class="relative bg-white px-4 sm:px-6 lg:px-8 py-24 scroll-mt-20 overflow-hidden">
+      <div class="absolute inset-0 pointer-events-none">
+        <div class="absolute -top-10 right-0 w-[420px] h-[420px] bg-emerald-100/50 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 -left-20 w-[420px] h-[420px] bg-fuchsia-100/50 rounded-full blur-3xl"></div>
+      </div>
+      <div class="relative max-w-7xl mx-auto">
+        <div class="max-w-3xl mb-14">
+          <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200 text-sm font-semibold text-emerald-700 mb-6">
+            Hecho para México
+          </span>
+          <h2 class="text-4xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-5">
+            El ERP open source en español que entiende
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600">cómo se trabaja en México</span>
+          </h2>
+          <p class="text-xl text-slate-600 leading-relaxed">
+            Nada de traducir un sistema extranjero ni pagar una localización aparte. La nómina, la Ley Federal
+            del Trabajo, el IVA y los datos del SAT vienen incluidos desde el primer día.
+          </p>
+        </div>
+        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            v-for="item in MEXICO_HIGHLIGHTS"
+            :key="item.title"
+            class="rounded-2xl p-6 bg-white border border-slate-200 shadow-lg shadow-slate-200/50"
+          >
+            <svg class="w-7 h-7 text-emerald-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">{{ item.title }}</h3>
+            <p class="text-sm text-slate-500 leading-relaxed">{{ item.description }}</p>
+          </div>
+        </div>
+        <p class="mt-8 text-sm text-slate-500">
+          Flowbit todavía no timbra CFDI: guarda los datos y claves del SAT para que timbres con tu proveedor actual.
+          <NuxtLink to="/funcionalidades/nomina" class="font-semibold text-indigo-600 hover:text-indigo-800">Conoce la nómina de Flowbit</NuxtLink>.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
     <!-- TODOS LOS MÓDULOS (enlazan a /funcionalidades) -->
     <!-- ============================================ -->
     <section id="modulos" class="relative bg-slate-50 px-4 sm:px-6 lg:px-8 py-24 scroll-mt-20">
       <div class="max-w-7xl mx-auto">
         <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-12">
           <div class="max-w-3xl">
-            <h2 class="text-4xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-4">
+            <h2 class="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-4">
               {{ FEATURE_MODULES.length }} módulos incluidos, gratis
             </h2>
             <p class="text-xl text-slate-600 leading-relaxed">

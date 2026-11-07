@@ -43,9 +43,11 @@ export function organizationJsonLd(siteUrl: string): JsonLdNode {
     '@type': 'Organization',
     '@id': `${siteUrl}/#organization`,
     name: 'Flowbit',
+    alternateName: 'Flowbit ERP',
     url: siteUrl,
     logo: `${siteUrl}/icon-512.png`,
-    description: 'ERP gratuito y open source para pymes.',
+    description: 'ERP open source en español hecho para México.',
+    areaServed: { '@type': 'Country', name: 'México' },
     sameAs: ['https://github.com/Caribbean-Digital-Group/flowbit']
   }
 }

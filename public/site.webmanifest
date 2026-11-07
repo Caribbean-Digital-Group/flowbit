@@ -1,7 +1,7 @@
 {
-  "name": "Flowbit — ERP open source",
+  "name": "Flowbit ERP",
   "short_name": "Flowbit",
-  "description": "ERP gratis y open source: CRM, ventas, punto de venta, inventario, tienda en línea, RR. HH. y nómina.",
+  "description": "ERP open source en español hecho para México: nómina, CRM, punto de venta, inventario, tienda en línea y RR. HH.",
   "lang": "es-MX",
   "start_url": "/admin",
   "scope": "/",

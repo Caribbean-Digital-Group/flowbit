@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FEATURE_MODULES, getFeatureModule, type FeatureModule } from '~/utils/features'
+import { BRAND_NAME, BRAND_POSITIONING, FEATURE_MODULES, getFeatureModule, type FeatureModule } from '~/utils/features'
 import { breadcrumbJsonLd, faqJsonLd, organizationJsonLd, serializeJsonLd } from '~/utils/seo'
 
 definePageMeta({ layout: 'marketing' })
@@ -59,12 +59,14 @@ useHead({
           {
             '@type': 'SoftwareApplication',
             '@id': `${canonical.value}#software`,
-            name: `Flowbit ${module.name}`,
+            name: `${BRAND_NAME} — ${module.name}`,
             description: module.seoDescription,
             url: canonical.value,
             applicationCategory: 'BusinessApplication',
             operatingSystem: 'Web',
             inLanguage: 'es-MX',
+            areaServed: { '@type': 'Country', name: 'México' },
+            availableLanguage: 'es',
             isAccessibleForFree: true,
             license: 'https://opensource.org/licenses/MIT',
             featureList: module.features.map(item => item.title),
@@ -121,7 +123,7 @@ const otherModules = computed(() => FEATURE_MODULES.filter(module => module.slug
             Ver funcionalidades
           </a>
         </div>
-        <p class="mt-6 text-sm text-slate-500">Gratis para siempre · Sin límite de usuarios · Código abierto MIT</p>
+        <p class="mt-6 text-sm text-slate-500">{{ BRAND_NAME }} · {{ BRAND_POSITIONING }} · Gratis y sin límite de usuarios</p>
       </div>
     </section>
 
@@ -142,6 +144,21 @@ const otherModules = computed(() => FEATURE_MODULES.filter(module => module.slug
             </svg>
             <h3 class="text-lg font-bold text-slate-800 mb-2">{{ benefit.title }}</h3>
             <p class="text-sm text-slate-500 leading-relaxed">{{ benefit.description }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Hecho para México -->
+    <section class="bg-white px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20">
+      <div class="max-w-7xl mx-auto">
+        <div class="flex flex-col md:flex-row md:items-center gap-5 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-6 sm:p-8">
+          <span class="inline-flex self-start items-center px-3 py-1 rounded-full bg-white border border-emerald-200 text-xs font-bold uppercase tracking-wider text-emerald-700 flex-shrink-0">
+            Hecho para México
+          </span>
+          <div>
+            <h2 class="text-lg font-bold text-slate-800 mb-1">{{ feature.name }} pensado para empresas mexicanas</h2>
+            <p class="text-slate-600 leading-relaxed">{{ feature.mexico }}</p>
           </div>
         </div>
       </div>

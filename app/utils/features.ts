@@ -45,6 +45,8 @@ export interface FeatureModule {
   gradient: string
   /** Frase de una línea para tarjetas y enlaces. */
   tagline: string
+  /** Cómo se adapta el módulo a México: contenido único del bloque «Hecho para México». */
+  mexico: string
   seoTitle: string
   seoDescription: string
   keywords: string[]
@@ -74,8 +76,9 @@ export const FEATURE_MODULES: FeatureModule[] = [
     icon: 'crm',
     gradient: 'from-indigo-500 to-violet-600',
     tagline: 'Pipeline de ventas con tablero Kanban, leads y actividades.',
-    seoTitle: 'CRM gratis y open source con tablero Kanban | Flowbit',
-    seoDescription: 'CRM gratuito para pymes: gestiona leads, oportunidades y actividades en un tablero Kanban, mide tu pipeline y convierte prospectos en ventas.',
+    mexico: 'Interfaz en español, montos en pesos mexicanos y el RFC de cada prospecto en su ficha de contacto, listo para cuando se convierta en cliente.',
+    seoTitle: 'CRM gratis en español con tablero Kanban | Flowbit ERP',
+    seoDescription: 'CRM gratis en español para pymes de México: leads, oportunidades y actividades en un tablero Kanban, con montos en pesos y pipeline medible.',
     keywords: ['CRM gratis', 'CRM open source', 'CRM para pymes', 'pipeline de ventas', 'tablero Kanban de ventas', 'gestión de leads'],
     headline: 'CRM gratis para dar seguimiento a cada oportunidad de venta',
     intro: 'Organiza a tus prospectos en un pipeline visual, programa actividades y entiende por qué ganas o pierdes cada oportunidad. Todo conectado con contactos, órdenes y el sitio web de tu empresa.',
@@ -112,8 +115,9 @@ export const FEATURE_MODULES: FeatureModule[] = [
     icon: 'sales',
     gradient: 'from-fuchsia-500 to-pink-600',
     tagline: 'Cotizaciones, órdenes, cobros y devoluciones en un solo flujo.',
-    seoTitle: 'Software de ventas y compras gratis para pymes | Flowbit',
-    seoDescription: 'Cotiza, vende y compra desde un solo sistema: órdenes de venta y compra, cobros con abonos, devoluciones y reporte de ventas. Gratis y open source.',
+    mexico: 'Cada línea calcula el IVA con su propia tasa, con precios con o sin impuesto incluido. Los montos van en pesos y las compras en otra moneda se convierten con su tipo de cambio.',
+    seoTitle: 'Software de ventas y compras para pymes | Flowbit ERP',
+    seoDescription: 'Software de ventas y compras en español: órdenes con IVA por línea, cobros con abonos, devoluciones y reporte de ventas en pesos. Gratis y open source.',
     keywords: ['software de ventas gratis', 'sistema de órdenes de compra', 'control de ventas', 'cotizaciones', 'cuentas por cobrar', 'reporte de ventas'],
     headline: 'Software de ventas y compras para controlar cada orden de principio a fin',
     intro: 'Crea cotizaciones, confírmalas como órdenes y deja que Flowbit lleve el estado de entrega y de pago. El inventario y el reporte de ventas se actualizan solos.',
@@ -150,8 +154,9 @@ export const FEATURE_MODULES: FeatureModule[] = [
     icon: 'pos',
     gradient: 'from-violet-500 to-fuchsia-600',
     tagline: 'Caja rápida con lector de códigos, cortes y devoluciones.',
-    seoTitle: 'Punto de venta gratis en la nube (POS) | Flowbit',
-    seoDescription: 'Sistema de punto de venta gratis: cobra con lector de código de barras, pagos mixtos, atajos de teclado, cortes de caja y devoluciones. Sin instalar nada.',
+    mexico: 'Precios en pesos con IVA incluido o desglosado, cobro en efectivo con botones de denominaciones y pagos mixtos con tarjeta o transferencia.',
+    seoTitle: 'Punto de venta gratis en la nube para México | Flowbit ERP',
+    seoDescription: 'Punto de venta gratis para negocios en México: lector de código de barras, precios en pesos con IVA, pagos mixtos, cortes de caja y devoluciones.',
     keywords: ['punto de venta gratis', 'POS gratis', 'sistema de caja', 'punto de venta en la nube', 'corte de caja', 'software para tienda'],
     headline: 'Punto de venta gratis en la nube, listo para cobrar desde el navegador',
     intro: 'Abre caja, escanea productos y cobra en segundos. Cada ticket es una orden de venta que descuenta inventario al momento, y el corte de caja cuadra solo.',
@@ -188,8 +193,9 @@ export const FEATURE_MODULES: FeatureModule[] = [
     icon: 'inventory',
     gradient: 'from-indigo-500 to-indigo-700',
     tagline: 'Productos, almacenes, movimientos con QR y trazabilidad.',
-    seoTitle: 'Control de inventario gratis con varios almacenes | Flowbit',
-    seoDescription: 'Sistema de inventario gratis: productos, varios almacenes, movimientos con código QR, traspasos, costo promedio y alertas de reabastecimiento.',
+    mexico: 'Valuación a costo promedio ponderado en pesos, y compras en dólares u otra moneda convertidas con su tipo de cambio al entrar al almacén.',
+    seoTitle: 'Control de inventario gratis multialmacén | Flowbit ERP',
+    seoDescription: 'Control de inventario gratis en español: varios almacenes, movimientos con código QR, traspasos, costo promedio en pesos y alertas de reabastecimiento.',
     keywords: ['control de inventario gratis', 'software de inventario', 'sistema de almacén', 'kardex', 'trazabilidad de inventario', 'multialmacén'],
     headline: 'Control de inventario gratis para uno o varios almacenes',
     intro: 'Sabe qué tienes, dónde está y cuánto vale. Cada entrada y salida queda registrada con su costo, y Flowbit te avisa antes de que un producto se agote.',
@@ -226,8 +232,9 @@ export const FEATURE_MODULES: FeatureModule[] = [
     icon: 'storefront',
     gradient: 'from-fuchsia-500 to-violet-600',
     tagline: 'Tu e-commerce con cupones, envíos, pagos con tarjeta y analítica.',
-    seoTitle: 'Tienda en línea gratis conectada a tu inventario | Flowbit',
-    seoDescription: 'Tienda en línea gratis para tu negocio: catálogo desde tu inventario, cupones, métodos de envío, pagos con tarjeta vía Stripe y analítica propia.',
+    mexico: 'Precios en pesos, checkout en español y cobro por transferencia, contra entrega o tarjeta con Stripe, que opera en México.',
+    seoTitle: 'Tienda en línea gratis con inventario | Flowbit ERP',
+    seoDescription: 'Tienda en línea gratis para negocios en México: catálogo desde tu inventario, precios en pesos, cupones, envíos y pagos con tarjeta vía Stripe.',
     keywords: ['tienda en línea gratis', 'crear tienda online', 'e-commerce gratis', 'tienda virtual', 'vender por internet', 'carrito de compras'],
     headline: 'Crea tu tienda en línea gratis, conectada a tu inventario y tus ventas',
     intro: 'Publica tu catálogo en minutos con tu marca. Los pedidos llegan como órdenes de venta, descuentan inventario y se cobran con los métodos que elijas.',
@@ -264,8 +271,9 @@ export const FEATURE_MODULES: FeatureModule[] = [
     icon: 'website',
     gradient: 'from-violet-500 to-indigo-600',
     tagline: 'Constructor de páginas, blog, menús y formularios de contacto.',
-    seoTitle: 'Crea el sitio web de tu empresa gratis, con blog | Flowbit',
-    seoDescription: 'Constructor de sitios web gratis para empresas: páginas por secciones, blog con categorías, menús, galerías y formularios conectados a tu CRM.',
+    mexico: 'Panel, editor y plantillas en español, fechas del blog en formato mexicano y mensajes de contacto que llegan directo a tu CRM.',
+    seoTitle: 'Crea el sitio web de tu empresa gratis | Flowbit ERP',
+    seoDescription: 'Constructor de sitios web gratis y en español para empresas: páginas por secciones, blog, menús, galerías y formularios conectados a tu CRM.',
     keywords: ['crear página web gratis', 'sitio web para empresas', 'constructor de páginas web', 'blog para empresas', 'CMS gratis'],
     headline: 'Crea el sitio web de tu empresa gratis, con blog y formularios conectados',
     intro: 'Arma tu sitio con secciones listas para usar, publica artículos en tu blog y recibe mensajes de contacto directo en Flowbit. Comparte diseño con tu tienda en línea.',
@@ -302,8 +310,9 @@ export const FEATURE_MODULES: FeatureModule[] = [
     icon: 'hr',
     gradient: 'from-indigo-500 to-fuchsia-500',
     tagline: 'Empleados, asistencia con kiosco, vacaciones e inasistencias.',
-    seoTitle: 'Software de RR. HH. y control de asistencia gratis | Flowbit',
-    seoDescription: 'Software de RR. HH. gratis: expediente de empleados, checador de asistencia con kiosco y NIP, horarios, retardos, horas extra, vacaciones y permisos.',
+    mexico: 'Expediente con CURP, NSS y RFC, días de vacaciones según el artículo 76 de la Ley Federal del Trabajo (reforma 2023) y días de descanso obligatorio del artículo 74.',
+    seoTitle: 'Control de asistencia y RR. HH. gratis | Flowbit ERP',
+    seoDescription: 'Software de RR. HH. gratis para México: expediente con CURP y NSS, checador con kiosco y NIP, vacaciones según la LFT, retardos y horas extra.',
     keywords: ['software de recursos humanos gratis', 'control de asistencia', 'checador de asistencia', 'reloj checador', 'control de vacaciones', 'expediente de empleados'],
     headline: 'Software de Recursos Humanos y control de asistencia gratis',
     intro: 'Centraliza el expediente de tu equipo, registra asistencia desde un kiosco con NIP y gestiona vacaciones y permisos. Retardos, horas extra y días de vacaciones los calcula el sistema.',
@@ -340,8 +349,9 @@ export const FEATURE_MODULES: FeatureModule[] = [
     icon: 'payroll',
     gradient: 'from-violet-600 to-fuchsia-600',
     tagline: 'Cálculo de nómina en México con ISR, IMSS e INFONAVIT.',
-    seoTitle: 'Software de nómina gratis para México (ISR e IMSS) | Flowbit',
-    seoDescription: 'Calcula tu nómina gratis: ISR, subsidio para el empleo, cuotas IMSS, INFONAVIT e ISN, horas extra, prima vacacional y recibos para tus empleados.',
+    mexico: 'Tarifa de ISR, subsidio para el empleo, cuotas obrero-patronales del IMSS con tope en UMA, INFONAVIT, ISN y percepciones de la LFT. Guarda las claves de los catálogos del SAT para el CFDI de nómina.',
+    seoTitle: 'Software de nómina gratis México: ISR e IMSS | Flowbit ERP',
+    seoDescription: 'Calcula tu nómina en México gratis: ISR, subsidio para el empleo, cuotas IMSS, INFONAVIT e ISN, horas extra, prima vacacional y recibos.',
     keywords: ['software de nómina gratis', 'calcular nómina México', 'cálculo de ISR', 'cuotas IMSS', 'sistema de nómina', 'recibos de nómina'],
     headline: 'Software de nómina gratis para México: ISR, IMSS e INFONAVIT',
     intro: 'Calcula periodos semanales, quincenales o mensuales a partir de la asistencia real de tu equipo. Aprueba, paga y comparte los recibos desde el mismo lugar.',
@@ -378,8 +388,9 @@ export const FEATURE_MODULES: FeatureModule[] = [
     icon: 'projects',
     gradient: 'from-violet-500 to-fuchsia-600',
     tagline: 'Proyectos, tareas, diagrama de Gantt y enlace para clientes.',
-    seoTitle: 'Gestor de proyectos y tareas gratis con Gantt | Flowbit',
-    seoDescription: 'Gestiona proyectos y tareas gratis: responsables, prioridades, diagrama de Gantt, KPIs de avance y un enlace público para mostrar el progreso a tu cliente.',
+    mexico: 'Todo en español, con fechas en formato mexicano y un enlace público para que tus clientes vean el avance sin crear cuenta.',
+    seoTitle: 'Gestor de proyectos gratis con Gantt | Flowbit ERP',
+    seoDescription: 'Gestor de proyectos y tareas gratis en español: responsables, prioridades, diagrama de Gantt, avance y un enlace público para tu cliente.',
     keywords: ['gestor de proyectos gratis', 'software de gestión de proyectos', 'diagrama de Gantt', 'gestión de tareas', 'seguimiento de proyectos'],
     headline: 'Gestor de proyectos y tareas gratis, con diagrama de Gantt',
     intro: 'Planea cada proyecto por tipo, divide el trabajo en tareas con responsable y fecha, y mide el avance real. Comparte el progreso con tu cliente sin darle acceso al panel.',
@@ -416,8 +427,9 @@ export const FEATURE_MODULES: FeatureModule[] = [
     icon: 'approvals',
     gradient: 'from-indigo-500 to-violet-600',
     tagline: 'Solicitudes con flujo de autorización y aprobadores.',
-    seoTitle: 'Flujos de aprobación y solicitudes internas gratis | Flowbit',
-    seoDescription: 'Digitaliza las autorizaciones de tu empresa: solicitudes de compra, gastos o permisos con categorías, aprobadores asignados y notificaciones.',
+    mexico: 'Solicitudes en español con montos en pesos, pensadas para autorizar compras, gastos y viáticos con evidencia de quién aprobó y cuándo.',
+    seoTitle: 'Flujos de aprobación gratis para empresas | Flowbit ERP',
+    seoDescription: 'Flujos de aprobación en español: solicitudes de compra, gastos o viáticos con montos en pesos, categorías, aprobadores y notificaciones.',
     keywords: ['flujo de aprobación', 'software de aprobaciones', 'solicitudes internas', 'autorización de gastos', 'workflow de aprobación'],
     headline: 'Flujos de aprobación para autorizar solicitudes sin correos ni papel',
     intro: 'Cualquier persona del equipo crea una solicitud, el aprobador correcto recibe el aviso y la decisión queda registrada con fecha y responsable.',
@@ -454,8 +466,9 @@ export const FEATURE_MODULES: FeatureModule[] = [
     icon: 'contacts',
     gradient: 'from-indigo-500 to-violet-600',
     tagline: 'Clientes, proveedores y empleados en una sola agenda.',
-    seoTitle: 'Base de datos de clientes y proveedores gratis | Flowbit',
-    seoDescription: 'Agenda única de clientes, proveedores y empleados con datos fiscales (RFC), direcciones, historial de ventas y métricas por contacto. Gratis.',
+    mexico: 'Ficha con RFC y razón social para cada cliente y proveedor, y un mismo contacto que también puede ser empleado, sin capturarlo dos veces.',
+    seoTitle: 'Base de datos de clientes y proveedores | Flowbit ERP',
+    seoDescription: 'Agenda única de clientes, proveedores y empleados con RFC, razón social, direcciones, historial de ventas y métricas por contacto. Gratis.',
     keywords: ['base de datos de clientes', 'directorio de clientes y proveedores', 'gestión de contactos', 'cartera de clientes', 'RFC de clientes'],
     headline: 'Una sola base de datos de clientes, proveedores y empleados',
     intro: 'Captura cada contacto una sola vez y úsalo en el CRM, las ventas, las compras y Recursos Humanos. Consulta su historial y sus métricas desde su ficha.',
@@ -506,12 +519,30 @@ export function getFeatureModule(slug: string): FeatureModule | undefined {
   return FEATURE_MODULES.find(module => module.slug === slug)
 }
 
+/**
+ * Posicionamiento de la marca. Se repite igual en títulos, H1, metadatos y
+ * redes para que los buscadores asocien «Flowbit ERP» con esta categoría.
+ */
+export const BRAND_NAME = 'Flowbit ERP'
+export const BRAND_POSITIONING = 'ERP open source en español hecho para México'
+
+/** Lo que hace a Flowbit un ERP para México. Cada punto existe en el producto. */
+export const MEXICO_HIGHLIGHTS: FeaturePoint[] = [
+  { title: 'Nómina mexicana incluida', description: 'ISR con subsidio para el empleo, cuotas IMSS con tope en UMA, INFONAVIT e ISN, con parámetros fiscales por año.' },
+  { title: 'Ley Federal del Trabajo', description: 'Vacaciones según el artículo 76 (reforma 2023), días de descanso obligatorio, horas extra dobles y triples y prima dominical.' },
+  { title: 'Datos fiscales del SAT', description: 'RFC y razón social de clientes y proveedores; CURP, NSS y claves de los catálogos del SAT para la nómina de tus empleados.' },
+  { title: 'IVA y pesos mexicanos', description: 'IVA por línea con precios con o sin impuesto incluido, montos en pesos y compras en otra moneda con tipo de cambio.' },
+  { title: 'En español, de verdad', description: 'Interfaz, manual de usuario y asistente Bit en español, con fechas y moneda en formato mexicano.' },
+  { title: 'Open source con licencia MIT', description: 'Código público en GitHub: úsalo gratis en la nube o instálalo en tu propio servidor, sin pagar licencias.' }
+]
+
 /** Preguntas frecuentes generales de la landing y del hub. */
 export const PLATFORM_FAQS: FeatureFaq[] = [
-  { question: '¿Qué es Flowbit?', answer: 'Flowbit es un ERP gratuito y de código abierto para pymes. Reúne CRM, ventas, punto de venta, inventario, tienda en línea, sitio web, Recursos Humanos, nómina, proyectos y aprobaciones en una sola plataforma web.' },
+  { question: '¿Qué es Flowbit ERP?', answer: 'Flowbit es un ERP open source en español hecho para México. Reúne CRM, ventas, punto de venta, inventario, tienda en línea, sitio web, Recursos Humanos, nómina, proyectos y aprobaciones en una sola plataforma web, gratis y sin límite de usuarios.' },
+  { question: '¿Por qué un ERP hecho para México?', answer: 'Porque calcula la nómina con ISR, IMSS, INFONAVIT e ISN, aplica la Ley Federal del Trabajo en vacaciones, horas extra y días festivos, maneja IVA y pesos mexicanos, y guarda RFC, CURP y NSS. No hay que adaptar un sistema extranjero.' },
   { question: '¿Flowbit es gratis de verdad?', answer: 'Sí. Todos los módulos y usuarios están incluidos sin costo y no se pide tarjeta de crédito. El código es público con licencia MIT.' },
-  { question: '¿Necesito instalar algo?', answer: 'No. Flowbit funciona en el navegador. Creas tu cuenta, das de alta tu empresa y empiezas a operar. Si lo prefieres, puedes instalarlo en tu propio servidor porque el código es abierto.' },
-  { question: '¿Sirve para empresas en México?', answer: 'Sí. Usa pesos mexicanos y formato es-MX, guarda RFC y datos fiscales, y calcula nómina con ISR, IMSS e INFONAVIT. Todavía no timbra CFDI.' },
-  { question: '¿Puedo administrar varias empresas?', answer: 'Sí. Una cuenta puede pertenecer a varias empresas, cada una con sus datos aislados y su propio equipo.' },
+  { question: '¿Flowbit timbra facturas o recibos de nómina (CFDI)?', answer: 'Todavía no. Flowbit guarda los datos fiscales y las claves del SAT, pero el timbrado se hace con tu proveedor de facturación actual.' },
+  { question: '¿Necesito instalar algo?', answer: 'No. Flowbit funciona en el navegador. Creas tu cuenta, das de alta tu empresa y empiezas a operar. Como es open source, también puedes instalarlo en tu propio servidor.' },
+  { question: '¿Puedo administrar varias empresas o razones sociales?', answer: 'Sí. Una cuenta puede pertenecer a varias empresas, cada una con sus datos aislados y su propio equipo.' },
   { question: '¿Mis datos están seguros?', answer: 'Cada empresa solo puede ver sus propios datos gracias a la seguridad a nivel de fila de la base de datos. No vendemos tu información.' }
 ]

@@ -85,7 +85,7 @@ onMounted(async () => {
     <footer class="bg-white border-t border-slate-200 print:hidden">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
         <p class="text-xs text-slate-500 text-center sm:text-left">
-          Manual de Flowbit, el ERP gratis y open source. Comparte estas guías libremente.
+          Manual de Flowbit ERP, el ERP open source en español hecho para México. Comparte estas guías libremente.
         </p>
         <p class="text-xs text-slate-400">&copy; {{ new Date().getFullYear() }} Flowbit</p>
       </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FEATURE_CATEGORIES, FEATURE_MODULES, PLATFORM_FAQS } from '~/utils/features'
+import { BRAND_NAME, FEATURE_CATEGORIES, FEATURE_MODULES, PLATFORM_FAQS } from '~/utils/features'
 import { breadcrumbJsonLd, faqJsonLd, organizationJsonLd, serializeJsonLd } from '~/utils/seo'
 
 definePageMeta({ layout: 'marketing' })
@@ -8,8 +8,8 @@ const config = useRuntimeConfig()
 const siteUrl = config.public.siteUrl as string
 const canonical = `${siteUrl}/funcionalidades`
 
-const pageTitle = 'Funcionalidades del ERP gratuito Flowbit: todos los módulos'
-const pageDescription = `Conoce los ${FEATURE_MODULES.length} módulos de Flowbit: CRM, ventas, punto de venta, inventario, tienda en línea, sitio web, RR. HH. y nómina. Gratis y open source.`
+const pageTitle = `Módulos del ERP open source para México | ${BRAND_NAME}`
+const pageDescription = `Los ${FEATURE_MODULES.length} módulos de Flowbit, el ERP open source en español para México: nómina, CRM, punto de venta, inventario, tienda y RR. HH.`
 
 useSeoMeta({
   title: pageTitle,
@@ -34,7 +34,7 @@ useHead({
         ]),
         {
           '@type': 'ItemList',
-          name: 'Módulos de Flowbit',
+          name: `Módulos de ${BRAND_NAME}`,
           itemListElement: FEATURE_MODULES.map((module, index) => ({
             '@type': 'ListItem',
             position: index + 1,
@@ -69,11 +69,12 @@ const groups = FEATURE_CATEGORIES
         </nav>
         <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-tight mb-6">
           Todo lo que tu empresa necesita,
-          <span class="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-violet-300 to-fuchsia-300">en un ERP gratuito y open source</span>
+          <span class="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-violet-300 to-fuchsia-300">en un ERP open source hecho para México</span>
         </h1>
         <p class="text-lg sm:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed">
-          Flowbit reúne {{ FEATURE_MODULES.length }} módulos que comparten los mismos datos: lo que capturas en
-          un lugar aparece en todos los demás. Sin licencias, sin límite de usuarios y sin instalar nada.
+          Flowbit ERP reúne {{ FEATURE_MODULES.length }} módulos en español que comparten los mismos datos: lo que capturas
+          en un lugar aparece en todos los demás. Con nómina mexicana, IVA y datos del SAT incluidos, sin licencias
+          y sin límite de usuarios.
         </p>
       </div>
     </section>

@@ -25,13 +25,13 @@ if (!article.value) {
 const canonical = computed(() => `${config.public.siteUrl}/manual/${articleId.value}`)
 
 useSeoMeta({
-  title: () => `${article.value?.title} — Manual de Flowbit`,
+  title: () => `${article.value?.title} — Manual de Flowbit ERP`,
   description: () => article.value?.summary ?? article.value?.description,
-  ogTitle: () => `${article.value?.title} — Flowbit`,
+  ogTitle: () => `${article.value?.title} — Flowbit ERP`,
   ogDescription: () => article.value?.summary ?? article.value?.description,
   ogUrl: () => canonical.value,
   ogType: 'article',
-  twitterTitle: () => `${article.value?.title} — Flowbit`,
+  twitterTitle: () => `${article.value?.title} — Flowbit ERP`,
   twitterDescription: () => article.value?.summary ?? article.value?.description
 })
 
