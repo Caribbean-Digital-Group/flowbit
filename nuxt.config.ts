@@ -26,6 +26,8 @@ export default defineNuxtConfig({
     // El manual pasó de /admin/manual y /help a la sección pública /manual.
     '/help': { redirect: { to: '/manual', statusCode: 301 } },
     '/help/**': { redirect: { to: '/manual/**', statusCode: 301 } },
+    // El token del kiosco viaja en la URL: no se envía como Referer ni se indexa.
+    '/kiosk/**': { headers: { 'Referrer-Policy': 'no-referrer', 'X-Robots-Tag': 'noindex, nofollow' } },
   },
   alias: {
     '~/types': '../types',

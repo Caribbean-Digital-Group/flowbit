@@ -104,6 +104,20 @@ export const MODULE_META: ModuleMeta[] = [
     accent: 'fuchsia'
   },
   {
+    id: 'hr',
+    label: 'Asistencia y ausencias',
+    emoji: '⏱️',
+    description: 'Horarios, kiosco de entrada y salida, asistencias, faltas, vacaciones y permisos.',
+    accent: 'fuchsia'
+  },
+  {
+    id: 'payroll',
+    label: 'Nómina',
+    emoji: '💵',
+    description: 'Salarios, configuración fiscal (ISR, IMSS, INFONAVIT, ISN), cálculo y recibos.',
+    accent: 'emerald'
+  },
+  {
     id: 'team',
     label: 'Equipo',
     emoji: '👨‍💼',
@@ -186,5 +200,18 @@ export const LEARNING_PATHS: LearningPath[] = [
     level: 'basico',
     accent: 'slate',
     articleIds: ['team-list', 'invitations', 'projects-create', 'tasks-list', 'approval-requests-create']
+  },
+  {
+    id: 'path-payroll',
+    title: 'De la asistencia a la nómina',
+    emoji: '💵',
+    description: 'Horarios, kiosco, vacaciones y faltas para calcular una nómina mexicana con ISR, IMSS e INFONAVIT.',
+    estimatedMinutes: 40,
+    level: 'intermedio',
+    accent: 'emerald',
+    articleIds: [
+      'employees-list', 'hr-work-schedules', 'hr-kiosks', 'hr-attendances', 'hr-leaves',
+      'hr-leave-allocations', 'hr-absences', 'payroll-settings', 'payroll-salaries', 'payroll-period-detail'
+    ]
   }
 ]

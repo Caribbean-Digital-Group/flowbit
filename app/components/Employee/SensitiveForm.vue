@@ -37,6 +37,9 @@ export interface EmployeePrivateFormData {
   cfdi_contribution_base: string | number
   cfdi_integrated_daily_wage: string | number
   cfdi_state: string
+  infonavit_credit_number: string
+  infonavit_discount_type: string
+  infonavit_discount_value: string | number
 }
 
 export const createEmptyEmployeePrivateForm = (): EmployeePrivateFormData => ({
@@ -72,7 +75,10 @@ export const createEmptyEmployeePrivateForm = (): EmployeePrivateFormData => ({
   cfdi_employer_registration: '',
   cfdi_contribution_base: '',
   cfdi_integrated_daily_wage: '',
-  cfdi_state: ''
+  cfdi_state: '',
+  infonavit_credit_number: '',
+  infonavit_discount_type: 'none',
+  infonavit_discount_value: ''
 })
 
 export const mapEmployeePrivateToForm = (row: EmployeePrivateRow): EmployeePrivateFormData => ({
@@ -108,7 +114,10 @@ export const mapEmployeePrivateToForm = (row: EmployeePrivateRow): EmployeePriva
   cfdi_employer_registration: row.cfdi_employer_registration ?? '',
   cfdi_contribution_base: row.cfdi_contribution_base ?? '',
   cfdi_integrated_daily_wage: row.cfdi_integrated_daily_wage ?? '',
-  cfdi_state: row.cfdi_state ?? ''
+  cfdi_state: row.cfdi_state ?? '',
+  infonavit_credit_number: row.infonavit_credit_number ?? '',
+  infonavit_discount_type: row.infonavit_discount_type ?? 'none',
+  infonavit_discount_value: row.infonavit_discount_value ?? ''
 })
 
 export const mapFormToEmployeePrivateUpdate = (form: EmployeePrivateFormData): EmployeePrivateUpdate => ({
@@ -144,7 +153,10 @@ export const mapFormToEmployeePrivateUpdate = (form: EmployeePrivateFormData): E
   cfdi_employer_registration: trimToNull(form.cfdi_employer_registration),
   cfdi_contribution_base: toNumberOrNull(form.cfdi_contribution_base),
   cfdi_integrated_daily_wage: toNumberOrNull(form.cfdi_integrated_daily_wage),
-  cfdi_state: form.cfdi_state || null
+  cfdi_state: form.cfdi_state || null,
+  infonavit_credit_number: trimToNull(form.infonavit_credit_number),
+  infonavit_discount_type: (form.infonavit_discount_type || 'none') as EmployeePrivateRow['infonavit_discount_type'],
+  infonavit_discount_value: form.infonavit_discount_type === 'none' ? 0 : toNumberOrNull(form.infonavit_discount_value) ?? 0
 })
 </script>
 
@@ -213,12 +225,31 @@ const yesNoOptions: EmployeeOption[] = [
   <!-- AJUSTES DE RR. HH. -->
   <div v-else-if="section === 'hr'" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
     <FormSelect v-model="formData.employee_type" label="Tipo de empleado" :options="EMPLOYEE_TYPE_OPTIONS" :disabled="readonly" :searchable="false" required size="md" />
-    <FormInput v-model="formData.monthly_salary" type="number" label="Sueldo mensual" min="0" step="0.01" :readonly="readonly" size="md" />
+    <FormInput v-model="formData.monthly_salary" type="number" label="Sueldo mensual" min="0" step="0.01" hint="Se actualiza al registrar un salario en Recursos Humanos → Salarios." :readonly="readonly" size="md" />
     <FormInput v-model="formData.salary_currency" label="Moneda" placeholder="MXN" :maxlength="3" :readonly="readonly" size="md" />
     <FormInput v-model="formData.weekly_hours" type="number" label="Horas por semana" min="0" max="168" step="0.5" :readonly="readonly" size="md" />
-    <FormInput v-model="formData.vacation_days" type="number" label="Días de vacaciones" min="0" :readonly="readonly" size="md" />
+    <FormInput v-model="formData.vacation_days" type="number" label="Días de vacaciones" min="0" hint="Vacío: los de ley según antigüedad. Con valor: se asignan estos días cada año." :readonly="readonly" size="md" />
     <div v-if="showTerminationReason" class="sm:col-span-2">
       <FormTextArea v-model="formData.termination_reason" label="Motivo de baja" :readonly="readonly" :rows="3" size="md" />
+    </div>
+    <div class="sm:col-span-2 mt-2 border-t border-slate-100 pt-4">
+      <p class="mb-3 text-sm font-semibold text-slate-800">
+        Crédito INFONAVIT
+      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <FormInput v-model="formData.infonavit_credit_number" label="Número de crédito" :readonly="readonly" size="md" />
+        <FormSelect v-model="formData.infonavit_discount_type" label="Tipo de descuento" :options="INFONAVIT_DISCOUNT_OPTIONS" :disabled="readonly" :searchable="false" size="md" />
+        <FormInput
+          v-if="formData.infonavit_discount_type !== 'none'"
+          v-model="formData.infonavit_discount_value"
+          type="number"
+          min="0"
+          step="0.0001"
+          :label="formData.infonavit_discount_type === 'percentage' ? 'Porcentaje del SBC' : formData.infonavit_discount_type === 'fixed' ? 'Cuota fija mensual' : 'Factor (veces UMA)'"
+          :readonly="readonly"
+          size="md"
+        />
+      </div>
     </div>
     <div class="sm:col-span-2">
       <FormTextArea v-model="formData.hr_notes" label="Notas de RR. HH." :readonly="readonly" :rows="4" size="md" />
@@ -228,7 +259,7 @@ const yesNoOptions: EmployeeOption[] = [
   <!-- CFDI -->
   <div v-else class="space-y-4">
     <p class="rounded-2xl border border-sky-100 bg-sky-50 px-5 py-3 text-sm text-sky-800">
-      Estos datos se guardan para el CFDI de nómina. Flowbit todavía no calcula nómina ni timbra comprobantes.
+      Estos datos se guardan para el CFDI de nómina. La nómina usa el SBC y el SDI del salario vigente (Recursos Humanos → Salarios). Flowbit todavía no timbra comprobantes.
     </p>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <FormSelect v-model="formData.cfdi_tax_regime" label="Régimen fiscal" :options="CFDI_TAX_REGIME_OPTIONS" :disabled="readonly" :searchable="false" clearable size="md" />

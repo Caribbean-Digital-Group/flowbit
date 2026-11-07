@@ -1204,7 +1204,8 @@ export const ARTICLES: DocArticle[] = [
     tips: [
       'Para editar nombre, correo, dirección o RFC usa «Abrir contacto».',
       'Para dar de baja, cambia el estado a Baja e indica la fecha. El motivo se captura en Ajustes de RR. HH.',
-      'Los datos de CFDI se guardan para la nómina. Flowbit todavía no calcula nómina ni timbra comprobantes.',
+      'Asigna el horario de trabajo en la información del trabajo y el crédito INFONAVIT en Ajustes de RR. HH.: los usan la asistencia y la nómina.',
+      'Los datos de CFDI se guardan para el timbrado. Flowbit calcula la nómina, pero todavía no timbra comprobantes.',
       'Un miembro no ve sus propios datos sensibles; pídelos a un administrador.'
     ],
     faqs: [
@@ -1238,6 +1239,432 @@ export const ARTICLES: DocArticle[] = [
     relatedModules: [{ label: 'Empleados', route: '/admin/employees' }],
     relatedArticles: ['employees-list'],
     tags: ['departamentos', 'áreas', 'organigrama', 'estructura']
+  },
+
+  // ─── ASISTENCIA Y AUSENCIAS ──────────────────────────────────────────────────
+  {
+    id: 'hr-work-schedules',
+    routePatterns: ['/admin/work-schedules', '/admin/work-schedules/create', '/admin/work-schedules/:id'],
+    module: 'hr',
+    moduleLabel: 'Asistencia y ausencias',
+    moduleEmoji: '⏱️',
+    title: 'Horarios de trabajo',
+    viewType: 'list',
+    summary: 'Define la jornada de cada día para calcular retardos, horas extra e inasistencias de forma automática.',
+    description: 'Un horario indica qué días se trabaja, a qué hora se entra y se sale y cuánto dura la comida. Se asigna a cada empleado desde su expediente.',
+    importance: 'Sin horario, Flowbit registra las marcas pero no puede saber si alguien llegó tarde, si trabajó de más o si faltó. Es la base del reporte de asistencias y de la nómina.',
+    tips: [
+      'Un día sin jornada es de descanso: si alguien trabaja ese día, la nómina lo paga doble además del sueldo.',
+      'La comida no se cuenta como tiempo trabajado. Si la persona marca su salida a comer, no se descuenta dos veces.',
+      'Cada horario puede tener su propia tolerancia de retardo; si la dejas vacía, se usa la de la empresa.',
+      'Los turnos no cruzan la medianoche. Para turnos nocturnos, registra las marcas a mano por ahora.'
+    ],
+    fields: [
+      { label: 'Nombre', required: true, type: 'text', description: 'Cómo identificas el horario. Ej: «Oficina 9 a 6».' },
+      { label: 'Tolerancia de retardo', required: false, type: 'number', description: 'Minutos después de la entrada antes de contar retardo.' },
+      { label: 'Jornada por día', required: true, type: 'text', description: 'Entrada, salida y minutos de comida de cada día laborable.' }
+    ],
+    relatedModules: [
+      { label: 'Empleados', route: '/admin/employees' },
+      { label: 'Asistencias', route: '/admin/attendances' }
+    ],
+    relatedArticles: ['hr-attendances', 'hr-absences', 'employees-detail'],
+    tags: ['horario', 'jornada', 'turno', 'retardo', 'tolerancia', 'descanso', 'asistencia'],
+    isNew: true
+  },
+  {
+    id: 'hr-kiosks',
+    routePatterns: ['/admin/kiosks'],
+    module: 'hr',
+    moduleLabel: 'Asistencia y ausencias',
+    moduleEmoji: '⏱️',
+    title: 'Kiosco de asistencia',
+    viewType: 'config',
+    summary: 'Convierte una tableta en reloj checador: cada empleado marca entrada y salida con su NIP.',
+    description: 'Un kiosco es una página pública que abres en una tableta o computadora de la entrada. Los empleados escriben su NIP y Flowbit registra la entrada o la salida, según corresponda.',
+    importance: 'Elimina las listas en papel y los registros a mano. Las marcas alimentan el reporte de asistencias, las horas extra y la nómina.',
+    tips: [
+      'La dirección del kiosco solo se muestra al crearlo. Si la pierdes o se filtra, usa «Nueva dirección»: la anterior deja de funcionar.',
+      'El NIP se guarda cifrado. Nadie puede consultarlo, ni siquiera un administrador: solo cambiarlo.',
+      'Tras 5 NIP incorrectos en 5 minutos el kiosco se bloquea 5 minutos.',
+      'Una segunda marca en menos de un minuto se ignora para evitar dobles toques.',
+      'Si alguien olvida marcar su salida y vuelve más de 20 horas después, la entrada vieja queda «sin salida» para que la corrijas.',
+      'Solo pueden marcar empleados activos con NIP asignado.'
+    ],
+    wizard: {
+      id: 'wizard-kiosk-setup',
+      title: 'Instala tu kiosco de asistencia',
+      description: 'De cero a registrar la primera entrada.',
+      estimatedMinutes: 10,
+      steps: [
+        {
+          id: 'schedule',
+          title: 'Crea un horario',
+          description: 'Define la jornada y asígnala a tus empleados.',
+          action: { label: 'Ir a Horarios', route: '/admin/work-schedules' },
+          checklist: ['Horario creado', 'Horario asignado en el expediente de cada empleado']
+        },
+        {
+          id: 'kiosk',
+          title: 'Crea el kiosco',
+          description: 'Ponle nombre y copia la dirección que aparece.',
+          action: { label: 'Ir a Kioscos', route: '/admin/kiosks' },
+          warning: 'La dirección solo se muestra una vez.'
+        },
+        {
+          id: 'pins',
+          title: 'Asigna los NIP',
+          description: 'Dale a cada empleado un NIP único y compártelo en privado.',
+          checklist: ['Todos los empleados activos tienen NIP']
+        },
+        {
+          id: 'device',
+          title: 'Abre el kiosco en el dispositivo',
+          description: 'Pega la dirección en el navegador de la tableta y déjala en pantalla completa.',
+          tip: 'Fija la página como acceso directo en la pantalla de inicio de la tableta.'
+        }
+      ]
+    },
+    faqs: [
+      {
+        question: '¿El kiosco necesita que alguien inicie sesión?',
+        answer: 'No. La dirección secreta identifica al kiosco y cada persona se identifica con su NIP.'
+      },
+      {
+        question: '¿Qué pasa si un empleado olvida su NIP?',
+        answer: 'Un administrador le asigna uno nuevo desde esta pantalla. El anterior deja de funcionar.'
+      }
+    ],
+    relatedModules: [
+      { label: 'Asistencias', route: '/admin/attendances' },
+      { label: 'Configuración de asistencia', route: '/admin/payroll/settings' }
+    ],
+    relatedArticles: ['hr-attendances', 'hr-work-schedules'],
+    tags: ['kiosco', 'reloj checador', 'checar', 'nip', 'clave', 'entrada', 'salida', 'marcar', 'asistencia'],
+    isNew: true
+  },
+  {
+    id: 'hr-attendances',
+    routePatterns: ['/admin/attendances', '/admin/attendances/create', '/admin/attendances/:id'],
+    module: 'hr',
+    moduleLabel: 'Asistencia y ausencias',
+    moduleEmoji: '⏱️',
+    title: 'Asistencias',
+    viewType: 'list',
+    summary: 'Consulta entradas, salidas, retardos y horas extra por día, y aprueba las horas extra que se pagarán.',
+    description: 'El resumen por día junta todas las marcas de una persona en una fecha y las compara con su horario. La pestaña Marcas muestra cada entrada y salida tal como se registró.',
+    importance: 'Solo las horas extra aprobadas se pagan en la nómina. Revisar este resumen antes de calcular evita pagos de más o de menos.',
+    tips: [
+      'Las horas extra se cuentan al cerrar el día y solo a partir del mínimo configurado (30 minutos por defecto).',
+      'Puedes aprobar menos horas de las registradas desde la aprobación de cada día.',
+      'Usa «Registrar marca manual» cuando el kiosco no estuvo disponible. Queda marcado como manual.',
+      'Corregir una marca recalcula el día; una aprobación previa se conserva si las horas extra no cambian.',
+      'Cada empleado con usuario puede ver sus propias marcas; owner y admin ven a todo el equipo.'
+    ],
+    relatedModules: [
+      { label: 'Reporte de asistencias', route: '/admin/attendances/report' },
+      { label: 'Kioscos', route: '/admin/kiosks' }
+    ],
+    relatedArticles: ['hr-attendance-report', 'hr-kiosks', 'payroll-period-detail'],
+    tags: ['asistencia', 'marcas', 'entrada', 'salida', 'retardo', 'horas extra', 'tiempo extra'],
+    isNew: true
+  },
+  {
+    id: 'hr-attendance-report',
+    routePatterns: ['/admin/attendances/report'],
+    module: 'hr',
+    moduleLabel: 'Asistencia y ausencias',
+    moduleEmoji: '⏱️',
+    title: 'Reporte de asistencias',
+    viewType: 'analytics',
+    summary: 'Días trabajados, puntualidad, horas extra, faltas y permisos de cada empleado en cualquier rango de fechas.',
+    description: 'Resume por empleado la asistencia del rango elegido: horas trabajadas, retardos, horas extra aprobadas y pendientes, faltas, permisos y días de descanso o festivos laborados.',
+    importance: 'Es la vista para revisar antes de calcular la nómina y para dar seguimiento a la puntualidad del equipo.',
+    tips: [
+      'Las faltas solo aparecen después de detectarlas en Inasistencias.',
+      'Exporta el reporte a CSV para compartirlo o archivarlo.',
+      'Haz clic en un empleado para ver su asistencia día por día.'
+    ],
+    relatedArticles: ['hr-attendances', 'hr-absences'],
+    tags: ['reporte', 'asistencia', 'puntualidad', 'retardos', 'faltas', 'horas extra'],
+    isNew: true
+  },
+  {
+    id: 'hr-absences',
+    routePatterns: ['/admin/absences'],
+    module: 'hr',
+    moduleLabel: 'Asistencia y ausencias',
+    moduleEmoji: '⏱️',
+    title: 'Inasistencias',
+    viewType: 'list',
+    summary: 'Detecta las faltas automáticamente y decide cuáles se justifican y cuáles se descuentan.',
+    description: '«Detectar faltas» revisa cada día laborable del rango y registra una falta injustificada cuando la persona no marcó, no era festivo y no tenía un permiso aprobado.',
+    importance: 'Las faltas injustificadas que se descuentan reducen los días pagados y los días cotizados al IMSS en la nómina.',
+    tips: [
+      'Solo se revisan días ya cerrados (hasta ayer) y empleados con horario asignado.',
+      'Detectar de nuevo no duplica faltas, y una falta descartada no vuelve a aparecer.',
+      'Si la persona marca después, la falta de ese día se quita sola.',
+      'Al aprobar un permiso, las faltas de esas fechas pasan a justificadas.',
+      'Al justificar puedes decidir si el día se descuenta o no.'
+    ],
+    relatedModules: [{ label: 'Vacaciones y permisos', route: '/admin/leaves' }],
+    relatedArticles: ['hr-leaves', 'hr-attendance-report', 'hr-holidays'],
+    tags: ['faltas', 'inasistencias', 'ausentismo', 'justificar', 'descuento'],
+    isNew: true
+  },
+  {
+    id: 'hr-leaves',
+    routePatterns: ['/admin/leaves', '/admin/leaves/create', '/admin/leaves/:id'],
+    module: 'hr',
+    moduleLabel: 'Asistencia y ausencias',
+    moduleEmoji: '⏱️',
+    title: 'Vacaciones y permisos',
+    viewType: 'list',
+    summary: 'Solicita, aprueba y da seguimiento a vacaciones, permisos con y sin goce de sueldo e incapacidades.',
+    description: 'Cada solicitud indica el tipo de ausencia y las fechas. Flowbit cuenta solo los días laborables del horario del empleado, sin fines de semana ni festivos.',
+    importance: 'Una solicitud aprobada justifica las faltas de esas fechas y se refleja en la nómina: las vacaciones se pagan con prima vacacional, los permisos sin goce se descuentan.',
+    tips: [
+      'Cualquier empleado con usuario puede solicitar sus propias vacaciones; solo owner y admin aprueban.',
+      'Al aprobar vacaciones se valida que haya saldo suficiente.',
+      'Un empleado puede cancelar su solicitud mientras siga pendiente.',
+      'No se pueden traslapar dos solicitudes pendientes o aprobadas de la misma persona.',
+      'Para rechazar hay que escribir el motivo.'
+    ],
+    fields: [
+      { label: 'Empleado', required: true, type: 'relation', description: 'Quién se ausenta.' },
+      { label: 'Tipo de ausencia', required: true, type: 'relation', description: 'Vacaciones, permiso con o sin goce, incapacidad u otro que hayas creado.' },
+      { label: 'Desde / Hasta', required: true, type: 'date', description: 'Fechas de la ausencia, ambas incluidas.' },
+      { label: 'Medio día', required: false, type: 'boolean', description: 'Solo para solicitudes de un día.' }
+    ],
+    relatedModules: [
+      { label: 'Saldos de vacaciones', route: '/admin/leave-allocations' },
+      { label: 'Tipos de ausencia', route: '/admin/leave-types' }
+    ],
+    relatedArticles: ['hr-leave-allocations', 'hr-leave-types', 'hr-absences'],
+    tags: ['vacaciones', 'permisos', 'incapacidad', 'ausencia', 'solicitud', 'aprobar', 'días libres'],
+    isNew: true
+  },
+  {
+    id: 'hr-leave-allocations',
+    routePatterns: ['/admin/leave-allocations', '/admin/leave-allocations/create'],
+    module: 'hr',
+    moduleLabel: 'Asistencia y ausencias',
+    moduleEmoji: '⏱️',
+    title: 'Saldos de vacaciones',
+    viewType: 'list',
+    summary: 'Asigna las vacaciones de ley por antigüedad con un clic y consulta cuántos días le quedan a cada persona.',
+    description: 'El saldo es la suma de los días asignados menos los días aprobados. «Asignar vacaciones por antigüedad» da a cada empleado los días de su año de servicio según la LFT.',
+    importance: 'Desde 2023 la Ley Federal del Trabajo otorga 12 días el primer año, dos más por año hasta 20 en el quinto y dos más cada cinco años después.',
+    tips: [
+      'Solo reciben asignación automática los empleados con fecha de ingreso y al menos un año cumplido.',
+      'Puedes ejecutar la asignación cuantas veces quieras: no duplica años ya asignados.',
+      'Si un empleado tiene «Días de vacaciones» en su expediente, se asignan esos días en lugar de los de ley.',
+      'Usa una asignación manual para cargar saldos iniciales al migrar a Flowbit; un número negativo resta días.'
+    ],
+    relatedArticles: ['hr-leaves', 'employees-detail'],
+    tags: ['saldo', 'vacaciones', 'antigüedad', 'LFT', 'días de vacaciones', 'vacaciones dignas'],
+    isNew: true
+  },
+  {
+    id: 'hr-leave-types',
+    routePatterns: ['/admin/leave-types', '/admin/leave-types/create', '/admin/leave-types/:id'],
+    module: 'hr',
+    moduleLabel: 'Asistencia y ausencias',
+    moduleEmoji: '⏱️',
+    title: 'Tipos de ausencia',
+    viewType: 'config',
+    description: 'Catálogo de ausencias. La clase de cada tipo define cómo se paga: vacaciones, permiso con goce, permiso sin goce o incapacidad IMSS.',
+    importance: 'La clase es lo que usa la nómina para decidir si esos días se pagan, se descuentan o los cubre el IMSS.',
+    tips: [
+      'Al entrar por primera vez se crean cuatro tipos básicos.',
+      'Puedes crear tipos propios, como «Permiso por matrimonio», con la clase que corresponda.',
+      'Solo los tipos que descuentan saldo necesitan asignar días.'
+    ],
+    relatedArticles: ['hr-leaves', 'hr-leave-allocations'],
+    tags: ['tipos de ausencia', 'permiso con goce', 'permiso sin goce', 'incapacidad'],
+    isNew: true
+  },
+  {
+    id: 'hr-holidays',
+    routePatterns: ['/admin/holidays'],
+    module: 'hr',
+    moduleLabel: 'Asistencia y ausencias',
+    moduleEmoji: '⏱️',
+    title: 'Días festivos',
+    viewType: 'config',
+    description: 'Días no laborables de la empresa. «Cargar días de ley» agrega los días de descanso obligatorio del artículo 74 de la LFT, con los lunes recorridos.',
+    importance: 'Los festivos no generan faltas ni cuentan como días de vacaciones. Si alguien trabaja uno, la nómina lo paga doble además del sueldo.',
+    tips: [
+      'Carga los días de ley al inicio de cada año.',
+      'Agrega también los días que tu empresa da por su cuenta.',
+      'El 1 de octubre solo es obligatorio cada seis años, con el cambio de Poder Ejecutivo Federal.'
+    ],
+    relatedArticles: ['hr-absences', 'hr-leaves'],
+    tags: ['festivos', 'días feriados', 'descanso obligatorio', 'artículo 74'],
+    isNew: true
+  },
+
+  // ─── NÓMINA ──────────────────────────────────────────────────────────────────
+  {
+    id: 'payroll-settings',
+    routePatterns: ['/admin/payroll/settings'],
+    module: 'payroll',
+    moduleLabel: 'Nómina',
+    moduleEmoji: '💵',
+    title: 'Configuración fiscal de nómina',
+    viewType: 'config',
+    level: 'avanzado',
+    summary: 'Configura por año la UMA, el salario mínimo, la tarifa de ISR, el subsidio, las cuotas IMSS, el INFONAVIT y el impuesto sobre nómina.',
+    description: 'Cada ejercicio fiscal tiene sus propios parámetros. Al configurarlo, Flowbit carga valores de referencia que debes revisar y ajustar a tu empresa.',
+    importance: 'Estos valores cambian cada año por publicación oficial. Si no los actualizas, los cálculos de ISR, IMSS e impuestos no serán correctos.',
+    tips: [
+      'Verifica la UMA (se publica en enero y rige desde febrero), el salario mínimo y la tarifa de ISR del año contra el DOF y el SAT.',
+      'La prima de riesgo de trabajo es propia de tu empresa: usa la que te determinó el IMSS.',
+      'El impuesto sobre nómina depende de tu estado. Captura la tasa vigente.',
+      'La cuota patronal de cesantía y vejez sube cada año hasta 2030 según el salario en veces UMA.',
+      'En la pestaña «Asistencia y kiosco» se configuran la zona horaria, la tolerancia de retardo, las horas extra y el NIP.'
+    ],
+    faqs: [
+      {
+        question: '¿Flowbit actualiza solo las tablas de ISR y la UMA?',
+        answer: 'No. Los valores precargados son una referencia. La empresa es responsable de verificarlos cada año.'
+      },
+      {
+        question: '¿Qué pasa con quien gana el salario mínimo?',
+        answer: 'No se le retiene la cuota obrera del IMSS: la cubre el patrón, como indica el artículo 36 de la Ley del Seguro Social. Sus horas extra dobles quedan exentas de ISR.'
+      }
+    ],
+    relatedArticles: ['payroll-periods', 'payroll-salaries'],
+    tags: ['ISR', 'IMSS', 'UMA', 'salario mínimo', 'subsidio', 'cesantía', 'vejez', 'INFONAVIT', 'impuesto sobre nómina', 'ISN', 'prima de riesgo'],
+    isNew: true
+  },
+  {
+    id: 'payroll-salaries',
+    routePatterns: ['/admin/salaries', '/admin/salaries/create', '/admin/salaries/:id'],
+    module: 'payroll',
+    moduleLabel: 'Nómina',
+    moduleEmoji: '💵',
+    title: 'Salarios',
+    viewType: 'list',
+    summary: 'Lleva el historial de sueldos de cada empleado con su SDI y SBC para el IMSS.',
+    description: 'Cada registro tiene una fecha de vigencia. El salario vigente se copia al expediente del empleado y es el que usa la nómina.',
+    importance: 'Un historial evita perder la referencia de aumentos y permite calcular cada periodo con el sueldo que correspondía.',
+    tips: [
+      'Puedes capturar un sueldo mensual o un salario diario; Flowbit calcula el otro con meses de 30 días.',
+      '«Usar sugerido» calcula el SDI con las prestaciones de ley: 15 días de aguinaldo y 25% de prima vacacional.',
+      'Si dejas vacío el SBC, la nómina usa el SDI sugerido.',
+      'Un aviso indica si el salario queda por debajo del mínimo.',
+      'Registra un aumento a futuro: se aplica solo cuando llega su fecha.'
+    ],
+    relatedArticles: ['payroll-periods', 'employees-detail'],
+    tags: ['salario', 'sueldo', 'SDI', 'SBC', 'salario diario integrado', 'aumento'],
+    isNew: true
+  },
+  {
+    id: 'payroll-periods',
+    routePatterns: ['/admin/payroll', '/admin/payroll/create'],
+    module: 'payroll',
+    moduleLabel: 'Nómina',
+    moduleEmoji: '💵',
+    title: 'Periodos de nómina',
+    viewType: 'list',
+    summary: 'Crea periodos semanales, quincenales o mensuales y sigue cada nómina de borrador a pagada.',
+    description: 'Un periodo agrupa los recibos de un rango de fechas. Pasa por cuatro estados: borrador, calculada, aprobada y pagada.',
+    importance: 'Separar el cálculo de la aprobación permite revisar antes de pagar. Una nómina aprobada o pagada ya no se modifica.',
+    tips: [
+      'Al crear un periodo, Flowbit propone las fechas siguientes al último de la misma periodicidad.',
+      'Quincenal paga 15 días y mensual 30, aunque el mes tenga más o menos días.'
+    ],
+    relatedArticles: ['payroll-period-detail', 'payroll-settings'],
+    tags: ['nómina', 'periodo', 'quincena', 'semana', 'pago'],
+    isNew: true
+  },
+  {
+    id: 'payroll-period-detail',
+    routePatterns: ['/admin/payroll/:id'],
+    module: 'payroll',
+    moduleLabel: 'Nómina',
+    moduleEmoji: '💵',
+    title: 'Calcular y aprobar la nómina',
+    viewType: 'detail',
+    level: 'intermedio',
+    summary: 'Calcula percepciones, ISR, IMSS e INFONAVIT de todo el equipo en un clic, revisa y aprueba.',
+    description: 'El cálculo toma el salario vigente al final del periodo, las horas extra aprobadas, las vacaciones y permisos aprobados, las faltas que se descuentan y los ajustes del periodo.',
+    importance: 'Reúne en un solo paso todo lo que antes se capturaba a mano. El costo total muestra cuánto paga realmente la empresa por cada persona.',
+    tips: [
+      'Horas extra: las primeras 9 por semana se pagan dobles y el resto triples; las dobles exentan 50% hasta 5 UMA por semana.',
+      'Vacaciones: se paga el sueldo de esos días más la prima vacacional (25% mínimo), exenta hasta 15 UMA.',
+      'Domingo laborado: prima dominical de 25%. Descanso o festivo laborado: doble además del sueldo.',
+      'Agrega bonos, aguinaldo, comisiones o préstamos como ajustes y recalcula.',
+      'Quien entra o sale a mitad del periodo cobra la parte proporcional.',
+      'Al aprobar, cada empleado con usuario ve su recibo en «Mis recibos».'
+    ],
+    wizard: {
+      id: 'wizard-first-payroll',
+      title: 'Tu primera nómina',
+      description: 'Lo necesario para calcular una nómina correcta.',
+      estimatedMinutes: 25,
+      steps: [
+        {
+          id: 'fiscal',
+          title: 'Revisa la configuración fiscal',
+          description: 'Configura el año y verifica UMA, salario mínimo, ISR, prima de riesgo e ISN.',
+          action: { label: 'Configuración fiscal', route: '/admin/payroll/settings' }
+        },
+        {
+          id: 'salaries',
+          title: 'Registra los salarios',
+          description: 'Cada empleado necesita un salario vigente con su SBC.',
+          action: { label: 'Salarios', route: '/admin/salaries' },
+          warning: 'Los empleados sin salario no se calculan.'
+        },
+        {
+          id: 'attendance',
+          title: 'Revisa la asistencia',
+          description: 'Aprueba horas extra, detecta faltas y aprueba vacaciones pendientes del periodo.',
+          action: { label: 'Reporte de asistencias', route: '/admin/attendances/report' }
+        },
+        {
+          id: 'calculate',
+          title: 'Calcula, revisa y aprueba',
+          description: 'Crea el periodo, agrega ajustes, calcula y revisa los recibos antes de aprobar.',
+          action: { label: 'Nueva nómina', route: '/admin/payroll/create' },
+          checklist: ['Avisos atendidos', 'Recibos revisados', 'Nómina aprobada', 'Nómina marcada como pagada']
+        }
+      ]
+    },
+    faqs: [
+      {
+        question: '¿Flowbit timbra el CFDI de nómina?',
+        answer: 'Todavía no. Los conceptos guardan su clave del SAT para preparar el timbrado, pero el recibo de Flowbit es informativo.'
+      },
+      {
+        question: '¿Puedo corregir una nómina aprobada?',
+        answer: 'Sí, mientras no esté pagada: usa «Reabrir para recalcular». Una nómina pagada ya no se modifica.'
+      }
+    ],
+    relatedArticles: ['payroll-slip', 'hr-attendance-report', 'payroll-settings'],
+    tags: ['calcular nómina', 'ISR', 'IMSS', 'INFONAVIT', 'horas extra', 'prima vacacional', 'aguinaldo', 'recibo', 'costo patronal'],
+    isNew: true
+  },
+  {
+    id: 'payroll-slip',
+    routePatterns: ['/admin/payroll/slips/:id', '/admin/payroll/my-payslips'],
+    module: 'payroll',
+    moduleLabel: 'Nómina',
+    moduleEmoji: '💵',
+    title: 'Recibos de nómina',
+    viewType: 'detail',
+    description: 'El recibo detalla percepciones (gravadas y exentas), deducciones y el neto a pagar. Owner y admin ven además las cuotas patronales y el costo total.',
+    importance: 'Cada empleado con usuario consulta sus recibos y su saldo de vacaciones en «Mis recibos», sin pedirlos a RR. HH.',
+    tips: [
+      'Los recibos aparecen para el empleado cuando la nómina se aprueba.',
+      'Usa «Imprimir» para guardarlo en PDF desde el navegador.',
+      'El recibo no sustituye al CFDI timbrado.'
+    ],
+    relatedArticles: ['payroll-period-detail', 'hr-leaves'],
+    tags: ['recibo', 'mis recibos', 'neto', 'percepciones', 'deducciones'],
+    isNew: true
   },
 
   // ─── EQUIPO ───────────────────────────────────────────────────────────────────

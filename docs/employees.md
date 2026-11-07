@@ -32,7 +32,18 @@ Se guarda en `employee_private.birth_date` y no en `partner.birthdate`. La polí
 
 Los campos `cfdi_*` guardan claves de los catálogos del SAT para el CFDI de nómina. Las opciones viven en `app/utils/employee.ts` y la base no las restringe, para que un cambio de catálogo no requiera una migración.
 
-El módulo solo captura datos. No calcula nómina ni timbra. Antes de timbrar hay que validar las claves contra el catálogo vigente del SAT.
+Este módulo solo captura datos. El cálculo de nómina vive en [payroll.md](payroll.md) y todavía no timbra. Antes de timbrar hay que validar las claves contra el catálogo vigente del SAT.
+
+## Asistencia y nómina
+
+La migración `20261107180000_create_hr_payroll_suite` agrega:
+
+- `employee.work_schedule_id`: horario de trabajo, visible para el equipo. `v_employees` se recreó para incluirlo junto con `work_schedule_name`.
+- `employee_private.infonavit_credit_number`, `infonavit_discount_type` e `infonavit_discount_value`: crédito INFONAVIT del trabajador.
+- El salario vigente de `hr_salary` se copia por trigger a `monthly_salary`, `cfdi_contribution_base` y `cfdi_integrated_daily_wage`.
+- `vacation_days`, si tiene valor, sustituye a los días de ley en la asignación anual de vacaciones.
+
+Detalle en [hr.md](hr.md) y [payroll.md](payroll.md).
 
 ## Tipos
 

@@ -12,6 +12,7 @@ export interface EmployeeFormData {
   hire_date: string
   status: EmployeeStatus
   termination_date: string
+  work_schedule_id: string
 }
 
 export const createEmptyEmployeeForm = (): EmployeeFormData => ({
@@ -24,7 +25,8 @@ export const createEmptyEmployeeForm = (): EmployeeFormData => ({
   work_location: '',
   hire_date: '',
   status: 'active',
-  termination_date: ''
+  termination_date: '',
+  work_schedule_id: ''
 })
 
 export const mapEmployeeToForm = (employee: EmployeeRow): EmployeeFormData => ({
@@ -37,7 +39,8 @@ export const mapEmployeeToForm = (employee: EmployeeRow): EmployeeFormData => ({
   work_location: employee.work_location ?? '',
   hire_date: employee.hire_date ?? '',
   status: employee.status,
-  termination_date: employee.termination_date ?? ''
+  termination_date: employee.termination_date ?? '',
+  work_schedule_id: employee.work_schedule_id ?? ''
 })
 
 export const mapFormToEmployeeRegistration = (form: EmployeeFormData): EmployeeRegistration => ({
@@ -54,7 +57,8 @@ export const mapFormToEmployeeRegistration = (form: EmployeeFormData): EmployeeR
 export const mapFormToEmployeeUpdate = (form: EmployeeFormData): EmployeeUpdate => ({
   ...mapFormToEmployeeRegistration(form),
   status: form.status,
-  termination_date: form.status === 'terminated' ? form.termination_date || null : null
+  termination_date: form.status === 'terminated' ? form.termination_date || null : null,
+  work_schedule_id: form.work_schedule_id || null
 })
 </script>
 
@@ -64,13 +68,16 @@ interface Props {
   showStatus?: boolean
   departmentOptions?: EmployeeOption[]
   managerOptions?: EmployeeOption[]
+  /** Horarios de trabajo. Sin opciones no se muestra el campo (alta). */
+  scheduleOptions?: EmployeeOption[]
 }
 
 withDefaults(defineProps<Props>(), {
   readonly: false,
   showStatus: false,
   departmentOptions: () => [],
-  managerOptions: () => []
+  managerOptions: () => [],
+  scheduleOptions: () => []
 })
 
 const formData = defineModel<EmployeeFormData>({ required: true })
@@ -140,6 +147,18 @@ const formData = defineModel<EmployeeFormData>({ required: true })
       type="date"
       label="Fecha de ingreso"
       :readonly="readonly"
+      size="md"
+    />
+    <FormSelect
+      v-if="showStatus"
+      v-model="formData.work_schedule_id"
+      label="Horario de trabajo"
+      :options="scheduleOptions"
+      :disabled="readonly"
+      placeholder="Sin horario"
+      no-results-text="Crea horarios en Recursos Humanos → Horarios"
+      hint="Define retardos, horas extra e inasistencias."
+      clearable
       size="md"
     />
     <template v-if="showStatus">
