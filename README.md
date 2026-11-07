@@ -1,75 +1,41 @@
-# Nuxt Minimal Starter
+# Flowbit
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+ERP ligero, multi-tenant y de código abierto, desarrollado por **Caribbean Digital Group**.
+Demo: https://tryflowbit.netlify.app
 
-## Setup
+## Stack
 
-Make sure to install dependencies:
+Nuxt 4 · Vue 3 (Composition API) · TypeScript estricto · Tailwind CSS v4 · Supabase (PostgreSQL + Auth + RLS) · Pinia.
+
+## Módulos
+
+General (dashboard, agenda, contactos) · CRM · Ventas/Compras · Tienda en línea · Sitio web (CMS + blog) · Inventario · Proyectos · Aprobaciones · Equipo · Manual público con asistente Bit.
+
+Documentación por módulo en [`docs/`](docs): [CRM](docs/crm.md), [ventas](docs/sales-flow-analysis.md), [storefront](docs/storefront.md), [sitio web](docs/website.md), [inventario](docs/inventory.md), [POS](docs/pos.md), [salud](docs/health.md), [manual y Bit](docs/manual-bit.md).
+
+## Puesta en marcha
 
 ```bash
-# npm
 npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
+cp .env.example .env.local   # completa las variables
+npm run dev                  # http://localhost:3000
 ```
 
-## Development Server
-
-Start the development server on `http://localhost:3000`:
+Flowbit usa Supabase Cloud (no hay instancia local). Para aplicar migraciones y regenerar tipos:
 
 ```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
+npm run db:push
+npm run db:types
 ```
 
-## Production
+## Variables de entorno
 
-Build the application for production:
+Ver [`.env.example`](.env.example). `SUPABASE_SECRET_KEY` es solo de servidor.
 
-```bash
-# npm
-npm run build
+## Contribuir
 
-# pnpm
-pnpm build
+Lee [CONTRIBUTING.md](CONTRIBUTING.md) y [CLAUDE.md](CLAUDE.md) (convenciones del código).
 
-# yarn
-yarn build
+## Licencia
 
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+MIT — ver [LICENSE](LICENSE).
