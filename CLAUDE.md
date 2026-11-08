@@ -54,7 +54,7 @@ flowbit/
 │   │   ├── marketing.vue              # Landing y /funcionalidades (header + footer con enlaces a módulos)
 │   │   ├── default.vue
 │   │   └── public.vue
-│   ├── middleware/                    # Guards de navegación (a implementar)
+│   ├── middleware/                    # admin-guard.global.ts: exige sesión en /admin (conserva ?redirect=)
 │   ├── pages/
 │   │   ├── sites/[company_slug]/      # Sitio web público por empresa (CMS + blog)
 │   │   ├── index.vue                  # Landing / login
