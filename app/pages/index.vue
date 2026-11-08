@@ -105,11 +105,16 @@ watch(() => route.query.registro, handleRegisterQuery)
 
 const modules = FEATURE_MODULES.map(module => ({ name: module.slug, label: module.name }))
 
+/**
+ * Flujo de punta a punta. Cada paso enlaza la página del módulo que lo resuelve:
+ * le explica al visitante cómo se conectan y suma enlazado interno.
+ */
 const workflow = [
-  { step: '01', title: 'Cliente', description: 'Registra socios comerciales con toda su información fiscal y de contacto.', color: 'from-indigo-500 to-indigo-600' },
-  { step: '02', title: 'Proyecto', description: 'Crea proyectos, asigna tareas y monitorea progreso en tiempo real.', color: 'from-violet-500 to-violet-600' },
-  { step: '03', title: 'Orden', description: 'Genera órdenes de venta o compra a partir de tu catálogo de productos.', color: 'from-fuchsia-500 to-fuchsia-600' },
-  { step: '04', title: 'Almacén', description: 'Picking, inventario y trazabilidad completa desde el almacén.', color: 'from-indigo-500 via-violet-500 to-fuchsia-500' },
+  { step: '01', title: 'Prospecto', module: 'CRM', to: '/funcionalidades/crm', description: 'Captura el lead desde tu sitio web o a mano y dale seguimiento en el tablero Kanban.', color: 'from-indigo-500 to-indigo-600' },
+  { step: '02', title: 'Venta', module: 'Ventas y punto de venta', to: '/funcionalidades/ventas', description: 'El lead ganado se vuelve orden de venta. En mostrador, cada ticket del punto de venta también lo es.', color: 'from-violet-500 to-violet-600' },
+  { step: '03', title: 'Entrega', module: 'Inventario', to: '/funcionalidades/inventario', description: 'El almacén surte con movimientos escaneables por QR y la existencia se actualiza sola.', color: 'from-fuchsia-500 to-fuchsia-600' },
+  { step: '04', title: 'Cobro', module: 'Ventas', to: '/funcionalidades/ventas', description: 'Registra abonos con cualquier método de pago; el estado de pago y el reporte de ventas se calculan solos.', color: 'from-violet-600 to-fuchsia-600' },
+  { step: '05', title: 'Equipo', module: 'RR. HH. y nómina', to: '/funcionalidades/nomina', description: 'La asistencia de tu equipo alimenta la nómina con ISR, IMSS e INFONAVIT.', color: 'from-indigo-600 to-violet-600' },
 ]
 </script>
 
@@ -311,7 +316,7 @@ const workflow = [
         </div>
 
         <!-- Bento Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-6 gap-5 auto-rows-[180px]">
+        <div class="grid grid-cols-1 md:grid-cols-6 gap-5 md:auto-rows-[180px]">
           <!-- Partners - Big -->
           <div class="md:col-span-3 md:row-span-2 group relative bg-gradient-to-br from-indigo-50 via-white to-violet-50 rounded-3xl p-8 border border-indigo-100 hover:border-indigo-300 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/20 overflow-hidden">
             <!-- Abstract decoration -->
@@ -328,10 +333,10 @@ const workflow = [
                 <span class="px-3 py-1 text-xs font-bold rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200">CORE</span>
               </div>
 
-              <h3 class="text-2xl font-bold text-slate-900 mb-3">Gestión de Clientes</h3>
+              <h3 class="text-2xl font-bold text-slate-900 mb-3"><NuxtLink to="/funcionalidades/contactos" class="after:absolute after:inset-0 after:rounded-3xl focus:outline-none focus-visible:underline">Gestión de Clientes</NuxtLink></h3>
               <p class="text-slate-600 leading-relaxed mb-6 flex-1">
                 Socios comerciales con datos fiscales completos, contactos, direcciones múltiples e historial.
-                Búsqueda inteligente y categorización por tipo de partner.
+                Búsqueda inteligente y categorización por tipo de contacto.
               </p>
 
               <!-- Mini preview chips -->
@@ -354,11 +359,11 @@ const workflow = [
                 </svg>
               </div>
               <div class="flex-1">
-                <h3 class="text-xl font-bold text-white mb-2">Proyectos</h3>
+                <h3 class="text-xl font-bold text-white mb-2"><NuxtLink to="/funcionalidades/proyectos" class="after:absolute after:inset-0 after:rounded-3xl focus:outline-none focus-visible:underline">Proyectos</NuxtLink></h3>
                 <p class="text-slate-400 text-sm leading-relaxed mb-4">
                   Define proyectos por tipo, asigna responsables, monitorea progreso con KPIs en tiempo real.
                 </p>
-                <div class="flex items-center gap-4 text-xs">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
                   <span class="flex items-center gap-1.5 text-emerald-400">
                     <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
                     En curso
@@ -387,7 +392,7 @@ const workflow = [
                 </svg>
               </div>
               <div class="flex-1">
-                <h3 class="text-xl font-bold text-slate-900 mb-2">Tareas</h3>
+                <h3 class="text-xl font-bold text-slate-900 mb-2"><NuxtLink to="/funcionalidades/proyectos" class="after:absolute after:inset-0 after:rounded-3xl focus:outline-none focus-visible:underline">Tareas</NuxtLink></h3>
                 <p class="text-slate-600 text-sm leading-relaxed">
                   Desglose granular del trabajo. Asigna, prioriza, vincula a proyectos y mide el avance real.
                 </p>
@@ -402,7 +407,7 @@ const workflow = [
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
               </svg>
             </div>
-            <h3 class="text-lg font-bold text-slate-900 mb-1">Órdenes</h3>
+            <h3 class="text-lg font-bold text-slate-900 mb-1"><NuxtLink to="/funcionalidades/ventas" class="after:absolute after:inset-0 after:rounded-3xl focus:outline-none focus-visible:underline">Órdenes</NuxtLink></h3>
             <p class="text-sm text-slate-600">Venta, compra y cotizaciones unificadas.</p>
           </div>
 
@@ -413,7 +418,7 @@ const workflow = [
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
               </svg>
             </div>
-            <h3 class="text-lg font-bold text-slate-900 mb-1">Productos</h3>
+            <h3 class="text-lg font-bold text-slate-900 mb-1"><NuxtLink to="/funcionalidades/inventario" class="after:absolute after:inset-0 after:rounded-3xl focus:outline-none focus-visible:underline">Productos</NuxtLink></h3>
             <p class="text-sm text-slate-600">Catálogo con costos, precios y existencias.</p>
           </div>
 
@@ -424,7 +429,7 @@ const workflow = [
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
               </svg>
             </div>
-            <h3 class="text-lg font-bold text-slate-900 mb-1">Almacenes</h3>
+            <h3 class="text-lg font-bold text-slate-900 mb-1"><NuxtLink to="/funcionalidades/inventario" class="after:absolute after:inset-0 after:rounded-3xl focus:outline-none focus-visible:underline">Almacenes</NuxtLink></h3>
             <p class="text-sm text-slate-600">Múltiples bodegas con picking integrado.</p>
           </div>
         </div>
@@ -520,82 +525,69 @@ const workflow = [
     <!-- ============================================ -->
     <!-- WORKFLOW -->
     <!-- ============================================ -->
-    <section id="workflow" class="relative bg-slate-950 px-4 sm:px-6 lg:px-8 py-24 scroll-mt-20 overflow-hidden">
-      <!-- Background -->
-      <div class="absolute inset-0">
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-violet-600/20 via-fuchsia-600/10 to-transparent rounded-full blur-3xl"></div>
-      </div>
-      <!-- Grid -->
-      <div class="absolute inset-0 opacity-[0.07]" style="background-image: linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px); background-size: 60px 60px;"></div>
-
-      <div class="relative max-w-7xl mx-auto">
-        <!-- Header -->
-        <div class="text-center max-w-3xl mx-auto mb-20">
-          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 mb-6">
-            <svg class="w-4 h-4 text-fuchsia-400" fill="currentColor" viewBox="0 0 20 20">
+    <!--
+      Fondo claro y colores opacos: la versión anterior (oscura, con anillos
+      animados semitransparentes) dejaba números y descripciones casi ilegibles.
+    -->
+    <section id="workflow" class="relative bg-white px-4 sm:px-6 lg:px-8 py-24 scroll-mt-20">
+      <div class="max-w-7xl mx-auto">
+        <div class="text-center max-w-3xl mx-auto mb-16">
+          <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 border border-indigo-200 text-sm font-semibold text-indigo-700 mb-6">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
               <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
             </svg>
-            <span class="text-sm font-semibold text-slate-300">Workflow integrado</span>
-          </div>
-          <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight">
+            Flujo integrado
+          </span>
+          <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 mb-6 tracking-tight">
             De cliente a entrega,
-            <span class="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-violet-300 to-fuchsia-300">en un solo flujo.</span>
+            <span class="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600">en un solo flujo.</span>
           </h2>
-          <p class="text-xl text-slate-400 leading-relaxed">
-            Cada acción genera información que alimenta al siguiente módulo. Sin duplicar capturas, sin perder contexto.
+          <p class="text-xl text-slate-600 leading-relaxed">
+            Cada paso alimenta al siguiente módulo. Sin duplicar capturas ni perder contexto entre áreas.
           </p>
         </div>
 
-        <!-- Connected Flow -->
-        <div class="relative">
-          <!-- Connecting line for desktop -->
-          <svg class="hidden lg:block absolute top-12 left-0 w-full h-20 z-0 pointer-events-none" viewBox="0 0 1200 80" preserveAspectRatio="none">
-            <path d="M 100 40 Q 400 -20, 600 40 T 1100 40" stroke="url(#flow-line)" stroke-width="2" fill="none" stroke-dasharray="6 6" class="animate-dash"/>
-            <defs>
-              <linearGradient id="flow-line" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#6366f1"/>
-                <stop offset="50%" stop-color="#a855f7"/>
-                <stop offset="100%" stop-color="#e879f9"/>
-              </linearGradient>
-            </defs>
-          </svg>
+        <ol class="relative grid gap-6 lg:grid-cols-5">
+          <!-- Conector horizontal (escritorio) -->
+          <div class="hidden lg:block absolute top-10 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-indigo-200 via-violet-300 to-fuchsia-200" aria-hidden="true"></div>
+          <!-- Conector vertical (móvil y tableta) -->
+          <div class="lg:hidden absolute top-10 bottom-10 left-10 w-0.5 bg-gradient-to-b from-indigo-200 via-violet-300 to-fuchsia-200" aria-hidden="true"></div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
-            <div v-for="(item, idx) in workflow" :key="item.step" class="group relative">
-              <!-- Node -->
-              <div class="relative bg-slate-900/60 backdrop-blur-sm border border-white/10 rounded-3xl p-6 hover:border-white/20 hover:bg-slate-900/80 transition-all duration-500 hover:-translate-y-2 h-full">
-                <!-- Step number with gradient ring -->
-                <div class="relative w-24 h-24 mx-auto mb-6">
-                  <div :class="['absolute inset-0 rounded-full bg-gradient-to-br opacity-20 blur-xl group-hover:opacity-40 transition-opacity', item.color]"></div>
-                  <div :class="['relative w-full h-full rounded-full bg-gradient-to-br flex items-center justify-center text-white font-bold text-2xl shadow-2xl', item.color]">
-                    {{ item.step }}
-                  </div>
-                  <!-- Pulse ring -->
-                  <div :class="['absolute inset-0 rounded-full bg-gradient-to-br opacity-50 animate-ping-slow', item.color]" :style="{ animationDelay: `${idx * 0.4}s` }"></div>
-                </div>
-
-                <h3 class="text-xl font-bold text-white text-center mb-3">{{ item.title }}</h3>
-                <p class="text-slate-400 text-sm text-center leading-relaxed">{{ item.description }}</p>
-              </div>
+          <li v-for="item in workflow" :key="item.step" class="relative flex lg:flex-col items-start lg:items-center gap-5 lg:gap-0 lg:text-center">
+            <div :class="['relative z-10 flex-shrink-0 w-20 h-20 rounded-full bg-gradient-to-br flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-violet-500/25 ring-8 ring-white', item.color]">
+              {{ item.step }}
             </div>
-          </div>
-        </div>
+            <div class="flex-1 lg:mt-6 bg-white rounded-2xl border border-slate-200 p-5 shadow-lg shadow-slate-200/50 lg:min-h-[13rem] flex flex-col">
+              <h3 class="text-xl font-bold text-slate-900 mb-2">{{ item.title }}</h3>
+              <p class="text-sm text-slate-600 leading-relaxed flex-1">{{ item.description }}</p>
+              <NuxtLink
+                :to="item.to"
+                class="mt-4 inline-flex items-center gap-1 self-start lg:self-center text-sm font-semibold text-indigo-700 hover:text-fuchsia-700 transition-colors"
+              >
+                {{ item.module }}
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </NuxtLink>
+            </div>
+          </li>
+        </ol>
       </div>
     </section>
 
     <!-- ============================================ -->
     <!-- VENTAJAS - CREATIVE LAYOUT -->
     <!-- ============================================ -->
-    <section id="ventajas" class="relative bg-gradient-to-b from-white via-indigo-50/30 to-white px-4 sm:px-6 lg:px-8 py-24 scroll-mt-20 overflow-hidden">
+    <section id="ventajas" class="relative bg-slate-50 px-4 sm:px-6 lg:px-8 py-24 scroll-mt-20 overflow-hidden">
       <!-- Decorative -->
       <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <svg class="absolute top-20 left-10 w-24 h-24 text-indigo-200/60 animate-float" viewBox="0 0 100 100">
+        <svg class="hidden md:block absolute top-20 left-10 w-24 h-24 text-indigo-200/60 animate-float" viewBox="0 0 100 100">
           <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" fill="currentColor"/>
         </svg>
-        <svg class="absolute top-40 right-20 w-20 h-20 text-violet-200/60 animate-float-delayed" viewBox="0 0 100 100">
+        <svg class="hidden md:block absolute top-40 right-20 w-20 h-20 text-violet-200/60 animate-float-delayed" viewBox="0 0 100 100">
           <circle cx="50" cy="50" r="45" fill="currentColor"/>
         </svg>
-        <svg class="absolute bottom-32 left-1/4 w-16 h-16 text-fuchsia-200/60 animate-float" viewBox="0 0 100 100">
+        <svg class="hidden md:block absolute bottom-32 left-1/4 w-16 h-16 text-fuchsia-200/60 animate-float" viewBox="0 0 100 100">
           <rect x="10" y="10" width="80" height="80" rx="15" fill="currentColor" transform="rotate(15 50 50)"/>
         </svg>
       </div>
@@ -701,7 +693,7 @@ const workflow = [
         </div>
 
         <!-- Mini feature row -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
           <div class="flex items-center gap-3 p-5 bg-white rounded-2xl border border-slate-200/80 hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-500/10 transition-all">
             <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
               <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -892,25 +884,6 @@ const workflow = [
   animation: float-delayed 10s ease-in-out infinite;
 }
 
-/* Ping slow */
-@keyframes ping-slow {
-  0% { transform: scale(1); opacity: 0.7; }
-  100% { transform: scale(1.4); opacity: 0; }
-}
-
-.animate-ping-slow {
-  animation: ping-slow 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-/* Dash animation */
-@keyframes dash {
-  to { stroke-dashoffset: -24; }
-}
-
-.animate-dash {
-  animation: dash 2s linear infinite;
-}
-
 /* Blob */
 @keyframes blob {
   0%, 100% { transform: translate(0, 0) scale(1); }
@@ -923,11 +896,6 @@ const workflow = [
   animation: blob 15s ease-in-out infinite;
 }
 
-/* Radial gradient utility */
-.bg-gradient-radial {
-  background-image: radial-gradient(var(--tw-gradient-stops));
-}
-
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee,
@@ -935,8 +903,6 @@ const workflow = [
   .animate-float-soft,
   .animate-float,
   .animate-float-delayed,
-  .animate-ping-slow,
-  .animate-dash,
   .animate-blob {
     animation: none;
   }

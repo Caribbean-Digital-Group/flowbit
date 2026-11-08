@@ -86,7 +86,8 @@ const registerLink = '/?registro=1'
       </div>
     </header>
 
-    <main class="flex-1 w-full">
+    <!-- Fondo claro explícito: las secciones con colores translúcidos no deben dejar ver el oscuro del layout -->
+    <main class="flex-1 w-full bg-white">
       <slot />
     </main>
 
