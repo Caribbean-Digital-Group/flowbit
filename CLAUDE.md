@@ -51,6 +51,7 @@ flowbit/
 │   ├── layouts/
 │   │   ├── admin.vue                  # Layout del panel (sidebar + header + notificaciones)
 │   │   ├── manual.vue                 # Layout del manual público (se adapta a invitado / con sesión)
+│   │   ├── marketing.vue              # Landing y /funcionalidades (header + footer con enlaces a módulos)
 │   │   ├── default.vue
 │   │   └── public.vue
 │   ├── middleware/                    # Guards de navegación (a implementar)
@@ -216,6 +217,19 @@ flowbit/
 > el proyecto por inactividad. Lo disparan la función programada de Netlify
 > (`netlify/functions/keepalive.mts`) y, como respaldo,
 > `.github/workflows/keepalive.yml`. Documentado en `docs/health.md`.
+
+### Funcionalidades y SEO (sección pública)
+
+| Módulo | Ruta | Acceso | Fuente |
+|---|---|---|---|
+| Hub de funcionalidades | `/funcionalidades` | Público | `app/utils/features.ts` |
+| Página por módulo | `/funcionalidades/[slug]` | Público | `app/utils/features.ts` |
+
+> Páginas comerciales que compiten en buscadores (layout `marketing`, compartido con la landing).
+> `app/utils/features.ts` es la fuente única del hub, las páginas, la grilla de la landing, el footer y el sitemap:
+> al lanzar un módulo nuevo, agrega su entrada ahí. Solo se afirma lo que existe en el producto.
+> JSON-LD con los helpers de `app/utils/seo.ts`. Los CTA de registro enlazan a `/?registro=1`.
+> Plan de SEO y acciones fuera del código: `docs/seo.md`.
 
 ### Ayuda (sección pública)
 
@@ -579,6 +593,8 @@ SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SECRET_KEY=      # service_role — solo servidor; requerida para pagos Stripe del storefront y para el latido anti-suspensión
 NUXT_PUBLIC_SITE_URL=
 HEALTH_PING_TOKEN=        # opcional — protege /api/health/keepalive (ver docs/health.md)
+NUXT_PUBLIC_GOOGLE_SITE_VERIFICATION=  # opcional — verificación de Search Console (se lee al compilar, ver docs/seo.md)
+NUXT_PUBLIC_BING_SITE_VERIFICATION=    # opcional — verificación de Bing Webmaster Tools
 ```
 
 ---

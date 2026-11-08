@@ -3,6 +3,13 @@ import tailwindcss from '@tailwindcss/vite'
 // https://nuxt.com/docs/api/configuration/nuxt-config
 const siteUrl = (process.env.NUXT_PUBLIC_SITE_URL || 'https://tryflowbit.netlify.app').replace(/\/$/, '')
 
+// Verificación de propiedad en Google Search Console y Bing Webmaster Tools
+// (método «etiqueta HTML»). Se leen al compilar; vacías no se emite la etiqueta.
+const searchVerificationMeta = [
+  { name: 'google-site-verification', content: process.env.NUXT_PUBLIC_GOOGLE_SITE_VERIFICATION },
+  { name: 'msvalidate.01', content: process.env.NUXT_PUBLIC_BING_SITE_VERIFICATION },
+].filter((meta): meta is { name: string, content: string } => Boolean(meta.content))
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -42,25 +49,26 @@ export default defineNuxtConfig({
     head: {
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1',
-      htmlAttrs: { lang: 'es' },
+      htmlAttrs: { lang: 'es-MX' },
       meta: [
-        { name: 'author', content: 'Caribbean Digital Group' },
+        { name: 'author', content: 'Flowbit' },
         // Las vistas privadas lo sobrescriben con noindex desde su layout
         { name: 'robots', content: 'index, follow' },
         { name: 'googlebot', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' },
         { name: 'theme-color', content: '#6366f1' },
         { name: 'apple-mobile-web-app-title', content: 'Flowbit' },
         { name: 'application-name', content: 'Flowbit' },
-        { property: 'og:site_name', content: 'Flowbit' },
+        { property: 'og:site_name', content: 'Flowbit ERP' },
         { property: 'og:type', content: 'website' },
-        { property: 'og:locale', content: 'es_ES' },
+        { property: 'og:locale', content: 'es_MX' },
         // Respaldo para las páginas que no definen su propia imagen
         { property: 'og:image', content: `${siteUrl}/og-image.png` },
         { property: 'og:image:width', content: '1200' },
         { property: 'og:image:height', content: '630' },
-        { property: 'og:image:alt', content: 'Flowbit — ERP open source' },
+        { property: 'og:image:alt', content: 'Flowbit ERP, el ERP open source en español hecho para México' },
         { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:image', content: `${siteUrl}/og-image.png` },
+        ...searchVerificationMeta,
       ],
       link: [
         // El SVG lo prefieren los navegadores modernos; el .ico cubre al resto
