@@ -801,30 +801,35 @@ export const ARTICLES: DocArticle[] = [
     module: 'approvals',
     moduleLabel: 'Aprobaciones',
     moduleEmoji: '✍️',
-    title: 'Solicitudes de Aprobación',
+    title: 'Solicitudes de aprobación',
     viewType: 'list',
-    description: 'Las solicitudes de aprobación son documentos formales que requieren autorización de un gestor designado antes de proceder con una acción (gasto, compra, contratación, etc.).',
-    importance: 'El módulo de aprobaciones crea un flujo de autorización formal y auditable. Garantiza que las decisiones importantes pasen por el proceso de revisión y autorización correcto, creando un registro permanente.',
+    summary: 'Tus bandejas: lo que espera tu decisión, lo que pediste y todo lo que puedes ver, con aprobación masiva.',
+    description: 'Las solicitudes de aprobación son trámites formales (compras, viáticos, gastos, permisos…) que necesitan autorización antes de proceder. La lista tiene tres bandejas: «Pendientes de mí», «Mis solicitudes» y «Todas las que puedo ver».',
+    importance: 'Cada decisión queda registrada con quién, cuándo y por qué en una bitácora que no se puede alterar. Ves solo lo que te corresponde: tus solicitudes, las que te toca aprobar y, si eres owner o admin, todas.',
     tips: [
-      'Las solicitudes "Publicadas" están esperando la aprobación del gestor asignado.',
-      'Como aprobador, tus solicitudes pendientes aparecen en el panel de notificaciones del header.',
-      'Una solicitud aprobada o rechazada queda como registro permanente de autorización.',
-      'Adjunta documentos de soporte antes de publicar para agilizar la revisión del aprobador.',
-      'Si el aprobador rechaza la solicitud, puedes corregirla y volver a publicarla.'
+      '«Pendientes de mí» se ordena por prioridad y fecha límite. Marca varias y apruébalas o recházalas de una vez.',
+      'La columna «Dónde está» dice en qué nivel va la solicitud y quién tiene que decidir.',
+      'Las solicitudes «Devueltas» esperan correcciones del solicitante; las «Expiradas» vencieron sin resolverse.',
+      'Filtra por categoría, estado, prioridad o solo las vencidas, y exporta la lista a CSV.',
+      'Los avisos (por aprobar, recordatorios, resoluciones, menciones) llegan a la campana del panel y a tu agenda.'
     ],
     process: [
-      { step: 1, title: 'Crear Solicitud (Borrador)', description: 'El solicitante crea la solicitud describiendo qué requiere aprobar y adjunta soporte.' },
-      { step: 2, title: 'Publicar Solicitud', description: 'El solicitante publica; esto notifica automáticamente al gestor asignado.' },
-      { step: 3, title: 'Revisión por el Gestor', description: 'El gestor designado revisa la información y documentos adjuntos.' },
-      { step: 4, title: 'Aprobación o Rechazo', description: 'El gestor aprueba o rechaza con una justificación obligatoria.' },
-      { step: 5, title: 'Registro Final', description: 'La decisión queda registrada con fecha, responsable y justificación como evidencia de autorización.' }
+      { step: 1, title: 'Borrador', description: 'El solicitante captura la solicitud (o alguien en su nombre) y revisa la vista previa del flujo.' },
+      { step: 2, title: 'En revisión', description: 'Al enviarla, el motor activa el primer nivel y avisa a sus aprobadores en la agenda.' },
+      { step: 3, title: 'Niveles', description: 'Cada nivel aprueba según su modo (uno, todos o un mínimo). Los niveles paralelos corren al mismo tiempo.' },
+      { step: 4, title: 'Resolución', description: 'Aprobada al completar el último nivel; rechazada en cuanto alguien rechaza con motivo. También puede devolverse para corrección.' },
+      { step: 5, title: 'Evidencia', description: 'La bitácora encadenada y la evidencia imprimible quedan disponibles para auditoría.' }
+    ],
+    faqs: [
+      { question: '¿Quién puede aprobar?', answer: 'Los aprobadores registrados en «Aprobadores» (para sus categorías) y los owners de la empresa. Si un nivel no encuentra a nadie, por ejemplo porque el solicitante no tiene jefe directo, pasa a los owners.' },
+      { question: '¿Por qué no veo una solicitud de mi equipo?', answer: 'Solo la ven el solicitante, quien la capturó, los aprobadores que participan, el responsable del departamento (si no es confidencial) y los owners/admin.' }
     ],
     relatedModules: [
-      { label: 'Crear Solicitud', route: '/admin/approval-requests/create' },
-      { label: 'Categorías de Aprobación', route: '/admin/approval-categories' },
-      { label: 'Gestores de Aprobación', route: '/admin/approval-managers' }
+      { label: 'Nueva solicitud', route: '/admin/approval-requests/create' },
+      { label: 'Flujos', route: '/admin/approval-flows' },
+      { label: 'Tablero', route: '/admin/approval-dashboard' }
     ],
-    tags: ['aprobación', 'solicitud', 'autorización', 'gestor', 'flujo', 'auditoria']
+    tags: ['aprobación', 'solicitud', 'autorización', 'bandeja', 'aprobación masiva', 'pendientes', 'auditoría']
   },
   {
     id: 'approval-requests-create',
@@ -832,30 +837,32 @@ export const ARTICLES: DocArticle[] = [
     module: 'approvals',
     moduleLabel: 'Aprobaciones',
     moduleEmoji: '✍️',
-    title: 'Crear Solicitud de Aprobación',
+    title: 'Crear una solicitud de aprobación',
     viewType: 'create',
-    description: 'Crea una solicitud formal de autorización para que un gestor designado la revise y apruebe antes de proceder.',
-    importance: 'Una solicitud bien documentada desde el inicio facilita la revisión del aprobador y acelera el proceso de autorización. La categoría determina qué gestor la recibirá.',
+    summary: 'Captura la solicitud, revisa en vivo quién la aprobará y envíala; puedes partir de una plantilla o pedir en nombre de otra persona.',
+    description: 'Crea una solicitud formal. La categoría define el formulario (campos propios, partidas, adjunto obligatorio) y cómo se aprueba: con un flujo multinivel o, en modo simple, con el aprobador que elijas.',
+    importance: 'La vista previa usa el mismo cálculo que hará el motor al enviar: sabes desde antes quién la aprobará y en qué orden.',
     tips: [
-      'El título debe ser claro y descriptivo: qué se solicita y para qué propósito.',
-      'La categoría es crítica: determina qué gestor recibe y aprueba la solicitud.',
-      'Incluye toda la información necesaria en la descripción para que el aprobador no pida más datos.',
-      'Adjunta documentos de soporte (cotizaciones, facturas, propuestas) antes de publicar.',
-      'Si hay un monto involucrado, ingrésalo para dar contexto financiero al aprobador.'
+      'Si la categoría no tiene flujo, elige al aprobador (solo aparecen los que autorizan esa categoría).',
+      'Con partidas, el importe es la suma automática de concepto × cantidad × precio.',
+      'Si capturas en nombre de otra persona, elígela como «Solicitante»: tú quedas registrado como capturista.',
+      'Guarda solicitudes frecuentes como plantilla (tuya o de la empresa). Las plantillas recurrentes crean un borrador cada semana o mes.',
+      'Si la categoría exige adjunto, guarda el borrador, adjunta el archivo y envíala desde el detalle.'
     ],
     fields: [
-      { label: 'Título', required: true, type: 'text', description: 'Descripción breve de lo que se solicita aprobar.', tip: 'Ejemplo: "Compra de laptops para equipo de desarrollo - Presupuesto Q3 2024".' },
-      { label: 'Categoría', required: true, type: 'select', description: 'Tipo de solicitud que determina el gestor asignado y el flujo de aprobación.', tip: 'Si no existe la categoría adecuada, solicita al administrador que la cree antes de proceder.' },
-      { label: 'Descripción / Justificación', required: false, type: 'textarea', description: 'Explicación detallada de la solicitud y su justificación de negocio.', tip: 'Explica el "por qué" es necesario, el impacto esperado y las alternativas consideradas.' },
-      { label: 'Monto', required: false, type: 'number', description: 'Valor monetario involucrado en la solicitud (si aplica).', tip: 'Incluye el monto exacto o estimado para facilitar la evaluación del aprobador.' },
-      { label: 'Moneda', required: false, type: 'select', description: 'Divisa del monto indicado.', tip: 'Por defecto MXN; cámbiala para transacciones en divisas extranjeras.' },
-      { label: 'Fecha Requerida', required: false, type: 'date', description: 'Fecha límite en que se necesita la aprobación para poder proceder.', tip: 'Da suficiente tiempo al aprobador para revisar; evita solicitudes de "urgente" sin justificación.' }
+      { label: 'Asunto', required: true, type: 'text', description: 'Qué se solicita, en una línea.' },
+      { label: 'Categoría', required: true, type: 'select', description: 'Define el formulario, el flujo y las reglas.' },
+      { label: 'Prioridad', required: false, type: 'select', description: 'Baja, normal, alta o urgente. Ordena las bandejas de los aprobadores.' },
+      { label: 'Fecha requerida', required: false, type: 'date', description: 'Para cuándo necesitas la respuesta.' },
+      { label: 'Campos de la categoría', required: false, type: 'text', description: 'Datos propios (destino, proveedor, RFC…). Los marcados como obligatorios se validan al enviar.' },
+      { label: 'Aprobador', required: false, type: 'relation', description: 'Solo en categorías sin flujo (modo simple).' },
+      { label: 'Importe y moneda', required: false, type: 'number', description: 'Monto en pesos u otra moneda. Las reglas por monto lo usan para decidir los niveles.' }
     ],
     relatedModules: [
-      { label: 'Lista de Solicitudes', route: '/admin/approval-requests' },
-      { label: 'Categorías de Aprobación', route: '/admin/approval-categories' }
+      { label: 'Lista de solicitudes', route: '/admin/approval-requests' },
+      { label: 'Categorías', route: '/admin/approval-categories' }
     ],
-    tags: ['solicitud', 'aprobación', 'crear', 'autorización', 'nueva solicitud']
+    tags: ['solicitud', 'aprobación', 'crear', 'plantilla', 'en nombre de', 'vista previa', 'partidas']
   },
   {
     id: 'approval-requests-detail',
@@ -863,22 +870,118 @@ export const ARTICLES: DocArticle[] = [
     module: 'approvals',
     moduleLabel: 'Aprobaciones',
     moduleEmoji: '✍️',
-    title: 'Detalle de Solicitud de Aprobación',
+    title: 'Detalle de una solicitud',
     viewType: 'detail',
-    description: 'Vista completa de una solicitud de aprobación con su estado, historial de cambios y acciones disponibles según tu rol.',
-    importance: 'Permite al solicitante y al aprobador ver todo el contexto de la solicitud y tomar las acciones correspondientes según su rol en el proceso.',
+    summary: 'Datos, adjuntos, conversación, línea de tiempo del flujo, bitácora verificada y todas las acciones según tu rol.',
+    description: 'Todo en una pantalla: datos y partidas, adjuntos, conversación con menciones, la línea de tiempo de cada nivel, solicitudes anteriores del mismo solicitante, indicadores de riesgo y la bitácora.',
+    importance: 'Las acciones dependen de tu papel y el motor las valida: nadie puede saltarse un nivel ni cambiar el estado a mano.',
     tips: [
-      'Las acciones disponibles dependen de tu rol: solicitante o aprobador.',
-      'Si eres el aprobador, verás los botones "Aprobar" y "Rechazar" con campo de justificación.',
-      'Si eres el solicitante, puedes publicar (si está en borrador) o cancelar la solicitud.',
-      'Una solicitud rechazada puede corregirse y volver a publicarse sin perder el historial.',
-      'El historial muestra todas las transiciones de estado con fecha y responsable como evidencia.'
+      'Como aprobador: aprueba (con observaciones opcionales), rechaza con motivo, devuelve para corrección, agrega a otra persona o reasigna.',
+      'Si ya aprobaste y la solicitud sigue en revisión, puedes revocar tu aprobación con motivo.',
+      'Como solicitante, una devuelta se corrige y se reenvía. Editar una en revisión queda registrado; si cambias un dato crítico (como el monto), el flujo empieza de nuevo.',
+      'Owners y admin pueden forzar la aprobación o el rechazo con motivo; queda en el reporte de cumplimiento.',
+      'Los avisos de riesgo señalan montos fuera del promedio, posibles duplicados y contactos nuevos.',
+      '«Evidencia imprimible» genera un documento con la cadena de aprobación y el hash de la bitácora para guardarlo como PDF.'
+    ],
+    faqs: [
+      { question: '¿Qué significa «Integridad verificada»?', answer: 'Cada evento de la bitácora guarda el hash SHA-256 del anterior. Si alguien alterara un evento, la cadena se rompería y el sello lo mostraría.' },
+      { question: 'Vengo de un permiso de RR. HH., ¿por qué no puedo devolverlo?', answer: 'Las solicitudes creadas desde otro módulo se aprueban o rechazan; para corregir fechas, el empleado cancela el permiso y crea uno nuevo.' }
     ],
     relatedModules: [
-      { label: 'Lista de Solicitudes', route: '/admin/approval-requests' },
-      { label: 'Gestores de Aprobación', route: '/admin/approval-managers' }
+      { label: 'Lista de solicitudes', route: '/admin/approval-requests' },
+      { label: 'Configuración', route: '/admin/approval-settings' }
     ],
-    tags: ['solicitud', 'aprobación', 'detalle', 'estado', 'historial', 'revisar']
+    tags: ['solicitud', 'aprobación', 'detalle', 'devolver', 'revocar', 'reasignar', 'bitácora', 'evidencia']
+  },
+  {
+    id: 'approval-flows',
+    isNew: true,
+    routePatterns: ['/admin/approval-flows', '/admin/approval-flows/create', '/admin/approval-flows/:id'],
+    module: 'approvals',
+    moduleLabel: 'Aprobaciones',
+    moduleEmoji: '✍️',
+    title: 'Flujos de aprobación multinivel',
+    viewType: 'config',
+    summary: 'Niveles secuenciales o paralelos, modos uno/todos/mínimo, condiciones por monto o campos, plazos y simulador.',
+    description: 'Un flujo es la plantilla de niveles que sigue una categoría. Cada nivel define sus aprobadores (personas concretas, aprobadores de la categoría, owners, jefe directo, cadena de jefes o responsable del departamento), su modo, una condición opcional y un plazo en días hábiles.',
+    importance: 'Al enviar, la solicitud guarda una copia del flujo: editarlo no afecta a las que ya están en curso.',
+    tips: [
+      'Niveles con la misma secuencia corren en paralelo (por ejemplo, Finanzas y Legal a la vez).',
+      'Rangos de monto: crea niveles con condición «Monto es mayor o igual que…». Hasta $10,000 el jefe; de ahí, también Dirección.',
+      '«Cadena de jefes hasta cubrir el monto» sube por el organigrama de RR. HH. hasta alguien cuyo límite alcance.',
+      'Si un aprobador tiene un límite menor al monto, el motor escala solo a su jefe con límite suficiente o a los owners.',
+      'Usa el simulador con datos hipotéticos antes de asignar el flujo a una categoría.',
+      'Los niveles informativos avisan sin bloquear.'
+    ],
+    faqs: [
+      { question: '¿Qué pasa si ninguna condición aplica?', answer: 'La solicitud la deciden los owners: nunca se aprueba sin que alguien decida, salvo la aprobación automática por monto de la categoría.' }
+    ],
+    relatedModules: [
+      { label: 'Categorías', route: '/admin/approval-categories' },
+      { label: 'Configuración', route: '/admin/approval-settings' }
+    ],
+    tags: ['flujo', 'multinivel', 'niveles', 'condiciones', 'monto', 'quórum', 'paralelo', 'simulador', 'jefe directo']
+  },
+  {
+    id: 'approval-settings',
+    isNew: true,
+    routePatterns: ['/admin/approval-settings'],
+    module: 'approvals',
+    moduleLabel: 'Aprobaciones',
+    moduleEmoji: '✍️',
+    title: 'Configuración, delegaciones y plazos',
+    viewType: 'config',
+    summary: 'Suplencias por vacaciones, políticas del motor, plazos con recordatorios y escalamiento, motivos de rechazo y herramientas.',
+    description: 'Cualquier aprobador registra aquí su suplente. Owners y admin ajustan las políticas (no aprobar lo propio, no pedir dos veces, motivo obligatorio), los plazos y el escalamiento, el catálogo de motivos de rechazo, y exportan o importan la configuración.',
+    importance: 'Las delegaciones y el escalamiento por plazo evitan que una solicitud se quede detenida porque alguien está fuera.',
+    tips: [
+      'Una delegación con fechas cubre vacaciones o incapacidades; sin fechas es permanente. Puede limitarse a una categoría.',
+      'Los plazos cuentan días hábiles: sin fines de semana ni los días festivos de RR. HH.',
+      'Al vencer un plazo se recuerda a quien debe decidir y, según el ajuste, se escala a su jefe, a los owners o se resuelve sola.',
+      'Las funciones avanzadas (flujos, aprobación automática, no aprobar lo propio) se activan aquí. Apagadas, la empresa trabaja en modo simple.',
+      '«Cargar flujos de ejemplo» crea Compras, Viáticos, Gastos menores, Descuentos comerciales y Alta de proveedor.'
+    ],
+    wizard: {
+        id: 'wizard-approvals-setup',
+        title: 'Configura tus aprobaciones multinivel',
+        description: 'De modo simple a flujos con reglas en cuatro pasos.',
+        estimatedMinutes: 10,
+        steps: [
+          { id: 'managers', title: 'Registra a los aprobadores', description: 'Elige qué categorías autoriza cada uno y su límite de monto.', action: { label: 'Abrir aprobadores', route: '/admin/approval-managers' } },
+          { id: 'advanced', title: 'Activa las funciones avanzadas', description: 'En Configuración, enciende «Funciones avanzadas» y define plazos y escalamiento.', action: { label: 'Abrir configuración', route: '/admin/approval-settings' } },
+          { id: 'flow', title: 'Crea un flujo o carga los ejemplos', description: 'Define niveles, condiciones por monto y prueba con el simulador.', action: { label: 'Abrir flujos', route: '/admin/approval-flows' } },
+          { id: 'category', title: 'Asigna el flujo a una categoría', description: 'Desde el flujo o desde la categoría. Las solicitudes nuevas ya lo usan.', action: { label: 'Abrir categorías', route: '/admin/approval-categories' } }
+        ]
+    },
+    relatedModules: [
+      { label: 'Flujos', route: '/admin/approval-flows' },
+      { label: 'Tablero', route: '/admin/approval-dashboard' }
+    ],
+    tags: ['delegación', 'suplente', 'vacaciones', 'plazo', 'SLA', 'escalamiento', 'recordatorio', 'motivos de rechazo', 'importar', 'exportar']
+  },
+  {
+    id: 'approval-dashboard',
+    isNew: true,
+    routePatterns: ['/admin/approval-dashboard'],
+    module: 'approvals',
+    moduleLabel: 'Aprobaciones',
+    moduleEmoji: '✍️',
+    title: 'Tablero de aprobaciones',
+    viewType: 'dashboard',
+    summary: 'Pendientes, tiempos de ciclo, cuellos de botella, gasto aprobado y cumplimiento del periodo.',
+    description: 'Indicadores del módulo para owners y admin: pendientes y vencidas, tiempo promedio de resolución, tasa de aprobación, monto aprobado, aprobadores con más pendientes, niveles donde más se detienen, gasto por solicitante y departamento, y lo resuelto fuera de regla.',
+    importance: 'Muestra dónde se atoran las solicitudes y qué decisiones se tomaron fuera del flujo normal.',
+    tips: [
+      'Cambia el periodo con las fechas de arriba; los pendientes siempre son los actuales.',
+      'Un aprobador con muchos pendientes o respuesta lenta es candidato a una delegación o a un plazo con escalamiento.',
+      '«Cumplimiento» lista las resoluciones forzadas, aprobaciones automáticas, niveles agregados, reasignaciones, delegaciones activas y cambios de flujos.',
+      'Exporta las tablas a CSV para Excel.'
+    ],
+    relatedModules: [
+      { label: 'Solicitudes', route: '/admin/approval-requests' },
+      { label: 'Configuración', route: '/admin/approval-settings' }
+    ],
+    tags: ['tablero', 'reportes', 'cuellos de botella', 'tiempo de ciclo', 'cumplimiento', 'gasto']
   },
   {
     id: 'approval-categories-list',
@@ -918,10 +1021,11 @@ export const ARTICLES: DocArticle[] = [
     description: 'Los gestores de aprobación son socios designados para revisar y aprobar solicitudes de una o más categorías. Reciben notificaciones automáticas cuando se publican solicitudes.',
     importance: 'Sin gestores configurados, el sistema no puede asignar solicitudes para aprobación. Deben configurarse junto con las categorías antes de usar el módulo.',
     tips: [
-      'Un socio puede ser gestor de múltiples categorías simultáneamente.',
-      'Los gestores reciben notificaciones en el panel de alertas del header al publicarse solicitudes.',
-      'El gestor debe tener acceso activo al sistema para poder aprobar.',
-      'Si el gestor designado cambia de rol, actualiza las categorías asignadas de inmediato.'
+      'Un aprobador solo autoriza las categorías marcadas: sin ninguna marcada no puede aprobar.',
+      'Define un monto máximo general o por categoría; si una solicitud lo excede, el motor escala a su jefe con límite suficiente o a los owners.',
+      'Los owners pueden aprobar sin estar registrados aquí.',
+      'Los avisos de solicitudes por aprobar llegan a la campana del panel y a la agenda.',
+      'Si alguien sale de vacaciones, registra un suplente en Configuración de aprobaciones.'
     ],
     fields: [
       { label: 'Socio', required: true, type: 'relation', description: 'Persona designada como gestor de aprobación.', tip: 'El socio debe ser miembro activo del equipo con acceso al sistema.' },
@@ -3378,7 +3482,7 @@ export const ARTICLES: DocArticle[] = [
     ],
     fields: [
       { label: 'Miembro del equipo', required: true, type: 'relation', description: 'Persona que tendrá la facultad de aprobar.', tip: 'Si no aparece, primero invítala desde el módulo Equipo.' },
-      { label: 'Notas del rol', required: false, type: 'textarea', description: 'Alcance y límites de esta persona como aprobador.', tip: 'Anota montos máximos o categorías que le corresponden.' }
+      { label: 'Notas del rol', required: false, type: 'textarea', description: 'Alcance y límites de esta persona como aprobador.', tip: 'Los montos máximos se capturan en sus campos propios; aquí anota excepciones o acuerdos.' }
     ],
     relatedModules: [
       { label: 'Aprobadores', route: '/admin/approval-managers' },

@@ -14,43 +14,150 @@ export type Database = {
   }
   public: {
     Tables: {
+      approval_activity: {
+        Row: {
+          actionable: boolean
+          company_id: string
+          created_at: string
+          done_at: string | null
+          id: string
+          kind: string
+          partner_id: string
+          read_at: string | null
+          request_id: string
+          scheduled_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          actionable?: boolean
+          company_id: string
+          created_at?: string
+          done_at?: string | null
+          id?: string
+          kind: string
+          partner_id: string
+          read_at?: string | null
+          request_id: string
+          scheduled_at?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          actionable?: boolean
+          company_id?: string
+          created_at?: string
+          done_at?: string | null
+          id?: string
+          kind?: string
+          partner_id?: string
+          read_at?: string | null
+          request_id?: string
+          scheduled_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_activity_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_activity_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_activity_request_fk"
+            columns: ["company_id", "request_id"]
+            isOneToOne: false
+            referencedRelation: "approval_request"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "approval_activity_request_fk"
+            columns: ["company_id", "request_id"]
+            isOneToOne: false
+            referencedRelation: "v_approval_requests"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
       approval_category: {
         Row: {
           active: boolean
+          allow_lines: boolean
           archived: boolean
+          auto_approve_max_amount: number | null
+          color: string | null
           company_id: string
+          confidential: boolean
           created_at: string
           created_by: string | null
+          critical_fields: string[]
           description: string | null
+          field_schema: Json
+          flow_id: string | null
+          icon: string | null
           id: string
           internal_code: string
           name: string
+          require_attachment: boolean
+          sla_days: number | null
+          source_kind: string | null
           updated_at: string
           updated_by: string | null
         }
         Insert: {
           active?: boolean
+          allow_lines?: boolean
           archived?: boolean
+          auto_approve_max_amount?: number | null
+          color?: string | null
           company_id: string
+          confidential?: boolean
           created_at?: string
           created_by?: string | null
+          critical_fields?: string[]
           description?: string | null
+          field_schema?: Json
+          flow_id?: string | null
+          icon?: string | null
           id?: string
           internal_code: string
           name: string
+          require_attachment?: boolean
+          sla_days?: number | null
+          source_kind?: string | null
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
           active?: boolean
+          allow_lines?: boolean
           archived?: boolean
+          auto_approve_max_amount?: number | null
+          color?: string | null
           company_id?: string
+          confidential?: boolean
           created_at?: string
           created_by?: string | null
+          critical_fields?: string[]
           description?: string | null
+          field_schema?: Json
+          flow_id?: string | null
+          icon?: string | null
           id?: string
           internal_code?: string
           name?: string
+          require_attachment?: boolean
+          sla_days?: number | null
+          source_kind?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -62,6 +169,270 @@ export type Database = {
             referencedRelation: "company"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "approval_category_flow_fk"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "approval_flow"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_delegation: {
+        Row: {
+          active: boolean
+          category_id: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          ends_on: string | null
+          from_partner_id: string
+          id: string
+          reason: string | null
+          starts_on: string | null
+          to_partner_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          category_id?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          ends_on?: string | null
+          from_partner_id: string
+          id?: string
+          reason?: string | null
+          starts_on?: string | null
+          to_partner_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          category_id?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          ends_on?: string | null
+          from_partner_id?: string
+          id?: string
+          reason?: string | null
+          starts_on?: string | null
+          to_partner_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_delegation_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "approval_category"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_delegation_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_delegation_from_partner_id_fkey"
+            columns: ["from_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_delegation_to_partner_id_fkey"
+            columns: ["to_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_flow: {
+        Row: {
+          active: boolean
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          restart_from_first: boolean | null
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          active?: boolean
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          restart_from_first?: boolean | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          active?: boolean
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          restart_from_first?: boolean | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_flow_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_flow_step: {
+        Row: {
+          active: boolean
+          company_id: string
+          condition: Json | null
+          created_at: string
+          created_by: string | null
+          flow_id: string
+          id: string
+          informative: boolean
+          mode: string
+          name: string
+          quorum: number | null
+          sequence: number
+          sla_days: number | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          company_id: string
+          condition?: Json | null
+          created_at?: string
+          created_by?: string | null
+          flow_id: string
+          id?: string
+          informative?: boolean
+          mode?: string
+          name: string
+          quorum?: number | null
+          sequence?: number
+          sla_days?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          company_id?: string
+          condition?: Json | null
+          created_at?: string
+          created_by?: string | null
+          flow_id?: string
+          id?: string
+          informative?: boolean
+          mode?: string
+          name?: string
+          quorum?: number | null
+          sequence?: number
+          sla_days?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_flow_step_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_flow_step_flow_fk"
+            columns: ["company_id", "flow_id"]
+            isOneToOne: false
+            referencedRelation: "approval_flow"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      approval_flow_step_approver: {
+        Row: {
+          active: boolean
+          approval_manager_id: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          step_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          approval_manager_id?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: string
+          step_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          approval_manager_id?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          step_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_flow_step_approver_approval_manager_id_fkey"
+            columns: ["approval_manager_id"]
+            isOneToOne: false
+            referencedRelation: "approval_manager"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_flow_step_approver_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_flow_step_approver_step_fk"
+            columns: ["company_id", "step_id"]
+            isOneToOne: false
+            referencedRelation: "approval_flow_step"
+            referencedColumns: ["company_id", "id"]
+          },
         ]
       }
       approval_manager: {
@@ -71,6 +442,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          max_amount: number | null
           notes: string | null
           partner_id: string
           updated_at: string
@@ -82,6 +454,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          max_amount?: number | null
           notes?: string | null
           partner_id: string
           updated_at?: string
@@ -93,6 +466,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          max_amount?: number | null
           notes?: string | null
           partner_id?: string
           updated_at?: string
@@ -119,14 +493,17 @@ export type Database = {
         Row: {
           approval_category_id: string
           approval_manager_id: string
+          max_amount: number | null
         }
         Insert: {
           approval_category_id: string
           approval_manager_id: string
+          max_amount?: number | null
         }
         Update: {
           approval_category_id?: string
           approval_manager_id?: string
+          max_amount?: number | null
         }
         Relationships: [
           {
@@ -145,25 +522,85 @@ export type Database = {
           },
         ]
       }
+      approval_rejection_reason: {
+        Row: {
+          active: boolean
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_rejection_reason_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       approval_request: {
         Row: {
           active: boolean
           amount: number | null
           approved_at: string | null
           assigned_approval_manager_id: string | null
+          auto_approved: boolean
+          cancelled_at: string | null
+          captured_by_partner_id: string | null
           category_id: string
           company_id: string
           created_at: string
           created_by: string | null
           currency: string
           description: string | null
+          due_date: string | null
+          expired_at: string | null
+          field_values: Json
+          flow_id: string | null
+          flow_version: number | null
+          forced: boolean
           id: string
+          priority: string
           reference: string | null
           rejected_at: string | null
+          rejection_reason_id: string | null
           request_date: string
           request_number: number
           requesting_partner_id: string
+          resolution_note: string | null
+          resolved_by_partner_id: string | null
+          returned_at: string | null
+          returned_from_sequence: number | null
+          round: number
+          source_id: string | null
+          source_type: string | null
           status: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at: string | null
           title: string
           updated_at: string
           updated_by: string | null
@@ -173,19 +610,38 @@ export type Database = {
           amount?: number | null
           approved_at?: string | null
           assigned_approval_manager_id?: string | null
+          auto_approved?: boolean
+          cancelled_at?: string | null
+          captured_by_partner_id?: string | null
           category_id: string
           company_id: string
           created_at?: string
           created_by?: string | null
           currency?: string
           description?: string | null
+          due_date?: string | null
+          expired_at?: string | null
+          field_values?: Json
+          flow_id?: string | null
+          flow_version?: number | null
+          forced?: boolean
           id?: string
+          priority?: string
           reference?: string | null
           rejected_at?: string | null
+          rejection_reason_id?: string | null
           request_date?: string
           request_number: number
           requesting_partner_id: string
+          resolution_note?: string | null
+          resolved_by_partner_id?: string | null
+          returned_at?: string | null
+          returned_from_sequence?: number | null
+          round?: number
+          source_id?: string | null
+          source_type?: string | null
           status?: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at?: string | null
           title?: string
           updated_at?: string
           updated_by?: string | null
@@ -195,19 +651,38 @@ export type Database = {
           amount?: number | null
           approved_at?: string | null
           assigned_approval_manager_id?: string | null
+          auto_approved?: boolean
+          cancelled_at?: string | null
+          captured_by_partner_id?: string | null
           category_id?: string
           company_id?: string
           created_at?: string
           created_by?: string | null
           currency?: string
           description?: string | null
+          due_date?: string | null
+          expired_at?: string | null
+          field_values?: Json
+          flow_id?: string | null
+          flow_version?: number | null
+          forced?: boolean
           id?: string
+          priority?: string
           reference?: string | null
           rejected_at?: string | null
+          rejection_reason_id?: string | null
           request_date?: string
           request_number?: number
           requesting_partner_id?: string
+          resolution_note?: string | null
+          resolved_by_partner_id?: string | null
+          returned_at?: string | null
+          returned_from_sequence?: number | null
+          round?: number
+          source_id?: string | null
+          source_type?: string | null
           status?: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at?: string | null
           title?: string
           updated_at?: string
           updated_by?: string | null
@@ -218,6 +693,13 @@ export type Database = {
             columns: ["assigned_approval_manager_id"]
             isOneToOne: false
             referencedRelation: "approval_manager"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_captured_by_partner_id_fkey"
+            columns: ["captured_by_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
             referencedColumns: ["id"]
           },
           {
@@ -235,11 +717,452 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "approval_request_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "approval_flow"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_rejection_reason_id_fkey"
+            columns: ["rejection_reason_id"]
+            isOneToOne: false
+            referencedRelation: "approval_rejection_reason"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "approval_request_requesting_partner_id_fkey"
             columns: ["requesting_partner_id"]
             isOneToOne: false
             referencedRelation: "partner"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_resolved_by_partner_id_fkey"
+            columns: ["resolved_by_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_request_approver: {
+        Row: {
+          comment: string | null
+          company_id: string
+          created_at: string
+          decided_at: string | null
+          delegated_from_partner_id: string | null
+          id: string
+          last_reminder_at: string | null
+          partner_id: string
+          request_id: string
+          resolved_via: string
+          status: string
+          step_id: string
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          company_id: string
+          created_at?: string
+          decided_at?: string | null
+          delegated_from_partner_id?: string | null
+          id?: string
+          last_reminder_at?: string | null
+          partner_id: string
+          request_id: string
+          resolved_via?: string
+          status?: string
+          step_id: string
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          company_id?: string
+          created_at?: string
+          decided_at?: string | null
+          delegated_from_partner_id?: string | null
+          id?: string
+          last_reminder_at?: string | null
+          partner_id?: string
+          request_id?: string
+          resolved_via?: string
+          status?: string
+          step_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_request_approver_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_approver_delegated_from_partner_id_fkey"
+            columns: ["delegated_from_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_approver_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_approver_request_fk"
+            columns: ["company_id", "request_id"]
+            isOneToOne: false
+            referencedRelation: "approval_request"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "approval_request_approver_request_fk"
+            columns: ["company_id", "request_id"]
+            isOneToOne: false
+            referencedRelation: "v_approval_requests"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "approval_request_approver_step_fk"
+            columns: ["company_id", "step_id"]
+            isOneToOne: false
+            referencedRelation: "approval_request_step"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      approval_request_attachment: {
+        Row: {
+          active: boolean
+          company_id: string
+          created_at: string
+          created_by: string | null
+          file_name: string
+          id: string
+          mime_type: string | null
+          request_id: string
+          size_bytes: number | null
+          storage_path: string
+          updated_at: string
+          updated_by: string | null
+          uploaded_by_partner_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          request_id: string
+          size_bytes?: number | null
+          storage_path: string
+          updated_at?: string
+          updated_by?: string | null
+          uploaded_by_partner_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          request_id?: string
+          size_bytes?: number | null
+          storage_path?: string
+          updated_at?: string
+          updated_by?: string | null
+          uploaded_by_partner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_request_attachment_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_attachment_request_fk"
+            columns: ["company_id", "request_id"]
+            isOneToOne: false
+            referencedRelation: "approval_request"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "approval_request_attachment_request_fk"
+            columns: ["company_id", "request_id"]
+            isOneToOne: false
+            referencedRelation: "v_approval_requests"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "approval_request_attachment_uploaded_by_partner_id_fkey"
+            columns: ["uploaded_by_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_request_comment: {
+        Row: {
+          active: boolean
+          author_partner_id: string
+          body: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          mentions: string[]
+          request_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          author_partner_id: string
+          body: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          mentions?: string[]
+          request_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          author_partner_id?: string
+          body?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          mentions?: string[]
+          request_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_request_comment_author_partner_id_fkey"
+            columns: ["author_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_comment_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_comment_request_fk"
+            columns: ["company_id", "request_id"]
+            isOneToOne: false
+            referencedRelation: "approval_request"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "approval_request_comment_request_fk"
+            columns: ["company_id", "request_id"]
+            isOneToOne: false
+            referencedRelation: "v_approval_requests"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      approval_request_event: {
+        Row: {
+          actor_partner_id: string | null
+          actor_user_id: string | null
+          automatic: boolean
+          company_id: string
+          created_at: string
+          event_type: string
+          hash: string
+          id: string
+          ip: string | null
+          payload: Json
+          prev_hash: string | null
+          request_id: string
+          seq: number
+          user_agent: string | null
+        }
+        Insert: {
+          actor_partner_id?: string | null
+          actor_user_id?: string | null
+          automatic?: boolean
+          company_id: string
+          created_at?: string
+          event_type: string
+          hash: string
+          id?: string
+          ip?: string | null
+          payload?: Json
+          prev_hash?: string | null
+          request_id: string
+          seq: number
+          user_agent?: string | null
+        }
+        Update: {
+          actor_partner_id?: string | null
+          actor_user_id?: string | null
+          automatic?: boolean
+          company_id?: string
+          created_at?: string
+          event_type?: string
+          hash?: string
+          id?: string
+          ip?: string | null
+          payload?: Json
+          prev_hash?: string | null
+          request_id?: string
+          seq?: number
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_request_event_actor_partner_id_fkey"
+            columns: ["actor_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_event_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_event_request_fk"
+            columns: ["company_id", "request_id"]
+            isOneToOne: false
+            referencedRelation: "approval_request"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "approval_request_event_request_fk"
+            columns: ["company_id", "request_id"]
+            isOneToOne: false
+            referencedRelation: "v_approval_requests"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      approval_request_line: {
+        Row: {
+          active: boolean
+          company_id: string
+          concept: string
+          created_at: string
+          created_by: string | null
+          id: string
+          product_id: string | null
+          quantity: number
+          request_id: string
+          sequence: number
+          subtotal: number | null
+          unit_price: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          company_id: string
+          concept: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          product_id?: string | null
+          quantity?: number
+          request_id: string
+          sequence?: number
+          subtotal?: number | null
+          unit_price?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          company_id?: string
+          concept?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          product_id?: string | null
+          quantity?: number
+          request_id?: string
+          sequence?: number
+          subtotal?: number | null
+          unit_price?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_request_line_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_line_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_line_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_low_stock_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_line_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_line_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_line_request_fk"
+            columns: ["company_id", "request_id"]
+            isOneToOne: false
+            referencedRelation: "approval_request"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "approval_request_line_request_fk"
+            columns: ["company_id", "request_id"]
+            isOneToOne: false
+            referencedRelation: "v_approval_requests"
+            referencedColumns: ["company_id", "id"]
           },
         ]
       }
@@ -259,6 +1182,249 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "approval_request_serial_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_request_step: {
+        Row: {
+          activated_at: string | null
+          ad_hoc: boolean
+          added_by_partner_id: string | null
+          company_id: string
+          completed_at: string | null
+          created_at: string
+          due_at: string | null
+          escalated_at: string | null
+          flow_step_id: string | null
+          id: string
+          informative: boolean
+          mode: string
+          name: string
+          note: string | null
+          quorum: number | null
+          request_id: string
+          round: number
+          sequence: number
+          sla_days: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string | null
+          ad_hoc?: boolean
+          added_by_partner_id?: string | null
+          company_id: string
+          completed_at?: string | null
+          created_at?: string
+          due_at?: string | null
+          escalated_at?: string | null
+          flow_step_id?: string | null
+          id?: string
+          informative?: boolean
+          mode?: string
+          name: string
+          note?: string | null
+          quorum?: number | null
+          request_id: string
+          round?: number
+          sequence: number
+          sla_days?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string | null
+          ad_hoc?: boolean
+          added_by_partner_id?: string | null
+          company_id?: string
+          completed_at?: string | null
+          created_at?: string
+          due_at?: string | null
+          escalated_at?: string | null
+          flow_step_id?: string | null
+          id?: string
+          informative?: boolean
+          mode?: string
+          name?: string
+          note?: string | null
+          quorum?: number | null
+          request_id?: string
+          round?: number
+          sequence?: number
+          sla_days?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_request_step_added_by_partner_id_fkey"
+            columns: ["added_by_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_step_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_step_flow_step_id_fkey"
+            columns: ["flow_step_id"]
+            isOneToOne: false
+            referencedRelation: "approval_flow_step"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_step_request_fk"
+            columns: ["company_id", "request_id"]
+            isOneToOne: false
+            referencedRelation: "approval_request"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "approval_request_step_request_fk"
+            columns: ["company_id", "request_id"]
+            isOneToOne: false
+            referencedRelation: "v_approval_requests"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      approval_request_template: {
+        Row: {
+          active: boolean
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          next_run_on: string | null
+          owner_partner_id: string | null
+          payload: Json
+          recurrence: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          category_id: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          next_run_on?: string | null
+          owner_partner_id?: string | null
+          payload?: Json
+          recurrence?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          category_id?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          next_run_on?: string | null
+          owner_partner_id?: string | null
+          payload?: Json
+          recurrence?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_request_template_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "approval_category"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_template_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_template_owner_partner_id_fkey"
+            columns: ["owner_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_settings: {
+        Row: {
+          advanced_enabled: boolean
+          company_id: string
+          created_at: string
+          created_by: string | null
+          dedupe_consecutive: boolean
+          default_sla_days: number | null
+          escalation_action: string
+          expire_after_days: number | null
+          notify_requester_each_level: boolean
+          prevent_self_approval: boolean
+          reminder_every_hours: number
+          require_reject_reason: boolean
+          restart_from_first: boolean
+          self_approval_fallback: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          advanced_enabled?: boolean
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          dedupe_consecutive?: boolean
+          default_sla_days?: number | null
+          escalation_action?: string
+          expire_after_days?: number | null
+          notify_requester_each_level?: boolean
+          prevent_self_approval?: boolean
+          reminder_every_hours?: number
+          require_reject_reason?: boolean
+          restart_from_first?: boolean
+          self_approval_fallback?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          advanced_enabled?: boolean
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          dedupe_consecutive?: boolean
+          default_sla_days?: number | null
+          escalation_action?: string
+          expire_after_days?: number | null
+          notify_requester_each_level?: boolean
+          prevent_self_approval?: boolean
+          reminder_every_hours?: number
+          require_reject_reason?: boolean
+          restart_from_first?: boolean
+          self_approval_fallback?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_settings_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: true
             referencedRelation: "company"
@@ -7506,28 +8672,105 @@ export type Database = {
       }
     }
     Views: {
+      v_approval_my_pending: {
+        Row: {
+          activated_at: string | null
+          approver_id: string | null
+          company_id: string | null
+          delegated_from_display: string | null
+          delegated_from_partner_id: string | null
+          due_at: string | null
+          is_overdue: boolean | null
+          request_id: string | null
+          resolved_via: string | null
+          sequence: number | null
+          step_id: string | null
+          step_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_request_approver_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_approver_delegated_from_partner_id_fkey"
+            columns: ["delegated_from_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_approver_request_fk"
+            columns: ["company_id", "request_id"]
+            isOneToOne: false
+            referencedRelation: "approval_request"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "approval_request_approver_request_fk"
+            columns: ["company_id", "request_id"]
+            isOneToOne: false
+            referencedRelation: "v_approval_requests"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "approval_request_approver_step_fk"
+            columns: ["company_id", "step_id"]
+            isOneToOne: false
+            referencedRelation: "approval_request_step"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
       v_approval_requests: {
         Row: {
           amount: number | null
           approved_at: string | null
           assigned_approval_manager_id: string | null
           assigned_approver_display: string | null
+          auto_approved: boolean | null
+          cancelled_at: string | null
+          captured_by_display: string | null
+          captured_by_partner_id: string | null
           category_code: string | null
+          category_color: string | null
+          category_confidential: boolean | null
           category_id: string | null
           category_name: string | null
           company_id: string | null
           created_at: string | null
           currency: string | null
+          current_due_at: string | null
+          current_sequence: number | null
+          current_step_name: string | null
           description: string | null
+          due_date: string | null
+          expired_at: string | null
+          forced: boolean | null
           id: string | null
+          is_overdue: boolean | null
+          pending_approvers_display: string | null
+          priority: string | null
           reference: string | null
           rejected_at: string | null
           request_date: string | null
           request_number: number | null
           requesting_partner_display: string | null
           requesting_partner_id: string | null
+          resolution_note: string | null
+          resolved_by_display: string | null
+          resolved_by_partner_id: string | null
+          returned_at: string | null
+          round: number | null
+          source_id: string | null
+          source_type: string | null
           status: Database["public"]["Enums"]["approval_request_status"] | null
+          submitted_at: string | null
           title: string | null
+          total_levels: number | null
         }
         Relationships: [
           {
@@ -7535,6 +8778,13 @@ export type Database = {
             columns: ["assigned_approval_manager_id"]
             isOneToOne: false
             referencedRelation: "approval_manager"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_captured_by_partner_id_fkey"
+            columns: ["captured_by_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
             referencedColumns: ["id"]
           },
           {
@@ -7554,6 +8804,13 @@ export type Database = {
           {
             foreignKeyName: "approval_request_requesting_partner_id_fkey"
             columns: ["requesting_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_request_resolved_by_partner_id_fkey"
+            columns: ["resolved_by_partner_id"]
             isOneToOne: false
             referencedRelation: "partner"
             referencedColumns: ["id"]
@@ -9776,6 +11033,100 @@ export type Database = {
         Args: { p_picking_id: string }
         Returns: undefined
       }
+      approval_activate_next: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
+      approval_add_approver: {
+        Args: {
+          p_parallel?: boolean
+          p_partner_id: string
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          auto_approved: boolean
+          cancelled_at: string | null
+          captured_by_partner_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          due_date: string | null
+          expired_at: string | null
+          field_values: Json
+          flow_id: string | null
+          flow_version: number | null
+          forced: boolean
+          id: string
+          priority: string
+          reference: string | null
+          rejected_at: string | null
+          rejection_reason_id: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          resolution_note: string | null
+          resolved_by_partner_id: string | null
+          returned_at: string | null
+          returned_from_sequence: number | null
+          round: number
+          source_id: string | null
+          source_type: string | null
+          status: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_add_business_days: {
+        Args: { p_company_id: string; p_days: number; p_from: string }
+        Returns: string
+      }
+      approval_add_comment: {
+        Args: { p_body: string; p_mentions?: string[]; p_request_id: string }
+        Returns: {
+          active: boolean
+          author_partner_id: string
+          body: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          mentions: string[]
+          request_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request_comment"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_advance: { Args: { p_request_id: string }; Returns: undefined }
+      approval_amount_limit: {
+        Args: {
+          p_category_id: string
+          p_company_id: string
+          p_partner_id: string
+        }
+        Returns: number
+      }
       approval_approve_request: {
         Args: { p_request_id: string }
         Returns: {
@@ -9783,19 +11134,38 @@ export type Database = {
           amount: number | null
           approved_at: string | null
           assigned_approval_manager_id: string | null
+          auto_approved: boolean
+          cancelled_at: string | null
+          captured_by_partner_id: string | null
           category_id: string
           company_id: string
           created_at: string
           created_by: string | null
           currency: string
           description: string | null
+          due_date: string | null
+          expired_at: string | null
+          field_values: Json
+          flow_id: string | null
+          flow_version: number | null
+          forced: boolean
           id: string
+          priority: string
           reference: string | null
           rejected_at: string | null
+          rejection_reason_id: string | null
           request_date: string
           request_number: number
           requesting_partner_id: string
+          resolution_note: string | null
+          resolved_by_partner_id: string | null
+          returned_at: string | null
+          returned_from_sequence: number | null
+          round: number
+          source_id: string | null
+          source_type: string | null
           status: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at: string | null
           title: string
           updated_at: string
           updated_by: string | null
@@ -9807,6 +11177,35 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      approval_assert_owner_or_admin: {
+        Args: {
+          p_request: Database["public"]["Tables"]["approval_request"]["Row"]
+        }
+        Returns: undefined
+      }
+      approval_build_context: {
+        Args: {
+          p_amount: number
+          p_category_id: string
+          p_company_id: string
+          p_field_values: Json
+          p_priority: string
+          p_request_id?: string
+          p_requester_partner_id: string
+        }
+        Returns: Json
+      }
+      approval_bulk_decide: {
+        Args: {
+          p_comment?: string
+          p_decision: string
+          p_reason_id?: string
+          p_request_ids: string[]
+        }
+        Returns: Json
+      }
+      approval_can_edit: { Args: { p_request_id: string }; Returns: boolean }
+      approval_can_view: { Args: { p_request_id: string }; Returns: boolean }
       approval_cancel_request: {
         Args: { p_request_id: string }
         Returns: {
@@ -9814,19 +11213,38 @@ export type Database = {
           amount: number | null
           approved_at: string | null
           assigned_approval_manager_id: string | null
+          auto_approved: boolean
+          cancelled_at: string | null
+          captured_by_partner_id: string | null
           category_id: string
           company_id: string
           created_at: string
           created_by: string | null
           currency: string
           description: string | null
+          due_date: string | null
+          expired_at: string | null
+          field_values: Json
+          flow_id: string | null
+          flow_version: number | null
+          forced: boolean
           id: string
+          priority: string
           reference: string | null
           rejected_at: string | null
+          rejection_reason_id: string | null
           request_date: string
           request_number: number
           requesting_partner_id: string
+          resolution_note: string | null
+          resolved_by_partner_id: string | null
+          returned_at: string | null
+          returned_from_sequence: number | null
+          round: number
+          source_id: string | null
+          source_type: string | null
           status: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at: string | null
           title: string
           updated_at: string
           updated_by: string | null
@@ -9838,6 +11256,383 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      approval_cancel_with_reason: {
+        Args: { p_reason?: string; p_request_id: string }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          auto_approved: boolean
+          cancelled_at: string | null
+          captured_by_partner_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          due_date: string | null
+          expired_at: string | null
+          field_values: Json
+          flow_id: string | null
+          flow_version: number | null
+          forced: boolean
+          id: string
+          priority: string
+          reference: string | null
+          rejected_at: string | null
+          rejection_reason_id: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          resolution_note: string | null
+          resolved_by_partner_id: string | null
+          returned_at: string | null
+          returned_from_sequence: number | null
+          round: number
+          source_id: string | null
+          source_type: string | null
+          status: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_close_actions: {
+        Args: { p_partner_id?: string; p_request_id: string }
+        Returns: undefined
+      }
+      approval_covers_amount: {
+        Args: {
+          p_amount: number
+          p_category_id: string
+          p_company_id: string
+          p_partner_id: string
+        }
+        Returns: boolean
+      }
+      approval_create_for_leave: {
+        Args: { p_leave_id: string }
+        Returns: string
+      }
+      approval_dashboard: {
+        Args: { p_company_id: string; p_from: string; p_to: string }
+        Returns: Json
+      }
+      approval_decide: {
+        Args: {
+          p_comment?: string
+          p_decision: string
+          p_reason_id?: string
+          p_request_id: string
+        }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          auto_approved: boolean
+          cancelled_at: string | null
+          captured_by_partner_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          due_date: string | null
+          expired_at: string | null
+          field_values: Json
+          flow_id: string | null
+          flow_version: number | null
+          forced: boolean
+          id: string
+          priority: string
+          reference: string | null
+          rejected_at: string | null
+          rejection_reason_id: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          resolution_note: string | null
+          resolved_by_partner_id: string | null
+          returned_at: string | null
+          returned_from_sequence: number | null
+          round: number
+          source_id: string | null
+          source_type: string | null
+          status: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_delegate_of: {
+        Args: {
+          p_category_id: string
+          p_company_id: string
+          p_on?: string
+          p_partner_id: string
+        }
+        Returns: string
+      }
+      approval_department_manager_of: {
+        Args: { p_company_id: string; p_partner_id: string }
+        Returns: string
+      }
+      approval_department_of: {
+        Args: { p_company_id: string; p_partner_id: string }
+        Returns: string
+      }
+      approval_escalate_for_amount: {
+        Args: {
+          p_amount: number
+          p_category_id: string
+          p_company_id: string
+          p_from_partner_id: string
+        }
+        Returns: string
+      }
+      approval_eval_condition: {
+        Args: { p_condition: Json; p_ctx: Json }
+        Returns: boolean
+      }
+      approval_eval_rule: {
+        Args: { p_ctx: Json; p_rule: Json }
+        Returns: boolean
+      }
+      approval_export_config: { Args: { p_company_id: string }; Returns: Json }
+      approval_finalize: {
+        Args: {
+          p_auto?: boolean
+          p_automatic?: boolean
+          p_forced?: boolean
+          p_note?: string
+          p_reason_id?: string
+          p_request_id: string
+          p_status: Database["public"]["Enums"]["approval_request_status"]
+        }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          auto_approved: boolean
+          cancelled_at: string | null
+          captured_by_partner_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          due_date: string | null
+          expired_at: string | null
+          field_values: Json
+          flow_id: string | null
+          flow_version: number | null
+          forced: boolean
+          id: string
+          priority: string
+          reference: string | null
+          rejected_at: string | null
+          rejection_reason_id: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          resolution_note: string | null
+          resolved_by_partner_id: string | null
+          returned_at: string | null
+          returned_from_sequence: number | null
+          round: number
+          source_id: string | null
+          source_type: string | null
+          status: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_force_resolve: {
+        Args: { p_decision: string; p_reason: string; p_request_id: string }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          auto_approved: boolean
+          cancelled_at: string | null
+          captured_by_partner_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          due_date: string | null
+          expired_at: string | null
+          field_values: Json
+          flow_id: string | null
+          flow_version: number | null
+          forced: boolean
+          id: string
+          priority: string
+          reference: string | null
+          rejected_at: string | null
+          rejection_reason_id: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          resolution_note: string | null
+          resolved_by_partner_id: string | null
+          returned_at: string | null
+          returned_from_sequence: number | null
+          round: number
+          source_id: string | null
+          source_type: string | null
+          status: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_get_settings: {
+        Args: { p_company_id: string }
+        Returns: {
+          advanced_enabled: boolean
+          company_id: string
+          created_at: string
+          created_by: string | null
+          dedupe_consecutive: boolean
+          default_sla_days: number | null
+          escalation_action: string
+          expire_after_days: number | null
+          notify_requester_each_level: boolean
+          prevent_self_approval: boolean
+          reminder_every_hours: number
+          require_reject_reason: boolean
+          restart_from_first: boolean
+          self_approval_fallback: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_import_config: {
+        Args: { p_company_id: string; p_config: Json }
+        Returns: Json
+      }
+      approval_is_eligible: {
+        Args: {
+          p_category_id?: string
+          p_company_id: string
+          p_partner_id: string
+        }
+        Returns: boolean
+      }
+      approval_is_owner: {
+        Args: { p_company_id: string; p_partner_id: string }
+        Returns: boolean
+      }
+      approval_is_registered: {
+        Args: {
+          p_category_id?: string
+          p_company_id: string
+          p_partner_id: string
+        }
+        Returns: boolean
+      }
+      approval_load_demo: { Args: { p_company_id: string }; Returns: Json }
+      approval_log: {
+        Args: {
+          p_automatic?: boolean
+          p_event_type: string
+          p_payload?: Json
+          p_request_id: string
+        }
+        Returns: undefined
+      }
+      approval_manager_of: {
+        Args: { p_company_id: string; p_partner_id: string }
+        Returns: string
+      }
+      approval_mark_activities_read: {
+        Args: { p_activity_ids?: string[]; p_company_id?: string }
+        Returns: number
+      }
+      approval_materialize_plan: {
+        Args: {
+          p_plan: Json
+          p_request_id: string
+          p_round: number
+          p_skip_below_sequence?: number
+        }
+        Returns: undefined
+      }
+      approval_notify: {
+        Args: {
+          p_actionable?: boolean
+          p_kind: string
+          p_partner_id: string
+          p_request_id: string
+          p_scheduled_at?: string
+          p_title: string
+        }
+        Returns: undefined
+      }
+      approval_on_resolved: {
+        Args: { p_request_id: string }
+        Returns: undefined
+      }
+      approval_owner_partners: {
+        Args: { p_company_id: string }
+        Returns: string[]
+      }
+      approval_partner_can_view: {
+        Args: { p_partner_id: string; p_request_id: string }
+        Returns: boolean
+      }
+      approval_partner_name: { Args: { p_partner_id: string }; Returns: string }
+      approval_plan_with_names: { Args: { p_plan: Json }; Returns: Json }
+      approval_preview_request: {
+        Args: { p_request_id: string }
+        Returns: Json
+      }
+      approval_process_sla: { Args: { p_company_id?: string }; Returns: Json }
       approval_publish_request: {
         Args: { p_request_id: string }
         Returns: {
@@ -9845,19 +11640,92 @@ export type Database = {
           amount: number | null
           approved_at: string | null
           assigned_approval_manager_id: string | null
+          auto_approved: boolean
+          cancelled_at: string | null
+          captured_by_partner_id: string | null
           category_id: string
           company_id: string
           created_at: string
           created_by: string | null
           currency: string
           description: string | null
+          due_date: string | null
+          expired_at: string | null
+          field_values: Json
+          flow_id: string | null
+          flow_version: number | null
+          forced: boolean
           id: string
+          priority: string
           reference: string | null
           rejected_at: string | null
+          rejection_reason_id: string | null
           request_date: string
           request_number: number
           requesting_partner_id: string
+          resolution_note: string | null
+          resolved_by_partner_id: string | null
+          returned_at: string | null
+          returned_from_sequence: number | null
+          round: number
+          source_id: string | null
+          source_type: string | null
           status: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_reassign: {
+        Args: {
+          p_approver_id: string
+          p_reason: string
+          p_to_partner_id: string
+        }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          auto_approved: boolean
+          cancelled_at: string | null
+          captured_by_partner_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          due_date: string | null
+          expired_at: string | null
+          field_values: Json
+          flow_id: string | null
+          flow_version: number | null
+          forced: boolean
+          id: string
+          priority: string
+          reference: string | null
+          rejected_at: string | null
+          rejection_reason_id: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          resolution_note: string | null
+          resolved_by_partner_id: string | null
+          returned_at: string | null
+          returned_from_sequence: number | null
+          round: number
+          source_id: string | null
+          source_type: string | null
+          status: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at: string | null
           title: string
           updated_at: string
           updated_by: string | null
@@ -9876,19 +11744,38 @@ export type Database = {
           amount: number | null
           approved_at: string | null
           assigned_approval_manager_id: string | null
+          auto_approved: boolean
+          cancelled_at: string | null
+          captured_by_partner_id: string | null
           category_id: string
           company_id: string
           created_at: string
           created_by: string | null
           currency: string
           description: string | null
+          due_date: string | null
+          expired_at: string | null
+          field_values: Json
+          flow_id: string | null
+          flow_version: number | null
+          forced: boolean
           id: string
+          priority: string
           reference: string | null
           rejected_at: string | null
+          rejection_reason_id: string | null
           request_date: string
           request_number: number
           requesting_partner_id: string
+          resolution_note: string | null
+          resolved_by_partner_id: string | null
+          returned_at: string | null
+          returned_from_sequence: number | null
+          round: number
+          source_id: string | null
+          source_type: string | null
           status: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at: string | null
           title: string
           updated_at: string
           updated_by: string | null
@@ -9900,6 +11787,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      approval_request_insights: {
+        Args: { p_request_id: string }
+        Returns: Json
+      }
+      approval_request_label: {
+        Args: { p_request_id: string }
+        Returns: string
+      }
       approval_reset_request_to_draft: {
         Args: { p_request_id: string }
         Returns: {
@@ -9907,19 +11802,38 @@ export type Database = {
           amount: number | null
           approved_at: string | null
           assigned_approval_manager_id: string | null
+          auto_approved: boolean
+          cancelled_at: string | null
+          captured_by_partner_id: string | null
           category_id: string
           company_id: string
           created_at: string
           created_by: string | null
           currency: string
           description: string | null
+          due_date: string | null
+          expired_at: string | null
+          field_values: Json
+          flow_id: string | null
+          flow_version: number | null
+          forced: boolean
           id: string
+          priority: string
           reference: string | null
           rejected_at: string | null
+          rejection_reason_id: string | null
           request_date: string
           request_number: number
           requesting_partner_id: string
+          resolution_note: string | null
+          resolved_by_partner_id: string | null
+          returned_at: string | null
+          returned_from_sequence: number | null
+          round: number
+          source_id: string | null
+          source_type: string | null
           status: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at: string | null
           title: string
           updated_at: string
           updated_by: string | null
@@ -9930,6 +11844,310 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      approval_resolve_plan: {
+        Args: {
+          p_assigned_manager_id: string
+          p_category_id: string
+          p_company_id: string
+          p_ctx: Json
+          p_requester_partner_id: string
+        }
+        Returns: Json
+      }
+      approval_return_request: {
+        Args: { p_comment: string; p_request_id: string }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          auto_approved: boolean
+          cancelled_at: string | null
+          captured_by_partner_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          due_date: string | null
+          expired_at: string | null
+          field_values: Json
+          flow_id: string | null
+          flow_version: number | null
+          forced: boolean
+          id: string
+          priority: string
+          reference: string | null
+          rejected_at: string | null
+          rejection_reason_id: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          resolution_note: string | null
+          resolved_by_partner_id: string | null
+          returned_at: string | null
+          returned_from_sequence: number | null
+          round: number
+          source_id: string | null
+          source_type: string | null
+          status: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_revoke_decision: {
+        Args: { p_reason: string; p_request_id: string }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          auto_approved: boolean
+          cancelled_at: string | null
+          captured_by_partner_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          due_date: string | null
+          expired_at: string | null
+          field_values: Json
+          flow_id: string | null
+          flow_version: number | null
+          forced: boolean
+          id: string
+          priority: string
+          reference: string | null
+          rejected_at: string | null
+          rejection_reason_id: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          resolution_note: string | null
+          resolved_by_partner_id: string | null
+          returned_at: string | null
+          returned_from_sequence: number | null
+          round: number
+          source_id: string | null
+          source_type: string | null
+          status: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_row_visible: {
+        Args: {
+          p_captured_by_partner_id: string
+          p_category_id: string
+          p_company_id: string
+          p_request_id: string
+          p_requester_partner_id: string
+        }
+        Returns: boolean
+      }
+      approval_row_visible_to: {
+        Args: {
+          p_captured_by_partner_id: string
+          p_category_id: string
+          p_company_id: string
+          p_partner_id: string
+          p_request_id: string
+          p_requester_partner_id: string
+        }
+        Returns: boolean
+      }
+      approval_run_sla_now: { Args: { p_company_id: string }; Returns: Json }
+      approval_simulate: {
+        Args: {
+          p_amount?: number
+          p_assigned_manager_id?: string
+          p_category_id: string
+          p_company_id: string
+          p_field_values?: Json
+          p_priority?: string
+          p_requester_partner_id: string
+        }
+        Returns: Json
+      }
+      approval_step_outcome: { Args: { p_step_id: string }; Returns: string }
+      approval_storage_can_access: {
+        Args: { p_name: string }
+        Returns: boolean
+      }
+      approval_submit_internal: {
+        Args: { p_request_id: string }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          auto_approved: boolean
+          cancelled_at: string | null
+          captured_by_partner_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          due_date: string | null
+          expired_at: string | null
+          field_values: Json
+          flow_id: string | null
+          flow_version: number | null
+          forced: boolean
+          id: string
+          priority: string
+          reference: string | null
+          rejected_at: string | null
+          rejection_reason_id: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          resolution_note: string | null
+          resolved_by_partner_id: string | null
+          returned_at: string | null
+          returned_from_sequence: number | null
+          round: number
+          source_id: string | null
+          source_type: string | null
+          status: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_submit_request: {
+        Args: { p_request_id: string }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          auto_approved: boolean
+          cancelled_at: string | null
+          captured_by_partner_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          due_date: string | null
+          expired_at: string | null
+          field_values: Json
+          flow_id: string | null
+          flow_version: number | null
+          forced: boolean
+          id: string
+          priority: string
+          reference: string | null
+          rejected_at: string | null
+          rejection_reason_id: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          resolution_note: string | null
+          resolved_by_partner_id: string | null
+          returned_at: string | null
+          returned_from_sequence: number | null
+          round: number
+          source_id: string | null
+          source_type: string | null
+          status: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_try_numeric: { Args: { p_value: string }; Returns: number }
+      approval_update_submitted: {
+        Args: { p_changes: Json; p_request_id: string }
+        Returns: {
+          active: boolean
+          amount: number | null
+          approved_at: string | null
+          assigned_approval_manager_id: string | null
+          auto_approved: boolean
+          cancelled_at: string | null
+          captured_by_partner_id: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          due_date: string | null
+          expired_at: string | null
+          field_values: Json
+          flow_id: string | null
+          flow_version: number | null
+          forced: boolean
+          id: string
+          priority: string
+          reference: string | null
+          rejected_at: string | null
+          rejection_reason_id: string | null
+          request_date: string
+          request_number: number
+          requesting_partner_id: string
+          resolution_note: string | null
+          resolved_by_partner_id: string | null
+          returned_at: string | null
+          returned_from_sequence: number | null
+          round: number
+          source_id: string | null
+          source_type: string | null
+          status: Database["public"]["Enums"]["approval_request_status"]
+          submitted_at: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "approval_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approval_verify_event_chain: {
+        Args: { p_request_id: string }
+        Returns: Json
       }
       approver_can_act_on_category: {
         Args: { p_category_id: string; p_manager_id: string }
@@ -10229,6 +12447,35 @@ export type Database = {
       get_website_taxonomy: {
         Args: { p_preview?: boolean; p_slug: string }
         Returns: Json
+      }
+      hr_apply_leave_review: {
+        Args: { p_approve: boolean; p_notes?: string; p_request_id: string }
+        Returns: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          days: number
+          employee_id: string
+          end_date: string
+          half_day: boolean
+          id: string
+          leave_type_id: string
+          reason: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          start_date: string
+          status: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "hr_leave_request"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       hr_attendance_summary: {
         Args: { p_company_id: string; p_from: string; p_to: string }
@@ -10917,6 +13164,8 @@ export type Database = {
         | "approved"
         | "rejected"
         | "cancelled"
+        | "returned"
+        | "expired"
       company_size: "micro" | "small" | "medium" | "large" | "enterprise"
       company_status:
         | "active"
@@ -11127,6 +13376,8 @@ export const Constants = {
         "approved",
         "rejected",
         "cancelled",
+        "returned",
+        "expired",
       ],
       company_size: ["micro", "small", "medium", "large", "enterprise"],
       company_status: [

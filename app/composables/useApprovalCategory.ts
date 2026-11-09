@@ -1,9 +1,9 @@
-import type { Tables, TablesInsert, TablesUpdate } from '~/types/database.types'
+import type { ApprovalCategoryInsert, ApprovalCategoryRow, ApprovalCategoryUpdate } from '~/types/approval.types'
 
-type ApprovalCategory = Tables<'approval_category'>
+type ApprovalCategory = ApprovalCategoryRow
 
 export const useApprovalCategory = () => {
-  const supabase = useSupabase()
+  const { supabase, lastError } = useApprovalClient()
 
   const getCategoriesByCompany = async (
     companyId: string,
@@ -30,7 +30,10 @@ export const useApprovalCategory = () => {
     return data ?? []
   }
 
-  /** Categorías disponibles al crear/editar solicitudes (activas y no archivadas). */
+  /**
+   * Categorías disponibles al crear/editar solicitudes (activas y no archivadas).
+   * Las reservadas para otro módulo (p. ej. permisos de RR. HH.) se crean desde su módulo.
+   */
   const getSelectableCategoriesForRequests = async (
     companyId: string
   ): Promise<ApprovalCategory[]> => {
@@ -42,6 +45,7 @@ export const useApprovalCategory = () => {
       .eq('company_id', companyId)
       .eq('active', true)
       .eq('archived', false)
+      .is('source_kind', null)
       .order('name', { ascending: true })
 
     if (error) {
@@ -75,7 +79,7 @@ export const useApprovalCategory = () => {
 
   const createCategory = async (
     companyId: string,
-    payload: Omit<TablesInsert<'approval_category'>, 'company_id'>
+    payload: Omit<ApprovalCategoryInsert, 'company_id'>
   ): Promise<ApprovalCategory | null> => {
     if (!companyId) return null
     const user = await useSupabaseUser()
@@ -93,6 +97,7 @@ export const useApprovalCategory = () => {
 
     if (error) {
       console.error('Error creating approval category:', error)
+      lastError.value = approvalErrorMessage(error)
       return null
     }
 
@@ -101,7 +106,7 @@ export const useApprovalCategory = () => {
 
   const updateCategory = async (
     id: string,
-    updates: TablesUpdate<'approval_category'>
+    updates: ApprovalCategoryUpdate
   ): Promise<ApprovalCategory | null> => {
     if (!id) return null
     const user = await useSupabaseUser()
@@ -118,6 +123,7 @@ export const useApprovalCategory = () => {
 
     if (error) {
       console.error('Error updating approval category:', error)
+      lastError.value = approvalErrorMessage(error)
       return null
     }
 
@@ -133,6 +139,7 @@ export const useApprovalCategory = () => {
   }
 
   return {
+    lastError,
     getCategoriesByCompany,
     getSelectableCategoriesForRequests,
     getCategoryById,

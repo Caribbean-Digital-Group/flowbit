@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { approvalStatusLabel } from '~/utils/approvals'
 import { storeToRefs } from 'pinia'
 import type { MenuOption } from '~/components/CardSheet.vue'
 import {
@@ -54,12 +55,28 @@ const menuOptions = computed<MenuOption[]>(() => {
   }]
 })
 
+// Solicitud del motor de aprobaciones vinculada a este permiso (TRY-18)
+const approvalLink = ref<{ id: string; status: string; pending: string | null } | null>(null)
+const { supabase: approvalDb } = useApprovalClient()
+
+const loadApprovalLink = async (leaveId: string): Promise<void> => {
+  const { data } = await approvalDb
+    .from('v_approval_requests')
+    .select('id, status, pending_approvers_display')
+    .eq('source_type', 'hr_leave')
+    .eq('source_id', leaveId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  approvalLink.value = data?.id ? { id: data.id, status: data.status ?? '', pending: data.pending_approvers_display } : null
+}
+
 const load = async () => {
   const companyId = selectedCompanyId.value
   if (!companyId || !requestId.value) return
   isLoading.value = true
   try {
-    const [row, typeRows] = await Promise.all([getRequest(requestId.value, companyId), getTypes(companyId)])
+    const [row, typeRows] = await Promise.all([getRequest(requestId.value, companyId), getTypes(companyId), loadApprovalLink(requestId.value)])
     request.value = row
     types.value = typeRows
     if (!row) {
@@ -180,12 +197,27 @@ watch([requestId, selectedCompanyId], load, { immediate: true })
       </div>
 
       <div
+        v-if="approvalLink"
+        class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-violet-100 bg-violet-50 px-6 py-4 text-sm text-violet-900"
+      >
+        <p>
+          La aprobación de este permiso pasa por el módulo de Aprobaciones:
+          <strong>{{ approvalStatusLabel(approvalLink.status) }}</strong>
+          <template v-if="approvalLink.pending"> · con {{ approvalLink.pending }}</template>
+        </p>
+        <NuxtLink :to="`/admin/approval-requests/${approvalLink.id}`" class="font-semibold underline">Ver solicitud de aprobación</NuxtLink>
+      </div>
+
+      <div
         v-if="isSelectedCompanyAdmin && isPending && !isEditing"
         class="mt-6 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-6"
       >
-        <h3 class="mb-3 font-semibold text-slate-800">
+        <h3 class="mb-1 font-semibold text-slate-800">
           Revisar solicitud
         </h3>
+        <p v-if="approvalLink" class="mb-3 text-xs text-slate-500">
+          Como administrador puedes decidir aquí; quedará como resolución forzada en la bitácora de la aprobación.
+        </p>
         <FormTextArea v-model="reviewNotes" label="Comentarios" placeholder="Obligatorio para rechazar" :rows="2" size="md" />
         <div class="mt-4 flex flex-wrap justify-end gap-2">
           <BtnApp variant="danger" size="md" @click="handleReview(false)">

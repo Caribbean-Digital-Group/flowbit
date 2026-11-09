@@ -5,9 +5,10 @@ useHead({ meta: [{ name: 'robots', content: 'noindex, nofollow' }] })
 import { storeToRefs } from 'pinia'
 import type { Database } from '~/types/database.types'
 import type { PendingInvitation } from '~/composables/useMembership'
+import type { ApprovalActivityRow } from '~/types/approval.types'
+import { APPROVAL_ACTIVITY_LABELS } from '~/utils/approvals'
 
 type TaskViewRow = Database['public']['Views']['v_project_tasks']['Row']
-type ApprovalRequestViewRow = Database['public']['Views']['v_approval_requests']['Row']
 type CrmActivityViewRow = Database['public']['Views']['v_crm_activities']['Row']
 type PartnerCompanyRole = Database['public']['Enums']['partner_company_role']
 
@@ -43,12 +44,12 @@ const isMenuItemActive = (item: { to: string; exact?: boolean }) => {
 const authStore = useAuthStore()
 const { partner, selectedCompanyId: selectedCompanyIdRef, pendingInvitationCount } = storeToRefs(authStore)
 const { getAssignedTasksForPartner } = useProjectTask()
-const { getPublishedRequestsForMyManager } = useApprovalRequest()
+const { getOpenActivities: getOpenApprovalActivities, markRead: markApprovalActivitiesRead } = useApprovalActivity()
 const { getActivitiesByCompany } = useCrmActivity()
 const { getMyInvitations, respondInvitation } = useMembership()
 
 const assignedTasksPreview = ref<TaskViewRow[]>([])
-const pendingApprovalsPreview = ref<ApprovalRequestViewRow[]>([])
+const pendingApprovalsPreview = ref<ApprovalActivityRow[]>([])
 const crmActivitiesPreview = ref<CrmActivityViewRow[]>([])
 const isTaskNotifOpen = ref(false)
 const isLoadingAssignedTasks = ref(false)
@@ -115,7 +116,7 @@ async function refreshTaskNotifPanel() {
   try {
     const [tasks, approvals, activities] = await Promise.all([
       getAssignedTasksForPartner(partnerId, companyId),
-      getPublishedRequestsForMyManager(companyId, partnerId),
+      getOpenApprovalActivities(companyId, partnerId, 30),
       getActivitiesByCompany(companyId)
     ])
     assignedTasksPreview.value = tasks
@@ -157,26 +158,27 @@ function openTaskDetailFromNotif(task: TaskViewRow) {
   navigateTo(`/admin/tasks/${task.id}`)
 }
 
-function formatApprovalAmountShort(
-  amount: number | null,
-  currency: string | null
-): string {
-  if (amount == null) return ''
-  try {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: currency && currency.length === 3 ? currency : 'MXN',
-      maximumFractionDigits: 2
-    }).format(amount)
-  } catch {
-    return String(amount)
-  }
+const approvalActivityLabel = (kind: string): string => APPROVAL_ACTIVITY_LABELS[kind] ?? 'Aviso'
+
+const approvalActivityBadge = (activity: ApprovalActivityRow): string => {
+  if (['rejected', 'expired', 'cancelled'].includes(activity.kind)) return 'bg-red-100 text-red-700'
+  if (['approved', 'auto_approved'].includes(activity.kind)) return 'bg-emerald-100 text-emerald-700'
+  if (activity.kind === 'reminder' || activity.kind === 'escalated') return 'bg-orange-100 text-orange-700'
+  return activity.actionable ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'
 }
 
-function openApprovalDetailFromNotif(req: ApprovalRequestViewRow) {
-  if (!req.id) return
+async function openApprovalDetailFromNotif(activity: ApprovalActivityRow) {
   closeTaskNotif()
-  navigateTo(`/admin/approval-requests/${req.id}`)
+  // Los avisos informativos se cierran al abrirse; los de acción, al decidir
+  if (!activity.read_at) void markApprovalActivitiesRead([activity.id])
+  await navigateTo(`/admin/approval-requests/${activity.request_id}`)
+}
+
+async function markAllApprovalNotificationsRead() {
+  const companyId = selectedCompanyIdRef.value
+  if (!companyId) return
+  await markApprovalActivitiesRead(null, companyId)
+  await refreshTaskNotifPanel()
 }
 
 function formatActivityScheduleShort(date: string | null): string {
@@ -675,6 +677,16 @@ const menuGroups: MenuGroup[] = [
         ]
       },
       {
+        title: 'Tablero',
+        to: '/admin/approval-dashboard',
+        iconPaths: ['M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z']
+      },
+      {
+        title: 'Flujos',
+        to: '/admin/approval-flows',
+        iconPaths: ['M4 6h16M4 12h10M4 18h6', 'M17 15l3 3-3 3']
+      },
+      {
         title: 'Categorías',
         to: '/admin/approval-categories',
         iconPaths: [
@@ -687,6 +699,14 @@ const menuGroups: MenuGroup[] = [
         iconPaths: [
           'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V8m8 0V6',
           'M12 12a3 3 0 110-6 3 3 0 010 6z'
+        ]
+      },
+      {
+        title: 'Configuración',
+        to: '/admin/approval-settings',
+        iconPaths: [
+          'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
+          'M15 12a3 3 0 11-6 0 3 3 0 016 0z'
         ]
       },
     ]
@@ -1268,38 +1288,40 @@ const handleLogout = async () => {
                       </div>
 
                       <div class="border-t border-slate-100 pt-3">
-                        <p class="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                          Por aprobar
-                        </p>
+                        <div class="flex items-center justify-between px-2 pb-1.5">
+                          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                            Aprobaciones
+                          </p>
+                          <button
+                            v-if="pendingApprovalsPreview.some(a => !a.actionable)"
+                            type="button"
+                            class="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800"
+                            @click="markAllApprovalNotificationsRead"
+                          >
+                            Marcar leídos
+                          </button>
+                        </div>
                         <template v-if="pendingApprovalsPreview.length === 0">
                           <p class="px-3 py-4 text-center text-sm text-slate-500">
-                            No tienes solicitudes pendientes por aprobar.
+                            Sin avisos de aprobaciones.
                           </p>
                         </template>
                         <ul v-else class="space-y-1">
-                          <li v-for="req in pendingApprovalsPreview" :key="req.id ?? ''">
+                          <li v-for="activity in pendingApprovalsPreview" :key="activity.id">
                             <button
                               type="button"
                               class="w-full rounded-lg border border-transparent px-3 py-2.5 text-left transition hover:border-violet-100 hover:bg-violet-50/60"
-                              @click="openApprovalDetailFromNotif(req)"
+                              @click="openApprovalDetailFromNotif(activity)"
                             >
                               <p class="text-sm font-medium text-slate-900 line-clamp-2">
-                                {{ req.title ?? 'Sin título' }}
-                              </p>
-                              <p class="mt-0.5 text-xs text-slate-500 truncate">
-                                <span v-if="req.request_number != null">#{{ req.request_number }}</span>
-                                <span v-if="req.category_name"> · {{ req.category_name }}</span>
-                                <span v-if="req.request_number == null && !req.category_name">Solicitud</span>
+                                {{ activity.title }}
                               </p>
                               <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
-                                <span class="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
-                                  Publicada
+                                <span class="rounded-md px-1.5 py-0.5 text-[10px] font-semibold" :class="approvalActivityBadge(activity)">
+                                  {{ approvalActivityLabel(activity.kind) }}
                                 </span>
-                                <span
-                                  v-if="req.amount != null"
-                                  class="text-[10px] text-slate-500"
-                                >
-                                  {{ formatApprovalAmountShort(req.amount, req.currency) }}
+                                <span class="text-[10px] text-slate-500">
+                                  {{ formatTaskDueShort(activity.scheduled_at) }}
                                 </span>
                               </div>
                             </button>

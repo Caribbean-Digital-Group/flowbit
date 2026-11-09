@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import type { Database } from '~/types/database.types'
+import type { ApprovalActivityRow } from '~/types/approval.types'
+import { APPROVAL_ACTIVITY_LABELS } from '~/utils/approvals'
 
 definePageMeta({ layout: 'admin' })
 
 type TaskViewRow = Database['public']['Views']['v_project_tasks']['Row']
-type ApprovalRequestViewRow = Database['public']['Views']['v_approval_requests']['Row']
 type CrmActivityViewRow = Database['public']['Views']['v_crm_activities']['Row']
 
 type AgendaItemType = 'task' | 'approval' | 'activity'
@@ -28,7 +29,7 @@ const authStore = useAuthStore()
 const { selectedCompanyId, partner } = storeToRefs(authStore)
 
 const { getAssignedTasksForPartner } = useProjectTask()
-const { getPublishedRequestsForMyManager } = useApprovalRequest()
+const { getOpenActivities: getOpenApprovalActivities } = useApprovalActivity()
 const { getActivitiesByCompany } = useCrmActivity()
 
 const isLoading = ref(false)
@@ -37,7 +38,7 @@ const search = ref('')
 const activeView = ref<AgendaView>('calendar')
 
 const tasks = ref<TaskViewRow[]>([])
-const approvals = ref<ApprovalRequestViewRow[]>([])
+const approvals = ref<ApprovalActivityRow[]>([])
 const activities = ref<CrmActivityViewRow[]>([])
 
 // Calendar state
@@ -108,19 +109,21 @@ const allAgendaItems = computed<AgendaItem[]>(() => {
     })
   }
 
-  for (const req of approvals.value) {
-    const dateIso = normalizeDate(req.request_date ?? req.created_at)
-    if (!req.id || !dateIso) continue
+  // Avisos del motor de aprobaciones: por aprobar (con la fecha límite del nivel),
+  // recordatorios, escaladas, devueltas y menciones aún sin leer
+  for (const activity of approvals.value) {
+    const dateIso = normalizeDate(activity.scheduled_at)
+    if (!dateIso) continue
     items.push({
-      id: req.id,
+      id: activity.id,
       type: 'approval',
-      title: req.title ?? 'Solicitud sin título',
-      subtitle: `${req.category_name ?? 'Sin categoría'}${req.request_number != null ? ` · #${req.request_number}` : ''}`,
+      title: activity.title,
+      subtitle: APPROVAL_ACTIVITY_LABELS[activity.kind] ?? 'Aprobación',
       dateIso,
       dateLabel: formatDateLabel(dateIso),
-      statusLabel: 'Publicada',
-      href: `/admin/approval-requests/${req.id}`,
-      isOverdue: false
+      statusLabel: activity.actionable ? 'Pendiente' : 'Aviso',
+      href: `/admin/approval-requests/${activity.request_id}`,
+      isOverdue: activity.actionable && new Date(dateIso).getTime() < todayMs
     })
   }
 
@@ -388,7 +391,7 @@ const refreshAgenda = async () => {
   try {
     const [taskRows, approvalRows, activityRows] = await Promise.all([
       getAssignedTasksForPartner(partnerId, companyId),
-      getPublishedRequestsForMyManager(companyId, partnerId),
+      getOpenApprovalActivities(companyId, partnerId, 200),
       getActivitiesByCompany(companyId)
     ])
     tasks.value = taskRows

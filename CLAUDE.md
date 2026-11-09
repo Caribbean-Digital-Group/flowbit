@@ -165,9 +165,19 @@ flowbit/
 
 | Módulo | Ruta admin | Composable(s) |
 |---|---|---|
-| Solicitudes | `/admin/approval-requests` | `useApprovalRequest` |
-| Categorías | `/admin/approval-categories` | `useApprovalCategory` |
-| Aprobadores | `/admin/approval-managers` | `useApprovalManager` |
+| Solicitudes (bandejas, detalle, evidencia imprimible) | `/admin/approval-requests` | `useApprovalRequest`, `useApprovalPeople` |
+| Tablero | `/admin/approval-dashboard` | `useApprovalSettings` |
+| Flujos multinivel y simulador | `/admin/approval-flows` | `useApprovalFlow` |
+| Categorías (formulario dinámico, reglas) | `/admin/approval-categories` | `useApprovalCategory` |
+| Aprobadores (límites de monto) | `/admin/approval-managers` | `useApprovalManager` |
+| Configuración, delegaciones y plazos | `/admin/approval-settings` | `useApprovalSettings` |
+
+> Motor en Postgres: el estado de una solicitud solo cambia por RPC (`approval_submit_request`, `approval_decide`…).
+> El flujo se copia en la solicitud al enviarla. Una categoría sin flujo usa el modo simple (el solicitante elige al aprobador).
+> Aprueban los aprobadores registrados y los owners; si un nivel no resuelve a nadie, pasa a los owners.
+> Los avisos son `approval_activity` (campana y agenda): no hay correo. Bitácora inmutable con hash encadenado.
+> Los permisos de RR. HH. se aprueban con el motor (categoría `source_kind = 'hr_leave'`).
+> Tipos temporales en `types/approval.types.ts` hasta correr `db:types`. Documentación en `docs/approvals.md`.
 
 ### Recursos Humanos
 
@@ -549,7 +559,7 @@ El layout incluye:
   3. Ventas/Compras (Órdenes, Por surtir, Reporte de ventas, Líneas de orden, Métodos de pago)
   4. Inventario (Productos, Almacenes, Movimientos, Líneas de picking)
   5. Proyectos (Proyectos, Tareas)
-  6. Aprobaciones (Solicitudes, Categorías, Aprobadores)
+  6. Aprobaciones (Solicitudes, Tablero, Flujos, Categorías, Aprobadores, Configuración)
   7. Sitio web (Ajustes, Páginas, Menús, Blog, Categorías, Etiquetas, Autores, Comentarios, Medios, Galerías, Mensajes, Redirecciones)
   8. Recursos Humanos (Empleados, Departamentos, Asistencias, Reporte de asistencias, Inasistencias, Vacaciones y permisos, Saldos de vacaciones, Tipos de ausencia, Horarios, Días festivos, Kioscos)
   9. Nómina (Periodos de nómina, Salarios, Mis recibos, Configuración fiscal)
@@ -557,7 +567,7 @@ El layout incluye:
 - **Header sticky** con:
   - Botón hamburguesa (mobile)
   - Acceso al Manual de usuario
-  - Notificaciones (Tareas + Aprobaciones + CRM) con badge y dropdown
+  - Notificaciones (Tareas + avisos de Aprobaciones + CRM) con badge y dropdown
   - Invitaciones recibidas con badge y dropdown
   - Selector de empresa multi-empresa
   - Avatar dropdown (perfil, logout)

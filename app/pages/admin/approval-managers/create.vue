@@ -2,6 +2,8 @@
 import { storeToRefs } from 'pinia'
 import {
   createEmptyApprovalManagerForm,
+  managerFormCategoryLimits,
+  managerFormMaxAmount,
   type ApprovalManagerFormData
 } from '~/components/ApprovalManager/Form.vue'
 
@@ -98,9 +100,10 @@ const handleSave = async () => {
       {
         partner_id: form.value.partner_id,
         notes: form.value.notes.trim() || null,
-        active: form.value.active
+        active: form.value.active,
+        max_amount: managerFormMaxAmount(form.value)
       },
-      [...form.value.category_ids]
+      managerFormCategoryLimits(form.value)
     )
     if (!row) {
       errorMessage.value = 'No se pudo crear el registro. ¿Ya existe ese partner como aprobador?'
