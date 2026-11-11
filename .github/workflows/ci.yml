@@ -1,4 +1,4 @@
-# CI: compila la app en cada PR hacia develop/main para detectar errores antes de revisar.
+# CI: ejecuta las pruebas unitarias y compila la app en cada PR hacia develop/main para detectar errores antes de revisar.
 name: CI
 
 on:
@@ -27,4 +27,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Pruebas puras (nómina, montos de órdenes, auth, CSV): no requieren Supabase.
+      - run: npm test
       - run: npm run build
