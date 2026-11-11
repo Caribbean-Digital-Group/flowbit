@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { downloadCsv } from '~/utils/csv'
 import { storeToRefs } from 'pinia'
 import type { InventorySummary, ProductStockView, StockStatus } from '~/types/inventory.types'
 
@@ -237,17 +238,7 @@ const exportCsv = () => {
     STOCK_STATUS_LABELS[r.stock_status]
   ])
 
-  const csv = [header, ...lines]
-    .map(cols => cols.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))
-    .join('\n')
-
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `inventario-${new Date().toISOString().slice(0, 10)}.csv`
-  link.click()
-  URL.revokeObjectURL(url)
+  downloadCsv(`inventario-${new Date().toISOString().slice(0, 10)}`, header, lines)
 }
 
 const statusTabs: { value: 'all' | StockStatus; label: string }[] = [

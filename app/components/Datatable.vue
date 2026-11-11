@@ -384,6 +384,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, getCurrentInstance } from 'vue'
+import { downloadCsv } from '~/utils/csv'
 
 // Types
 export interface Column {
@@ -745,38 +746,16 @@ const exportToCSV = () => {
   const headers = props.columns.map(col => col.label)
   const rows = filteredData.value.map(row => {
     return props.columns.map(col => {
-      let value = getCellValue(row, col.key)
-      // Handle special types
+      const value = getCellValue(row, col.key)
       if (col.type === 'badge' && col.badgeConfig?.labels) {
-        value = col.badgeConfig.labels[value] || value
+        return col.badgeConfig.labels[value] ?? value
       }
-      // Escape quotes and wrap in quotes if contains comma
-      if (typeof value === 'string') {
-        value = value.replace(/"/g, '""')
-        if (value.includes(',') || value.includes('\n')) {
-          value = `"${value}"`
-        }
-      }
-      return value ?? ''
+      return value
     })
   })
 
-  const csvContent = [
-    headers.join(','),
-    ...rows.map(row => row.join(','))
-  ].join('\n')
-
-  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  const url = URL.createObjectURL(blob)
-  
-  link.setAttribute('href', url)
-  link.setAttribute('download', `${props.exportFilename}-${new Date().toISOString().split('T')[0]}.csv`)
-  link.style.visibility = 'hidden'
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
+  // Escape RFC 4180 y protección contra inyección de fórmulas: ver app/utils/csv.ts
+  downloadCsv(`${props.exportFilename}-${new Date().toISOString().split('T')[0]}`, headers, rows)
 }
 
 // Watchers
