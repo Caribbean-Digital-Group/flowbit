@@ -3236,6 +3236,60 @@ export const ARTICLES: DocArticle[] = [
     tags: ['inventario', 'stock', 'existencias', 'valoración', 'costo', 'reporte', 'alertas', 'reabastecimiento']
   },
   {
+    id: 'inventory-restock',
+    routePatterns: ['/admin/inventory/restock'],
+    module: 'pickings',
+    moduleLabel: 'Pickings / Movimientos',
+    moduleEmoji: '🚚',
+    title: 'Por reabastecer: órdenes de compra sugeridas',
+    viewType: 'list',
+    level: 'basico',
+    isNew: true,
+    summary: 'Qué productos pedir, cuánto y a qué proveedor, con las órdenes de compra listas en borrador en un clic.',
+    description: 'Lista los productos cuyo disponible (existencia menos lo reservado para entregas) está por debajo del mínimo, calcula cuánto pedir para volver al máximo y agrupa todo por proveedor habitual para crear las órdenes de compra.',
+    importance: 'Saber que algo se está agotando no basta: hay que decidir cuánto pedir y a quién. Esta vista hace esa cuenta por ti y te deja las órdenes de compra en borrador, así reabasteces en minutos y no al día siguiente de quedarte sin producto.',
+    tips: [
+      'Solo aparecen productos con stock mínimo capturado. Si falta alguno, define su mínimo en la ficha del producto.',
+      'El disponible descuenta lo reservado: una entrega preparada que aún no sale ya cuenta como vendida.',
+      'La cantidad sugerida repone hasta el stock máximo. Sin máximo, repone hasta el doble del mínimo.',
+      'Asigna el proveedor habitual en cada producto: los productos sin proveedor se muestran aparte y no entran en ninguna orden.',
+      'Las órdenes se crean en borrador con el costo del producto como precio. Revísalas y ajusta precios antes de confirmarlas.',
+      'Usa «Marcar todos» o «Quitar todos» por proveedor para decidir qué pedir hoy y qué dejar para después.'
+    ],
+    process: [
+      { step: 1, title: 'Revisa', description: 'Productos bajo mínimo por proveedor.' },
+      { step: 2, title: 'Marca', description: 'Lo que vas a pedir hoy.' },
+      { step: 3, title: 'Crea', description: 'Órdenes de compra en borrador.' },
+      { step: 4, title: 'Confirma', description: 'Ajusta precios y confirma cada orden.' },
+      { step: 5, title: 'Recibe', description: 'La entrada al almacén repone la existencia.' }
+    ],
+    faqs: [
+      {
+        question: '¿Cómo se calcula la cantidad sugerida?',
+        answer: 'Es el stock máximo menos lo disponible. Si el producto no tiene máximo, se usa el doble del mínimo. Por ejemplo, con mínimo 10, máximo 30 y 4 disponibles, se sugieren 26.'
+      },
+      {
+        question: '¿Se confirma la compra automáticamente?',
+        answer: 'No. Las órdenes se crean en borrador para que revises cantidades y precios. Nada se compra hasta que confirmas la orden.'
+      },
+      {
+        question: '¿Qué pasa con las tareas de reabastecimiento de la agenda?',
+        answer: 'Siguen funcionando igual. Cuando recibes la mercancía y el producto vuelve a su nivel, la tarea se cierra sola.'
+      },
+      {
+        question: '¿Por qué un producto no aparece en ninguna orden?',
+        answer: 'Porque no tiene proveedor habitual. Ábrelo con el enlace «Asignar», captura su proveedor y vuelve a esta vista.'
+      }
+    ],
+    relatedModules: [
+      { label: 'Inventario', route: '/admin/inventory' },
+      { label: 'Órdenes', route: '/admin/orders' },
+      { label: 'Productos', route: '/admin/products' }
+    ],
+    relatedArticles: ['inventory-report', 'orders-detail', 'products-detail'],
+    tags: ['reabastecimiento', 'compras', 'orden de compra', 'proveedor', 'stock mínimo', 'inventario', 'surtir']
+  },
+  {
     id: 'inventory-traceability',
     routePatterns: ['/admin/inventory/:id'],
     module: 'pickings',

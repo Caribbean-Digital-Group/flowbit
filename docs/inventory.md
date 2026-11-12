@@ -92,6 +92,32 @@ Para que aparezcan en la agenda, la tarea necesita responsable:
 `inventory_settings.restock_responsible_partner_id`. Si no está definido, se usa
 el propietario del equipo.
 
+## Por reabastecer (órdenes de compra sugeridas)
+
+La tarea de la agenda avisa; `/admin/inventory/restock` resuelve. Lista los
+productos bajo su mínimo, calcula cuánto pedir y crea las órdenes de compra en
+borrador, una por proveedor habitual.
+
+| Regla | Detalle |
+|---|---|
+| Candidatos | `is_stockable = true`, `stock_min > 0` y estado distinto de `inactive`/`discontinued` |
+| Disponible | `stock_quantity − Σ reserved` de `v_stock_availability` (todas las bodegas) |
+| Entra a la lista | Disponible `<` mínimo |
+| Cantidad sugerida | `stock_max − disponible`; sin máximo válido (`≤ mínimo`), `2 × stock_min − disponible` |
+| Urgencia | Negativo → agotado → bajo mínimo |
+| Agrupación | Por `product.default_supplier_id`; los productos sin proveedor se muestran aparte y no generan orden |
+| Orden creada | `create_order(..., 'purchase', proveedor)` + `add_order_line` por producto, precio = `cost_price`; queda en **borrador** |
+
+No requiere migración: usa vistas y RPC existentes. La lógica es pura y está
+probada en `app/utils/restock.ts` / `tests/utils/restock.test.ts`. El dashboard
+muestra un aviso con el número de productos por reabastecer.
+
+Limitaciones conocidas (seguimiento en Linear):
+
+- El cálculo es por empresa, no por almacén: una sucursal puede estar vacía
+  mientras otra tiene de sobra. En ese caso conviene un traspaso, no una compra.
+- La campana de notificaciones aún no incluye este aviso.
+
 ## API de base de datos
 
 | Función | Uso |
@@ -115,6 +141,7 @@ el propietario del equipo.
 | Ruta | Contenido |
 |---|---|
 | `/admin/inventory` | Tablero: valor del inventario, alertas, valoración por categoría y almacén, reporte filtrable, exportación CSV, ajuste, sincronización de la agenda y **ajustes del módulo** |
+| `/admin/inventory/restock` | **Por reabastecer**: productos bajo mínimo con cantidad sugerida y creación de órdenes de compra en borrador por proveedor |
 | `/admin/inventory/[id]` | Trazabilidad del producto: kardex con origen, documento, lote/serie, costo y saldo |
 | `/admin/pickings` | Listado con columna de origen y **valor del movimiento** |
 | `/admin/products/[id]` | Stock de solo lectura y **historial tomado del libro** (incluye ajustes y costos) |
@@ -146,8 +173,9 @@ a $20 y Norte a $25, cada uno se valora con su costo.
 |---|---|
 | Migraciones | `20260911120000_create_inventory_traceability_module.sql`, `20260911160000_add_warehouse_stock_report.sql` |
 | Tipos | `types/inventory.types.ts` (shim hasta regenerar `database.types.ts`) |
-| Composable | `app/composables/useInventory.ts` |
-| Páginas | `app/pages/admin/inventory/index.vue`, `app/pages/admin/inventory/[id].vue` |
+| Composables | `app/composables/useInventory.ts`, `app/composables/useRestock.ts` |
+| Utilidades | `app/utils/restock.ts` (cálculo puro, probado en `tests/utils/restock.test.ts`) |
+| Páginas | `app/pages/admin/inventory/index.vue`, `app/pages/admin/inventory/[id].vue`, `app/pages/admin/inventory/restock.vue` |
 | Componentes | `app/components/Inventory/SettingsModal.vue` |
 
 ## Verificación

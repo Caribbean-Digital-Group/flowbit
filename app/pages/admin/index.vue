@@ -204,6 +204,24 @@ const loadBase = async () => {
 
 watch(selectedCompanyId, () => { void loadBase() }, { immediate: true })
 
+// ── Reabastecimiento: aviso cuando hay productos bajo su mínimo ─────────────
+
+const { getSuggestions: getRestockSuggestions } = useRestock()
+const restockCount = ref(0)
+let restockRequest = 0
+const loadRestock = async () => {
+  const companyId = selectedCompanyId.value
+  const requestId = ++restockRequest
+  if (!companyId) {
+    restockCount.value = 0
+    return
+  }
+  const suggestions = await getRestockSuggestions(companyId)
+  if (requestId === restockRequest) restockCount.value = suggestions.length
+}
+
+watch(selectedCompanyId, () => { void loadRestock() }, { immediate: true })
+
 // ── Datos del periodo (KPIs en base de caja) ────────────────────────────────
 
 const isPeriodLoading = ref(false)
@@ -966,6 +984,18 @@ const recentActivity = computed<ActivityItem[]>(() => {
         :comparison-label="comparisonLabel"
         :loading="isPeriodLoading || isLoading"
       />
+
+      <NuxtLink
+        v-if="restockCount > 0"
+        to="/admin/inventory/restock"
+        class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-100 bg-amber-50 px-6 py-3 text-sm text-amber-900 transition-colors hover:bg-amber-100"
+      >
+        <span>
+          <span class="font-semibold">{{ restockCount }} {{ restockCount === 1 ? 'producto está' : 'productos están' }} por debajo de su mínimo.</span>
+          Genera las órdenes de compra sugeridas en un clic.
+        </span>
+        <span class="font-semibold">Ver por reabastecer →</span>
+      </NuxtLink>
 
       <div
         v-if="rangeError"
