@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import {
   approvalErrorMessage,
   approvalStatusLabel,
-  buildCsv,
   describeCondition,
   fieldSchemaIssues,
   flowIssues,
@@ -110,17 +109,6 @@ describe('validación de flujos', () => {
 })
 
 describe('exportación y formato', () => {
-  it('escapa comillas, comas y saltos de línea, con BOM para Excel', () => {
-    const csv = buildCsv([{ a: 'Hola, "mundo"', b: 3 }, { a: 'línea\nnueva', b: null }], [
-      { label: 'Texto', value: r => r.a },
-      { label: 'Número', value: r => r.b }
-    ])
-    expect(csv.startsWith('﻿')).toBe(true)
-    expect(csv).toContain('"Hola, ""mundo"""')
-    expect(csv).toContain('"línea\nnueva",')
-    expect(csv.split('\r\n')).toHaveLength(3)
-  })
-
   it('formatea horas', () => {
     expect(formatHours(0.5)).toBe('30 min')
     expect(formatHours(5)).toBe('5.0 h')

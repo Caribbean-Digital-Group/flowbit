@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import type { Column } from '~/components/Datatable.vue'
-import type { Tables } from '~/types/database.types'
+import type { ApprovalCategoryRow } from '~/types/approval.types'
 
 definePageMeta({
   layout: 'admin'
 })
 
-type Row = Tables<'approval_category'>
+type Row = ApprovalCategoryRow
 
 const columns: Column[] = [
   { key: 'name', label: 'Categoría', type: 'text', subtitleKey: 'internal_code' },
@@ -21,7 +21,7 @@ const { selectedCompanyId, companies } = storeToRefs(authStore)
 const { getCategoriesByCompany } = useApprovalCategory()
 
 const isLoading = ref(false)
-const raw = ref<Row[]>([])
+const raw = shallowRef<Row[]>([])
 
 const isWorkspaceAdmin = computed(() => {
   const id = selectedCompanyId.value

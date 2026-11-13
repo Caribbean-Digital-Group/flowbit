@@ -85,7 +85,7 @@ const toggleCategory = (categoryId: string) => {
         label="Miembro del equipo"
         placeholder="Selecciona un miembro con acceso confirmado"
         :options="partnerOptions.map(o => ({ value: o.value, label: o.label }))"
-        :disabled="readonly || partnerLocked"
+        :disabled="props.readonly || partnerLocked"
         searchable
         required
       />
@@ -103,7 +103,7 @@ const toggleCategory = (categoryId: string) => {
       step="0.01"
       placeholder="Sin límite"
       hint="Si una solicitud lo excede, el motor escala al siguiente jefe con límite suficiente o a los owners"
-      :readonly="readonly"
+      :readonly="props.readonly"
     />
 
     <FormTextArea
@@ -111,7 +111,7 @@ const toggleCategory = (categoryId: string) => {
       label="Notas del rol"
       placeholder="Ámbitos, excepciones u observaciones"
       :rows="3"
-      :readonly="readonly"
+      :readonly="props.readonly"
     />
 
     <div class="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm shadow-slate-200/40">
@@ -126,13 +126,13 @@ const toggleCategory = (categoryId: string) => {
         <div v-for="c in categoryOptions" :key="c.id" class="flex flex-wrap items-center gap-3">
           <label
             class="flex flex-1 items-start gap-3 cursor-pointer"
-            :class="readonly ? 'cursor-default opacity-70' : ''"
+            :class="props.readonly ? 'cursor-default opacity-70' : ''"
           >
             <input
               type="checkbox"
               class="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
               :checked="formData.category_ids.includes(c.id)"
-              :disabled="readonly"
+              :disabled="props.readonly"
               @change="toggleCategory(c.id)"
             >
             <span class="text-sm text-slate-700">{{ c.label }}</span>
@@ -145,7 +145,7 @@ const toggleCategory = (categoryId: string) => {
               step="0.01"
               size="sm"
               placeholder="Límite (MXN)"
-              :readonly="readonly"
+              :readonly="props.readonly"
               @update:model-value="formData.category_limits = { ...formData.category_limits, [c.id]: $event }"
             />
           </div>
@@ -169,7 +169,7 @@ const toggleCategory = (categoryId: string) => {
           v-model="formData.active"
           type="checkbox"
           class="sr-only peer"
-          :disabled="readonly"
+          :disabled="props.readonly"
         >
         <div
           class="w-11 h-6 bg-slate-200 peer-focus:ring-4 peer-focus:ring-indigo-100 rounded-full

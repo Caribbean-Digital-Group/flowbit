@@ -2,7 +2,8 @@
 import { storeToRefs } from 'pinia'
 import type { StatItem } from '~/components/StatGrid.vue'
 import type { ApprovalDashboard } from '~/types/approval.types'
-import { approvalStatusLabel, buildCsv, downloadText, formatDateTimeMx, formatHours, formatMoneyMx } from '~/utils/approvals'
+import { approvalStatusLabel, formatDateTimeMx, formatHours, formatMoneyMx } from '~/utils/approvals'
+import { downloadCsv } from '~/utils/csv'
 
 definePageMeta({ layout: 'admin' })
 
@@ -48,25 +49,20 @@ const monthName = (ym: string): string =>
 
 const exportApprovers = (): void => {
   if (!data.value) return
-  downloadText('aprobaciones-aprobadores.csv', buildCsv(data.value.approvers, [
-    { label: 'Aprobador', value: r => r.name },
-    { label: 'Pendientes', value: r => r.pending },
-    { label: 'Decididas en el periodo', value: r => r.decided },
-    { label: 'Respuesta promedio (h)', value: r => r.avg_response_hours }
-  ]))
+  downloadCsv(
+    'aprobaciones-aprobadores',
+    ['Aprobador', 'Pendientes', 'Decididas en el periodo', 'Respuesta promedio (h)'],
+    data.value.approvers.map(r => [r.name, r.pending, r.decided, r.avg_response_hours])
+  )
 }
 
 const exportCategories = (): void => {
   if (!data.value) return
-  downloadText('aprobaciones-categorias.csv', buildCsv(data.value.by_category, [
-    { label: 'Categoría', value: r => r.category },
-    { label: 'Total', value: r => r.total },
-    { label: 'Aprobadas', value: r => r.approved },
-    { label: 'Rechazadas', value: r => r.rejected },
-    { label: 'Pendientes', value: r => r.pending },
-    { label: 'Monto aprobado', value: r => r.amount_approved },
-    { label: 'Horas promedio', value: r => r.avg_hours }
-  ]))
+  downloadCsv(
+    'aprobaciones-categorias',
+    ['Categoría', 'Total', 'Aprobadas', 'Rechazadas', 'Pendientes', 'Monto aprobado', 'Horas promedio'],
+    data.value.by_category.map(r => [r.category, r.total, r.approved, r.rejected, r.pending, r.amount_approved, r.avg_hours])
+  )
 }
 
 const card = 'rounded-2xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/50'

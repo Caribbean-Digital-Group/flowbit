@@ -438,23 +438,6 @@ export const formatHours = (hours: number | null | undefined): string => {
   return `${(h / 24).toFixed(1)} días`
 }
 
-export interface CsvColumn<T> {
-  label: string
-  value: (row: T) => string | number | null | undefined
-}
-
-/** CSV con BOM para que Excel respete acentos; separador coma y comillas dobles. */
-export const buildCsv = <T>(rows: T[], columns: CsvColumn<T>[]): string => {
-  const escape = (raw: string | number | null | undefined): string => {
-    if (raw === null || raw === undefined) return ''
-    const text = String(raw)
-    return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
-  }
-  const header = columns.map(c => escape(c.label)).join(',')
-  const body = rows.map(row => columns.map(c => escape(c.value(row))).join(','))
-  return '﻿' + [header, ...body].join('\r\n')
-}
-
 /** Descarga un texto como archivo (solo navegador). */
 export const downloadText = (filename: string, content: string, mime = 'text/csv;charset=utf-8'): void => {
   const blob = new Blob([content], { type: mime })

@@ -11,7 +11,7 @@ const { getFlows } = useApprovalFlow()
 const { getCategoriesByCompany } = useApprovalCategory()
 
 const flows = ref<ApprovalFlowRow[]>([])
-const categories = ref<ApprovalCategoryRow[]>([])
+const categories = shallowRef<ApprovalCategoryRow[]>([])
 const isLoading = ref(false)
 
 const columns: Column[] = [

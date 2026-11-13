@@ -87,7 +87,14 @@ export type ApprovalSettingsRow = Audit & {
   expire_after_days: number | null
 }
 
-export type ApprovalCategoryRow = Database['public']['Tables']['approval_category']['Row'] & {
+/**
+ * Reemplaza columnas del tipo generado por su forma tipada. Con `&` a secas, una columna
+ * `Json` quedaría como `Json & T` y TypeScript no podría iterarla ni copiarla.
+ */
+type Override<T, U> = Omit<T, keyof U> & U
+
+/** Columnas de categoría con su forma tipada (en el tipo generado varias son `Json`). */
+type ApprovalCategoryTyped = {
   color: string | null
   icon: string | null
   flow_id: string | null
@@ -101,13 +108,14 @@ export type ApprovalCategoryRow = Database['public']['Tables']['approval_categor
   source_kind: string | null
 }
 
-export type ApprovalCategoryInsert = Database['public']['Tables']['approval_category']['Insert']
-  & Partial<Omit<ApprovalCategoryRow, keyof Database['public']['Tables']['approval_category']['Row']>>
+export type ApprovalCategoryRow = Override<Database['public']['Tables']['approval_category']['Row'], ApprovalCategoryTyped>
+
+export type ApprovalCategoryInsert = Override<Database['public']['Tables']['approval_category']['Insert'], Partial<ApprovalCategoryTyped>>
 export type ApprovalCategoryUpdate = Partial<ApprovalCategoryRow>
 
-export type ApprovalManagerRow = Database['public']['Tables']['approval_manager']['Row'] & {
+export type ApprovalManagerRow = Override<Database['public']['Tables']['approval_manager']['Row'], {
   max_amount: number | null
-}
+}>
 
 export type ApprovalManagerCategoryRow = {
   approval_manager_id: string
@@ -171,7 +179,7 @@ export type ApprovalDelegationRow = Audit & {
 
 type BaseRequestRow = Database['public']['Tables']['approval_request']['Row']
 
-export type ApprovalRequestRow = Omit<BaseRequestRow, 'status'> & {
+export type ApprovalRequestRow = Override<BaseRequestRow, {
   status: ApprovalRequestStatus
   priority: ApprovalPriority
   due_date: string | null
@@ -192,9 +200,9 @@ export type ApprovalRequestRow = Omit<BaseRequestRow, 'status'> & {
   resolved_by_partner_id: string | null
   forced: boolean
   auto_approved: boolean
-}
+}>
 
-export type ApprovalRequestInsert = Omit<Database['public']['Tables']['approval_request']['Insert'], 'status' | 'request_number'> & {
+export type ApprovalRequestInsert = Override<Database['public']['Tables']['approval_request']['Insert'], {
   /** Lo asigna un trigger por empresa. */
   request_number?: number
   status?: 'draft'
@@ -202,7 +210,7 @@ export type ApprovalRequestInsert = Omit<Database['public']['Tables']['approval_
   due_date?: string | null
   field_values?: ApprovalFieldValues
   captured_by_partner_id?: string | null
-}
+}>
 
 export type ApprovalRequestUpdate = Partial<Pick<ApprovalRequestRow,
   'title' | 'category_id' | 'request_date' | 'description' | 'amount' | 'currency' | 'reference'

@@ -23,7 +23,7 @@ const { simulate } = useApprovalFlow()
 const people = useApprovalPeople()
 
 const form = ref<ApprovalRequestFormData>(createEmptyApprovalRequestForm())
-const categories = ref<ApprovalCategoryRow[]>([])
+const categories = shallowRef<ApprovalCategoryRow[]>([])
 const templates = ref<ApprovalRequestTemplateRow[]>([])
 const preview = ref<ApprovalPlanStep[]>([])
 const previewLoading = ref(false)

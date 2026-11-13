@@ -50,7 +50,7 @@ const rid = computed(() => String(Array.isArray(route.params.id) ? route.params.
 
 const entity = ref<ApprovalRequestRow | null>(null)
 const view = ref<ApprovalRequestViewRow | null>(null)
-const categories = ref<ApprovalCategoryRow[]>([])
+const categories = shallowRef<ApprovalCategoryRow[]>([])
 const steps = ref<ApprovalStepWithApprovers[]>([])
 const events = ref<ApprovalRequestEventRow[]>([])
 const comments = ref<ApprovalRequestCommentRow[]>([])
