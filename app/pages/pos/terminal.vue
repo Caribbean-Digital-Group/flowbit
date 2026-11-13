@@ -79,7 +79,8 @@ const register = ref<PosRegister | null>(null)
 const sessionId = computed(() => String(route.query.session ?? ''))
 
 // ── Catálogo ─────────────────────────────────────────────────────────────────
-const products = ref<ProductView[]>([])
+// shallowRef: la lista se reemplaza completa y evita el desempaquetado profundo del tipo de la vista.
+const products = shallowRef<ProductView[]>([])
 const paymentMethods = ref<PaymentMethod[]>([])
 const partners = ref<Partner[]>([])
 
@@ -113,7 +114,7 @@ const heldStorageKey = computed(() => `flowbit:pos:held:${sessionId.value}`)
 // ── Búsqueda ─────────────────────────────────────────────────────────────────
 const searchInputRef = ref<HTMLInputElement | null>(null)
 const searchQuery = ref('')
-const searchResults = ref<ProductView[]>([])
+const searchResults = shallowRef<ProductView[]>([])
 const searchHighlight = ref(0)
 const isSearching = ref(false)
 

@@ -113,6 +113,8 @@ export const useApprovalRequest = () => {
         company_id: companyId,
         requesting_partner_id: requestingPartnerId,
         status: 'draft',
+        // El trigger assign_approval_request_number asigna el folio real por empresa.
+        request_number: 0,
         created_by: user?.id,
         updated_by: user?.id
       })

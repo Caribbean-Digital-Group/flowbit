@@ -18,6 +18,12 @@ const report = useStorefrontAnalyticsReport()
 type RangePreset = '7d' | '30d' | '90d' | 'custom'
 
 const rangePreset = ref<RangePreset>('30d')
+const rangePresets: { value: RangePreset; label: string }[] = [
+  { value: '7d', label: '7 días' },
+  { value: '30d', label: '30 días' },
+  { value: '90d', label: '90 días' },
+  { value: 'custom', label: 'Personalizado' }
+]
 const customFrom = ref('')
 const customTo = ref('')
 const deviceSegment = ref<'all' | 'desktop' | 'mobile' | 'tablet'>('all')
@@ -390,12 +396,7 @@ useHead({ title: 'Analítica de la tienda — Flowbit' })
       <div class="flex flex-col lg:flex-row lg:items-center gap-4">
         <div class="flex items-center gap-1.5">
           <button
-            v-for="preset in ([
-              { value: '7d', label: '7 días' },
-              { value: '30d', label: '30 días' },
-              { value: '90d', label: '90 días' },
-              { value: 'custom', label: 'Personalizado' }
-            ] as { value: RangePreset; label: string }[])"
+            v-for="preset in rangePresets"
             :key="preset.value"
             type="button"
             :class="[

@@ -44,7 +44,7 @@ const formData = defineModel<ApprovalCategoryFormData>({ required: true })
       placeholder="viaje-negocios"
       required
       :readonly="props.readonly || props.codeReadonly"
-      maxlength="64"
+      :maxlength="64"
     />
 
     <FormTextArea

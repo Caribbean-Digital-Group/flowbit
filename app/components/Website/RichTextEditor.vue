@@ -146,7 +146,7 @@ onBeforeUnmount(() => editor.value?.destroy())
 </script>
 
 <template>
-  <div :class="['ws-editor rounded-2xl border border-slate-200 bg-white overflow-hidden', readonly ? 'opacity-80' : '']">
+  <div :class="['ws-editor rounded-2xl border border-slate-200 bg-white overflow-hidden', props.readonly ? 'opacity-80' : '']">
     <div v-if="!readonly" class="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-slate-100 bg-slate-50 sticky top-0 z-10">
       <template v-for="button in toolbar" :key="button.id">
         <button

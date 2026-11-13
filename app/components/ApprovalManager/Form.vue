@@ -97,7 +97,7 @@ const toggleCategory = (categoryId: string) => {
           v-for="c in categoryOptions"
           :key="c.id"
           class="flex items-start gap-3 cursor-pointer"
-          :class="readonly ? 'cursor-default opacity-70' : ''"
+          :class="props.readonly ? 'cursor-default opacity-70' : ''"
         >
           <input
             type="checkbox"
