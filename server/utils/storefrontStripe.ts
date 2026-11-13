@@ -53,7 +53,7 @@ export const callStorefrontServiceRpc = async <T>(
   }
 
   try {
-    return await $fetch<T>(`${supabaseUrl}/rest/v1/rpc/${fn}`, {
+    return await $fetch<T, string>(`${supabaseUrl}/rest/v1/rpc/${fn}`, {
       method: 'POST',
       headers: {
         apikey: serviceKey,

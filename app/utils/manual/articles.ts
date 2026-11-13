@@ -116,6 +116,46 @@ export const ARTICLES: DocArticle[] = [
     tags: ['inicio', 'resumen', 'métricas', 'estadísticas', 'dashboard']
   },
 
+  {
+    id: 'command-palette',
+    routePatterns: [],
+    module: 'core',
+    moduleLabel: 'General',
+    moduleEmoji: '🏠',
+    title: 'Búsqueda global y atajo Ctrl+K',
+    viewType: 'config',
+    level: 'basico',
+    isNew: true,
+    summary: 'Pulsa Ctrl+K (⌘K en Mac) en cualquier pantalla del panel para saltar a un módulo, crear un registro o abrir un contacto o producto escribiendo unas letras.',
+    description: 'La búsqueda global es una caja de texto que abre desde cualquier pantalla del panel con Ctrl+K (⌘K en Mac) o con el botón «Buscar» del encabezado. Encuentra todas las pantallas del menú lateral, las acciones de creación más usadas y los contactos y productos de la empresa seleccionada.',
+    importance: 'Flowbit crece con cada módulo y el menú lateral tiene ya decenas de pantallas. La búsqueda global te lleva a cualquiera en dos segundos sin recordar en qué grupo está, y te deja abrir la ficha de un cliente o producto sin pasar por su listado.',
+    tips: [
+      'No importan los acentos ni las mayúsculas: «nomina» encuentra «Nómina» y «configuracion» encuentra «Configuración».',
+      'Puedes escribir varias palabras: «reporte ventas» va directo al reporte de ventas.',
+      'Busca un contacto por nombre, nombre comercial o email, y un producto por nombre, SKU, referencia interna o código de barras.',
+      'Solo verás contactos y productos de la empresa seleccionada en el encabezado.',
+      'Sin escribir nada, la paleta muestra las acciones rápidas: nuevo contacto, producto, orden, lead, proyecto, empleado o solicitud de aprobación.'
+    ],
+    shortcuts: [
+      { keys: 'Ctrl + K / ⌘ + K', action: 'Abrir o cerrar la búsqueda global' },
+      { keys: '↑ / ↓', action: 'Moverse entre resultados' },
+      { keys: 'Enter', action: 'Abrir el resultado seleccionado' },
+      { keys: 'Esc', action: 'Cerrar la búsqueda' }
+    ],
+    faqs: [
+      {
+        question: '¿Por qué no aparece un contacto que sí existe?',
+        answer: 'La búsqueda solo muestra contactos activos de la empresa seleccionada. Revisa que tengas elegida la empresa correcta en el encabezado y que el contacto no esté archivado. Escribe al menos dos letras.'
+      },
+      {
+        question: '¿Funciona en el celular?',
+        answer: 'Sí. Toca el ícono de lupa del encabezado para abrirla y elige el resultado con el dedo.'
+      }
+    ],
+    relatedArticles: ['dashboard', 'getting-started'],
+    tags: ['buscar', 'búsqueda', 'atajo', 'teclado', 'ctrl k', 'paleta de comandos', 'navegación']
+  },
+
   // ─── SOCIOS (PARTNERS) ───────────────────────────────────────────────────────
   {
     id: 'partners-list',
@@ -214,7 +254,8 @@ export const ARTICLES: DocArticle[] = [
       'El precio de lista es el precio base; puede modificarse en cada línea de orden individual.',
       'Activa el control de stock para recibir alertas cuando el inventario esté bajo.',
       'Usa categorías para organizar el catálogo (Electrónicos, Ropa, Servicios, etc.).',
-      'El código de barras es necesario para usar el escáner QR en el módulo de pickings.'
+      'El código de barras es necesario para usar el escáner QR en el módulo de pickings.',
+      'Para migrar desde otro sistema usa «Importar CSV»: descarga la plantilla, llénala y súbela. Se revisa todo antes de guardar y se te indica la fila de cada error.'
     ],
     process: [
       { step: 1, title: 'Crear producto en catálogo', description: 'Registra el producto con SKU, nombre, precio y unidad de medida.' },
@@ -3338,6 +3379,60 @@ export const ARTICLES: DocArticle[] = [
     ],
     relatedArticles: ['inventory-traceability', 'pickings-list', 'products-detail'],
     tags: ['inventario', 'stock', 'existencias', 'valoración', 'costo', 'reporte', 'alertas', 'reabastecimiento']
+  },
+  {
+    id: 'inventory-restock',
+    routePatterns: ['/admin/inventory/restock'],
+    module: 'pickings',
+    moduleLabel: 'Pickings / Movimientos',
+    moduleEmoji: '🚚',
+    title: 'Por reabastecer: órdenes de compra sugeridas',
+    viewType: 'list',
+    level: 'basico',
+    isNew: true,
+    summary: 'Qué productos pedir, cuánto y a qué proveedor, con las órdenes de compra listas en borrador en un clic.',
+    description: 'Lista los productos cuyo disponible (existencia menos lo reservado para entregas) está por debajo del mínimo, calcula cuánto pedir para volver al máximo y agrupa todo por proveedor habitual para crear las órdenes de compra.',
+    importance: 'Saber que algo se está agotando no basta: hay que decidir cuánto pedir y a quién. Esta vista hace esa cuenta por ti y te deja las órdenes de compra en borrador, así reabasteces en minutos y no al día siguiente de quedarte sin producto.',
+    tips: [
+      'Solo aparecen productos con stock mínimo capturado. Si falta alguno, define su mínimo en la ficha del producto.',
+      'El disponible descuenta lo reservado: una entrega preparada que aún no sale ya cuenta como vendida.',
+      'La cantidad sugerida repone hasta el stock máximo. Sin máximo, repone hasta el doble del mínimo.',
+      'Asigna el proveedor habitual en cada producto: los productos sin proveedor se muestran aparte y no entran en ninguna orden.',
+      'Las órdenes se crean en borrador con el costo del producto como precio. Revísalas y ajusta precios antes de confirmarlas.',
+      'Usa «Marcar todos» o «Quitar todos» por proveedor para decidir qué pedir hoy y qué dejar para después.'
+    ],
+    process: [
+      { step: 1, title: 'Revisa', description: 'Productos bajo mínimo por proveedor.' },
+      { step: 2, title: 'Marca', description: 'Lo que vas a pedir hoy.' },
+      { step: 3, title: 'Crea', description: 'Órdenes de compra en borrador.' },
+      { step: 4, title: 'Confirma', description: 'Ajusta precios y confirma cada orden.' },
+      { step: 5, title: 'Recibe', description: 'La entrada al almacén repone la existencia.' }
+    ],
+    faqs: [
+      {
+        question: '¿Cómo se calcula la cantidad sugerida?',
+        answer: 'Es el stock máximo menos lo disponible. Si el producto no tiene máximo, se usa el doble del mínimo. Por ejemplo, con mínimo 10, máximo 30 y 4 disponibles, se sugieren 26.'
+      },
+      {
+        question: '¿Se confirma la compra automáticamente?',
+        answer: 'No. Las órdenes se crean en borrador para que revises cantidades y precios. Nada se compra hasta que confirmas la orden.'
+      },
+      {
+        question: '¿Qué pasa con las tareas de reabastecimiento de la agenda?',
+        answer: 'Siguen funcionando igual. Cuando recibes la mercancía y el producto vuelve a su nivel, la tarea se cierra sola.'
+      },
+      {
+        question: '¿Por qué un producto no aparece en ninguna orden?',
+        answer: 'Porque no tiene proveedor habitual. Ábrelo con el enlace «Asignar», captura su proveedor y vuelve a esta vista.'
+      }
+    ],
+    relatedModules: [
+      { label: 'Inventario', route: '/admin/inventory' },
+      { label: 'Órdenes', route: '/admin/orders' },
+      { label: 'Productos', route: '/admin/products' }
+    ],
+    relatedArticles: ['inventory-report', 'orders-detail', 'products-detail'],
+    tags: ['reabastecimiento', 'compras', 'orden de compra', 'proveedor', 'stock mínimo', 'inventario', 'surtir']
   },
   {
     id: 'inventory-traceability',

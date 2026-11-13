@@ -54,7 +54,7 @@ flowbit/
 │   │   ├── marketing.vue              # Landing y /funcionalidades (header + footer con enlaces a módulos)
 │   │   ├── default.vue
 │   │   └── public.vue
-│   ├── middleware/                    # Guards de navegación (a implementar)
+│   ├── middleware/                    # admin-guard.global.ts: exige sesión en /admin (conserva ?redirect=)
 │   ├── pages/
 │   │   ├── sites/[company_slug]/      # Sitio web público por empresa (CMS + blog)
 │   │   ├── index.vue                  # Landing / login
@@ -149,6 +149,8 @@ flowbit/
 
 | Módulo | Ruta admin | Composable(s) |
 |---|---|---|
+| Tablero de inventario | `/admin/inventory` | `useInventory` |
+| Por reabastecer (OC sugeridas) | `/admin/inventory/restock` | `useRestock` |
 | Productos | `/admin/products` | `useProduct` |
 | Almacenes | `/admin/warehouses` | `useWarehouse` |
 | Movimientos (Pickings) | `/admin/pickings` | `usePicking`, `usePickingLine` |
@@ -452,6 +454,7 @@ export const useEntity = () => {
 - Soft-delete: `.update({ active: false })` — nunca `.delete()`
 - Filtrar siempre por `company_id` (multi-tenant)
 - Para búsqueda de texto usar `.ilike('field', '%term%')` o full-text search con config `spanish`
+- Listados completos (todas las filas de una empresa): envolver la consulta en `fetchAllRows` (`app/utils/pagination.ts`). Supabase corta cada respuesta en 1000 filas sin avisar; el helper lee por bloques con `.range()`. Construir la consulta dentro del callback y terminar el `.order()` en una columna única (`id`)
 
 ### Helpers de autenticación (`useSupabase.ts`)
 
@@ -557,7 +560,7 @@ El layout incluye:
   1. General (Dashboard, Agenda, Contactos)
   2. CRM (Tablero, Leads, Pipeline, Motivos de pérdida)
   3. Ventas/Compras (Órdenes, Por surtir, Reporte de ventas, Líneas de orden, Métodos de pago)
-  4. Inventario (Productos, Almacenes, Movimientos, Líneas de picking)
+  4. Inventario (Inventario, Por reabastecer, Productos, Almacenes, Movimientos, Líneas de picking)
   5. Proyectos (Proyectos, Tareas)
   6. Aprobaciones (Solicitudes, Tablero, Flujos, Categorías, Aprobadores, Configuración)
   7. Sitio web (Ajustes, Páginas, Menús, Blog, Categorías, Etiquetas, Autores, Comentarios, Medios, Galerías, Mensajes, Redirecciones)
@@ -566,6 +569,7 @@ El layout incluye:
   10. Sistema (Equipo, Manual, Configuración)
 - **Header sticky** con:
   - Botón hamburguesa (mobile)
+  - Búsqueda global / paleta de comandos (`Ctrl+K` / `⌘K`, `components/CommandPalette.vue`): lee los mismos `menuGroups` del sidebar, así que un módulo nuevo aparece en ambos sin trabajo extra
   - Acceso al Manual de usuario
   - Notificaciones (Tareas + avisos de Aprobaciones + CRM) con badge y dropdown
   - Invitaciones recibidas con badge y dropdown
@@ -583,6 +587,7 @@ El layout incluye:
 npm run dev                    # Servidor de desarrollo (http://localhost:3000)
 npm run build                  # Build de producción
 npm run preview                # Preview del build
+npm run typecheck              # Validación de tipos (vue-tsc); también corre en la CI
 
 # Base de datos (Supabase Cloud — --linked)
 npm run db:status              # Estado de la conexión

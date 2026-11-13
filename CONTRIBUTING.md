@@ -24,6 +24,7 @@ Tipos: `feat`, `fix`, `refactor`, `docs`, `style`, `chore`, `test`, `perf`.
 
 - [ ] Descripción clara y enlace a la tarea relacionada.
 - [ ] Compila (`npm run build`).
+- [ ] Sin errores de tipos (`npm run typecheck`); no se usa `any` ni `@ts-ignore` para silenciarlos.
 - [ ] Migraciones nuevas (si aplica) con RLS y tipos regenerados.
 - [ ] Documentación actualizada en `docs/` y, si aplica, artículo en `app/utils/manual/`.
 - [ ] Sin secretos ni `.env` en el commit.

@@ -137,7 +137,7 @@ const financialByCurrency = computed<CurrencyFinancial[]>(() => {
 
   for (const order of props.orders) {
     if (!order.order_type || !order.order_state) continue
-    if (order.order_state === 'cancelled') continue
+    if (order.order_state === 'cancel') continue
 
     const cur = normalizeCurrency(order.currency)
     if (!map.has(cur)) {

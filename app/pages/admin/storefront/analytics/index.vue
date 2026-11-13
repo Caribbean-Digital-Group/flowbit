@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { downloadCsv } from '~/utils/csv'
 import { storeToRefs } from 'pinia'
 import type { StatItem } from '~/components/StatGrid.vue'
 import type { DailyTrendPoint } from '~/components/Chart/DailyTrend.vue'
@@ -18,6 +19,12 @@ const report = useStorefrontAnalyticsReport()
 type RangePreset = '7d' | '30d' | '90d' | 'custom'
 
 const rangePreset = ref<RangePreset>('30d')
+const rangePresets: { value: RangePreset; label: string }[] = [
+  { value: '7d', label: '7 días' },
+  { value: '30d', label: '30 días' },
+  { value: '90d', label: '90 días' },
+  { value: 'custom', label: 'Personalizado' }
+]
 const customFrom = ref('')
 const customTo = ref('')
 const deviceSegment = ref<'all' | 'desktop' | 'mobile' | 'tablet'>('all')
@@ -328,20 +335,12 @@ const exportCsv = () => {
     'ordenes', 'ingresos', 'sesiones_convertidas',
     'embudo_view_item', 'embudo_add_to_cart', 'embudo_begin_checkout', 'embudo_purchase'
   ]
-  const lines = daily.value.map((row) =>
-    [
-      row.day, row.page_views, row.sessions, row.visitors, row.new_visitors,
-      row.bounce_sessions, row.orders, row.revenue, row.converted_sessions,
-      row.funnel_view_item, row.funnel_add_to_cart, row.funnel_begin_checkout, row.funnel_purchase
-    ].join(',')
-  )
-  const blob = new Blob([[header.join(','), ...lines].join('\n')], { type: 'text/csv;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `analitica-tienda_${range.value.from}_${range.value.to}.csv`
-  link.click()
-  URL.revokeObjectURL(url)
+  const lines = daily.value.map((row) => [
+    row.day, row.page_views, row.sessions, row.visitors, row.new_visitors,
+    row.bounce_sessions, row.orders, row.revenue, row.converted_sessions,
+    row.funnel_view_item, row.funnel_add_to_cart, row.funnel_begin_checkout, row.funnel_purchase
+  ])
+  downloadCsv(`analitica-tienda_${range.value.from}_${range.value.to}`, header, lines)
 }
 
 const lastRunLabel = computed(() => {
@@ -390,12 +389,7 @@ useHead({ title: 'Analítica de la tienda — Flowbit' })
       <div class="flex flex-col lg:flex-row lg:items-center gap-4">
         <div class="flex items-center gap-1.5">
           <button
-            v-for="preset in ([
-              { value: '7d', label: '7 días' },
-              { value: '30d', label: '30 días' },
-              { value: '90d', label: '90 días' },
-              { value: 'custom', label: 'Personalizado' }
-            ] as { value: RangePreset; label: string }[])"
+            v-for="preset in rangePresets"
             :key="preset.value"
             type="button"
             :class="[

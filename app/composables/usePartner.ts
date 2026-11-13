@@ -1,4 +1,5 @@
 import type { Database, Tables, TablesInsert, TablesUpdate } from '~/types/database.types'
+import { escapeIlikeTerm } from '~/utils/search'
 
 type Partner = Tables<'partner'>
 type PartnerInsert = TablesInsert<'partner'>
@@ -279,6 +280,38 @@ export const usePartner = () => {
   }
 
   /**
+   * Busca contactos de una empresa por nombre, nombre comercial o email.
+   * Solo contactos (relación `partner`) activos de `companyId`; lo usa la paleta de comandos.
+   */
+  const searchPartnersByCompany = async (
+    companyId: string,
+    searchTerm: string,
+    limit = 8
+  ): Promise<Pick<Partner, 'id' | 'name' | 'display_name' | 'email'>[]> => {
+    const term = escapeIlikeTerm(searchTerm)
+    if (!companyId || !term.trim()) return []
+    const pat = `%${term}%`
+
+    const { data, error } = await supabase
+      .from('partner')
+      .select('id, name, display_name, email, rel_partner_company!rel_partner_company_partner_id_fkey!inner(company_id)')
+      .eq('rel_partner_company.company_id', companyId)
+      .eq('rel_partner_company.relationship_type', 'partner')
+      .eq('rel_partner_company.is_active', true)
+      .eq('active', true)
+      .or(`name.ilike.${pat},display_name.ilike.${pat},email.ilike.${pat}`)
+      .order('name')
+      .limit(limit)
+
+    if (error) {
+      console.error('Error searching company partners:', error)
+      return []
+    }
+
+    return (data ?? []).map(({ id, name, display_name, email }) => ({ id, name, display_name, email }))
+  }
+
+  /**
    * Search partners by name
    */
   const searchPartners = async (searchTerm: string, limit = 10): Promise<Partner[]> => {
@@ -386,6 +419,7 @@ export const usePartner = () => {
     updateCurrentPartner,
     archivePartner,
     searchPartners,
+    searchPartnersByCompany,
     // Categories
     getCategories,
     getPartnerWithCategories,

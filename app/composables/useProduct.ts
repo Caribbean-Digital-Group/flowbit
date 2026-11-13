@@ -1,14 +1,11 @@
 import type { Database, Tables, TablesInsert, TablesUpdate } from '~/types/database.types'
+import { escapeIlikeTerm } from '~/utils/search'
 
 type Product = Tables<'product'>
 type ProductView = Database['public']['Views']['v_products']['Row']
 type OrderKind = Database['public']['Enums']['order_type']
 type ProductInsert = TablesInsert<'product'>
 type ProductUpdate = TablesUpdate<'product'>
-
-/** Escapa `%`, `_` y `\` para usar el término dentro de filtros `.ilike` en PostgREST. */
-const escapeForIlike = (raw: string): string =>
-  raw.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_%')
 
 export const useProduct = () => {
   const supabase = useSupabase()
@@ -42,32 +39,49 @@ export const useProduct = () => {
   ): Promise<Product[]> => {
     if (!companyId) return []
 
-    let query = supabase
-      .from('product')
-      .select('*')
-      .eq('company_id', companyId)
+    // Se construye desde cero en cada llamada: los builders de supabase-js no se reutilizan.
+    const buildQuery = () => {
+      let query = supabase
+        .from('product')
+        .select('*')
+        .eq('company_id', companyId)
 
-    if (options?.status) {
-      query = query.eq('status', options.status)
-    }
-    if (options?.productType) {
-      query = query.eq('product_type', options.productType)
-    }
-    if (options?.limit) {
-      query = query.limit(options.limit)
-    }
-    if (options?.offset) {
-      query = query.range(options.offset, options.offset + (options.limit || 10) - 1)
+      if (options?.status) {
+        query = query.eq('status', options.status)
+      }
+      if (options?.productType) {
+        query = query.eq('product_type', options.productType)
+      }
+      return query.order('name').order('id')
     }
 
-    const { data, error } = await query.order('name')
+    // Página explícita pedida por quien llama.
+    if (options?.limit || options?.offset) {
+      let query = buildQuery()
+      if (options.limit) {
+        query = query.limit(options.limit)
+      }
+      if (options.offset) {
+        query = query.range(options.offset, options.offset + (options.limit || 10) - 1)
+      }
+
+      const { data, error } = await query
+      if (error) {
+        console.error('Error fetching products by company:', error)
+        return []
+      }
+      return data || []
+    }
+
+    // Catálogo completo por bloques: una consulta simple se corta en 1000 filas.
+    const { data, error } = await fetchAllRows((from, to) => buildQuery().range(from, to))
 
     if (error) {
       console.error('Error fetching products by company:', error)
       return []
     }
 
-    return data || []
+    return data
   }
 
   /** Productos vendibles con nombre de categoría resuelto (para el POS). */
@@ -108,9 +122,9 @@ export const useProduct = () => {
       .order('name')
       .limit(limit)
 
-    const termRaw = searchTerm.trim().slice(0, 160)
-    if (termRaw.length > 0) {
-      const pat = `%${escapeForIlike(termRaw)}%`
+    const term = escapeIlikeTerm(searchTerm)
+    if (term.trim().length > 0) {
+      const pat = `%${term}%`
       query = query.or(
         [
           `name.ilike.${pat}`,

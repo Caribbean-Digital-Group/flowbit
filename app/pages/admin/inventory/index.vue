@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { downloadCsv } from '~/utils/csv'
 import { storeToRefs } from 'pinia'
 import type { InventorySummary, ProductStockView, StockStatus } from '~/types/inventory.types'
 
@@ -237,17 +238,7 @@ const exportCsv = () => {
     STOCK_STATUS_LABELS[r.stock_status]
   ])
 
-  const csv = [header, ...lines]
-    .map(cols => cols.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))
-    .join('\n')
-
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `inventario-${new Date().toISOString().slice(0, 10)}.csv`
-  link.click()
-  URL.revokeObjectURL(url)
+  downloadCsv(`inventario-${new Date().toISOString().slice(0, 10)}`, header, lines)
 }
 
 const statusTabs: { value: 'all' | StockStatus; label: string }[] = [
@@ -295,6 +286,15 @@ const statusTabs: { value: 'all' | StockStatus; label: string }[] = [
           </svg>
           Exportar CSV
         </button>
+        <NuxtLink
+          to="/admin/inventory/restock"
+          class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-600 hover:border-indigo-200 hover:text-indigo-700 transition-colors"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          Por reabastecer
+        </NuxtLink>
         <button
           type="button"
           :disabled="isWorking || isLoading"
