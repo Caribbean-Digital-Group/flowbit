@@ -116,6 +116,46 @@ export const ARTICLES: DocArticle[] = [
     tags: ['inicio', 'resumen', 'métricas', 'estadísticas', 'dashboard']
   },
 
+  {
+    id: 'command-palette',
+    routePatterns: [],
+    module: 'core',
+    moduleLabel: 'General',
+    moduleEmoji: '🏠',
+    title: 'Búsqueda global y atajo Ctrl+K',
+    viewType: 'config',
+    level: 'basico',
+    isNew: true,
+    summary: 'Pulsa Ctrl+K (⌘K en Mac) en cualquier pantalla del panel para saltar a un módulo, crear un registro o abrir un contacto o producto escribiendo unas letras.',
+    description: 'La búsqueda global es una caja de texto que abre desde cualquier pantalla del panel con Ctrl+K (⌘K en Mac) o con el botón «Buscar» del encabezado. Encuentra todas las pantallas del menú lateral, las acciones de creación más usadas y los contactos y productos de la empresa seleccionada.',
+    importance: 'Flowbit crece con cada módulo y el menú lateral tiene ya decenas de pantallas. La búsqueda global te lleva a cualquiera en dos segundos sin recordar en qué grupo está, y te deja abrir la ficha de un cliente o producto sin pasar por su listado.',
+    tips: [
+      'No importan los acentos ni las mayúsculas: «nomina» encuentra «Nómina» y «configuracion» encuentra «Configuración».',
+      'Puedes escribir varias palabras: «reporte ventas» va directo al reporte de ventas.',
+      'Busca un contacto por nombre, nombre comercial o email, y un producto por nombre, SKU, referencia interna o código de barras.',
+      'Solo verás contactos y productos de la empresa seleccionada en el encabezado.',
+      'Sin escribir nada, la paleta muestra las acciones rápidas: nuevo contacto, producto, orden, lead, proyecto, empleado o solicitud de aprobación.'
+    ],
+    shortcuts: [
+      { keys: 'Ctrl + K / ⌘ + K', action: 'Abrir o cerrar la búsqueda global' },
+      { keys: '↑ / ↓', action: 'Moverse entre resultados' },
+      { keys: 'Enter', action: 'Abrir el resultado seleccionado' },
+      { keys: 'Esc', action: 'Cerrar la búsqueda' }
+    ],
+    faqs: [
+      {
+        question: '¿Por qué no aparece un contacto que sí existe?',
+        answer: 'La búsqueda solo muestra contactos activos de la empresa seleccionada. Revisa que tengas elegida la empresa correcta en el encabezado y que el contacto no esté archivado. Escribe al menos dos letras.'
+      },
+      {
+        question: '¿Funciona en el celular?',
+        answer: 'Sí. Toca el ícono de lupa del encabezado para abrirla y elige el resultado con el dedo.'
+      }
+    ],
+    relatedArticles: ['dashboard', 'getting-started'],
+    tags: ['buscar', 'búsqueda', 'atajo', 'teclado', 'ctrl k', 'paleta de comandos', 'navegación']
+  },
+
   // ─── SOCIOS (PARTNERS) ───────────────────────────────────────────────────────
   {
     id: 'partners-list',

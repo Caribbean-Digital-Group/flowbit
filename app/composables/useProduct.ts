@@ -1,14 +1,11 @@
 import type { Database, Tables, TablesInsert, TablesUpdate } from '~/types/database.types'
+import { escapeIlikeTerm } from '~/utils/search'
 
 type Product = Tables<'product'>
 type ProductView = Database['public']['Views']['v_products']['Row']
 type OrderKind = Database['public']['Enums']['order_type']
 type ProductInsert = TablesInsert<'product'>
 type ProductUpdate = TablesUpdate<'product'>
-
-/** Escapa `%`, `_` y `\` para usar el término dentro de filtros `.ilike` en PostgREST. */
-const escapeForIlike = (raw: string): string =>
-  raw.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_%')
 
 export const useProduct = () => {
   const supabase = useSupabase()
@@ -125,9 +122,9 @@ export const useProduct = () => {
       .order('name')
       .limit(limit)
 
-    const termRaw = searchTerm.trim().slice(0, 160)
-    if (termRaw.length > 0) {
-      const pat = `%${escapeForIlike(termRaw)}%`
+    const term = escapeIlikeTerm(searchTerm)
+    if (term.trim().length > 0) {
+      const pat = `%${term}%`
       query = query.or(
         [
           `name.ilike.${pat}`,

@@ -25,6 +25,15 @@ const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
 
+// Paleta de comandos (Ctrl+K / ⌘K): ver components/CommandPalette.vue
+const isCommandPaletteOpen = ref(false)
+const commandShortcutLabel = ref('Ctrl K')
+onMounted(() => {
+  if (/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) {
+    commandShortcutLabel.value = '⌘K'
+  }
+})
+
 // Cerrar mobile menu al cambiar de ruta
 const route = useRoute()
 watch(() => route.path, () => {
@@ -1118,6 +1127,21 @@ const handleLogout = async () => {
 
           <!-- Right: Notificaciones (tareas) + empresa + Avatar -->
           <div class="flex items-center gap-3">
+            <!-- Búsqueda global (paleta de comandos) -->
+            <button
+              type="button"
+              class="flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-slate-500 transition-all hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
+              :title="`Buscar (${commandShortcutLabel})`"
+              aria-label="Abrir búsqueda global"
+              @click="isCommandPaletteOpen = true"
+            >
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+              </svg>
+              <span class="hidden text-sm md:inline">Buscar</span>
+              <kbd class="hidden rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-sans text-xs text-slate-400 lg:inline">{{ commandShortcutLabel }}</kbd>
+            </button>
+
             <!-- Manual de usuario -->
             <NuxtLink
               to="/manual"
@@ -1585,6 +1609,7 @@ const handleLogout = async () => {
 
       <!-- Asistente flotante -->
       <ManualFloatingAssistant />
+      <CommandPalette v-model:open="isCommandPaletteOpen" :groups="menuGroups" />
     </div>
   </div>
 </template>

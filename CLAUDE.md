@@ -557,6 +557,7 @@ El layout incluye:
   10. Sistema (Equipo, Manual, Configuración)
 - **Header sticky** con:
   - Botón hamburguesa (mobile)
+  - Búsqueda global / paleta de comandos (`Ctrl+K` / `⌘K`, `components/CommandPalette.vue`): lee los mismos `menuGroups` del sidebar, así que un módulo nuevo aparece en ambos sin trabajo extra
   - Acceso al Manual de usuario
   - Notificaciones (Tareas + Aprobaciones + CRM) con badge y dropdown
   - Invitaciones recibidas con badge y dropdown
