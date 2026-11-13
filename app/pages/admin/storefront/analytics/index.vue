@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { downloadCsv } from '~/utils/csv'
 import { storeToRefs } from 'pinia'
 import type { StatItem } from '~/components/StatGrid.vue'
 import type { DailyTrendPoint } from '~/components/Chart/DailyTrend.vue'
@@ -328,20 +329,12 @@ const exportCsv = () => {
     'ordenes', 'ingresos', 'sesiones_convertidas',
     'embudo_view_item', 'embudo_add_to_cart', 'embudo_begin_checkout', 'embudo_purchase'
   ]
-  const lines = daily.value.map((row) =>
-    [
-      row.day, row.page_views, row.sessions, row.visitors, row.new_visitors,
-      row.bounce_sessions, row.orders, row.revenue, row.converted_sessions,
-      row.funnel_view_item, row.funnel_add_to_cart, row.funnel_begin_checkout, row.funnel_purchase
-    ].join(',')
-  )
-  const blob = new Blob([[header.join(','), ...lines].join('\n')], { type: 'text/csv;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `analitica-tienda_${range.value.from}_${range.value.to}.csv`
-  link.click()
-  URL.revokeObjectURL(url)
+  const lines = daily.value.map((row) => [
+    row.day, row.page_views, row.sessions, row.visitors, row.new_visitors,
+    row.bounce_sessions, row.orders, row.revenue, row.converted_sessions,
+    row.funnel_view_item, row.funnel_add_to_cart, row.funnel_begin_checkout, row.funnel_purchase
+  ])
+  downloadCsv(`analitica-tienda_${range.value.from}_${range.value.to}`, header, lines)
 }
 
 const lastRunLabel = computed(() => {
