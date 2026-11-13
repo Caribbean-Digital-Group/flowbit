@@ -26,18 +26,21 @@ export const useOrderLine = () => {
   const getOrderLinesByCompany = async (companyId: string): Promise<OrderLineViewRow[]> => {
     if (!companyId) return []
 
-    const { data, error } = await supabase
+    // Por bloques: una consulta simple se corta en 1000 filas (ver utils/pagination.ts).
+    const { data, error } = await fetchAllRows((from, to) => supabase
       .from('v_order_lines')
       .select('*')
       .eq('company_id', companyId)
       .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(from, to))
 
     if (error) {
       console.error('Error fetching order lines by company:', error)
       return []
     }
 
-    return data || []
+    return data
   }
 
   const getOrderLinesByOrderId = async (orderId: string): Promise<OrderLineRow[]> => {

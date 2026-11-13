@@ -1,18 +1,31 @@
 <script lang="ts">
-import type { Database } from '~/types/database.types'
+import type {
+  ApprovalCategoryRow,
+  ApprovalFieldValues,
+  ApprovalPriority,
+  ApprovalRequestRow
+} from '~/types/approval.types'
+import type { ApprovalLineDraft } from '~/composables/useApprovalRequest'
+import { APPROVAL_STATUS_LABELS } from '~/utils/approvals'
 
-export type ApprovalRequestStatus = Database['public']['Enums']['approval_request_status']
+export type { ApprovalRequestStatus } from '~/types/approval.types'
 
 export interface ApprovalRequestFormData {
   title: string
   category_id: string
   request_date: string
   description: string
-  /** `FormInput` tipo number puede emitir número; el guardado siempre normaliza a string aquí cuando hace falta. */
+  /** `FormInput` tipo number puede emitir número; el guardado siempre normaliza. */
   amount: string | number
   currency: string
   reference: string
   assigned_approval_manager_id: string
+  priority: ApprovalPriority
+  due_date: string
+  field_values: ApprovalFieldValues
+  /** Vacío = la persona que captura. Con valor = se solicita en nombre de otra persona. */
+  requesting_partner_id: string
+  lines: ApprovalLineDraft[]
 }
 
 export const createEmptyApprovalRequestForm = (): ApprovalRequestFormData => ({
@@ -23,7 +36,31 @@ export const createEmptyApprovalRequestForm = (): ApprovalRequestFormData => ({
   amount: '',
   currency: 'MXN',
   reference: '',
-  assigned_approval_manager_id: ''
+  assigned_approval_manager_id: '',
+  priority: 'normal',
+  due_date: '',
+  field_values: {},
+  requesting_partner_id: '',
+  lines: []
+})
+
+export const approvalRequestToForm = (
+  r: ApprovalRequestRow,
+  lines: ApprovalLineDraft[] = []
+): ApprovalRequestFormData => ({
+  title: r.title ?? '',
+  category_id: r.category_id,
+  request_date: (r.request_date ?? '').slice(0, 10),
+  description: r.description ?? '',
+  amount: r.amount != null ? String(r.amount) : '',
+  currency: (r.currency ?? 'MXN').trim(),
+  reference: r.reference ?? '',
+  assigned_approval_manager_id: r.assigned_approval_manager_id ?? '',
+  priority: r.priority ?? 'normal',
+  due_date: r.due_date ?? '',
+  field_values: { ...(r.field_values ?? {}) },
+  requesting_partner_id: r.requesting_partner_id,
+  lines
 })
 
 /** Convierte el valor del campo importe (texto o número desde FormInput) a string para parseo. */
@@ -31,225 +68,175 @@ export const approvalRequestAmountToTrimmedString = (
   raw: string | number | null | undefined
 ): string => {
   if (raw === null || raw === undefined) return ''
-  if (typeof raw === 'number') {
-    return Number.isNaN(raw) ? '' : String(raw)
-  }
+  if (typeof raw === 'number') return Number.isNaN(raw) ? '' : String(raw)
   return String(raw).trim()
+}
+
+export const parseApprovalAmount = (raw: string | number | null | undefined): number | null => {
+  const text = approvalRequestAmountToTrimmedString(raw)
+  if (text === '') return null
+  const n = Number(text.replace(',', '.'))
+  return Number.isFinite(n) ? n : null
 }
 
 export const approvalRequestCurrencyOptions = [
   { value: 'MXN', label: 'MXN — Peso mexicano' },
   { value: 'USD', label: 'USD — Dólar estadounidense' },
   { value: 'EUR', label: 'EUR — Euro' },
-  { value: 'COP', label: 'COP — Peso colombiano' },
   { value: 'CAD', label: 'CAD — Dólar canadiense' }
 ]
 
-export const approvalRequestStatusLabels: Record<ApprovalRequestStatus, string> = {
-  draft: 'Borrador',
-  published: 'Publicado',
-  approved: 'Aprobado',
-  rejected: 'Rechazado',
-  cancelled: 'Cancelado'
-}
+/** Compatibilidad: etiquetas de estado (fuente única en app/utils/approvals.ts). */
+export const approvalRequestStatusLabels = APPROVAL_STATUS_LABELS
+
+/** Usa un `ApprovalCategoryRow` para saber si la categoría trabaja con flujo. */
+export const categoryUsesFlow = (category: ApprovalCategoryRow | undefined | null): boolean =>
+  Boolean(category?.flow_id)
 </script>
 
 <script setup lang="ts">
-interface CatOption {
-  value: string
-  label: string
-}
+import { APPROVAL_PRIORITY_OPTIONS } from '~/utils/approvals'
 
-interface ManagerOption {
+type Option = {
   value: string
   label: string
 }
 
 interface Props {
   readonly?: boolean
-  readonlyStatus?: ApprovalRequestStatus | null
-  categoryOptions: CatOption[]
-  managerOptions: ManagerOption[]
-  requestNumberDisplay?: string | null
-  /** Fechas de resolución (vista detalle); la creación se muestra en el pie del CardSheet */
-  previewApprovedAt?: string | null
-  previewRejectedAt?: string | null
+  categories: ApprovalCategoryRow[]
+  managerOptions: Option[]
+  /** Miembros del equipo para «solicitar en nombre de»; vacío = no se muestra. */
+  memberOptions?: Option[]
+  lookups?: Record<'partner' | 'employee' | 'product', Option[]>
+  /** Bloquea la categoría (por ejemplo, al editar una solicitud enviada). */
+  lockCategory?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   readonly: false,
-  readonlyStatus: null,
-  categoryOptions: () => [],
-  managerOptions: () => [],
-  requestNumberDisplay: null,
-  previewApprovedAt: null,
-  previewRejectedAt: null
+  memberOptions: () => [],
+  lookups: () => ({ partner: [], employee: [], product: [] }),
+  lockCategory: false
 })
 
 const formData = defineModel<ApprovalRequestFormData>({ required: true })
 
-const statusLabel = computed(() => {
-  if (!props.readonlyStatus) return null
-  return approvalRequestStatusLabels[props.readonlyStatus] ?? props.readonlyStatus
+const category = computed(() => props.categories.find(c => c.id === formData.value.category_id))
+const usesFlow = computed(() => categoryUsesFlow(category.value))
+const allowLines = computed(() => Boolean(category.value?.allow_lines))
+const schema = computed(() => category.value?.field_schema ?? [])
+
+const categoryOptions = computed(() => props.categories.map(c => ({ value: c.id, label: c.name })))
+
+const linesTotal = computed(() =>
+  formData.value.lines.reduce((s, l) => s + (Number(l.quantity) || 0) * (Number(l.unit_price) || 0), 0))
+
+// Con partidas, el monto es su suma (la base lo recalcula igual)
+watch(linesTotal, (total) => {
+  if (allowLines.value && formData.value.lines.length) formData.value.amount = String(Math.round(total * 100) / 100)
 })
 
-const fmtDateTime = (iso: string | null | undefined): string => {
-  if (!iso) return '—'
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return '—'
-  return new Intl.DateTimeFormat('es-MX', {
-    dateStyle: 'medium',
-    timeStyle: 'short'
-  }).format(d)
-}
-
-const sectionClass =
-  'rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-lg shadow-slate-200/40'
-const headingClass =
-  'text-xs font-semibold uppercase tracking-wide text-slate-500 mb-4 border-b border-slate-100 pb-2'
+const sectionClass = 'rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-lg shadow-slate-200/40'
+const headingClass = 'text-xs font-semibold uppercase tracking-wide text-slate-500 mb-4 border-b border-slate-100 pb-2'
 </script>
 
 <template>
   <div class="space-y-6">
-    <!-- Identificación + estado (principalmente detalle con folio) -->
-    <div
-      v-if="requestNumberDisplay || (readonlyStatus && statusLabel)"
-      class="grid grid-cols-1 gap-4 sm:grid-cols-2"
-    >
-      <div
-        v-if="requestNumberDisplay"
-        class="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-violet-50 px-5 py-4 shadow-sm"
-      >
-        <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600">
-          Folio interno
-        </p>
-        <p class="mt-1 text-2xl font-bold text-slate-900 tabular-nums">
-          #{{ requestNumberDisplay }}
-        </p>
-      </div>
-      <div
-        v-if="readonlyStatus && statusLabel"
-        class="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm"
-      >
-        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Estado
-        </p>
-        <p class="mt-1 text-lg font-semibold text-slate-800">
-          {{ statusLabel }}
-        </p>
-      </div>
-    </div>
-
-    <!-- Resolución (evita repetir fecha de alta; esa va en el pie del CardSheet) -->
-    <section
-      v-if="previewApprovedAt || previewRejectedAt"
-      :class="sectionClass"
-    >
-      <h3 :class="headingClass">
-        Resolución
-      </h3>
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 text-sm">
-        <div class="rounded-xl bg-emerald-50/60 px-3 py-2.5 border border-emerald-100/80">
-          <p class="text-[11px] font-medium uppercase tracking-wide text-emerald-700">
-            Fecha de aprobación
-          </p>
-          <p class="mt-0.5 font-medium text-emerald-900">
-            {{ fmtDateTime(previewApprovedAt) }}
-          </p>
-        </div>
-        <div class="rounded-xl bg-rose-50/60 px-3 py-2.5 border border-rose-100/80">
-          <p class="text-[11px] font-medium uppercase tracking-wide text-rose-700">
-            Fecha de rechazo
-          </p>
-          <p class="mt-0.5 font-medium text-rose-900">
-            {{ fmtDateTime(previewRejectedAt) }}
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Asunto -->
     <section :class="sectionClass">
-      <h3 :class="headingClass">
-        Información general
-      </h3>
-      <FormInput
-        v-model="formData.title"
-        label="Asunto / título"
-        placeholder="Describe brevemente la solicitud"
-        required
-        :readonly="readonly"
-      />
-    </section>
-
-    <!-- Categoría + fecha en fila en desktop -->
-    <section :class="sectionClass">
-      <h3 :class="headingClass">
-        Clasificación y fechas
-      </h3>
-      <div class="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
+      <h3 :class="headingClass">Información general</h3>
+      <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <div class="lg:col-span-2">
+          <FormInput
+            v-model="formData.title"
+            label="Asunto"
+            placeholder="Describe brevemente la solicitud"
+            required
+            :readonly="readonly"
+          />
+        </div>
         <FormSelect
           v-model="formData.category_id"
-          label="Categoría de aprobación"
+          label="Categoría"
           placeholder="Selecciona un tipo"
           :options="categoryOptions"
-          :disabled="readonly"
+          :disabled="readonly || lockCategory"
           searchable
           required
         />
+        <FormSelect
+          v-model="formData.priority"
+          label="Prioridad"
+          :options="APPROVAL_PRIORITY_OPTIONS"
+          :disabled="readonly"
+        />
+        <FormInput v-model="formData.request_date" label="Fecha de solicitud" type="date" required :readonly="readonly" />
         <FormInput
-          v-model="formData.request_date"
-          label="Fecha de solicitud"
+          v-model="formData.due_date"
+          label="Fecha requerida"
           type="date"
-          required
+          hint="Para cuándo necesitas la respuesta"
           :readonly="readonly"
         />
+        <FormSelect
+          v-if="memberOptions.length"
+          v-model="formData.requesting_partner_id"
+          label="Solicitante"
+          :options="memberOptions"
+          :disabled="readonly"
+          searchable
+          clearable
+          placeholder="Yo"
+          hint="Elige a otra persona si capturas en su nombre; quedarás registrado como capturista"
+        />
       </div>
+      <p v-if="category?.description" class="mt-4 text-sm text-slate-500">{{ category.description }}</p>
     </section>
 
-    <!-- Aprobador -->
-    <section :class="sectionClass">
-      <h3 :class="headingClass">
-        Asignación
-      </h3>
+    <section v-if="schema.length" :class="sectionClass">
+      <h3 :class="headingClass">Datos de {{ category?.name }}</h3>
+      <ApprovalRequestDynamicFields v-model="formData.field_values" :schema="schema" :readonly="readonly" :lookups="lookups" />
+    </section>
+
+    <section v-if="!usesFlow && formData.category_id" :class="sectionClass">
+      <h3 :class="headingClass">Aprobador</h3>
       <FormSelect
         v-model="formData.assigned_approval_manager_id"
         label="Aprobador asignado"
-        placeholder="Opcional en borrador; obligatorio al publicar"
+        placeholder="Obligatorio al enviar"
         :options="managerOptions"
         :disabled="readonly"
         searchable
       />
       <p class="mt-2 text-xs text-slate-500">
-        Solo aparecen gerentes activos autorizados para la categoría elegida.
+        Solo aparecen aprobadores activos autorizados para esta categoría.
       </p>
     </section>
 
-    <!-- Monto + referencia -->
+    <section v-if="allowLines" :class="sectionClass">
+      <h3 :class="headingClass">Partidas</h3>
+      <ApprovalRequestLinesEditor v-model="formData.lines" :readonly="readonly" :currency="formData.currency" />
+    </section>
+
     <section :class="sectionClass">
-      <h3 :class="headingClass">
-        Importe y referencia
-      </h3>
-      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:items-end">
+      <h3 :class="headingClass">Importe y referencia</h3>
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-3 sm:items-end">
         <FormInput
           v-model="formData.amount"
           label="Importe"
           type="number"
           min="0"
           step="0.01"
-          placeholder="Opcional"
-          :readonly="readonly"
+          :placeholder="allowLines ? 'Suma de las partidas' : 'Opcional'"
+          :readonly="readonly || (allowLines && formData.lines.length > 0)"
         />
         <FormSelect
           v-model="formData.currency"
           label="Moneda"
-          placeholder="Selecciona"
           :options="approvalRequestCurrencyOptions"
           :disabled="readonly"
           required
         />
-      </div>
-      <div class="mt-5">
         <FormInput
           v-model="formData.reference"
           label="Referencia externa"
@@ -259,16 +246,13 @@ const headingClass =
       </div>
     </section>
 
-    <!-- Descripción amplia -->
     <section :class="sectionClass">
-      <h3 :class="headingClass">
-        Descripción del trámite
-      </h3>
+      <h3 :class="headingClass">Descripción</h3>
       <FormTextArea
         v-model="formData.description"
-        label="Detalle para el aprobador"
+        label="Detalle para quien aprueba"
         placeholder="Contexto, alcance y documentación relevante para la decisión"
-        :rows="6"
+        :rows="5"
         :readonly="readonly"
       />
     </section>

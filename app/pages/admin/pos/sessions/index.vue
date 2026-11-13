@@ -74,7 +74,8 @@ const load = async () => {
 
 watch(selectedCompanyId, load, { immediate: true })
 
-const handleView = (row: SessionRow) => router.push(`/admin/pos/sessions/${row.id}`)
+// El slot de Datatable entrega filas genéricas; solo se usa el id.
+const handleView = (row: Record<string, unknown>) => router.push(`/admin/pos/sessions/${String(row.id)}`)
 </script>
 
 <template>

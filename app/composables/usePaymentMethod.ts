@@ -4,7 +4,6 @@ type PaymentMethod = Tables<'payment_method'>
 
 export const usePaymentMethod = () => {
   const supabase = useSupabase()
-  const user = useSupabaseUser()
 
   const getAllByCompany = async (companyId: string): Promise<PaymentMethod[]> => {
     const { data, error } = await supabase
@@ -32,9 +31,10 @@ export const usePaymentMethod = () => {
     companyId: string,
     payload: Omit<TablesInsert<'payment_method'>, 'company_id'>
   ): Promise<PaymentMethod | null> => {
+    const user = await useSupabaseUser()
     const { data, error } = await supabase
       .from('payment_method')
-      .insert({ ...payload, company_id: companyId, created_by: user.value?.id, updated_by: user.value?.id })
+      .insert({ ...payload, company_id: companyId, created_by: user?.id, updated_by: user?.id })
       .select()
       .single()
     if (error) { console.error('Error creating payment method:', error); return null }
@@ -46,9 +46,10 @@ export const usePaymentMethod = () => {
     companyId: string,
     updates: TablesUpdate<'payment_method'>
   ): Promise<PaymentMethod | null> => {
+    const user = await useSupabaseUser()
     const { data, error } = await supabase
       .from('payment_method')
-      .update({ ...updates, updated_by: user.value?.id })
+      .update({ ...updates, updated_by: user?.id })
       .eq('id', id)
       .eq('company_id', companyId)
       .select()

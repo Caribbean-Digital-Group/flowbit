@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import type { MenuOption } from '~/components/CardSheet.vue'
 import {
+  approvalCategoryFormToPayload,
+  approvalCategoryToForm,
   createEmptyApprovalCategoryForm,
   type ApprovalCategoryFormData
 } from '~/components/ApprovalCategory/Form.vue'
-import type { Tables, TablesUpdate } from '~/types/database.types'
+import type { ApprovalCategoryRow, ApprovalCategoryUpdate } from '~/types/approval.types'
+import { fieldSchemaIssues } from '~/utils/approvals'
 
 definePageMeta({
   layout: 'admin'
 })
 
-type Category = Tables<'approval_category'>
+type Category = ApprovalCategoryRow
 
 const route = useRoute()
 const router = useRouter()
@@ -43,12 +46,19 @@ const entity = ref<Category | null>(null)
 const form = ref<ApprovalCategoryFormData>(createEmptyApprovalCategoryForm())
 const initial = ref<ApprovalCategoryFormData>(createEmptyApprovalCategoryForm())
 
-const mapToForm = (c: Category): ApprovalCategoryFormData => ({
-  name: c.name ?? '',
-  internal_code: c.internal_code ?? '',
-  description: c.description ?? '',
-  active: c.active ?? true
-})
+const mapToForm = (c: Category): ApprovalCategoryFormData => approvalCategoryToForm(c)
+
+const { getFlows } = useApprovalFlow()
+const { getSettings } = useApprovalSettings()
+const flowOptions = ref<{ value: string; label: string }[]>([])
+const advanced = ref(false)
+
+watch(selectedCompanyId, async (cid) => {
+  if (!cid) return
+  const [flows, settings] = await Promise.all([getFlows(cid), getSettings(cid)])
+  flowOptions.value = flows.map(f => ({ value: f.id, label: f.name }))
+  advanced.value = settings.advanced_enabled || Boolean(entity.value?.flow_id)
+}, { immediate: true })
 
 const menuOptions = computed<MenuOption[]>(() => {
   if (!isWorkspaceAdmin.value || !entity.value) return []
@@ -84,7 +94,7 @@ const load = async () => {
     entity.value = data
     const m = mapToForm(data)
     form.value = m
-    initial.value = { ...m }
+    initial.value = JSON.parse(JSON.stringify(m))
   } finally {
     isLoading.value = false
   }
@@ -100,16 +110,12 @@ const handleEdit = () => {
 }
 
 const handleCancel = () => {
-  form.value = { ...initial.value }
+  form.value = JSON.parse(JSON.stringify(initial.value))
   isEditing.value = false
   errorMessage.value = null
 }
 
-const mapUpdate = (v: ApprovalCategoryFormData): TablesUpdate<'approval_category'> => ({
-  name: v.name.trim(),
-  description: v.description.trim() || null,
-  active: v.active
-})
+const mapUpdate = (v: ApprovalCategoryFormData): ApprovalCategoryUpdate => approvalCategoryFormToPayload(v)
 
 const handleSave = async () => {
   const tid = id.value
@@ -117,6 +123,12 @@ const handleSave = async () => {
 
   if (!form.value.name.trim()) {
     errorMessage.value = 'El nombre es obligatorio.'
+    return
+  }
+
+  const issues = fieldSchemaIssues(form.value.field_schema)
+  if (issues.length) {
+    errorMessage.value = issues[0] ?? null
     return
   }
 
@@ -131,7 +143,7 @@ const handleSave = async () => {
     entity.value = saved
     const m = mapToForm(saved)
     form.value = m
-    initial.value = { ...m }
+    initial.value = JSON.parse(JSON.stringify(m))
     isEditing.value = false
   } finally {
     isLoading.value = false
@@ -154,7 +166,7 @@ const handleArchiveToggle = async () => {
     entity.value = next
     const m = mapToForm(next)
     form.value = m
-    initial.value = { ...m }
+    initial.value = JSON.parse(JSON.stringify(m))
     isEditing.value = false
   } finally {
     isLoading.value = false
@@ -202,7 +214,7 @@ const handleArchiveToggle = async () => {
         Esta categoría está archivada: no aparece al crear nuevas solicitudes hasta que la restablezcas.
       </div>
 
-      <ApprovalCategoryForm v-model="form" :readonly="!isEditing || !!entity?.archived" code-readonly />
+      <ApprovalCategoryForm v-model="form" :readonly="!isEditing || !!entity?.archived" code-readonly :flow-options="flowOptions" :advanced="advanced" :source-kind="entity?.source_kind ?? null" />
     </CardSheet>
   </div>
 </template>

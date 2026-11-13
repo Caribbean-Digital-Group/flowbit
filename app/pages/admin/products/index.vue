@@ -58,6 +58,10 @@ const { getProductsByCompany, archiveProduct } = useProduct()
 
 const products = ref<Record<string, unknown>[]>([])
 const isLoadingProducts = ref(false)
+const showImport = ref(false)
+const existingSkus = computed(() =>
+  products.value.map(p => p.sku).filter((s): s is string => typeof s === 'string' && s !== '')
+)
 
 function mapProductToTableRow(raw: ProductRow): Record<string, unknown> {
   return {
@@ -159,6 +163,12 @@ const deleteMany = async (selected: Record<string, any>[]) => {
       export-filename="productos"
       @create="create"
     >
+      <template #headerActions>
+        <BtnApp variant="secondary" @click="showImport = true">
+          Importar CSV
+        </BtnApp>
+      </template>
+
       <!-- SKU vacío -->
       <template #cell-sku="{ value }">
         <span :class="value ? 'font-mono text-slate-700' : 'text-slate-400'">
@@ -193,5 +203,12 @@ const deleteMany = async (selected: Record<string, any>[]) => {
         <BtnDelete @click="deleteMany(selected)" />
       </template>
     </Datatable>
+
+    <ProductImportModal
+      v-model="showImport"
+      :company-id="selectedCompanyId"
+      :existing-skus="existingSkus"
+      @imported="loadProducts"
+    />
   </div>
 </template>

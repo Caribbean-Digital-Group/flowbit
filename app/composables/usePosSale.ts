@@ -1,4 +1,5 @@
-export interface PosSaleLine {
+// Alias (no interface) para que sea asignable al tipo Json del RPC.
+export type PosSaleLine = {
   product_id: string | null
   description: string
   quantity: number
@@ -8,7 +9,8 @@ export interface PosSaleLine {
   tax_rate: number
 }
 
-export interface PosSalePayment {
+// Alias (no interface) para que sea asignable al tipo Json del RPC.
+export type PosSalePayment = {
   payment_method_id: string
   amount: number
   tendered?: number | null
@@ -21,7 +23,8 @@ export interface PosSaleResult {
   amount_total: number
 }
 
-export interface PosRefundLine {
+// Alias (no interface) para que sea asignable al tipo Json del RPC.
+export type PosRefundLine = {
   order_line_id: string
   quantity: number
 }

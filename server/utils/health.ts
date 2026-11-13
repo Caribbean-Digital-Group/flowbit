@@ -161,7 +161,7 @@ const callServiceRpc = async <T>(
     throw new Error('SUPABASE_SECRET_KEY no está configurada')
   }
 
-  return await $fetch<T>(`${supabaseUrl}/rest/v1/rpc/${fn}`, {
+  return await $fetch<T, string>(`${supabaseUrl}/rest/v1/rpc/${fn}`, {
     method: 'POST',
     headers: {
       apikey: serviceKey,

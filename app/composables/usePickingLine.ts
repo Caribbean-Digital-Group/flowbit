@@ -33,18 +33,21 @@ export const usePickingLine = () => {
   const getPickingLineViewsByCompany = async (companyId: string): Promise<PickingLineView[]> => {
     if (!companyId) return []
 
-    const { data, error } = await supabase
+    // Por bloques: una consulta simple se corta en 1000 filas (ver utils/pagination.ts).
+    const { data, error } = await fetchAllRows((from, to) => supabase
       .from('v_picking_lines')
       .select('*')
       .eq('company_id', companyId)
       .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(from, to))
 
     if (error) {
       console.error('Error fetching picking line views:', error)
       return []
     }
 
-    return data || []
+    return data
   }
 
   const getPickingLinesByProduct = async (

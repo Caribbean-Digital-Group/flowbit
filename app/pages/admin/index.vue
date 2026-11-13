@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
+import { APPROVAL_STATUS_LABELS } from '~/utils/approvals'
 import type { Database, Tables } from '~/types/database.types'
 import type { RevenueLedgerView, SalesKpis } from '~/types/sales.types'
 import type { DashboardPreset, DateRange } from '~/utils/dashboard'
@@ -39,10 +40,9 @@ type PartnerRow = Tables<'partner'>
 type ProductRow = Tables<'product'>
 type ProjectViewRow = Database['public']['Views']['v_projects']['Row']
 type PickingViewRow = Database['public']['Views']['v_pickings']['Row']
-type ApprovalRequestViewRow = Database['public']['Views']['v_approval_requests']['Row']
+type ApprovalRequestViewRow = import('~/types/approval.types').ApprovalRequestViewRow
 type ProjectTaskViewRow = Database['public']['Views']['v_project_tasks']['Row']
 type CrmLeadViewRow = Database['public']['Views']['v_crm_leads']['Row']
-type ApprovalRequestStatus = Database['public']['Enums']['approval_request_status']
 type PickingStatus = Database['public']['Enums']['picking_status']
 type PickingType = Database['public']['Enums']['picking_type']
 type ProjectTaskStatusEnum = Database['public']['Enums']['project_task_status']
@@ -203,6 +203,24 @@ const loadBase = async () => {
 }
 
 watch(selectedCompanyId, () => { void loadBase() }, { immediate: true })
+
+// ── Reabastecimiento: aviso cuando hay productos bajo su mínimo ─────────────
+
+const { getSuggestions: getRestockSuggestions } = useRestock()
+const restockCount = ref(0)
+let restockRequest = 0
+const loadRestock = async () => {
+  const companyId = selectedCompanyId.value
+  const requestId = ++restockRequest
+  if (!companyId) {
+    restockCount.value = 0
+    return
+  }
+  const suggestions = await getRestockSuggestions(companyId)
+  if (requestId === restockRequest) restockCount.value = suggestions.length
+}
+
+watch(selectedCompanyId, () => { void loadRestock() }, { immediate: true })
 
 // ── Datos del periodo (KPIs en base de caja) ────────────────────────────────
 
@@ -622,7 +640,7 @@ const attentionItems = computed<AttentionItem[]>(() => {
       key: 'approvals',
       label: 'Aprobaciones por resolver',
       value: String(pendingApprovals),
-      detail: plural(pendingApprovals, 'solicitud publicada', 'solicitudes publicadas'),
+      detail: plural(pendingApprovals, 'solicitud en revisión', 'solicitudes en revisión'),
       to: '/admin/approval-requests',
       tone: 'warning'
     })
@@ -777,13 +795,8 @@ const openPublicProjectView = (projectId: string | null) => {
 
 // ── Actividad reciente ──────────────────────────────────────────────────────
 
-const approvalRequestStatusLabels: Record<ApprovalRequestStatus, string> = {
-  draft: 'Borrador',
-  published: 'Publicada',
-  approved: 'Aprobada',
-  rejected: 'Rechazada',
-  cancelled: 'Cancelada'
-}
+// Fuente única de etiquetas (incluye «Devuelta» y «Expirada» del motor de aprobaciones)
+const approvalRequestStatusLabels: Record<string, string> = APPROVAL_STATUS_LABELS
 
 const pickingStatusLabels: Record<PickingStatus, string> = {
   borrador: 'Borrador',
@@ -813,7 +826,7 @@ const projectStatusLabels: Record<ProjectStatusEnum, string> = {
 }
 
 const formatApprovalDetail = (request: ApprovalRequestViewRow): string => {
-  const parts: string[] = [request.status ? approvalRequestStatusLabels[request.status] : 'Sin estado']
+  const parts: string[] = [request.status ? (approvalRequestStatusLabels[request.status] ?? request.status) : 'Sin estado']
   if (request.requesting_partner_display?.trim()) parts.push(request.requesting_partner_display.trim())
   if (request.category_name?.trim()) parts.push(request.category_name.trim())
   if (request.amount !== null && !Number.isNaN(Number(request.amount))) {
@@ -966,6 +979,18 @@ const recentActivity = computed<ActivityItem[]>(() => {
         :comparison-label="comparisonLabel"
         :loading="isPeriodLoading || isLoading"
       />
+
+      <NuxtLink
+        v-if="restockCount > 0"
+        to="/admin/inventory/restock"
+        class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-100 bg-amber-50 px-6 py-3 text-sm text-amber-900 transition-colors hover:bg-amber-100"
+      >
+        <span>
+          <span class="font-semibold">{{ restockCount }} {{ restockCount === 1 ? 'producto está' : 'productos están' }} por debajo de su mínimo.</span>
+          Genera las órdenes de compra sugeridas en un clic.
+        </span>
+        <span class="font-semibold">Ver por reabastecer →</span>
+      </NuxtLink>
 
       <div
         v-if="rangeError"

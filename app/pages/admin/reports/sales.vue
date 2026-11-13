@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { downloadCsv } from '~/utils/csv'
 import { storeToRefs } from 'pinia'
 import type { OrderChannel, RevenueLedgerKind, SalesKpis } from '~/types/sales.types'
 import { CHANNEL_LABELS } from '~/utils/sales'
@@ -162,11 +163,6 @@ const kindLabels: Record<RevenueLedgerKind, string> = {
   cogs_return: 'Reverso de costo (devolución)'
 }
 
-const csvCell = (value: unknown): string => {
-  const text = value === null || value === undefined ? '' : String(value)
-  return /[",\n;]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
-}
-
 const exportLedger = async () => {
   const companyId = selectedCompanyId.value
   if (!companyId || isExporting.value) return
@@ -182,14 +178,8 @@ const exportLedger = async () => {
       r.amount,
       r.amount_net,
       r.quantity ?? ''
-    ].map(csvCell).join(','))
-    const csv = '﻿' + [header.join(','), ...body].join('\n')
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `libro-ingresos-${range.from}-a-${range.to}.csv`
-    link.click()
-    URL.revokeObjectURL(url)
+    ])
+    downloadCsv(`libro-ingresos-${range.from}-a-${range.to}`, header, body)
   } finally {
     isExporting.value = false
   }

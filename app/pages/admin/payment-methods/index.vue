@@ -50,12 +50,13 @@ const load = async () => {
 watch(selectedCompanyId, load, { immediate: true })
 
 const handleCreate = () => router.push('/admin/payment-methods/create')
-const handleEdit = (row: PaymentMethodRow) => router.push(`/admin/payment-methods/${row.id}`)
+// El slot de Datatable entrega filas genéricas; solo se usa el id.
+const handleEdit = (row: Record<string, unknown>) => router.push(`/admin/payment-methods/${String(row.id)}`)
 
-const handleRemove = async (row: PaymentMethodRow) => {
+const handleRemove = async (row: Record<string, unknown>) => {
   const cid = selectedCompanyId.value
   if (!cid) return
-  await archive(row.id, cid)
+  await archive(String(row.id), cid)
   await load()
 }
 </script>

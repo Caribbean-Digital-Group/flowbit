@@ -1,4 +1,5 @@
 import type { Database, Tables, TablesInsert, TablesUpdate } from '~/types/database.types'
+import type { ApprovalManagerRow } from '~/types/approval.types'
 import type { CompanyMember } from '~/composables/useMembership'
 
 type PartnerCompanyRole = Database['public']['Enums']['partner_company_role']
@@ -14,16 +15,22 @@ export interface ApprovalManagerCandidate {
   role: PartnerCompanyRole
 }
 
-export type ApprovalManagerWithRelations = Tables<'approval_manager'> & {
+export type ApprovalManagerWithRelations = ApprovalManagerRow & {
   partner: Pick<
     Tables<'partner'>,
     'id' | 'name' | 'display_name' | 'email' | 'user_id'
   > | null
-  approval_manager_category: { approval_category_id: string }[] | null
+  approval_manager_category: { approval_category_id: string; max_amount: number | null }[] | null
+}
+
+/** Categoría autorizada con su límite opcional (NULL = usa el límite general). */
+export interface ManagerCategoryLimit {
+  categoryId: string
+  maxAmount: number | null
 }
 
 export const useApprovalManager = () => {
-  const supabase = useSupabase()
+  const { supabase } = useApprovalClient()
 
   const mapManagerRow = (
     row: Record<string, unknown> | null
@@ -31,8 +38,8 @@ export const useApprovalManager = () => {
     if (!row) return null
     const { partner, approval_manager_category: amc, ...rest } = row as {
       partner: ApprovalManagerWithRelations['partner']
-      approval_manager_category: { approval_category_id: string }[] | null
-    } & Tables<'approval_manager'>
+      approval_manager_category: { approval_category_id: string; max_amount: number | null }[] | null
+    } & ApprovalManagerRow
 
     return {
       ...rest,
@@ -52,7 +59,7 @@ export const useApprovalManager = () => {
         `
         *,
         partner:partner_id(id, name, display_name, email, user_id),
-        approval_manager_category(approval_category_id)
+        approval_manager_category(approval_category_id, max_amount)
       `
       )
       .eq('company_id', companyId)
@@ -80,7 +87,7 @@ export const useApprovalManager = () => {
         `
         *,
         partner:partner_id(id, name, display_name, email, user_id),
-        approval_manager_category(approval_category_id)
+        approval_manager_category(approval_category_id, max_amount)
       `
       )
       .eq('id', id)
@@ -107,7 +114,7 @@ export const useApprovalManager = () => {
         `
         *,
         partner:partner_id(id, name, display_name, email, user_id),
-        approval_manager_category(approval_category_id)
+        approval_manager_category(approval_category_id, max_amount)
       `
       )
       .eq('company_id', companyId)
@@ -125,8 +132,11 @@ export const useApprovalManager = () => {
 
   const syncManagerCategories = async (
     managerId: string,
-    categoryIds: string[]
+    categories: Array<string | ManagerCategoryLimit>
   ): Promise<boolean> => {
+    const limits: ManagerCategoryLimit[] = categories.map(c =>
+      typeof c === 'string' ? { categoryId: c, maxAmount: null } : c)
+
     const { error: delError } = await supabase
       .from('approval_manager_category')
       .delete()
@@ -137,11 +147,12 @@ export const useApprovalManager = () => {
       return false
     }
 
-    if (categoryIds.length === 0) return true
+    if (limits.length === 0) return true
 
-    const rows = categoryIds.map((approval_category_id) => ({
+    const rows = limits.map(l => ({
       approval_manager_id: managerId,
-      approval_category_id
+      approval_category_id: l.categoryId,
+      max_amount: l.maxAmount
     }))
 
     const { error: insError } = await supabase.from('approval_manager_category').insert(rows)
@@ -156,8 +167,8 @@ export const useApprovalManager = () => {
 
   const createManager = async (
     companyId: string,
-    payload: Omit<TablesInsert<'approval_manager'>, 'company_id'>,
-    categoryIds: string[]
+    payload: Omit<TablesInsert<'approval_manager'>, 'company_id'> & { max_amount?: number | null },
+    categoryIds: Array<string | ManagerCategoryLimit>
   ): Promise<ApprovalManagerWithRelations | null> => {
     if (!companyId) return null
     const user = await useSupabaseUser()
@@ -174,7 +185,7 @@ export const useApprovalManager = () => {
         `
         *,
         partner:partner_id(id, name, display_name, email, user_id),
-        approval_manager_category(approval_category_id)
+        approval_manager_category(approval_category_id, max_amount)
       `
       )
       .maybeSingle()
@@ -184,7 +195,7 @@ export const useApprovalManager = () => {
       return null
     }
 
-    const id = (data as Tables<'approval_manager'>).id
+    const id = (data as ApprovalManagerRow).id
 
     const okCats = await syncManagerCategories(id, categoryIds)
     if (!okCats) {
@@ -197,8 +208,8 @@ export const useApprovalManager = () => {
   const updateManager = async (
     id: string,
     companyId: string,
-    updates: TablesUpdate<'approval_manager'>,
-    categoryIds?: string[]
+    updates: TablesUpdate<'approval_manager'> & { max_amount?: number | null },
+    categoryIds?: Array<string | ManagerCategoryLimit>
   ): Promise<ApprovalManagerWithRelations | null> => {
     if (!id || !companyId) return null
     const user = await useSupabaseUser()

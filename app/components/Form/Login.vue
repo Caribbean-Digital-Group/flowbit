@@ -252,6 +252,9 @@
 </template>
 
 <script setup lang="ts">
+import { sanitizeRedirect } from '~/utils/authRedirect'
+
+const route = useRoute()
 type View = 'login' | 'forgot-password' | 'register'
 
 const { signInOrSignUp, signUp, requestPasswordReset } = useSupabaseAuth()
@@ -320,7 +323,7 @@ const handleLogin = async () => {
       return
     }
 
-    await navigateTo('/admin')
+    await navigateTo(sanitizeRedirect(route.query.redirect))
   } catch (err) {
     console.error('Login error:', err)
     errorMessage.value = 'Ocurrió un error inesperado. Intenta de nuevo.'
@@ -361,7 +364,7 @@ const handleRegister = async () => {
       return
     }
 
-    await navigateTo('/admin')
+    await navigateTo(sanitizeRedirect(route.query.redirect))
   } catch (err) {
     console.error('Register error:', err)
     registerError.value = 'Ocurrió un error inesperado. Intenta de nuevo.'

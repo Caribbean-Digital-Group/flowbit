@@ -20,6 +20,7 @@
     "db:pull": "supabase db pull",
     "db:diff": "supabase db diff",
     "db:types": "mkdir -p supabase/.temp && supabase gen types typescript --project-id pmnurkwkqchxbofottyn --schema public > supabase/.temp/database.types.ts && mv supabase/.temp/database.types.ts types/database.types.ts",
+    "typecheck": "nuxi typecheck",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -45,6 +46,8 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
-    "vitest": "^3.2.4"
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4",
+    "vue-tsc": "^2.2.12"
   }
 }
