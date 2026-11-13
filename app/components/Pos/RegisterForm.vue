@@ -25,7 +25,7 @@ export const createEmptyPosRegisterForm = (): PosRegisterFormData => ({
 </script>
 
 <script setup lang="ts">
-interface SelectOption {
+type SelectOption = {
   value: string
   label: string
 }

@@ -47,7 +47,7 @@ const columns: Column[] = [
   {
     key: 'quantity',
     label: 'Cantidad',
-    type: 'number'
+    type: 'text'
   },
   {
     key: 'unit_price',

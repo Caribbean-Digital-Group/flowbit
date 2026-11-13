@@ -300,7 +300,7 @@ const buildUpdatePayload = (): TablesUpdate<'approval_request'> => {
   return {
     title: form.value.title.trim(),
     category_id: form.value.category_id,
-    request_date: form.value.request_date || null,
+    request_date: form.value.request_date || undefined,
     description: form.value.description.trim() || null,
     amount: amountParsed,
     currency: (form.value.currency || 'MXN').trim().slice(0, 3).toUpperCase(),

@@ -55,12 +55,12 @@ export const approvalRequestStatusLabels: Record<ApprovalRequestStatus, string> 
 </script>
 
 <script setup lang="ts">
-interface CatOption {
+type CatOption = {
   value: string
   label: string
 }
 
-interface ManagerOption {
+type ManagerOption = {
   value: string
   label: string
 }

@@ -26,7 +26,7 @@ export const useCompany = () => {
    */
   const getCurrentCompany = async (): Promise<Company | null> => {
     const user = await useSupabaseUser()
-    if (!user) return null
+    if (!user?.email) return null
 
     const { data, error } = await supabase
       .from('v_partner_companies')

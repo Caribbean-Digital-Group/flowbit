@@ -30,3 +30,5 @@ jobs:
       # Pruebas puras (nómina, montos de órdenes, auth, CSV): no requieren Supabase.
       - run: npm test
       - run: npm run build
+      # Valida tipos (vue-tsc). `nuxt prepare` corre en el postinstall de npm ci.
+      - run: npm run typecheck

@@ -36,7 +36,8 @@ export interface PosSessionSummary {
   methods: PosSessionMethodSummary[]
 }
 
-export interface PosSessionCloseCount {
+// Alias (no interface) para que sea asignable al tipo Json del RPC.
+export type PosSessionCloseCount = {
   payment_method_id: string
   counted: number
   justification?: string | null

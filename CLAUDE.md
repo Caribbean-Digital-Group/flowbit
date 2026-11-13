@@ -577,6 +577,7 @@ El layout incluye:
 npm run dev                    # Servidor de desarrollo (http://localhost:3000)
 npm run build                  # Build de producción
 npm run preview                # Preview del build
+npm run typecheck              # Validación de tipos (vue-tsc); también corre en la CI
 
 # Base de datos (Supabase Cloud — --linked)
 npm run db:status              # Estado de la conexión
