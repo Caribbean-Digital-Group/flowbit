@@ -2,6 +2,8 @@
 import { storeToRefs } from 'pinia'
 import {
   createEmptyApprovalManagerForm,
+  managerFormCategoryLimits,
+  managerFormMaxAmount,
   type ApprovalManagerFormData
 } from '~/components/ApprovalManager/Form.vue'
 
@@ -61,10 +63,16 @@ const mapRowToForm = async (companyId: string, managerId: string) => {
     partner_id: entity.partner_id,
     notes: entity.notes ?? '',
     active: entity.active,
-    category_ids: categoryIds
+    category_ids: categoryIds,
+    max_amount: entity.max_amount ?? '',
+    category_limits: Object.fromEntries(
+      (entity.approval_manager_category ?? [])
+        .filter(c => c.max_amount !== null)
+        .map(c => [c.approval_category_id, c.max_amount as number])
+    )
   }
   form.value = fm
-  initial.value = { ...fm, category_ids: [...categoryIds] }
+  initial.value = JSON.parse(JSON.stringify(fm))
   return entity
 }
 
@@ -101,7 +109,8 @@ const handleEdit = () => {
 const handleCancel = () => {
   form.value = {
     ...initial.value,
-    category_ids: [...initial.value.category_ids]
+    category_ids: [...initial.value.category_ids],
+    category_limits: { ...initial.value.category_limits }
   }
   isEditing.value = false
 }
@@ -116,8 +125,9 @@ const handleSave = async () => {
   try {
     const saved = await updateManager(id, companyId, {
       notes: form.value.notes.trim() || null,
-      active: form.value.active
-    }, [...form.value.category_ids])
+      active: form.value.active,
+      max_amount: managerFormMaxAmount(form.value)
+    }, managerFormCategoryLimits(form.value))
 
     if (!saved) {
       errorMessage.value = 'No se pudo guardar.'

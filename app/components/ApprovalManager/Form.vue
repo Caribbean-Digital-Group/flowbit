@@ -4,14 +4,32 @@ export interface ApprovalManagerFormData {
   notes: string
   active: boolean
   category_ids: string[]
+  /** Monto máximo general que puede autorizar ('' = sin límite). */
+  max_amount: string | number
+  /** Límite por categoría; tiene prioridad sobre el general. */
+  category_limits: Record<string, string | number>
 }
 
 export const createEmptyApprovalManagerForm = (): ApprovalManagerFormData => ({
   partner_id: '',
   notes: '',
   active: true,
-  category_ids: []
+  category_ids: [],
+  max_amount: '',
+  category_limits: {}
 })
+
+const limitOrNull = (v: string | number | undefined): number | null => {
+  if (v === '' || v === undefined || v === null) return null
+  const n = Number(v)
+  return Number.isFinite(n) && n >= 0 ? n : null
+}
+
+/** Categorías con su límite para useApprovalManager().syncManagerCategories. */
+export const managerFormCategoryLimits = (v: ApprovalManagerFormData) =>
+  v.category_ids.map(categoryId => ({ categoryId, maxAmount: limitOrNull(v.category_limits[categoryId]) }))
+
+export const managerFormMaxAmount = (v: ApprovalManagerFormData): number | null => limitOrNull(v.max_amount)
 </script>
 
 <script setup lang="ts">
@@ -67,7 +85,7 @@ const toggleCategory = (categoryId: string) => {
         label="Miembro del equipo"
         placeholder="Selecciona un miembro con acceso confirmado"
         :options="partnerOptions.map(o => ({ value: o.value, label: o.label }))"
-        :disabled="readonly || partnerLocked"
+        :disabled="props.readonly || partnerLocked"
         searchable
         required
       />
@@ -77,12 +95,23 @@ const toggleCategory = (categoryId: string) => {
       </p>
     </div>
 
+    <FormInput
+      v-model="formData.max_amount"
+      label="Monto máximo que puede autorizar (MXN)"
+      type="number"
+      min="0"
+      step="0.01"
+      placeholder="Sin límite"
+      hint="Si una solicitud lo excede, el motor escala al siguiente jefe con límite suficiente o a los owners"
+      :readonly="props.readonly"
+    />
+
     <FormTextArea
       v-model="formData.notes"
       label="Notas del rol"
       placeholder="Ámbitos, excepciones u observaciones"
       :rows="3"
-      :readonly="readonly"
+      :readonly="props.readonly"
     />
 
     <div class="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm shadow-slate-200/40">
@@ -90,24 +119,37 @@ const toggleCategory = (categoryId: string) => {
         Categorías que puede aprobar
       </p>
       <p class="text-xs text-slate-500 mb-4">
-        Deja todas sin marcar si puede autorizar cualquier categoría disponible para solicitudes.
+        Solo autoriza las categorías marcadas: sin ninguna marcada no podrá aprobar.
+        El límite por categoría es opcional y reemplaza al general.
       </p>
       <div class="space-y-3 max-h-56 overflow-y-auto pr-1">
-        <label
-          v-for="c in categoryOptions"
-          :key="c.id"
-          class="flex items-start gap-3 cursor-pointer"
-          :class="props.readonly ? 'cursor-default opacity-70' : ''"
-        >
-          <input
-            type="checkbox"
-            class="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-            :checked="formData.category_ids.includes(c.id)"
-            :disabled="readonly"
-            @change="toggleCategory(c.id)"
+        <div v-for="c in categoryOptions" :key="c.id" class="flex flex-wrap items-center gap-3">
+          <label
+            class="flex flex-1 items-start gap-3 cursor-pointer"
+            :class="props.readonly ? 'cursor-default opacity-70' : ''"
           >
-          <span class="text-sm text-slate-700">{{ c.label }}</span>
-        </label>
+            <input
+              type="checkbox"
+              class="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              :checked="formData.category_ids.includes(c.id)"
+              :disabled="props.readonly"
+              @change="toggleCategory(c.id)"
+            >
+            <span class="text-sm text-slate-700">{{ c.label }}</span>
+          </label>
+          <div v-if="formData.category_ids.includes(c.id)" class="w-40">
+            <FormInput
+              :model-value="formData.category_limits[c.id] ?? ''"
+              type="number"
+              min="0"
+              step="0.01"
+              size="sm"
+              placeholder="Límite (MXN)"
+              :readonly="props.readonly"
+              @update:model-value="formData.category_limits = { ...formData.category_limits, [c.id]: $event }"
+            />
+          </div>
+        </div>
       </div>
     </div>
 
@@ -127,7 +169,7 @@ const toggleCategory = (categoryId: string) => {
           v-model="formData.active"
           type="checkbox"
           class="sr-only peer"
-          :disabled="readonly"
+          :disabled="props.readonly"
         >
         <div
           class="w-11 h-6 bg-slate-200 peer-focus:ring-4 peer-focus:ring-indigo-100 rounded-full

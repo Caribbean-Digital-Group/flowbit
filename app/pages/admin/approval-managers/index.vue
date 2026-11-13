@@ -47,7 +47,7 @@ const mapRow = (m: ApprovalManagerWithRelations) => {
     id: m.id,
     partner_label: name,
     user_state: hasUser ? 'Usuario vinculado' : 'Sin usuario (no podrá aprobar en la app)',
-    category_scope_label: catCount === 0 ? 'Todas las categorías' : `${catCount} categoría(s) específica(s)`,
+    category_scope_label: catCount === 0 ? 'Ninguna: asígnale categorías' : `${catCount} categoría(s)`,
     active_badge: m.active ? 'activo' : 'inactivo'
   }
 }

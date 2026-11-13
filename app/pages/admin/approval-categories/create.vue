@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import {
+  approvalCategoryFormToPayload,
   createEmptyApprovalCategoryForm,
   type ApprovalCategoryFormData
 } from '~/components/ApprovalCategory/Form.vue'
-import type { TablesInsert } from '~/types/database.types'
+import type { ApprovalCategoryInsert } from '~/types/approval.types'
+import { fieldSchemaIssues } from '~/utils/approvals'
 
 definePageMeta({
   layout: 'admin'
@@ -14,7 +16,18 @@ const router = useRouter()
 const authStore = useAuthStore()
 const { selectedCompanyId, companies } = storeToRefs(authStore)
 
-const { createCategory } = useApprovalCategory()
+const { createCategory, lastError } = useApprovalCategory()
+const { getFlows } = useApprovalFlow()
+const { getSettings } = useApprovalSettings()
+const flowOptions = ref<{ value: string; label: string }[]>([])
+const advanced = ref(false)
+
+watch(selectedCompanyId, async (cid) => {
+  if (!cid) return
+  const [flows, settings] = await Promise.all([getFlows(cid), getSettings(cid)])
+  flowOptions.value = flows.map(f => ({ value: f.id, label: f.name }))
+  advanced.value = settings.advanced_enabled
+}, { immediate: true })
 
 const form = ref<ApprovalCategoryFormData>(createEmptyApprovalCategoryForm())
 const isSaving = ref(false)
@@ -34,11 +47,10 @@ const slugifyInternalCode = (value: string) =>
     .replace(/[^a-z0-9-]/g, '')
     .replace(/-+/g, '-')
 
-const mapToInsert = (v: ApprovalCategoryFormData): Omit<TablesInsert<'approval_category'>, 'company_id'> => ({
+const mapToInsert = (v: ApprovalCategoryFormData): Omit<ApprovalCategoryInsert, 'company_id'> => ({
+  ...approvalCategoryFormToPayload(v),
   name: v.name.trim(),
   internal_code: slugifyInternalCode(v.internal_code),
-  description: v.description.trim() || null,
-  active: v.active,
   archived: false
 })
 
@@ -64,11 +76,17 @@ const handleSave = async () => {
     return
   }
 
+  const issues = fieldSchemaIssues(form.value.field_schema)
+  if (issues.length) {
+    errorMessage.value = issues[0] ?? null
+    return
+  }
+
   isSaving.value = true
   try {
     const row = await createCategory(companyId, mapToInsert(form.value))
     if (!row) {
-      errorMessage.value = 'No se pudo crear la categoría. Verifica que el código interno sea único.'
+      errorMessage.value = lastError.value ?? 'No se pudo crear la categoría. Verifica que el código interno sea único.'
       return
     }
     router.push(`/admin/approval-categories/${row.id}`)
@@ -115,7 +133,7 @@ const handleSave = async () => {
       <p v-if="errorMessage" class="mb-4 text-sm font-medium text-red-600">
         {{ errorMessage }}
       </p>
-      <ApprovalCategoryForm v-model="form" />
+      <ApprovalCategoryForm v-model="form" :flow-options="flowOptions" :advanced="advanced" />
     </CardSheet>
   </div>
 </template>
