@@ -149,6 +149,8 @@ flowbit/
 
 | Módulo | Ruta admin | Composable(s) |
 |---|---|---|
+| Tablero de inventario | `/admin/inventory` | `useInventory` |
+| Por reabastecer (OC sugeridas) | `/admin/inventory/restock` | `useRestock` |
 | Productos | `/admin/products` | `useProduct` |
 | Almacenes | `/admin/warehouses` | `useWarehouse` |
 | Movimientos (Pickings) | `/admin/pickings` | `usePicking`, `usePickingLine` |
@@ -548,7 +550,7 @@ El layout incluye:
   1. General (Dashboard, Agenda, Contactos)
   2. CRM (Tablero, Leads, Pipeline, Motivos de pérdida)
   3. Ventas/Compras (Órdenes, Por surtir, Reporte de ventas, Líneas de orden, Métodos de pago)
-  4. Inventario (Productos, Almacenes, Movimientos, Líneas de picking)
+  4. Inventario (Inventario, Por reabastecer, Productos, Almacenes, Movimientos, Líneas de picking)
   5. Proyectos (Proyectos, Tareas)
   6. Aprobaciones (Solicitudes, Categorías, Aprobadores)
   7. Sitio web (Ajustes, Páginas, Menús, Blog, Categorías, Etiquetas, Autores, Comentarios, Medios, Galerías, Mensajes, Redirecciones)

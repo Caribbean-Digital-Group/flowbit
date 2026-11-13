@@ -202,7 +202,7 @@ export const FEATURE_MODULES: FeatureModule[] = [
     benefits: [
       { title: 'Trazabilidad completa', description: 'Cada movimiento guarda su origen (compra, venta, punto de venta, ajuste o traspaso), así reconstruyes la historia de cualquier producto.' },
       { title: 'Valor de inventario confiable', description: 'Costo promedio ponderado recalculado en cada entrada y valoración reconstruible a cualquier fecha.' },
-      { title: 'Reabastecimiento a tiempo', description: 'Cuando un producto cruza su mínimo se crea una tarea de reabastecimiento con prioridad según la gravedad, y se cierra sola al reponerse.' }
+      { title: 'Reabastecimiento a tiempo', description: 'Cuando un producto cruza su mínimo se crea una tarea de reabastecimiento, y Flowbit sugiere cuánto pedir y arma las órdenes de compra por proveedor.' }
     ],
     features: [
       { title: 'Catálogo de productos', description: 'SKU, código de barras, costos, precios, variantes y existencias mínimas.' },
@@ -210,7 +210,8 @@ export const FEATURE_MODULES: FeatureModule[] = [
       { title: 'Movimientos con código QR', description: 'Cada movimiento (picking) tiene su QR para escanearlo y confirmarlo desde el celular.' },
       { title: 'Reporte de inventario', description: 'Existencias y valor por producto y almacén, con alerta de productos sin costo.' },
       { title: 'Kardex y trazabilidad', description: 'Historial de entradas y salidas de cada producto con costo unitario y saldo.' },
-      { title: 'Integrado con ventas', description: 'Órdenes, punto de venta y tienda en línea mueven el mismo inventario.' }
+      { title: 'Integrado con ventas', description: 'Órdenes, punto de venta y tienda en línea mueven el mismo inventario.' },
+      { title: 'Órdenes de compra sugeridas', description: 'Lista de productos bajo su mínimo, descontando lo reservado, con la cantidad a pedir y las órdenes de compra en borrador agrupadas por proveedor.' }
     ],
     useCases: [
       'Comercios con bodega y piso de venta que necesitan saber qué reponer.',
@@ -222,7 +223,7 @@ export const FEATURE_MODULES: FeatureModule[] = [
       { question: '¿Qué método de costeo usa Flowbit?', answer: 'Costo promedio ponderado. Se recalcula con cada entrada y cada movimiento guarda el costo, de modo que la valoración de cualquier fecha se puede reconstruir.' },
       { question: '¿Puedo usar el celular en el almacén?', answer: 'Sí. Los movimientos tienen código QR y una vista de escaneo pensada para el celular.' }
     ],
-    manualArticles: ['products-create', 'warehouses-list', 'pickings-scan', 'inventory-report', 'inventory-traceability'],
+    manualArticles: ['products-create', 'warehouses-list', 'pickings-scan', 'inventory-report', 'inventory-restock', 'inventory-traceability'],
     related: ['ventas', 'punto-de-venta', 'tienda-en-linea']
   },
   {
