@@ -214,7 +214,8 @@ export const ARTICLES: DocArticle[] = [
       'El precio de lista es el precio base; puede modificarse en cada línea de orden individual.',
       'Activa el control de stock para recibir alertas cuando el inventario esté bajo.',
       'Usa categorías para organizar el catálogo (Electrónicos, Ropa, Servicios, etc.).',
-      'El código de barras es necesario para usar el escáner QR en el módulo de pickings.'
+      'El código de barras es necesario para usar el escáner QR en el módulo de pickings.',
+      'Para migrar desde otro sistema usa «Importar CSV»: descarga la plantilla, llénala y súbela. Se revisa todo antes de guardar y se te indica la fila de cada error.'
     ],
     process: [
       { step: 1, title: 'Crear producto en catálogo', description: 'Registra el producto con SKU, nombre, precio y unidad de medida.' },
