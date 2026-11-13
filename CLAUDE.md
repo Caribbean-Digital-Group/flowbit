@@ -442,6 +442,7 @@ export const useEntity = () => {
 - Soft-delete: `.update({ active: false })` — nunca `.delete()`
 - Filtrar siempre por `company_id` (multi-tenant)
 - Para búsqueda de texto usar `.ilike('field', '%term%')` o full-text search con config `spanish`
+- Listados completos (todas las filas de una empresa): envolver la consulta en `fetchAllRows` (`app/utils/pagination.ts`). Supabase corta cada respuesta en 1000 filas sin avisar; el helper lee por bloques con `.range()`. Construir la consulta dentro del callback y terminar el `.order()` en una columna única (`id`)
 
 ### Helpers de autenticación (`useSupabase.ts`)
 

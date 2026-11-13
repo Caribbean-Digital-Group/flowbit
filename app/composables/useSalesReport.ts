@@ -41,20 +41,27 @@ export const useSalesReport = () => {
     const toExclusive = new Date(`${to}T00:00:00`)
     toExclusive.setDate(toExclusive.getDate() + 1)
 
-    const { data, error } = await supabase
+    // Por bloques: sin esto la exportación contable se cortaba en 1000 asientos.
+    // La vista no tiene id; el desempate usa las columnas que identifican el asiento.
+    const { data, error } = await fetchAllRows((rangeFrom, rangeTo) => supabase
       .from('v_revenue_ledger')
       .select('*')
       .eq('company_id', companyId)
       .gte('occurred_at', `${from}T00:00:00`)
       .lt('occurred_at', toExclusive.toISOString())
       .order('occurred_at', { ascending: true })
+      .order('source', { ascending: true })
+      .order('kind', { ascending: true })
+      .order('document_id', { ascending: true })
+      .order('product_id', { ascending: true })
+      .range(rangeFrom, rangeTo))
 
     if (error) {
       console.error('Error fetching revenue ledger:', error)
       return []
     }
 
-    return (data ?? []) as RevenueLedgerView[]
+    return data as RevenueLedgerView[]
   }
 
   return { lastError, getSalesKpis, getRevenueLedger }

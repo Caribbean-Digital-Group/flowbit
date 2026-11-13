@@ -48,18 +48,21 @@ export const usePicking = () => {
   const getPickingsByCompany = async (companyId: string): Promise<PickingView[]> => {
     if (!companyId) return []
 
-    const { data, error } = await supabase
+    // Por bloques: una consulta simple se corta en 1000 filas (ver utils/pagination.ts).
+    const { data, error } = await fetchAllRows((from, to) => supabase
       .from('v_pickings')
       .select('*')
       .eq('company_id', companyId)
       .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(from, to))
 
     if (error) {
       console.error('Error fetching pickings:', error)
       return []
     }
 
-    return data || []
+    return data
   }
 
   const getPickingsByOrder = async (orderId: string, companyId: string): Promise<PickingView[]> => {
