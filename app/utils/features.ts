@@ -22,6 +22,7 @@ export type FeatureIcon =
   | 'projects'
   | 'approvals'
   | 'contacts'
+  | 'expenses'
 
 export type FeatureCategory = 'Ventas' | 'Operación' | 'Canales digitales' | 'Personas' | 'Colaboración'
 
@@ -146,6 +147,45 @@ export const FEATURE_MODULES: FeatureModule[] = [
     ],
     manualArticles: ['orders-create', 'orders-detail', 'payment-methods-list', 'sales-report'],
     related: ['inventario', 'punto-de-venta', 'crm']
+  },
+  {
+    slug: 'gastos',
+    name: 'Gastos',
+    category: 'Ventas',
+    icon: 'expenses',
+    gradient: 'from-rose-500 to-orange-500',
+    tagline: 'Registra gastos de operación y consulta tu estado de resultados.',
+    mexico: 'Cada gasto guarda su subtotal y su IVA por separado, con el folio de la factura del proveedor, y los importes van en pesos con formato mexicano.',
+    seoTitle: 'Control de gastos y estado de resultados | Flowbit ERP',
+    seoDescription: 'Control de gastos en español: categorías, proveedores, IVA y folio por gasto, y un estado de resultados mensual con ingresos, compras y gastos.',
+    keywords: ['control de gastos', 'software de gastos para empresas', 'estado de resultados', 'gastos de operación', 'utilidad mensual'],
+    headline: 'Control de gastos y estado de resultados para saber cuánto ganas cada mes',
+    intro: 'Registra la renta, los servicios, la publicidad y cualquier otro gasto con su categoría y proveedor. Flowbit los cruza con lo que cobraste y lo que pagaste a proveedores para mostrarte el resultado de cada mes.',
+    benefits: [
+      { title: 'Sabe si tu negocio gana dinero', description: 'El estado de resultados resta compras y gastos pagados a lo cobrado, mes por mes.' },
+      { title: 'Gastos ordenados por concepto', description: 'Las categorías muestran en qué se va el dinero y qué parte del gasto representa cada una.' },
+      { title: 'Sin doble captura', description: 'Ingresos y compras salen de las órdenes y sus pagos; solo capturas los gastos que no pasan por una orden.' }
+    ],
+    features: [
+      { title: 'Registro de gastos', description: 'Fecha, descripción, categoría, proveedor, proyecto, método de pago, subtotal, IVA y folio del comprobante.' },
+      { title: 'Estados del gasto', description: 'Borrador, aprobado, pagado o cancelado. Solo los pagados cuentan en el resultado.' },
+      { title: 'Categorías de gasto', description: 'Define las tuyas (renta, servicios, publicidad…) con un color para identificarlas.' },
+      { title: 'Estado de resultados', description: 'Ingresos cobrados, compras pagadas, gastos y resultado por mes, con desglose por categoría.' },
+      { title: 'Filtros y exportación', description: 'Filtra por estado, categoría y fechas, y exporta los gastos o el estado de resultados a CSV.' },
+      { title: 'Gastos por proyecto', description: 'Liga un gasto a un proyecto para saber cuánto te costó.' }
+    ],
+    useCases: [
+      'Negocios que llevan sus gastos en una libreta o en hojas de cálculo.',
+      'Dueños que quieren saber su utilidad del mes sin esperar al contador.',
+      'Empresas de servicios que necesitan saber cuánto gastan por proyecto.'
+    ],
+    faqs: [
+      { question: '¿El estado de resultados sustituye a mi contabilidad?', answer: 'No. Es un reporte en base de caja para tomar decisiones: suma lo cobrado y resta lo pagado. Tu contabilidad fiscal sigue a cargo de tu contador.' },
+      { question: '¿Qué gastos cuentan en el resultado?', answer: 'Solo los que están marcados como pagados, en el mes de su fecha de pago. Los borradores, los aprobados sin pagar y los cancelados no cuentan.' },
+      { question: '¿Flowbit lee mis facturas del SAT?', answer: 'No. Los gastos se capturan a mano con el folio del comprobante; Flowbit no descarga ni timbra CFDI.' }
+    ],
+    manualArticles: ['expenses-list', 'expenses-create', 'expense-categories-list', 'profit-loss-report'],
+    related: ['ventas', 'proyectos', 'aprobaciones']
   },
   {
     slug: 'punto-de-venta',
@@ -513,6 +553,7 @@ export const FEATURE_ICON_PATHS: Record<FeatureIcon, string> = {
   payroll: 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z',
   projects: 'M13 10V3L4 14h7v7l9-11h-7z',
   approvals: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+  expenses: 'M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z',
   contacts: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'
 }
 
@@ -539,7 +580,7 @@ export const MEXICO_HIGHLIGHTS: FeaturePoint[] = [
 
 /** Preguntas frecuentes generales de la landing y del hub. */
 export const PLATFORM_FAQS: FeatureFaq[] = [
-  { question: '¿Qué es Flowbit ERP?', answer: 'Flowbit es un ERP open source en español hecho para México. Reúne CRM, ventas, punto de venta, inventario, tienda en línea, sitio web, Recursos Humanos, nómina, proyectos y aprobaciones en una sola plataforma web, gratis y sin límite de usuarios.' },
+  { question: '¿Qué es Flowbit ERP?', answer: 'Flowbit es un ERP open source en español hecho para México. Reúne CRM, ventas, gastos, punto de venta, inventario, tienda en línea, sitio web, Recursos Humanos, nómina, proyectos y aprobaciones en una sola plataforma web, gratis y sin límite de usuarios.' },
   { question: '¿Por qué un ERP hecho para México?', answer: 'Porque calcula la nómina con ISR, IMSS, INFONAVIT e ISN, aplica la Ley Federal del Trabajo en vacaciones, horas extra y días festivos, maneja IVA y pesos mexicanos, y guarda RFC, CURP y NSS. No hay que adaptar un sistema extranjero.' },
   { question: '¿Flowbit es gratis de verdad?', answer: 'Sí. Todos los módulos y usuarios están incluidos sin costo y no se pide tarjeta de crédito. El código es público con licencia MIT.' },
   { question: '¿Flowbit timbra facturas o recibos de nómina (CFDI)?', answer: 'Todavía no. Flowbit guarda los datos fiscales y las claves del SAT, pero el timbrado se hace con tu proveedor de facturación actual.' },

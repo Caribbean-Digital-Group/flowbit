@@ -9,9 +9,9 @@ Nuxt 4 · Vue 3 (Composition API) · TypeScript estricto · Tailwind CSS v4 · S
 
 ## Módulos
 
-General (dashboard, agenda, contactos) · CRM · Ventas/Compras · Tienda en línea · Sitio web (CMS + blog) · Inventario · Proyectos · Aprobaciones · Equipo · Manual público con asistente Bit.
+General (dashboard, agenda, contactos) · CRM · Ventas/Compras · Gastos y estado de resultados · Tienda en línea · Sitio web (CMS + blog) · Inventario · Proyectos · Aprobaciones · Equipo · Manual público con asistente Bit.
 
-Documentación por módulo en [`docs/`](docs): [CRM](docs/crm.md), [ventas](docs/sales-flow-analysis.md), [storefront](docs/storefront.md), [sitio web](docs/website.md), [inventario](docs/inventory.md), [POS](docs/pos.md), [salud](docs/health.md), [manual y Bit](docs/manual-bit.md).
+Documentación por módulo en [`docs/`](docs): [CRM](docs/crm.md), [ventas](docs/sales-flow-analysis.md), [gastos](docs/expenses.md), [storefront](docs/storefront.md), [sitio web](docs/website.md), [inventario](docs/inventory.md), [POS](docs/pos.md), [salud](docs/health.md), [manual y Bit](docs/manual-bit.md).
 
 ## Puesta en marcha
 
