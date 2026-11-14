@@ -603,6 +603,149 @@ export const ARTICLES: DocArticle[] = [
     tags: ['reporte', 'ventas', 'ingresos', 'cobranza', 'margen', 'costo', 'cartera', 'campañas', 'kpi']
   },
 
+  // ─── GASTOS Y ESTADO DE RESULTADOS ───────────────────────────────────────────
+  {
+    id: 'expenses-list',
+    routePatterns: ['/admin/expenses'],
+    module: 'orders',
+    moduleLabel: 'Órdenes',
+    moduleEmoji: '🛒',
+    title: 'Gastos',
+    viewType: 'list',
+    level: 'basico',
+    isNew: true,
+    summary: 'Registra la renta, los servicios y demás gastos de operación para saber cuánto gana tu negocio cada mes.',
+    description: 'Listado de los gastos de operación de la empresa: renta, luz, internet, publicidad, honorarios y cualquier pago que no pase por una orden de compra. Muestra totales por estado, filtros por estado, categoría y fechas, y exportación a CSV.',
+    importance: 'Las órdenes de compra solo registran lo que compras para vender o para tu inventario. Sin los gastos de operación, el estado de resultados mostraría una utilidad mayor a la real.',
+    tips: [
+      'Las compras de mercancía van en una orden de compra, no como gasto: así alimentan el inventario y no se cuentan dos veces.',
+      'Un gasto pasa por Borrador → Aprobado → Pagado. Solo los pagados cuentan en el estado de resultados.',
+      'Usa «Marcar pagado» en el listado para registrar el pago sin abrir el gasto; la fecha de pago será la del gasto.',
+      'Filtra por categoría y exporta el CSV para entregar a tu contador el detalle de un concepto.',
+      'Archivar un gasto lo saca del listado y de los reportes; si fue un error de captura, cancélalo para dejar constancia.'
+    ],
+    relatedModules: [
+      { label: 'Nuevo gasto', route: '/admin/expenses/create' },
+      { label: 'Categorías de gasto', route: '/admin/expense-categories' },
+      { label: 'Estado de resultados', route: '/admin/reports/profit-loss' }
+    ],
+    relatedArticles: ['expenses-create', 'expense-categories-list', 'profit-loss-report'],
+    tags: ['gastos', 'egresos', 'renta', 'servicios', 'proveedores', 'comprobante', 'csv']
+  },
+  {
+    id: 'expenses-create',
+    routePatterns: ['/admin/expenses/create', '/admin/expenses/:id'],
+    module: 'orders',
+    moduleLabel: 'Órdenes',
+    moduleEmoji: '🛒',
+    title: 'Registrar un gasto',
+    viewType: 'create',
+    level: 'basico',
+    isNew: true,
+    summary: 'Captura un gasto con su categoría, proveedor, IVA y folio, y márcalo como pagado para que cuente en tu resultado.',
+    description: 'Formulario para registrar o editar un gasto: descripción, fecha, categoría, proveedor, proyecto, método de pago, subtotal, IVA, moneda, folio del comprobante, estado y notas. Desde el menú del detalle se aprueba, se marca como pagado, se cancela o se regresa a borrador.',
+    importance: 'Cada gasto bien clasificado hace que el estado de resultados muestre en qué se va el dinero. La fecha de pago decide en qué mes cuenta.',
+    tips: [
+      'El total es subtotal + IVA. El botón «Calcular IVA 16 %» llena el impuesto a partir del subtotal.',
+      'Si marcas el gasto como pagado y no capturas la fecha de pago, se usa la fecha del gasto.',
+      'Liga el gasto a un proyecto para conocer cuánto te costó cada proyecto.',
+      'Captura el folio de la factura del proveedor en «Folio o comprobante» para encontrarla después.',
+      'Regresar un gasto pagado a borrador borra su fecha de pago y lo saca del estado de resultados.'
+    ],
+    fields: [
+      { label: 'Descripción', required: true, type: 'text', description: 'Qué se pagó.', tip: 'Ejemplo: «Renta de oficina de marzo».' },
+      { label: 'Fecha del gasto', required: true, type: 'date', description: 'Fecha del comprobante o del cargo.' },
+      { label: 'Categoría', required: false, type: 'relation', description: 'Concepto con que se agrupa en el estado de resultados.', tip: 'Sin categoría, el gasto aparece como «Sin categoría».' },
+      { label: 'Proveedor', required: false, type: 'relation', description: 'Contacto al que se le pagó.' },
+      { label: 'Proyecto', required: false, type: 'relation', description: 'Proyecto al que se carga el gasto.' },
+      { label: 'Método de pago', required: false, type: 'relation', description: 'Cómo se pagó: transferencia, efectivo, tarjeta…' },
+      { label: 'Subtotal', required: true, type: 'number', description: 'Importe sin impuestos. No puede ser negativo.' },
+      { label: 'Impuestos (IVA)', required: false, type: 'number', description: 'IVA del gasto.' },
+      { label: 'Moneda', required: false, type: 'text', description: 'Código de tres letras. Por omisión, la moneda de la empresa.' },
+      { label: 'Estado', required: true, type: 'select', description: 'Borrador, Aprobado, Pagado o Cancelado.' },
+      { label: 'Fecha de pago', required: false, type: 'date', description: 'Solo para gastos pagados; decide el mes en que cuentan.' },
+      { label: 'Folio o comprobante', required: false, type: 'text', description: 'Número de factura, ticket o recibo.' }
+    ],
+    process: [
+      { step: 1, title: 'Captura el gasto', description: 'Descripción, fecha, importe y categoría. Queda en borrador.' },
+      { step: 2, title: 'Apruébalo', description: 'Opcional: márcalo como aprobado cuando alguien autorice el pago.' },
+      { step: 3, title: 'Márcalo como pagado', description: 'Desde el menú del detalle o desde el listado. Desde ese momento cuenta en el estado de resultados.' }
+    ],
+    faqs: [
+      { question: '¿Puedo registrar un gasto en dólares?', answer: 'Puedes capturar la moneda en el gasto, pero el estado de resultados suma los importes tal como se capturaron, sin convertirlos. Conviene registrar el gasto en la moneda de la empresa.' },
+      { question: '¿Quién puede registrar gastos?', answer: 'Cualquier miembro del equipo de la empresa puede registrar y editar gastos.' }
+    ],
+    relatedModules: [
+      { label: 'Gastos', route: '/admin/expenses' },
+      { label: 'Categorías de gasto', route: '/admin/expense-categories' }
+    ],
+    relatedArticles: ['expenses-list', 'profit-loss-report'],
+    tags: ['gasto', 'registrar', 'iva', 'factura', 'folio', 'pagado', 'aprobar']
+  },
+  {
+    id: 'expense-categories-list',
+    routePatterns: ['/admin/expense-categories', '/admin/expense-categories/create', '/admin/expense-categories/:id'],
+    module: 'orders',
+    moduleLabel: 'Órdenes',
+    moduleEmoji: '🛒',
+    title: 'Categorías de gasto',
+    viewType: 'config',
+    level: 'basico',
+    isNew: true,
+    summary: 'Define los conceptos con que agrupas tus gastos: renta, servicios, publicidad, honorarios.',
+    description: 'Catálogo de categorías de gasto de la empresa, con nombre, descripción y un color para identificarlas. El estado de resultados desglosa los gastos pagados por categoría.',
+    importance: 'Con pocas categorías bien elegidas, el estado de resultados muestra de un vistazo qué conceptos pesan más en tu gasto.',
+    tips: [
+      'Empieza con pocas categorías (Renta, Servicios, Publicidad, Honorarios, Otros) y crea más solo cuando las necesites.',
+      'El nombre no se puede repetir entre las categorías activas de la empresa.',
+      'Archivar una categoría no cambia los gastos que ya la usan; solo deja de aparecer al capturar gastos nuevos.',
+      'Desde el menú del detalle, «Ver gastos de esta categoría» abre el listado ya filtrado.'
+    ],
+    fields: [
+      { label: 'Nombre', required: true, type: 'text', description: 'Nombre del concepto.', tip: 'Ejemplos: «Renta», «Luz y agua», «Publicidad digital».' },
+      { label: 'Color', required: false, type: 'select', description: 'Color con que se identifica en el listado.' },
+      { label: 'Descripción', required: false, type: 'textarea', description: 'Qué gastos agrupa.' }
+    ],
+    relatedModules: [
+      { label: 'Gastos', route: '/admin/expenses' },
+      { label: 'Estado de resultados', route: '/admin/reports/profit-loss' }
+    ],
+    relatedArticles: ['expenses-list', 'profit-loss-report'],
+    tags: ['categorías', 'gastos', 'conceptos', 'catálogo']
+  },
+  {
+    id: 'profit-loss-report',
+    routePatterns: ['/admin/reports/profit-loss'],
+    module: 'orders',
+    moduleLabel: 'Órdenes',
+    moduleEmoji: '🛒',
+    title: 'Estado de resultados',
+    viewType: 'analytics',
+    level: 'intermedio',
+    isNew: true,
+    summary: 'Cuánto cobraste, cuánto pagaste a proveedores y en gastos, y cuánto te quedó, mes por mes.',
+    description: 'Estado de resultados en base de caja para el periodo que elijas: ingresos cobrados, compras pagadas a proveedores, gastos pagados y resultado por mes, con totales, desglose de gastos por categoría y exportación a CSV.',
+    importance: 'Es la forma más rápida de saber si el negocio gana o pierde dinero y en qué conceptos se va el gasto, sin esperar el cierre contable.',
+    tips: [
+      'Ingresos = cobrado neto de devoluciones (con IVA), igual que en el reporte de ventas.',
+      'Compras = pagos registrados en órdenes de compra, en la fecha del pago.',
+      'Gastos = gastos en estado «Pagado», por su total con IVA, en el mes de su fecha de pago.',
+      'Si el reporte de ventas no está disponible, el estado de resultados muestra solo los gastos y avisa.',
+      'Exporta el CSV para compartirlo con tu contador: incluye una columna por categoría de gasto.'
+    ],
+    faqs: [
+      { question: '¿Por qué no aparece un gasto que capturé?', answer: 'Solo cuentan los gastos pagados. Revisa que esté en estado «Pagado» y que su fecha de pago caiga en el periodo.' },
+      { question: '¿Es lo mismo que mi estado de resultados contable?', answer: 'No. Es un reporte en base de caja: cuenta el dinero cuando entra o sale. La contabilidad fiscal usa otros criterios (devengado, depreciaciones, IVA acreditable).' }
+    ],
+    relatedModules: [
+      { label: 'Gastos', route: '/admin/expenses' },
+      { label: 'Reporte de ventas', route: '/admin/reports/sales' },
+      { label: 'Órdenes', route: '/admin/orders' }
+    ],
+    relatedArticles: ['sales-report', 'expenses-list', 'expense-categories-list'],
+    tags: ['estado de resultados', 'utilidad', 'pérdidas y ganancias', 'gastos', 'ingresos', 'reporte']
+  },
+
   // ─── PICKINGS ─────────────────────────────────────────────────────────────────
   {
     id: 'pickings-list',

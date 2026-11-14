@@ -442,10 +442,24 @@ const menuGroups: MenuGroup[] = [
         ]
       },
       {
+        title: 'Gastos',
+        to: '/admin/expenses',
+        iconPaths: [
+          'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z'
+        ]
+      },
+      {
         title: 'Reporte de ventas',
         to: '/admin/reports/sales',
         iconPaths: [
           'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
+        ]
+      },
+      {
+        title: 'Estado de resultados',
+        to: '/admin/reports/profit-loss',
+        iconPaths: [
+          'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z'
         ]
       },
       {
@@ -460,6 +474,13 @@ const menuGroups: MenuGroup[] = [
         to: '/admin/payment-methods',
         iconPaths: [
           'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z'
+        ]
+      },
+      {
+        title: 'Categorías de gasto',
+        to: '/admin/expense-categories',
+        iconPaths: [
+          'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z'
         ]
       },
     ]

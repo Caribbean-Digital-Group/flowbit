@@ -109,10 +109,17 @@ flowbit/
 | Líneas de orden | `/admin/order-lines` | `useOrderLine` |
 | Métodos de pago | `/admin/payment-methods` | `usePaymentMethod` |
 | Reporte de ventas | `/admin/reports/sales` | `useSalesReport` |
+| Gastos | `/admin/expenses` | `useExpense`, `useExpenseLookups` |
+| Categorías de gasto | `/admin/expense-categories` | `useExpenseCategory` |
+| Estado de resultados | `/admin/reports/profit-loss` | `useSalesReport`, `useExpense`, `useExpenseCategory` |
 
 > Flujo comercial (entrega derivada de pickings, libro de pagos `order_payment`,
 > devoluciones, reservas por almacén, ingreso en base de caja): `docs/sales-flow-analysis.md`.
 > Entrega y pago de una orden **no se escriben a mano**: los deriva la base de datos.
+>
+> Gastos de operación y estado de resultados (base de caja: cobrado − compras pagadas − gastos
+> en estado `paid`, por mes; armado puro en `buildProfitLoss` de `app/utils/expenses.ts`):
+> `docs/expenses.md`. Tipos temporales en `types/expense.types.ts` hasta correr `db:types`.
 
 ### Tienda en línea (Storefront)
 
@@ -559,7 +566,7 @@ El layout incluye:
 - **Grupos de navegación colapsables** organizados por dominio:
   1. General (Dashboard, Agenda, Contactos)
   2. CRM (Tablero, Leads, Pipeline, Motivos de pérdida)
-  3. Ventas/Compras (Órdenes, Por surtir, Reporte de ventas, Líneas de orden, Métodos de pago)
+  3. Ventas/Compras (Órdenes, Por surtir, Gastos, Reporte de ventas, Estado de resultados, Líneas de orden, Métodos de pago, Categorías de gasto)
   4. Inventario (Inventario, Por reabastecer, Productos, Almacenes, Movimientos, Líneas de picking)
   5. Proyectos (Proyectos, Tareas)
   6. Aprobaciones (Solicitudes, Tablero, Flujos, Categorías, Aprobadores, Configuración)
