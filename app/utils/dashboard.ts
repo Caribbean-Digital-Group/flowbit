@@ -43,8 +43,12 @@ export const isDashboardPreset = (value: unknown): value is DashboardPreset =>
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
+/**
+ * `YYYY-MM-DD` de un día que existe en el calendario. `new Date(y, m, d)`
+ * desborda en silencio (2026-02-30 → 2 mar), así que se exige ida y vuelta.
+ */
 export const isIsoDate = (value: unknown): value is string =>
-  typeof value === 'string' && ISO_DATE.test(value) && !Number.isNaN(parseIsoDate(value).getTime())
+  typeof value === 'string' && ISO_DATE.test(value) && toIsoDate(parseIsoDate(value)) === value
 
 export const toIsoDate = (d: Date): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
