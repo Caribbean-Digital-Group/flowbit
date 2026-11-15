@@ -565,6 +565,61 @@ export const ARTICLES: DocArticle[] = [
   },
 
   {
+    id: 'orders-quote-share',
+    routePatterns: [],
+    module: 'orders',
+    moduleLabel: 'Órdenes',
+    moduleEmoji: '🛒',
+    title: 'Cotizaciones en línea',
+    viewType: 'detail',
+    level: 'basico',
+    isNew: true,
+    summary: 'Manda un enlace y deja que tu cliente acepte la cotización con un clic, sin crear cuenta.',
+    description: 'Desde una orden de venta en borrador generas un enlace privado. Tu cliente ve la cotización con tus datos, líneas, totales y condiciones; puede imprimirla o guardarla en PDF, y la acepta o la rechaza desde ahí mismo.',
+    importance: 'Ya no tienes que mandar PDFs por fuera ni confirmar la orden a mano cuando el cliente contesta. Al aceptar, la orden se confirma sola, el lead del CRM pasa a ganado y tú te enteras en la campana.',
+    tips: [
+      'Abre la orden de venta en borrador y usa «Compartir cotización» en el panel «Cotización en línea». El enlace se copia solo.',
+      'La vigencia es opcional y cuenta el último día completo. Después de esa fecha el cliente ve la cotización como vencida y ya no puede aceptarla.',
+      'El botón «WhatsApp» abre el mensaje listo para enviar con el enlace.',
+      'Si cambias precios o líneas después de compartir, el cliente verá la versión nueva al recargar: el enlace siempre muestra la orden actual.',
+      '«Revocar enlace» invalida el enlace enviado. Si vuelves a compartir se genera uno nuevo.',
+      'El historial muestra cuándo se compartió, cuándo la abrió el cliente por primera vez y qué respondió.'
+    ],
+    process: [
+      { step: 1, title: 'Arma la cotización', description: 'Crea una orden de venta (o «Crear cotización» desde un lead) y agrega las líneas.' },
+      { step: 2, title: 'Comparte el enlace', description: 'Elige la vigencia y copia el enlace o envíalo por WhatsApp.' },
+      { step: 3, title: 'El cliente responde', description: 'Acepta (la orden se confirma) o rechaza indicando el motivo.' },
+      { step: 4, title: 'Recibe el aviso', description: 'La respuesta aparece en la campana; al abrir la orden se marca como vista.' },
+      { step: 5, title: 'Surte y cobra', description: 'Sigue con «Preparar entrega» y «Registrar cobro» como en cualquier orden.' }
+    ],
+    faqs: [
+      {
+        question: '¿El cliente puede ver otras órdenes o mis costos?',
+        answer: 'No. El enlace solo abre esa cotización y muestra lo que el cliente necesita: conceptos, cantidades, precios, descuentos, impuestos y condiciones. Nunca muestra costos ni márgenes.'
+      },
+      {
+        question: '¿Aceptar aparta el inventario?',
+        answer: 'No. Aceptar confirma la orden, igual que el botón «Confirmar orden». El stock se aparta cuando usas «Preparar entrega».'
+      },
+      {
+        question: '¿Qué pasa si el cliente rechaza?',
+        answer: 'La orden sigue en borrador para que ajustes la propuesta y la vuelvas a compartir. Si viene de un lead, el responsable recibe una actividad de seguimiento con el motivo.'
+      },
+      {
+        question: '¿Se envía algún correo?',
+        answer: 'Todavía no. El aviso llega a la campana del panel. Tú decides por qué medio mandas el enlace.'
+      }
+    ],
+    relatedModules: [
+      { label: 'Órdenes', route: '/admin/orders' },
+      { label: 'Nueva orden', route: '/admin/orders/create' },
+      { label: 'Leads', route: '/admin/crm/leads' }
+    ],
+    relatedArticles: ['orders-detail', 'orders-create', 'crm-leads-detail'],
+    tags: ['cotización', 'presupuesto', 'enlace', 'compartir', 'aceptar', 'whatsapp', 'cliente', 'vigencia', 'propuesta']
+  },
+
+  {
     id: 'sales-report',
     routePatterns: ['/admin/reports/sales'],
     module: 'orders',

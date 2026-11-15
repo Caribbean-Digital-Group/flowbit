@@ -109,10 +109,12 @@ flowbit/
 | Líneas de orden | `/admin/order-lines` | `useOrderLine` |
 | Métodos de pago | `/admin/payment-methods` | `usePaymentMethod` |
 | Reporte de ventas | `/admin/reports/sales` | `useSalesReport` |
+| Cotizaciones en línea (enlace público, aceptar/rechazar) | `/q/[token]` (público) + panel en `/admin/orders/[id]` | `useOrderQuote` |
 
 > Flujo comercial (entrega derivada de pickings, libro de pagos `order_payment`,
 > devoluciones, reservas por almacén, ingreso en base de caja): `docs/sales-flow-analysis.md`.
 > Entrega y pago de una orden **no se escriben a mano**: los deriva la base de datos.
+> Cotizaciones compartibles: token + estado `quote_*` solo por RPC, bitácora `order_quote_event`; aceptar confirma la orden (`docs/sales-flow-analysis.md` §9).
 
 ### Tienda en línea (Storefront)
 
