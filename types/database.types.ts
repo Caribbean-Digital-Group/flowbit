@@ -2351,6 +2351,165 @@ export type Database = {
           },
         ]
       }
+      expense: {
+        Row: {
+          active: boolean | null
+          amount: number
+          category_id: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          description: string
+          expense_date: string
+          id: string
+          notes: string | null
+          paid_at: string | null
+          partner_id: string | null
+          payment_method_id: string | null
+          project_id: string | null
+          reference: string | null
+          status: string
+          tax_amount: number
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          amount: number
+          category_id?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          description: string
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          partner_id?: string | null
+          payment_method_id?: string | null
+          project_id?: string | null
+          reference?: string | null
+          status?: string
+          tax_amount?: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          amount?: number
+          category_id?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          description?: string
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          partner_id?: string | null
+          payment_method_id?: string | null
+          project_id?: string | null
+          reference?: string | null
+          status?: string
+          tax_amount?: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_category"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_method"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expense_category: {
+        Row: {
+          active: boolean | null
+          color: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          color?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          color?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_category_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_absence: {
         Row: {
           absence_date: string
@@ -3462,6 +3621,15 @@ export type Database = {
           payment_term: string | null
           pos_session_id: string | null
           project_id: string | null
+          quote_responded_at: string | null
+          quote_response_name: string | null
+          quote_response_note: string | null
+          quote_response_seen_at: string | null
+          quote_shared_at: string | null
+          quote_status: string | null
+          quote_token: string | null
+          quote_valid_until: string | null
+          quote_viewed_at: string | null
           reference: string | null
           shipping_city: string | null
           shipping_cost: number | null
@@ -3521,6 +3689,15 @@ export type Database = {
           payment_term?: string | null
           pos_session_id?: string | null
           project_id?: string | null
+          quote_responded_at?: string | null
+          quote_response_name?: string | null
+          quote_response_note?: string | null
+          quote_response_seen_at?: string | null
+          quote_shared_at?: string | null
+          quote_status?: string | null
+          quote_token?: string | null
+          quote_valid_until?: string | null
+          quote_viewed_at?: string | null
           reference?: string | null
           shipping_city?: string | null
           shipping_cost?: number | null
@@ -3580,6 +3757,15 @@ export type Database = {
           payment_term?: string | null
           pos_session_id?: string | null
           project_id?: string | null
+          quote_responded_at?: string | null
+          quote_response_name?: string | null
+          quote_response_note?: string | null
+          quote_response_seen_at?: string | null
+          quote_shared_at?: string | null
+          quote_status?: string | null
+          quote_token?: string | null
+          quote_valid_until?: string | null
+          quote_viewed_at?: string | null
           reference?: string | null
           shipping_city?: string | null
           shipping_cost?: number | null
@@ -3948,6 +4134,71 @@ export type Database = {
             columns: ["refund_id"]
             isOneToOne: false
             referencedRelation: "v_order_refunds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_quote_event: {
+        Row: {
+          actor_name: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          event_type: string
+          id: string
+          note: string | null
+          order_id: string
+          valid_until: string | null
+        }
+        Insert: {
+          actor_name?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          event_type: string
+          id?: string
+          note?: string | null
+          order_id: string
+          valid_until?: string | null
+        }
+        Update: {
+          actor_name?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          event_type?: string
+          id?: string
+          note?: string | null
+          order_id?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_quote_event_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_quote_event_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "order"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_quote_event_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "v_order_attribution"
+            referencedColumns: ["order_id"]
+          },
+          {
+            foreignKeyName: "order_quote_event_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "v_orders"
             referencedColumns: ["id"]
           },
         ]
@@ -11003,6 +11254,15 @@ export type Database = {
         Returns: Json
       }
       _prepare_order_delivery: { Args: { p_order_id: string }; Returns: Json }
+      _quote_actor_name: { Args: never; Returns: string }
+      _quote_effective_status: {
+        Args: {
+          p_order_state: Database["public"]["Enums"]["order_state"]
+          p_status: string
+          p_valid_until: string
+        }
+        Returns: string
+      }
       add_order_line: {
         Args: {
           p_description?: string
@@ -12279,6 +12539,14 @@ export type Database = {
       ensure_restock_task: { Args: { p_product_id: string }; Returns: string }
       generate_restock_tasks: { Args: { p_company_id: string }; Returns: Json }
       get_active_websites: { Args: never; Returns: Json }
+      get_aging_report: {
+        Args: {
+          p_as_of?: string
+          p_company_id: string
+          p_order_type?: Database["public"]["Enums"]["order_type"]
+        }
+        Returns: Json
+      }
       get_available_stock: {
         Args: {
           p_exclude_order_id?: string
@@ -12353,12 +12621,23 @@ export type Database = {
           role: string
         }[]
       }
+      get_partner_statement: {
+        Args: {
+          p_as_of?: string
+          p_company_id: string
+          p_from?: string
+          p_order_type?: Database["public"]["Enums"]["order_type"]
+          p_partner_id: string
+        }
+        Returns: Json
+      }
       get_pos_session_summary: { Args: { p_session_id: string }; Returns: Json }
       get_product_stock_card: {
         Args: { p_limit?: number; p_product_id: string }
         Returns: Json
       }
       get_public_project_view: { Args: { p_project_id: string }; Returns: Json }
+      get_public_quote: { Args: { p_token: string }; Returns: Json }
       get_reserved_stock: {
         Args: {
           p_exclude_order_id?: string
@@ -12716,6 +12995,12 @@ export type Database = {
         }
         Returns: number
       }
+      order_quote_mark_seen: { Args: { p_order_id: string }; Returns: boolean }
+      order_quote_revoke: { Args: { p_order_id: string }; Returns: boolean }
+      order_quote_share: {
+        Args: { p_order_id: string; p_valid_until?: string }
+        Returns: string
+      }
       partner_shares_company_with_user: {
         Args: { p_partner_id: string }
         Returns: boolean
@@ -12970,6 +13255,15 @@ export type Database = {
       resolve_website_company: {
         Args: { p_preview?: boolean; p_slug: string }
         Returns: string
+      }
+      respond_public_quote: {
+        Args: {
+          p_decision: string
+          p_name: string
+          p_note?: string
+          p_token: string
+        }
+        Returns: Json
       }
       respond_to_invitation: {
         Args: { p_accept: boolean; p_rel_id: string }
