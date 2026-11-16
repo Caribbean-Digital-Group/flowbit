@@ -23,7 +23,8 @@ export const ARTICLES: DocArticle[] = [
       'No intentes configurar todo el primer día. Empieza por el módulo que resuelve tu dolor más urgente (ventas, inventario o proyectos) y crece desde ahí.',
       'Todos los datos están separados por empresa. Si administras varias, usa el selector de empresa del header antes de capturar información.',
       'Registra tus contactos reales desde el inicio: clientes, proveedores y empleados viven en el mismo módulo diferenciados por su rol.',
-      'Invita a tu equipo cuando ya tengas la estructura básica: así encuentran el sistema listo para usar y no vacío.'
+      'Invita a tu equipo cuando ya tengas la estructura básica: así encuentran el sistema listo para usar y no vacío.',
+      'En el Dashboard verás la tarjeta «Primeros pasos»: se marca sola conforme completas datos fiscales, primer producto, método de pago, equipo y primera venta, y desaparece al terminar. Solo la ven owners y admins, y puedes ocultarla con «Ocultar».'
     ],
     wizard: {
       id: 'wz-onboarding',
@@ -106,14 +107,15 @@ export const ARTICLES: DocArticle[] = [
       'Revisa el dashboard al inicio de cada jornada para identificar alertas y pendientes.',
       'Las métricas se actualizan en tiempo real conforme se realizan operaciones en la plataforma.',
       'Desde el header puedes acceder rápidamente a tus tareas asignadas, solicitudes por aprobar y actividades de seguimiento CRM.',
-      'El ícono de campana en el header muestra notificaciones de tareas y aprobaciones pendientes.'
+      'El ícono de campana en el header muestra notificaciones de tareas y aprobaciones pendientes.',
+      'Si eres owner o admin de una empresa nueva, la tarjeta «Primeros pasos» te indica qué configurar primero y enlaza a cada pantalla y a su guía. Se completa sola con los datos reales de la empresa.'
     ],
     relatedModules: [
       { label: 'Agenda', route: '/admin/agenda' },
       { label: 'Tareas', route: '/admin/tasks' },
       { label: 'Solicitudes de Aprobación', route: '/admin/approval-requests' }
     ],
-    tags: ['inicio', 'resumen', 'métricas', 'estadísticas', 'dashboard']
+    tags: ['inicio', 'resumen', 'métricas', 'estadísticas', 'dashboard', 'primeros pasos', 'onboarding']
   },
 
   {
