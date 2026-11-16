@@ -9,6 +9,10 @@ dist
 # Node dependencies
 node_modules
 
+# Playwright (E2E)
+playwright-report/
+test-results/
+
 # Logs
 logs
 *.log
