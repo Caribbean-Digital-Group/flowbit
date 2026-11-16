@@ -129,6 +129,18 @@ flowbit/
 > Pagos con tarjeta por empresa (Stripe Checkout hosted + webhook + endpoints `/api/storefront/stripe/*`): `docs/storefront-stripe.md`.
 > Los eventos del storefront se emiten únicamente vía la fachada `useStorefrontTracker`.
 
+### Punto de Venta (POS)
+
+| Módulo | Ruta | Composable(s) |
+|---|---|---|
+| Terminal POS (apertura, venta, cobro, devoluciones, corte) | `/pos`, `/pos/terminal`, `/pos/close` | `usePosSession`, `usePosSale` |
+| Cajas | `/admin/pos/registers` | `usePosRegister` |
+| Sesiones de caja (cortes y arqueos) | `/admin/pos/sessions` | `usePosSession` |
+
+> Cada ticket es una orden de venta (`SO-…`) confirmada, entregada y pagada, creada por el RPC
+> `register_pos_sale`: el POS reutiliza órdenes, pickings y el libro de pagos, no duplica lógica.
+> Una caja admite una sola sesión abierta. Guía de uso para cajeros: `docs/pos.md`.
+
 ### Sitio web (CMS + blog)
 
 | Módulo | Ruta admin | Composable(s) |
@@ -567,6 +579,7 @@ El layout incluye:
   8. Recursos Humanos (Empleados, Departamentos, Asistencias, Reporte de asistencias, Inasistencias, Vacaciones y permisos, Saldos de vacaciones, Tipos de ausencia, Horarios, Días festivos, Kioscos)
   9. Nómina (Periodos de nómina, Salarios, Mis recibos, Configuración fiscal)
   10. Sistema (Equipo, Manual, Configuración)
+  - Además, entre Ventas/Compras e Inventario: **Tienda en línea** (Ajustes de tienda, Cupones, Métodos de envío, Analítica) y **Punto de Venta** (Terminal POS, Cajas, Sesiones de caja)
 - **Header sticky** con:
   - Botón hamburguesa (mobile)
   - Búsqueda global / paleta de comandos (`Ctrl+K` / `⌘K`, `components/CommandPalette.vue`): lee los mismos `menuGroups` del sidebar, así que un módulo nuevo aparece en ambos sin trabajo extra
