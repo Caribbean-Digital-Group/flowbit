@@ -109,6 +109,7 @@ flowbit/
 | Líneas de orden | `/admin/order-lines` | `useOrderLine` |
 | Métodos de pago | `/admin/payment-methods` | `usePaymentMethod` |
 | Reporte de ventas | `/admin/reports/sales` | `useSalesReport` |
+| Cotizaciones en línea (enlace público, aceptar/rechazar) | `/q/[token]` (público) + panel en `/admin/orders/[id]` | `useOrderQuote` |
 | Gastos | `/admin/expenses` | `useExpense`, `useExpenseLookups` |
 | Categorías de gasto | `/admin/expense-categories` | `useExpenseCategory` |
 | Estado de resultados | `/admin/reports/profit-loss` | `useSalesReport`, `useExpense`, `useExpenseCategory` |
@@ -116,6 +117,8 @@ flowbit/
 > Flujo comercial (entrega derivada de pickings, libro de pagos `order_payment`,
 > devoluciones, reservas por almacén, ingreso en base de caja): `docs/sales-flow-analysis.md`.
 > Entrega y pago de una orden **no se escriben a mano**: los deriva la base de datos.
+>
+> Cotizaciones compartibles: token + estado `quote_*` solo por RPC, bitácora `order_quote_event`; aceptar confirma la orden (`docs/sales-flow-analysis.md` §9).
 >
 > Gastos de operación y estado de resultados (base de caja: cobrado − compras pagadas − gastos
 > en estado `paid`, por mes; armado puro en `buildProfitLoss` de `app/utils/expenses.ts`):

@@ -5,6 +5,7 @@ useHead({ meta: [{ name: 'robots', content: 'noindex, nofollow' }] })
 import { storeToRefs } from 'pinia'
 import type { Database } from '~/types/database.types'
 import type { PendingInvitation } from '~/composables/useMembership'
+import type { QuoteResponseNotice } from '~/composables/useOrderQuote'
 import type { ApprovalActivityRow } from '~/types/approval.types'
 import { APPROVAL_ACTIVITY_LABELS } from '~/utils/approvals'
 
@@ -56,10 +57,12 @@ const { getAssignedTasksForPartner } = useProjectTask()
 const { getOpenActivities: getOpenApprovalActivities, markRead: markApprovalActivitiesRead } = useApprovalActivity()
 const { getActivitiesByCompany } = useCrmActivity()
 const { getMyInvitations, respondInvitation } = useMembership()
+const { getUnseenQuoteResponses } = useOrderQuote()
 
 const assignedTasksPreview = ref<TaskViewRow[]>([])
 const pendingApprovalsPreview = ref<ApprovalActivityRow[]>([])
 const crmActivitiesPreview = ref<CrmActivityViewRow[]>([])
+const quoteResponsesPreview = ref<QuoteResponseNotice[]>([])
 const isTaskNotifOpen = ref(false)
 const isLoadingAssignedTasks = ref(false)
 const taskNotifRef = ref<HTMLElement | null>(null)
@@ -103,7 +106,11 @@ const pendingApprovalCount = computed(() => pendingApprovalsPreview.value.length
 const openCrmActivityCount = computed(() => visibleCrmActivities.value.length)
 
 const taskNotifBadgeTotal = computed(
-  () => openAssignedTaskCount.value + pendingApprovalCount.value + openCrmActivityCount.value
+  () =>
+    openAssignedTaskCount.value
+    + pendingApprovalCount.value
+    + openCrmActivityCount.value
+    + quoteResponsesPreview.value.length
 )
 
 const notificationBadgeLabel = computed(() => {
@@ -119,16 +126,19 @@ async function refreshTaskNotifPanel() {
     assignedTasksPreview.value = []
     pendingApprovalsPreview.value = []
     crmActivitiesPreview.value = []
+    quoteResponsesPreview.value = []
     return
   }
   isLoadingAssignedTasks.value = true
   try {
-    const [tasks, approvals, activities] = await Promise.all([
+    const [tasks, approvals, activities, quoteResponses] = await Promise.all([
       getAssignedTasksForPartner(partnerId, companyId),
       getOpenApprovalActivities(companyId, partnerId, 30),
-      getActivitiesByCompany(companyId)
+      getActivitiesByCompany(companyId),
+      getUnseenQuoteResponses(companyId)
     ])
     assignedTasksPreview.value = tasks
+    quoteResponsesPreview.value = quoteResponses
     pendingApprovalsPreview.value = approvals
     crmActivitiesPreview.value = activities.filter((activity) => {
       if (!activity.responsible_partner_id) return false
@@ -202,6 +212,11 @@ function formatActivityScheduleShort(date: string | null): string {
   } catch {
     return date
   }
+}
+
+function openQuoteResponseFromNotif(notice: QuoteResponseNotice) {
+  closeTaskNotif()
+  navigateTo(`/admin/orders/${notice.id}`)
 }
 
 function openCrmActivityFromNotif(activity: CrmActivityViewRow) {
@@ -1293,6 +1308,35 @@ const handleLogout = async () => {
                                   Vence {{ formatTaskDueShort(task.due_date) }}
                                 </span>
                               </div>
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+
+                      <div v-if="quoteResponsesPreview.length > 0" class="border-t border-slate-100 pt-3">
+                        <p class="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                          Cotizaciones respondidas
+                        </p>
+                        <ul class="space-y-1">
+                          <li v-for="notice in quoteResponsesPreview" :key="notice.id">
+                            <button
+                              type="button"
+                              class="w-full rounded-lg border border-transparent px-3 py-2.5 text-left transition hover:border-emerald-100 hover:bg-emerald-50/60"
+                              @click="openQuoteResponseFromNotif(notice)"
+                            >
+                              <p class="text-sm font-medium text-slate-900">
+                                {{ notice.name ?? 'Cotización' }}
+                                {{ notice.quote_status === 'accepted' ? 'aceptada' : 'rechazada' }}
+                              </p>
+                              <p class="mt-0.5 text-xs text-slate-500 truncate">
+                                {{ notice.quote_response_name ?? 'Cliente' }} · {{ formatActivityScheduleShort(notice.quote_responded_at) }}
+                              </p>
+                              <span
+                                class="mt-1.5 inline-block rounded-md px-1.5 py-0.5 text-[10px] font-semibold"
+                                :class="notice.quote_status === 'accepted' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700'"
+                              >
+                                {{ notice.quote_status === 'accepted' ? 'Orden confirmada' : 'Revisar motivo' }}
+                              </span>
                             </button>
                           </li>
                         </ul>
