@@ -20,6 +20,35 @@ Tipos: `feat`, `fix`, `refactor`, `docs`, `style`, `chore`, `test`, `perf`.
 - No edites `types/database.types.ts` a mano (`npm run db:types`).
 - Detalle completo en [CLAUDE.md](CLAUDE.md).
 
+## Pruebas
+
+- **Unitarias** (`npm test`, Vitest): funciones puras en `tests/`.
+- **E2E de humo** (`npm run test:e2e`, Playwright): recorren el build de producción en
+  Chromium sin base de datos. Cubren la landing, `/funcionalidades`, el manual, `/health`,
+  las redirecciones del panel sin sesión (`/admin` → `/?redirect=…`) y la página 404.
+  Viven en `e2e/` y la configuración en `playwright.config.ts`.
+
+Para correr las E2E en local:
+
+```bash
+npx playwright install chromium   # solo la primera vez
+SUPABASE_URL=https://example.supabase.co \
+SUPABASE_PUBLISHABLE_KEY=ci-placeholder \
+NUXT_PUBLIC_SITE_URL=http://localhost:3000 \
+npm run build
+npm run test:e2e
+```
+
+- Playwright levanta `node .output/server/index.mjs` en el puerto 3000 con credenciales
+  ficticias; si ya tienes un servidor en ese puerto, lo reutiliza.
+- Las pruebas no deben depender de datos: con la URL ficticia las llamadas a Supabase
+  fallan (y `/health` responde 503), y eso es lo esperado.
+- Si ya tienes un Chromium instalado cuya versión no coincide con `@playwright/test`,
+  apúntalo con `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/ruta/a/chrome`.
+- Para depurar un fallo: `npx playwright test --trace on` y `npx playwright show-report`.
+- En la CI corren en el job `e2e` de `.github/workflows/ci.yml`; si fallan, el reporte
+  queda como artefacto `playwright-report`.
+
 ## Checklist de PR
 
 - [ ] Descripción clara y enlace a la tarea relacionada.
