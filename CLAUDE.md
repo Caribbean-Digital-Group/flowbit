@@ -83,7 +83,7 @@ flowbit/
 
 | Módulo | Ruta admin | Composable(s) |
 |---|---|---|
-| Dashboard | `/admin` | — |
+| Dashboard (con «Primeros pasos» para empresas nuevas, `app/utils/onboarding.ts`) | `/admin` | `useOnboarding` |
 | Agenda | `/admin/agenda` | — |
 | Contactos (Partners) | `/admin/partners` | `usePartner` |
 | Perfil | `/admin/profile` | — |
@@ -110,11 +110,19 @@ flowbit/
 | Métodos de pago | `/admin/payment-methods` | `usePaymentMethod` |
 | Reporte de ventas | `/admin/reports/sales` | `useSalesReport` |
 | Cotizaciones en línea (enlace público, aceptar/rechazar) | `/q/[token]` (público) + panel en `/admin/orders/[id]` | `useOrderQuote` |
+| Gastos | `/admin/expenses` | `useExpense`, `useExpenseLookups` |
+| Categorías de gasto | `/admin/expense-categories` | `useExpenseCategory` |
+| Estado de resultados | `/admin/reports/profit-loss` | `useSalesReport`, `useExpense`, `useExpenseCategory` |
 
 > Flujo comercial (entrega derivada de pickings, libro de pagos `order_payment`,
 > devoluciones, reservas por almacén, ingreso en base de caja): `docs/sales-flow-analysis.md`.
 > Entrega y pago de una orden **no se escriben a mano**: los deriva la base de datos.
+>
 > Cotizaciones compartibles: token + estado `quote_*` solo por RPC, bitácora `order_quote_event`; aceptar confirma la orden (`docs/sales-flow-analysis.md` §9).
+>
+> Gastos de operación y estado de resultados (base de caja: cobrado − compras pagadas − gastos
+> en estado `paid`, por mes; armado puro en `buildProfitLoss` de `app/utils/expenses.ts`):
+> `docs/expenses.md`. Tipos temporales en `types/expense.types.ts` hasta correr `db:types`.
 
 ### Tienda en línea (Storefront)
 
@@ -130,6 +138,18 @@ flowbit/
 > Analítica first-party (tracker propio + ingesta `/api/storefront/analytics` + rollups): `docs/storefront-analytics.md`.
 > Pagos con tarjeta por empresa (Stripe Checkout hosted + webhook + endpoints `/api/storefront/stripe/*`): `docs/storefront-stripe.md`.
 > Los eventos del storefront se emiten únicamente vía la fachada `useStorefrontTracker`.
+
+### Punto de Venta (POS)
+
+| Módulo | Ruta | Composable(s) |
+|---|---|---|
+| Terminal POS (apertura, venta, cobro, devoluciones, corte) | `/pos`, `/pos/terminal`, `/pos/close` | `usePosSession`, `usePosSale` |
+| Cajas | `/admin/pos/registers` | `usePosRegister` |
+| Sesiones de caja (cortes y arqueos) | `/admin/pos/sessions` | `usePosSession` |
+
+> Cada ticket es una orden de venta (`SO-…`) confirmada, entregada y pagada, creada por el RPC
+> `register_pos_sale`: el POS reutiliza órdenes, pickings y el libro de pagos, no duplica lógica.
+> Una caja admite una sola sesión abierta. Guía de uso para cajeros: `docs/pos.md`.
 
 ### Sitio web (CMS + blog)
 
@@ -561,7 +581,7 @@ El layout incluye:
 - **Grupos de navegación colapsables** organizados por dominio:
   1. General (Dashboard, Agenda, Contactos)
   2. CRM (Tablero, Leads, Pipeline, Motivos de pérdida)
-  3. Ventas/Compras (Órdenes, Por surtir, Reporte de ventas, Líneas de orden, Métodos de pago)
+  3. Ventas/Compras (Órdenes, Por surtir, Gastos, Reporte de ventas, Estado de resultados, Líneas de orden, Métodos de pago, Categorías de gasto)
   4. Inventario (Inventario, Por reabastecer, Productos, Almacenes, Movimientos, Líneas de picking)
   5. Proyectos (Proyectos, Tareas)
   6. Aprobaciones (Solicitudes, Tablero, Flujos, Categorías, Aprobadores, Configuración)
@@ -569,6 +589,7 @@ El layout incluye:
   8. Recursos Humanos (Empleados, Departamentos, Asistencias, Reporte de asistencias, Inasistencias, Vacaciones y permisos, Saldos de vacaciones, Tipos de ausencia, Horarios, Días festivos, Kioscos)
   9. Nómina (Periodos de nómina, Salarios, Mis recibos, Configuración fiscal)
   10. Sistema (Equipo, Manual, Configuración)
+  - Además, entre Ventas/Compras e Inventario: **Tienda en línea** (Ajustes de tienda, Cupones, Métodos de envío, Analítica) y **Punto de Venta** (Terminal POS, Cajas, Sesiones de caja)
 - **Header sticky** con:
   - Botón hamburguesa (mobile)
   - Búsqueda global / paleta de comandos (`Ctrl+K` / `⌘K`, `components/CommandPalette.vue`): lee los mismos `menuGroups` del sidebar, así que un módulo nuevo aparece en ambos sin trabajo extra
