@@ -522,3 +522,57 @@ como perdido: el vendedor decide si renegocia o lo cierra con un motivo del cat�
 - Tipos: tras `npm run db:push && npm run db:types` se pueden quitar los casts
   `as never` de `useOrderQuote`.
 - Correo opcional al cliente y al vendedor: TRY-35. Portal del cliente: TRY-40.
+
+---
+
+## 10. Cuentas por cobrar y por pagar (TRY-39)
+
+Reporte de antigüedad de saldos y estado de cuenta por contacto, sin tablas nuevas:
+reutiliza `order.amount_paid` / `amount_refunded` (libro `order_payment` y `order_refund`)
+y `payment_due_date`.
+
+### Reglas
+
+| Concepto | Regla |
+|---|---|
+| Saldo de una orden | `amount_total − amount_refunded − amount_paid` (igual que `v_orders.balance_due`) |
+| Órdenes incluidas | `posted`, `payment_status` distinto de `paid` y `condoned`, saldo > 0.005 |
+| Vencimiento | `payment_due_date`, si no `confirmation_date`, si no `order_date` |
+| Días de atraso | fecha de corte − vencimiento; ≤ 0 = al corriente |
+| Cubetas | al corriente, 1–30, 31–60, 61–90, +90 días |
+| Moneda | moneda de la empresa con el `exchange_rate` de la orden |
+
+Son las mismas reglas del bloque `receivables` de `get_sales_kpis`, así que el reporte de
+ventas y la antigüedad de saldos nunca se contradicen.
+
+### Base de datos (`20261116120000_receivables_aging_and_statement.sql`)
+
+- `get_aging_report(p_company_id, p_order_type = 'sale', p_as_of = hoy)` → JSONB con
+  `totals` (cubetas, órdenes, contactos) y `partners[]` ordenados por saldo.
+  `p_order_type = 'purchase'` da las cuentas por pagar.
+- `get_partner_statement(p_company_id, p_partner_id, p_order_type, p_from, p_as_of)` → JSONB con
+  `opening_balance` (movimientos anteriores a `p_from`), `entries[]` cronológicos y `open_orders[]`.
+  - Cargo: orden confirmada (total) y reembolso entregado (pago negativo del libro).
+  - Abono: cobro/pago positivo y devolución (`order_refund.amount_total`).
+  - Una devolución reembolsada en efectivo deja el saldo igual (abono + cargo).
+
+Ambas son `SECURITY DEFINER` con `user_belongs_to_company` (mismo patrón que `get_sales_kpis`)
+y solo se otorgan a `authenticated`. La agregación ocurre en la base: el navegador no descarga
+todas las órdenes.
+
+### Interfaz
+
+- `/admin/reports/receivables` — tarjetas (total, al corriente, vencido, +90 días), barra de
+  distribución, tabla por contacto con búsqueda y filtro «Solo con saldo vencido», exportación CSV.
+  `?kind=purchase` muestra proveedores.
+- `/admin/reports/receivables/[partnerId]` — estado de cuenta con periodo, órdenes abiertas con días
+  de atraso, movimientos con saldo acumulado, impresión (iframe sin layout) y CSV.
+- Accesos: sidebar «Cuentas por cobrar» (Ventas/Compras), enlace «Ver por cliente» en el reporte de
+  ventas y opciones «Estado de cuenta» en el menú del contacto.
+- Lógica pura (`app/utils/receivables.ts`): cubetas, días de atraso, saldo acumulado y filtros,
+  probada en `tests/utils/receivables.test.ts`.
+
+### Pendiente (fase 2)
+
+- Indicador «Vencido» en `Partner/MetricsPanel`.
+- Recordatorios de cobranza (requiere TRY-35, avisos por correo).

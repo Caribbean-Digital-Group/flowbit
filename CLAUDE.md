@@ -113,6 +113,7 @@ flowbit/
 | Gastos | `/admin/expenses` | `useExpense`, `useExpenseLookups` |
 | Categorías de gasto | `/admin/expense-categories` | `useExpenseCategory` |
 | Estado de resultados | `/admin/reports/profit-loss` | `useSalesReport`, `useExpense`, `useExpenseCategory` |
+| Cuentas por cobrar / por pagar (antigüedad y estado de cuenta) | `/admin/reports/receivables` (`?kind=purchase` = proveedores), `/admin/reports/receivables/[partnerId]` | `useReceivables` |
 
 > Flujo comercial (entrega derivada de pickings, libro de pagos `order_payment`,
 > devoluciones, reservas por almacén, ingreso en base de caja): `docs/sales-flow-analysis.md`.
@@ -581,7 +582,7 @@ El layout incluye:
 - **Grupos de navegación colapsables** organizados por dominio:
   1. General (Dashboard, Agenda, Contactos)
   2. CRM (Tablero, Leads, Pipeline, Motivos de pérdida)
-  3. Ventas/Compras (Órdenes, Por surtir, Gastos, Reporte de ventas, Estado de resultados, Líneas de orden, Métodos de pago, Categorías de gasto)
+  3. Ventas/Compras (Órdenes, Por surtir, Gastos, Reporte de ventas, Estado de resultados, Cuentas por cobrar, Líneas de orden, Métodos de pago, Categorías de gasto)
   4. Inventario (Inventario, Por reabastecer, Productos, Almacenes, Movimientos, Líneas de picking)
   5. Proyectos (Proyectos, Tareas)
   6. Aprobaciones (Solicitudes, Tablero, Flujos, Categorías, Aprobadores, Configuración)

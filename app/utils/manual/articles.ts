@@ -802,6 +802,59 @@ export const ARTICLES: DocArticle[] = [
     relatedArticles: ['sales-report', 'expenses-list', 'expense-categories-list'],
     tags: ['estado de resultados', 'utilidad', 'pérdidas y ganancias', 'gastos', 'ingresos', 'reporte']
   },
+  {
+    id: 'receivables-aging',
+    routePatterns: ['/admin/reports/receivables', '/admin/reports/receivables/:partnerId'],
+    module: 'orders',
+    moduleLabel: 'Órdenes',
+    moduleEmoji: '🛒',
+    title: 'Cuentas por cobrar y por pagar',
+    viewType: 'analytics',
+    level: 'basico',
+    isNew: true,
+    summary: 'Quién te debe, cuánto y desde cuándo, con el estado de cuenta de cada cliente listo para enviar.',
+    description: 'La antigüedad de saldos agrupa lo que te deben tus clientes (o lo que debes a tus proveedores) en columnas: al corriente, 1 a 30, 31 a 60, 61 a 90 y más de 90 días de atraso. Desde cada contacto abres su estado de cuenta: ventas, cobros, devoluciones y reembolsos en orden cronológico con el saldo acumulado.',
+    importance: 'Cobrar a tiempo es tan importante como vender. Este reporte te dice a quién llamar primero: un saldo con más de 90 días es mucho más difícil de recuperar que uno de 15. El estado de cuenta evita discusiones con el cliente porque muestra cada cargo y cada abono.',
+    tips: [
+      'Captura la «Fecha de pago» al crear la orden: es la que define cuándo vence. Si la dejas vacía, la orden vence el día que se confirma.',
+      'Usa «Solo con saldo vencido» para armar tu lista de cobranza del día.',
+      'Cambia a «Por pagar (proveedores)» para ver tus compras pendientes de pago con la misma antigüedad.',
+      'Imprime el estado de cuenta (o guárdalo como PDF) y envíalo al cliente antes de llamarle.',
+      'Las cifras salen del libro de cobros: al registrar un abono en la orden, el reporte se actualiza solo.'
+    ],
+    process: [
+      { step: 1, title: 'Revisa el total vencido', description: 'Las tarjetas superiores muestran cuánto está al corriente, cuánto vencido y cuánto tiene más de 90 días.' },
+      { step: 2, title: 'Ordena tu cobranza', description: 'La tabla lista a los clientes de mayor a menor saldo. Las columnas en rojo son las más urgentes.' },
+      { step: 3, title: 'Abre el estado de cuenta', description: 'Haz clic en el cliente para ver sus órdenes abiertas, sus movimientos y el saldo acumulado.' },
+      { step: 4, title: 'Comparte y registra el cobro', description: 'Imprime o exporta el estado de cuenta. Cuando el cliente pague, registra el cobro en la orden.' }
+    ],
+    faqs: [
+      {
+        question: '¿Cómo se calcula el vencimiento de una orden?',
+        answer: 'Con la «Fecha de pago» de la orden. Si no la tiene, se usa la fecha de confirmación. Los días de atraso se cuentan desde esa fecha hasta hoy.'
+      },
+      {
+        question: '¿Por qué una orden no aparece en el reporte?',
+        answer: 'Solo aparecen órdenes confirmadas que tienen saldo. Los borradores, las canceladas, las pagadas y las condonadas no cuentan como saldo pendiente.'
+      },
+      {
+        question: '¿Qué pasa con las órdenes en dólares u otra moneda?',
+        answer: 'Se convierten a la moneda de la empresa con el tipo de cambio capturado en la orden, igual que en el reporte de ventas.'
+      },
+      {
+        question: '¿Por qué una devolución aparece como abono y luego un reembolso como cargo?',
+        answer: 'La devolución reduce lo que el cliente debe. Si además le regresaste el dinero, ese reembolso se registra como cargo, así que el saldo queda igual que antes de la devolución.'
+      }
+    ],
+    relatedModules: [
+      { label: 'Cuentas por cobrar', route: '/admin/reports/receivables' },
+      { label: 'Cuentas por pagar', route: '/admin/reports/receivables?kind=purchase' },
+      { label: 'Órdenes', route: '/admin/orders' },
+      { label: 'Reporte de ventas', route: '/admin/reports/sales' }
+    ],
+    relatedArticles: ['sales-report', 'orders-detail', 'partners-list'],
+    tags: ['cobranza', 'cuentas por cobrar', 'cuentas por pagar', 'antigüedad de saldos', 'estado de cuenta', 'cartera', 'vencido', 'proveedores', 'clientes']
+  },
 
   // ─── PICKINGS ─────────────────────────────────────────────────────────────────
   {

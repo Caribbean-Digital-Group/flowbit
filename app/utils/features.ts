@@ -133,7 +133,8 @@ export const FEATURE_MODULES: FeatureModule[] = [
       { title: 'Devoluciones y reembolsos', description: 'Registra devoluciones parciales que reintegran inventario y ajustan lo cobrado.' },
       { title: 'Órdenes por surtir', description: 'Una vista dedicada muestra qué órdenes siguen pendientes de entrega.' },
       { title: 'Reservas por almacén', description: 'Al preparar una entrega, el producto queda reservado en el almacén que la surte.' },
-      { title: 'Reporte de ventas', description: 'Ventas por periodo, producto y cliente, con gráficas mensuales.' }
+      { title: 'Reporte de ventas', description: 'Ventas por periodo, producto y cliente, con gráficas mensuales.' },
+      { title: 'Antigüedad de saldos y estado de cuenta', description: 'Quién te debe y a quién le debes, en columnas de 1–30, 31–60, 61–90 y más de 90 días, con el estado de cuenta de cada contacto listo para imprimir o exportar.' }
     ],
     useCases: [
       'Comercios y distribuidores que venden en mostrador, en línea y por pedido.',
@@ -145,7 +146,7 @@ export const FEATURE_MODULES: FeatureModule[] = [
       { question: '¿Puedo registrar pagos parciales?', answer: 'Sí. Cada orden tiene su libro de pagos y admite abonos con distintos métodos de pago hasta liquidarse.' },
       { question: '¿Las ventas descuentan inventario automáticamente?', answer: 'Sí. Al confirmar la entrega se genera el movimiento de salida del almacén y la existencia se actualiza.' }
     ],
-    manualArticles: ['orders-create', 'orders-detail', 'payment-methods-list', 'sales-report'],
+    manualArticles: ['orders-create', 'orders-detail', 'payment-methods-list', 'sales-report', 'receivables-aging'],
     related: ['inventario', 'punto-de-venta', 'crm']
   },
   {
