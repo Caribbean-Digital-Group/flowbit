@@ -1314,6 +1314,17 @@ const formatDate = (dateString: string | null): string => {
         :company-id="selectedCompanyId"
       />
 
+      <QuoteSharePanel
+        v-if="!isEditing && orderId && selectedCompanyId && formData.order_type === 'sale'"
+        :order-id="orderId"
+        :company-id="selectedCompanyId"
+        :order-state="formData.order_state"
+        :order-name="formData.name"
+        :company-name="selectedCompany?.name ?? null"
+        :has-lines="orderLines.length > 0"
+        @changed="loadOrder"
+      />
+
       <OrderFulfillmentPanel
         v-if="!isEditing && orderId && selectedCompanyId && formData.order_state !== 'draft'"
         ref="fulfillmentPanel"

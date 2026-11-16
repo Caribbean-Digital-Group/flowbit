@@ -30,7 +30,7 @@ export const MODULE_META: ModuleMeta[] = [
     id: 'orders',
     label: 'Ventas y compras',
     emoji: '🛒',
-    description: 'Órdenes de venta y compra, líneas y métodos de pago.',
+    description: 'Órdenes de venta y compra, líneas, métodos de pago, gastos y estado de resultados.',
     accent: 'emerald'
   },
   {

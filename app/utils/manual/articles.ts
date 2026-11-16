@@ -23,7 +23,8 @@ export const ARTICLES: DocArticle[] = [
       'No intentes configurar todo el primer día. Empieza por el módulo que resuelve tu dolor más urgente (ventas, inventario o proyectos) y crece desde ahí.',
       'Todos los datos están separados por empresa. Si administras varias, usa el selector de empresa del header antes de capturar información.',
       'Registra tus contactos reales desde el inicio: clientes, proveedores y empleados viven en el mismo módulo diferenciados por su rol.',
-      'Invita a tu equipo cuando ya tengas la estructura básica: así encuentran el sistema listo para usar y no vacío.'
+      'Invita a tu equipo cuando ya tengas la estructura básica: así encuentran el sistema listo para usar y no vacío.',
+      'En el Dashboard verás la tarjeta «Primeros pasos»: se marca sola conforme completas datos fiscales, primer producto, método de pago, equipo y primera venta, y desaparece al terminar. Solo la ven owners y admins, y puedes ocultarla con «Ocultar».'
     ],
     wizard: {
       id: 'wz-onboarding',
@@ -106,14 +107,15 @@ export const ARTICLES: DocArticle[] = [
       'Revisa el dashboard al inicio de cada jornada para identificar alertas y pendientes.',
       'Las métricas se actualizan en tiempo real conforme se realizan operaciones en la plataforma.',
       'Desde el header puedes acceder rápidamente a tus tareas asignadas, solicitudes por aprobar y actividades de seguimiento CRM.',
-      'El ícono de campana en el header muestra notificaciones de tareas y aprobaciones pendientes.'
+      'El ícono de campana en el header muestra notificaciones de tareas y aprobaciones pendientes.',
+      'Si eres owner o admin de una empresa nueva, la tarjeta «Primeros pasos» te indica qué configurar primero y enlaza a cada pantalla y a su guía. Se completa sola con los datos reales de la empresa.'
     ],
     relatedModules: [
       { label: 'Agenda', route: '/admin/agenda' },
       { label: 'Tareas', route: '/admin/tasks' },
       { label: 'Solicitudes de Aprobación', route: '/admin/approval-requests' }
     ],
-    tags: ['inicio', 'resumen', 'métricas', 'estadísticas', 'dashboard']
+    tags: ['inicio', 'resumen', 'métricas', 'estadísticas', 'dashboard', 'primeros pasos', 'onboarding']
   },
 
   {
@@ -565,6 +567,61 @@ export const ARTICLES: DocArticle[] = [
   },
 
   {
+    id: 'orders-quote-share',
+    routePatterns: [],
+    module: 'orders',
+    moduleLabel: 'Órdenes',
+    moduleEmoji: '🛒',
+    title: 'Cotizaciones en línea',
+    viewType: 'detail',
+    level: 'basico',
+    isNew: true,
+    summary: 'Manda un enlace y deja que tu cliente acepte la cotización con un clic, sin crear cuenta.',
+    description: 'Desde una orden de venta en borrador generas un enlace privado. Tu cliente ve la cotización con tus datos, líneas, totales y condiciones; puede imprimirla o guardarla en PDF, y la acepta o la rechaza desde ahí mismo.',
+    importance: 'Ya no tienes que mandar PDFs por fuera ni confirmar la orden a mano cuando el cliente contesta. Al aceptar, la orden se confirma sola, el lead del CRM pasa a ganado y tú te enteras en la campana.',
+    tips: [
+      'Abre la orden de venta en borrador y usa «Compartir cotización» en el panel «Cotización en línea». El enlace se copia solo.',
+      'La vigencia es opcional y cuenta el último día completo. Después de esa fecha el cliente ve la cotización como vencida y ya no puede aceptarla.',
+      'El botón «WhatsApp» abre el mensaje listo para enviar con el enlace.',
+      'Si cambias precios o líneas después de compartir, el cliente verá la versión nueva al recargar: el enlace siempre muestra la orden actual.',
+      '«Revocar enlace» invalida el enlace enviado. Si vuelves a compartir se genera uno nuevo.',
+      'El historial muestra cuándo se compartió, cuándo la abrió el cliente por primera vez y qué respondió.'
+    ],
+    process: [
+      { step: 1, title: 'Arma la cotización', description: 'Crea una orden de venta (o «Crear cotización» desde un lead) y agrega las líneas.' },
+      { step: 2, title: 'Comparte el enlace', description: 'Elige la vigencia y copia el enlace o envíalo por WhatsApp.' },
+      { step: 3, title: 'El cliente responde', description: 'Acepta (la orden se confirma) o rechaza indicando el motivo.' },
+      { step: 4, title: 'Recibe el aviso', description: 'La respuesta aparece en la campana; al abrir la orden se marca como vista.' },
+      { step: 5, title: 'Surte y cobra', description: 'Sigue con «Preparar entrega» y «Registrar cobro» como en cualquier orden.' }
+    ],
+    faqs: [
+      {
+        question: '¿El cliente puede ver otras órdenes o mis costos?',
+        answer: 'No. El enlace solo abre esa cotización y muestra lo que el cliente necesita: conceptos, cantidades, precios, descuentos, impuestos y condiciones. Nunca muestra costos ni márgenes.'
+      },
+      {
+        question: '¿Aceptar aparta el inventario?',
+        answer: 'No. Aceptar confirma la orden, igual que el botón «Confirmar orden». El stock se aparta cuando usas «Preparar entrega».'
+      },
+      {
+        question: '¿Qué pasa si el cliente rechaza?',
+        answer: 'La orden sigue en borrador para que ajustes la propuesta y la vuelvas a compartir. Si viene de un lead, el responsable recibe una actividad de seguimiento con el motivo.'
+      },
+      {
+        question: '¿Se envía algún correo?',
+        answer: 'Todavía no. El aviso llega a la campana del panel. Tú decides por qué medio mandas el enlace.'
+      }
+    ],
+    relatedModules: [
+      { label: 'Órdenes', route: '/admin/orders' },
+      { label: 'Nueva orden', route: '/admin/orders/create' },
+      { label: 'Leads', route: '/admin/crm/leads' }
+    ],
+    relatedArticles: ['orders-detail', 'orders-create', 'crm-leads-detail'],
+    tags: ['cotización', 'presupuesto', 'enlace', 'compartir', 'aceptar', 'whatsapp', 'cliente', 'vigencia', 'propuesta']
+  },
+
+  {
     id: 'sales-report',
     routePatterns: ['/admin/reports/sales'],
     module: 'orders',
@@ -603,6 +660,148 @@ export const ARTICLES: DocArticle[] = [
     tags: ['reporte', 'ventas', 'ingresos', 'cobranza', 'margen', 'costo', 'cartera', 'campañas', 'kpi']
   },
 
+  // ─── GASTOS Y ESTADO DE RESULTADOS ───────────────────────────────────────────
+  {
+    id: 'expenses-list',
+    routePatterns: ['/admin/expenses'],
+    module: 'orders',
+    moduleLabel: 'Órdenes',
+    moduleEmoji: '🛒',
+    title: 'Gastos',
+    viewType: 'list',
+    level: 'basico',
+    isNew: true,
+    summary: 'Registra la renta, los servicios y demás gastos de operación para saber cuánto gana tu negocio cada mes.',
+    description: 'Listado de los gastos de operación de la empresa: renta, luz, internet, publicidad, honorarios y cualquier pago que no pase por una orden de compra. Muestra totales por estado, filtros por estado, categoría y fechas, y exportación a CSV.',
+    importance: 'Las órdenes de compra solo registran lo que compras para vender o para tu inventario. Sin los gastos de operación, el estado de resultados mostraría una utilidad mayor a la real.',
+    tips: [
+      'Las compras de mercancía van en una orden de compra, no como gasto: así alimentan el inventario y no se cuentan dos veces.',
+      'Un gasto pasa por Borrador → Aprobado → Pagado. Solo los pagados cuentan en el estado de resultados.',
+      'Usa «Marcar pagado» en el listado para registrar el pago sin abrir el gasto; la fecha de pago será la del gasto.',
+      'Filtra por categoría y exporta el CSV para entregar a tu contador el detalle de un concepto.',
+      'Archivar un gasto lo saca del listado y de los reportes; si fue un error de captura, cancélalo para dejar constancia.'
+    ],
+    relatedModules: [
+      { label: 'Nuevo gasto', route: '/admin/expenses/create' },
+      { label: 'Categorías de gasto', route: '/admin/expense-categories' },
+      { label: 'Estado de resultados', route: '/admin/reports/profit-loss' }
+    ],
+    relatedArticles: ['expenses-create', 'expense-categories-list', 'profit-loss-report'],
+    tags: ['gastos', 'egresos', 'renta', 'servicios', 'proveedores', 'comprobante', 'csv']
+  },
+  {
+    id: 'expenses-create',
+    routePatterns: ['/admin/expenses/create', '/admin/expenses/:id'],
+    module: 'orders',
+    moduleLabel: 'Órdenes',
+    moduleEmoji: '🛒',
+    title: 'Registrar un gasto',
+    viewType: 'create',
+    level: 'basico',
+    isNew: true,
+    summary: 'Captura un gasto con su categoría, proveedor, IVA y folio, y márcalo como pagado para que cuente en tu resultado.',
+    description: 'Formulario para registrar o editar un gasto: descripción, fecha, categoría, proveedor, proyecto, método de pago, subtotal, IVA, moneda, folio del comprobante, estado y notas. Desde el menú del detalle se aprueba, se marca como pagado, se cancela o se regresa a borrador.',
+    importance: 'Cada gasto bien clasificado hace que el estado de resultados muestre en qué se va el dinero. La fecha de pago decide en qué mes cuenta.',
+    tips: [
+      'El total es subtotal + IVA. El botón «Calcular IVA 16 %» llena el impuesto a partir del subtotal.',
+      'Si marcas el gasto como pagado y no capturas la fecha de pago, se usa la fecha del gasto.',
+      'Liga el gasto a un proyecto para conocer cuánto te costó cada proyecto.',
+      'Captura el folio de la factura del proveedor en «Folio o comprobante» para encontrarla después.',
+      'Regresar un gasto pagado a borrador borra su fecha de pago y lo saca del estado de resultados.'
+    ],
+    fields: [
+      { label: 'Descripción', required: true, type: 'text', description: 'Qué se pagó.', tip: 'Ejemplo: «Renta de oficina de marzo».' },
+      { label: 'Fecha del gasto', required: true, type: 'date', description: 'Fecha del comprobante o del cargo.' },
+      { label: 'Categoría', required: false, type: 'relation', description: 'Concepto con que se agrupa en el estado de resultados.', tip: 'Sin categoría, el gasto aparece como «Sin categoría».' },
+      { label: 'Proveedor', required: false, type: 'relation', description: 'Contacto al que se le pagó.' },
+      { label: 'Proyecto', required: false, type: 'relation', description: 'Proyecto al que se carga el gasto.' },
+      { label: 'Método de pago', required: false, type: 'relation', description: 'Cómo se pagó: transferencia, efectivo, tarjeta…' },
+      { label: 'Subtotal', required: true, type: 'number', description: 'Importe sin impuestos. No puede ser negativo.' },
+      { label: 'Impuestos (IVA)', required: false, type: 'number', description: 'IVA del gasto.' },
+      { label: 'Moneda', required: false, type: 'text', description: 'Código de tres letras. Por omisión, la moneda de la empresa.' },
+      { label: 'Estado', required: true, type: 'select', description: 'Borrador, Aprobado, Pagado o Cancelado.' },
+      { label: 'Fecha de pago', required: false, type: 'date', description: 'Solo para gastos pagados; decide el mes en que cuentan.' },
+      { label: 'Folio o comprobante', required: false, type: 'text', description: 'Número de factura, ticket o recibo.' }
+    ],
+    process: [
+      { step: 1, title: 'Captura el gasto', description: 'Descripción, fecha, importe y categoría. Queda en borrador.' },
+      { step: 2, title: 'Apruébalo', description: 'Opcional: márcalo como aprobado cuando alguien autorice el pago.' },
+      { step: 3, title: 'Márcalo como pagado', description: 'Desde el menú del detalle o desde el listado. Desde ese momento cuenta en el estado de resultados.' }
+    ],
+    faqs: [
+      { question: '¿Puedo registrar un gasto en dólares?', answer: 'Puedes capturar la moneda en el gasto, pero el estado de resultados suma los importes tal como se capturaron, sin convertirlos. Conviene registrar el gasto en la moneda de la empresa.' },
+      { question: '¿Quién puede registrar gastos?', answer: 'Cualquier miembro del equipo de la empresa puede registrar y editar gastos.' }
+    ],
+    relatedModules: [
+      { label: 'Gastos', route: '/admin/expenses' },
+      { label: 'Categorías de gasto', route: '/admin/expense-categories' }
+    ],
+    relatedArticles: ['expenses-list', 'profit-loss-report'],
+    tags: ['gasto', 'registrar', 'iva', 'factura', 'folio', 'pagado', 'aprobar']
+  },
+  {
+    id: 'expense-categories-list',
+    routePatterns: ['/admin/expense-categories', '/admin/expense-categories/create', '/admin/expense-categories/:id'],
+    module: 'orders',
+    moduleLabel: 'Órdenes',
+    moduleEmoji: '🛒',
+    title: 'Categorías de gasto',
+    viewType: 'config',
+    level: 'basico',
+    isNew: true,
+    summary: 'Define los conceptos con que agrupas tus gastos: renta, servicios, publicidad, honorarios.',
+    description: 'Catálogo de categorías de gasto de la empresa, con nombre, descripción y un color para identificarlas. El estado de resultados desglosa los gastos pagados por categoría.',
+    importance: 'Con pocas categorías bien elegidas, el estado de resultados muestra de un vistazo qué conceptos pesan más en tu gasto.',
+    tips: [
+      'Empieza con pocas categorías (Renta, Servicios, Publicidad, Honorarios, Otros) y crea más solo cuando las necesites.',
+      'El nombre no se puede repetir entre las categorías activas de la empresa.',
+      'Archivar una categoría no cambia los gastos que ya la usan; solo deja de aparecer al capturar gastos nuevos.',
+      'Desde el menú del detalle, «Ver gastos de esta categoría» abre el listado ya filtrado.'
+    ],
+    fields: [
+      { label: 'Nombre', required: true, type: 'text', description: 'Nombre del concepto.', tip: 'Ejemplos: «Renta», «Luz y agua», «Publicidad digital».' },
+      { label: 'Color', required: false, type: 'select', description: 'Color con que se identifica en el listado.' },
+      { label: 'Descripción', required: false, type: 'textarea', description: 'Qué gastos agrupa.' }
+    ],
+    relatedModules: [
+      { label: 'Gastos', route: '/admin/expenses' },
+      { label: 'Estado de resultados', route: '/admin/reports/profit-loss' }
+    ],
+    relatedArticles: ['expenses-list', 'profit-loss-report'],
+    tags: ['categorías', 'gastos', 'conceptos', 'catálogo']
+  },
+  {
+    id: 'profit-loss-report',
+    routePatterns: ['/admin/reports/profit-loss'],
+    module: 'orders',
+    moduleLabel: 'Órdenes',
+    moduleEmoji: '🛒',
+    title: 'Estado de resultados',
+    viewType: 'analytics',
+    level: 'intermedio',
+    isNew: true,
+    summary: 'Cuánto cobraste, cuánto pagaste a proveedores y en gastos, y cuánto te quedó, mes por mes.',
+    description: 'Estado de resultados en base de caja para el periodo que elijas: ingresos cobrados, compras pagadas a proveedores, gastos pagados y resultado por mes, con totales, desglose de gastos por categoría y exportación a CSV.',
+    importance: 'Es la forma más rápida de saber si el negocio gana o pierde dinero y en qué conceptos se va el gasto, sin esperar el cierre contable.',
+    tips: [
+      'Ingresos = cobrado neto de devoluciones (con IVA), igual que en el reporte de ventas.',
+      'Compras = pagos registrados en órdenes de compra, en la fecha del pago.',
+      'Gastos = gastos en estado «Pagado», por su total con IVA, en el mes de su fecha de pago.',
+      'Si el reporte de ventas no está disponible, el estado de resultados muestra solo los gastos y avisa.',
+      'Exporta el CSV para compartirlo con tu contador: incluye una columna por categoría de gasto.'
+    ],
+    faqs: [
+      { question: '¿Por qué no aparece un gasto que capturé?', answer: 'Solo cuentan los gastos pagados. Revisa que esté en estado «Pagado» y que su fecha de pago caiga en el periodo.' },
+      { question: '¿Es lo mismo que mi estado de resultados contable?', answer: 'No. Es un reporte en base de caja: cuenta el dinero cuando entra o sale. La contabilidad fiscal usa otros criterios (devengado, depreciaciones, IVA acreditable).' }
+    ],
+    relatedModules: [
+      { label: 'Gastos', route: '/admin/expenses' },
+      { label: 'Reporte de ventas', route: '/admin/reports/sales' },
+      { label: 'Órdenes', route: '/admin/orders' }
+    ],
+    relatedArticles: ['sales-report', 'expenses-list', 'expense-categories-list'],
+    tags: ['estado de resultados', 'utilidad', 'pérdidas y ganancias', 'gastos', 'ingresos', 'reporte']
+  },
   {
     id: 'receivables-aging',
     routePatterns: ['/admin/reports/receivables', '/admin/reports/receivables/:partnerId'],

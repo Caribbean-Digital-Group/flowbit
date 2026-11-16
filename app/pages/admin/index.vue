@@ -968,6 +968,12 @@ const recentActivity = computed<ActivityItem[]>(() => {
     </div>
 
     <template v-else>
+      <!-- ── Primeros pasos (solo owner/admin; desaparece al completarse) ──── -->
+      <DashboardOnboardingChecklist
+        v-if="authStore.isSelectedCompanyAdmin"
+        :company-id="selectedCompanyId"
+      />
+
       <!-- ── Filtro de periodo ─────────────────────────────────────────────── -->
       <DashboardPeriodFilter
         v-model:preset="preset"
