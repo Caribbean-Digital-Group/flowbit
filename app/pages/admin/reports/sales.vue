@@ -294,7 +294,7 @@ const exportLedger = async () => {
         <section class="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-lg shadow-slate-200/50">
           <div class="flex items-center justify-between px-5 pt-4">
             <h2 class="text-sm font-bold text-slate-800">Antigüedad de cuentas por cobrar</h2>
-            <NuxtLink to="/admin/orders" class="text-xs font-medium text-indigo-600 hover:underline">Ver órdenes</NuxtLink>
+            <NuxtLink to="/admin/reports/receivables" class="text-xs font-medium text-indigo-600 hover:underline">Ver por cliente</NuxtLink>
           </div>
           <table class="mt-3 w-full text-sm">
             <tbody>
