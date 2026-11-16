@@ -5,6 +5,7 @@ useHead({ meta: [{ name: 'robots', content: 'noindex, nofollow' }] })
 import { storeToRefs } from 'pinia'
 import type { Database } from '~/types/database.types'
 import type { PendingInvitation } from '~/composables/useMembership'
+import type { QuoteResponseNotice } from '~/composables/useOrderQuote'
 import type { ApprovalActivityRow } from '~/types/approval.types'
 import { APPROVAL_ACTIVITY_LABELS } from '~/utils/approvals'
 
@@ -56,10 +57,12 @@ const { getAssignedTasksForPartner } = useProjectTask()
 const { getOpenActivities: getOpenApprovalActivities, markRead: markApprovalActivitiesRead } = useApprovalActivity()
 const { getActivitiesByCompany } = useCrmActivity()
 const { getMyInvitations, respondInvitation } = useMembership()
+const { getUnseenQuoteResponses } = useOrderQuote()
 
 const assignedTasksPreview = ref<TaskViewRow[]>([])
 const pendingApprovalsPreview = ref<ApprovalActivityRow[]>([])
 const crmActivitiesPreview = ref<CrmActivityViewRow[]>([])
+const quoteResponsesPreview = ref<QuoteResponseNotice[]>([])
 const isTaskNotifOpen = ref(false)
 const isLoadingAssignedTasks = ref(false)
 const taskNotifRef = ref<HTMLElement | null>(null)
@@ -103,7 +106,11 @@ const pendingApprovalCount = computed(() => pendingApprovalsPreview.value.length
 const openCrmActivityCount = computed(() => visibleCrmActivities.value.length)
 
 const taskNotifBadgeTotal = computed(
-  () => openAssignedTaskCount.value + pendingApprovalCount.value + openCrmActivityCount.value
+  () =>
+    openAssignedTaskCount.value
+    + pendingApprovalCount.value
+    + openCrmActivityCount.value
+    + quoteResponsesPreview.value.length
 )
 
 const notificationBadgeLabel = computed(() => {
@@ -119,16 +126,19 @@ async function refreshTaskNotifPanel() {
     assignedTasksPreview.value = []
     pendingApprovalsPreview.value = []
     crmActivitiesPreview.value = []
+    quoteResponsesPreview.value = []
     return
   }
   isLoadingAssignedTasks.value = true
   try {
-    const [tasks, approvals, activities] = await Promise.all([
+    const [tasks, approvals, activities, quoteResponses] = await Promise.all([
       getAssignedTasksForPartner(partnerId, companyId),
       getOpenApprovalActivities(companyId, partnerId, 30),
-      getActivitiesByCompany(companyId)
+      getActivitiesByCompany(companyId),
+      getUnseenQuoteResponses(companyId)
     ])
     assignedTasksPreview.value = tasks
+    quoteResponsesPreview.value = quoteResponses
     pendingApprovalsPreview.value = approvals
     crmActivitiesPreview.value = activities.filter((activity) => {
       if (!activity.responsible_partner_id) return false
@@ -202,6 +212,11 @@ function formatActivityScheduleShort(date: string | null): string {
   } catch {
     return date
   }
+}
+
+function openQuoteResponseFromNotif(notice: QuoteResponseNotice) {
+  closeTaskNotif()
+  navigateTo(`/admin/orders/${notice.id}`)
 }
 
 function openCrmActivityFromNotif(activity: CrmActivityViewRow) {
@@ -442,10 +457,31 @@ const menuGroups: MenuGroup[] = [
         ]
       },
       {
+        title: 'Gastos',
+        to: '/admin/expenses',
+        iconPaths: [
+          'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z'
+        ]
+      },
+      {
         title: 'Reporte de ventas',
         to: '/admin/reports/sales',
         iconPaths: [
           'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
+        ]
+      },
+      {
+        title: 'Estado de resultados',
+        to: '/admin/reports/profit-loss',
+        iconPaths: [
+          'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z'
+        ]
+      },
+      {
+        title: 'Cuentas por cobrar',
+        to: '/admin/reports/receivables',
+        iconPaths: [
+          'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
         ]
       },
       {
@@ -460,6 +496,13 @@ const menuGroups: MenuGroup[] = [
         to: '/admin/payment-methods',
         iconPaths: [
           'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z'
+        ]
+      },
+      {
+        title: 'Categorías de gasto',
+        to: '/admin/expense-categories',
+        iconPaths: [
+          'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z'
         ]
       },
     ]
@@ -1272,6 +1315,35 @@ const handleLogout = async () => {
                                   Vence {{ formatTaskDueShort(task.due_date) }}
                                 </span>
                               </div>
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+
+                      <div v-if="quoteResponsesPreview.length > 0" class="border-t border-slate-100 pt-3">
+                        <p class="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                          Cotizaciones respondidas
+                        </p>
+                        <ul class="space-y-1">
+                          <li v-for="notice in quoteResponsesPreview" :key="notice.id">
+                            <button
+                              type="button"
+                              class="w-full rounded-lg border border-transparent px-3 py-2.5 text-left transition hover:border-emerald-100 hover:bg-emerald-50/60"
+                              @click="openQuoteResponseFromNotif(notice)"
+                            >
+                              <p class="text-sm font-medium text-slate-900">
+                                {{ notice.name ?? 'Cotización' }}
+                                {{ notice.quote_status === 'accepted' ? 'aceptada' : 'rechazada' }}
+                              </p>
+                              <p class="mt-0.5 text-xs text-slate-500 truncate">
+                                {{ notice.quote_response_name ?? 'Cliente' }} · {{ formatActivityScheduleShort(notice.quote_responded_at) }}
+                              </p>
+                              <span
+                                class="mt-1.5 inline-block rounded-md px-1.5 py-0.5 text-[10px] font-semibold"
+                                :class="notice.quote_status === 'accepted' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700'"
+                              >
+                                {{ notice.quote_status === 'accepted' ? 'Orden confirmada' : 'Revisar motivo' }}
+                              </span>
                             </button>
                           </li>
                         </ul>

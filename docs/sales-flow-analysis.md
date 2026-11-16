@@ -460,3 +460,119 @@ preexistentes).
   nunca se confirmó vuelven a «Por entregar»: es el estado real.
 - Las órdenes del panel aplican el modo fiscal de la orden («Impuesto incluido»),
   no el del producto; la tienda y el POS usan el del producto.
+
+## 9. Cotizaciones compartibles (TRY-29)
+
+Migración `20261115120000_order_quote_share.sql`. Una cotización es una orden de
+venta en borrador; ahora puede enviarse al cliente como enlace público
+`/q/{token}` para que la acepte o la rechace sin cuenta.
+
+### Modelo
+
+| Elemento | Qué es |
+|---|---|
+| `order.quote_token` | Token aleatorio de 64 caracteres hex (2 × UUIDv4). Índice único. `NULL` = no se comparte. |
+| `order.quote_status` | `shared` · `accepted` · `rejected` · `revoked`. «Vencida» **no se guarda**: se calcula con `quote_valid_until`. |
+| `order.quote_valid_until` | Último día (inclusive) en que se puede aceptar. Opcional. |
+| `order.quote_viewed_at` / `quote_responded_at` / `quote_response_name` / `quote_response_note` | Primera apertura y respuesta del cliente. |
+| `order.quote_response_seen_at` | Cuándo alguien del equipo abrió la orden tras la respuesta: apaga el aviso de la campana. |
+| `order_quote_event` | Bitácora de solo inserción: `shared`, `viewed` (solo la primera vez), `accepted`, `rejected`, `revoked`. Lectura para miembros de la empresa; nadie escribe salvo los RPC. |
+
+El trigger `trigger_order_01_protect_quote_fields` restaura las columnas `quote_*`
+en cualquier `INSERT`/`UPDATE` que no venga de los RPC (bandera de sesión
+`flowbit.quote_sync`, mismo patrón que `flowbit.order_sync`). Así nadie del equipo
+puede marcar una cotización como aceptada con un `update` directo.
+
+### RPC
+
+| RPC | Rol | Qué hace |
+|---|---|---|
+| `order_quote_share(order_id, valid_until)` | authenticated | Solo ventas en borrador con líneas. Conserva el token si ya existía (el enlace enviado sigue sirviendo) y reinicia la respuesta. |
+| `order_quote_revoke(order_id)` | authenticated | Borra el token; el enlace anterior deja de abrir. |
+| `order_quote_mark_seen(order_id)` | authenticated | Lo llama el panel al abrir la orden. |
+| `get_public_quote(token)` | anon | Datos de la empresa, la orden y las líneas **sin costos ni márgenes**. Registra la primera apertura. |
+| `respond_public_quote(token, decision, name, note)` | anon | Valida estado efectivo, nombre (≤ 120) y motivo obligatorio al rechazar (≤ 1000). |
+
+**Estado efectivo** (`_quote_effective_status`, replicado en `app/utils/quote.ts`):
+una cotización `shared` se muestra como `expired` si pasó su vigencia, `closed` si
+el equipo la confirmó por su cuenta y `cancelled` si la canceló. Solo `shared`
+admite respuesta; aceptada, rechazada, vencida o revocada no se vuelve a responder.
+
+**Aceptar** confirma la orden dentro del mismo RPC con la lógica de `post_order`
+para ventas (`order_state = 'posted'` + `recompute_order_delivery`). No reserva
+stock: la entrega se sigue preparando a mano. El trigger `sync_crm_from_order`
+pasa el lead vinculado a la primera etapa ganada.
+
+**Rechazar** deja la orden en borrador y crea una actividad `followup` para el
+responsable de cada lead vinculado, con el motivo del cliente. No marca el lead
+como perdido: el vendedor decide si renegocia o lo cierra con un motivo del catálogo.
+
+### Interfaz
+
+- Panel `Quote/SharePanel.vue` en el detalle de órdenes de venta: vigencia,
+  copiar enlace, WhatsApp, revocar, respuesta del cliente e historial.
+- Página pública `app/pages/q/[token].vue` (layout `public`, `noindex`), lista
+  para imprimir o guardar en PDF.
+- Campana del panel: sección «Cotizaciones respondidas» con las respuestas que
+  nadie ha abierto (`useOrderQuote().getUnseenQuoteResponses`).
+- Manual: artículo `orders-quote-share`.
+
+### Pendiente
+
+- Tipos: tras `npm run db:push && npm run db:types` se pueden quitar los casts
+  `as never` de `useOrderQuote`.
+- Correo opcional al cliente y al vendedor: TRY-35. Portal del cliente: TRY-40.
+
+---
+
+## 10. Cuentas por cobrar y por pagar (TRY-39)
+
+Reporte de antigüedad de saldos y estado de cuenta por contacto, sin tablas nuevas:
+reutiliza `order.amount_paid` / `amount_refunded` (libro `order_payment` y `order_refund`)
+y `payment_due_date`.
+
+### Reglas
+
+| Concepto | Regla |
+|---|---|
+| Saldo de una orden | `amount_total − amount_refunded − amount_paid` (igual que `v_orders.balance_due`) |
+| Órdenes incluidas | `posted`, `payment_status` distinto de `paid` y `condoned`, saldo > 0.005 |
+| Vencimiento | `payment_due_date`, si no `confirmation_date`, si no `order_date` |
+| Días de atraso | fecha de corte − vencimiento; ≤ 0 = al corriente |
+| Cubetas | al corriente, 1–30, 31–60, 61–90, +90 días |
+| Moneda | moneda de la empresa con el `exchange_rate` de la orden |
+
+Son las mismas reglas del bloque `receivables` de `get_sales_kpis`, así que el reporte de
+ventas y la antigüedad de saldos nunca se contradicen.
+
+### Base de datos (`20261116120000_receivables_aging_and_statement.sql`)
+
+- `get_aging_report(p_company_id, p_order_type = 'sale', p_as_of = hoy)` → JSONB con
+  `totals` (cubetas, órdenes, contactos) y `partners[]` ordenados por saldo.
+  `p_order_type = 'purchase'` da las cuentas por pagar.
+- `get_partner_statement(p_company_id, p_partner_id, p_order_type, p_from, p_as_of)` → JSONB con
+  `opening_balance` (movimientos anteriores a `p_from`), `entries[]` cronológicos y `open_orders[]`.
+  - Cargo: orden confirmada (total) y reembolso entregado (pago negativo del libro).
+  - Abono: cobro/pago positivo y devolución (`order_refund.amount_total`).
+  - Una devolución reembolsada en efectivo deja el saldo igual (abono + cargo).
+
+Ambas son `SECURITY DEFINER` con `user_belongs_to_company` (mismo patrón que `get_sales_kpis`)
+y solo se otorgan a `authenticated`. La agregación ocurre en la base: el navegador no descarga
+todas las órdenes.
+
+### Interfaz
+
+- `/admin/reports/receivables` — tarjetas (total, al corriente, vencido, +90 días), barra de
+  distribución, tabla por contacto con búsqueda y filtro «Solo con saldo vencido», exportación CSV.
+  `?kind=purchase` muestra proveedores.
+- `/admin/reports/receivables/[partnerId]` — estado de cuenta con periodo, órdenes abiertas con días
+  de atraso, movimientos con saldo acumulado, impresión (iframe sin layout) y CSV.
+- Accesos: sidebar «Cuentas por cobrar» (Ventas/Compras), enlace «Ver por cliente» en el reporte de
+  ventas y opciones «Estado de cuenta» en el menú del contacto.
+- Lógica pura (`app/utils/receivables.ts`): cubetas, días de atraso, saldo acumulado y filtros,
+  probada en `tests/utils/receivables.test.ts`.
+
+### Pendiente (fase 2)
+
+- Indicador «Vencido» en `Partner/MetricsPanel`.
+- Recordatorios de cobranza (requiere TRY-35, avisos por correo).
