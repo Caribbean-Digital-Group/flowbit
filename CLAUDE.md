@@ -246,7 +246,11 @@ flowbit/
 | Empresa | — | `useCompany` |
 | Proyecto público | `/public/projects/[id]` | `usePublicProject` |
 | Salud de la plataforma | `/health` (público), `/api/health/keepalive` | — (rutas Nitro) |
+| Exportar datos de la empresa (ZIP de CSV, solo owner/admin) | `/admin/data-export` | `useCompanyDataExport` |
 
+> Exportación completa: catálogo de tablas en `DATA_EXPORT_ENTITIES` (`app/utils/dataExport.ts`), ZIP sin dependencias
+> en `app/utils/zip.ts`. Al crear un módulo con tablas propias, agrégalas al catálogo. Ver `docs/data-export.md`.
+>
 > `/health` reporta el estado de la plataforma (200 ok / 503 base caída) y
 > `/api/health/keepalive` escribe un latido que evita que Supabase Cloud pause
 > el proyecto por inactividad. Lo disparan la función programada de Netlify
@@ -589,7 +593,7 @@ El layout incluye:
   7. Sitio web (Ajustes, Páginas, Menús, Blog, Categorías, Etiquetas, Autores, Comentarios, Medios, Galerías, Mensajes, Redirecciones)
   8. Recursos Humanos (Empleados, Departamentos, Asistencias, Reporte de asistencias, Inasistencias, Vacaciones y permisos, Saldos de vacaciones, Tipos de ausencia, Horarios, Días festivos, Kioscos)
   9. Nómina (Periodos de nómina, Salarios, Mis recibos, Configuración fiscal)
-  10. Sistema (Equipo, Manual, Configuración)
+  10. Sistema (Equipo, Manual, Configuración, Exportar datos)
   - Además, entre Ventas/Compras e Inventario: **Tienda en línea** (Ajustes de tienda, Cupones, Métodos de envío, Analítica) y **Punto de Venta** (Terminal POS, Cajas, Sesiones de caja)
 - **Header sticky** con:
   - Botón hamburguesa (mobile)
@@ -651,6 +655,7 @@ NUXT_PUBLIC_BING_SITE_VERIFICATION=    # opcional — verificación de Bing Webm
    - `app/pages/admin/{module}/create.vue` (creación con `CardSheet`)
    - `app/pages/admin/{module}/[id]/index.vue` (detalle/edición con `CardSheet`)
 7. Agregar entrada en el sidebar de `app/layouts/admin.vue` en el grupo correspondiente
+8. Agregar sus tablas a `DATA_EXPORT_ENTITIES` (`app/utils/dataExport.ts`) para que entren en la exportación completa
 
 ---
 

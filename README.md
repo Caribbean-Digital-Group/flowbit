@@ -11,7 +11,13 @@ Nuxt 4 · Vue 3 (Composition API) · TypeScript estricto · Tailwind CSS v4 · S
 
 General (dashboard, agenda, contactos) · CRM · Ventas/Compras · Gastos y estado de resultados · Tienda en línea · Sitio web (CMS + blog) · Inventario · Proyectos · Aprobaciones · Equipo · Manual público con asistente Bit.
 
-Documentación por módulo en [`docs/`](docs): [CRM](docs/crm.md), [ventas](docs/sales-flow-analysis.md), [gastos](docs/expenses.md), [storefront](docs/storefront.md), [sitio web](docs/website.md), [inventario](docs/inventory.md), [POS](docs/pos.md), [salud](docs/health.md), [manual y Bit](docs/manual-bit.md).
+Documentación por módulo en [`docs/`](docs): [CRM](docs/crm.md), [ventas](docs/sales-flow-analysis.md), [gastos](docs/expenses.md), [storefront](docs/storefront.md), [sitio web](docs/website.md), [inventario](docs/inventory.md), [POS](docs/pos.md), [salud](docs/health.md), [manual y Bit](docs/manual-bit.md), [exportar datos](docs/data-export.md).
+
+## Tus datos son tuyos
+
+Desde **Configuración → Exportar datos** (`/admin/data-export`), el propietario o un administrador descarga
+un ZIP con un CSV por tabla de su empresa y un `LEEME.txt` que los describe. Sin límite de filas y sin costo:
+puedes respaldar, auditar o migrar a otra herramienta cuando quieras.
 
 ## Puesta en marcha
 
