@@ -2182,9 +2182,47 @@ export const ARTICLES: DocArticle[] = [
       'Los datos fiscales (RFC, dirección fiscal) son necesarios para emitir documentos oficiales.'
     ],
     relatedModules: [
-      { label: 'Equipo', route: '/admin/team' }
+      { label: 'Equipo', route: '/admin/team' },
+      { label: 'Exportar datos', route: '/admin/data-export' }
     ],
     tags: ['configuración', 'empresa', 'ajustes', 'preferencias', 'fiscal', 'RFC']
+  },
+  {
+    id: 'data-export',
+    routePatterns: ['/admin/data-export'],
+    module: 'core',
+    moduleLabel: 'General',
+    moduleEmoji: '🏠',
+    title: 'Exportar todos los datos de la empresa',
+    viewType: 'config',
+    level: 'basico',
+    isNew: true,
+    summary: 'Con un clic descargas todos los datos de tu empresa en un ZIP de archivos CSV: tus datos son tuyos.',
+    description: 'Genera un archivo ZIP con un CSV por cada tabla de tu empresa (contactos, productos, órdenes, pagos, inventario, CRM, proyectos, punto de venta y Recursos Humanos) y un LEEME.txt que explica cada archivo y cuántas filas trae. Está en Configuración → Exportar datos.',
+    importance: 'Flowbit es software libre y no te encierra: puedes respaldar tu información, entregarla a tu contador o auditor, o llevarla a otra herramienta cuando quieras, sin pedir permiso ni pagar por ello.',
+    tips: [
+      'Solo el propietario o un administrador puede exportar todos los datos.',
+      'Los datos privados de empleados (CURP, NSS, cuentas bancarias, salarios y recibos de nómina) solo se incluyen si marcas la casilla correspondiente. Guarda ese ZIP en un lugar seguro.',
+      'Los archivos abren directo en Excel, Google Sheets o LibreOffice. Las columnas «id» y «…_id» relacionan un archivo con otro (por ejemplo, las líneas de orden con su orden).',
+      'No hay límite de 1000 filas: cada tabla se lee completa por bloques.',
+      'Si alguna tabla no se pudo leer, el ZIP se genera de todos modos y el LEEME.txt dice cuál faltó y por qué.',
+      'Haz una exportación mensual como respaldo propio, además de los respaldos de la plataforma.'
+    ],
+    process: [
+      { step: 1, title: 'Abre la exportación', description: 'Ve a Configuración y presiona «Exportar datos», o búscalo con Ctrl+K.' },
+      { step: 2, title: 'Decide si incluyes datos privados', description: 'Marca la casilla solo si necesitas la información personal y de nómina de tus empleados.' },
+      { step: 3, title: 'Descarga el ZIP', description: 'Presiona «Descargar ZIP» y espera a que termine la barra de progreso. El archivo se llama flowbit-tu-empresa-fecha.zip.' }
+    ],
+    faqs: [
+      { question: '¿Puedo volver a importar estos archivos?', answer: 'Los nombres de columna son los mismos de la base de datos, así que sirven para migrar a otra herramienta o para reimportar contactos y productos con la importación CSV.' },
+      { question: '¿Un miembro del equipo puede llevarse los datos?', answer: 'No. La página solo funciona para propietarios y administradores, y la base de datos aplica las mismas reglas de acceso que en el resto del panel.' }
+    ],
+    relatedModules: [
+      { label: 'Exportar datos', route: '/admin/data-export' },
+      { label: 'Configuración', route: '/admin/settings' }
+    ],
+    relatedArticles: ['settings'],
+    tags: ['exportar', 'respaldo', 'backup', 'zip', 'csv', 'portabilidad', 'migrar', 'datos', 'descargar']
   },
 
   // ─── MANUAL ───────────────────────────────────────────────────────────────────
