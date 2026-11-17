@@ -574,5 +574,32 @@ todas las órdenes.
 
 ### Pendiente (fase 2)
 
-- Indicador «Vencido» en `Partner/MetricsPanel`.
+- ~~Indicador «Vencido» en `Partner/MetricsPanel`~~ — hecho en TRY-44 (§11), como componente aparte.
 - Recordatorios de cobranza (requiere TRY-35, avisos por correo).
+
+---
+
+## 11. Saldo vencido y límite de crédito (TRY-44, fase 1)
+
+Sin migración: reutiliza `get_partner_statement` (§10).
+
+- `useReceivables().getPartnerCreditSummary(companyId, partnerId)` llama el RPC con `from` = hoy
+  (para no traer el historial) y solo suma `open_orders[].balance` y `days_overdue` que ya
+  calculó la base, en moneda de la empresa (`summarizeOpenOrders`). No recalcula pagos.
+- Lógica pura en `app/utils/receivables.ts`: `summarizeOpenOrders`, `toCompanyCurrency` y
+  `evaluateCreditStatus({ openBalance, overdue, orderTotal, creditLimit })`, probadas en
+  `tests/utils/receivables.test.ts`. `credit_limit = 0` significa sin límite.
+- `components/Partner/CreditStatus.vue` muestra el badge «Vencido» (monto, órdenes y días máximos
+  de atraso, enlaza al estado de cuenta) y el aviso ámbar cuando
+  `saldo abierto + esta orden > credit_limit`. Se usa en:
+  - la ficha del contacto (`/admin/partners/[id]`), sin orden: avisa si el saldo ya rebasa el límite;
+  - `Order/Form.vue` bajo los totales, solo en ventas con cliente y no canceladas. Un borrador
+    suma su total convertido con su tipo de cambio; una orden confirmada ya está en el saldo
+    abierto y no se suma otra vez.
+- **Solo avisa, nunca bloquea** guardar ni confirmar. Si el RPC falla o falta la migración, el
+  componente no muestra nada.
+
+### Pendiente (fase 2)
+
+- Bloqueo opcional por empresa al confirmar (requiere validarlo en `confirm_order` / RPC).
+- Badge en el listado de contactos y en el selector del POS.
