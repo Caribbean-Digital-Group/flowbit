@@ -113,7 +113,7 @@ flowbit/
 | Gastos | `/admin/expenses` | `useExpense`, `useExpenseLookups` |
 | Categorías de gasto | `/admin/expense-categories` | `useExpenseCategory` |
 | Estado de resultados | `/admin/reports/profit-loss` | `useSalesReport`, `useExpense`, `useExpenseCategory` |
-| Cuentas por cobrar / por pagar (antigüedad y estado de cuenta) | `/admin/reports/receivables` (`?kind=purchase` = proveedores), `/admin/reports/receivables/[partnerId]` | `useReceivables` |
+| Cuentas por cobrar / por pagar (antigüedad, estado de cuenta, badge «Vencido» y aviso de límite de crédito en contacto y venta) | `/admin/reports/receivables` (`?kind=purchase` = proveedores), `/admin/reports/receivables/[partnerId]` | `useReceivables` |
 
 > Flujo comercial (entrega derivada de pickings, libro de pagos `order_payment`,
 > devoluciones, reservas por almacén, ingreso en base de caja): `docs/sales-flow-analysis.md`.

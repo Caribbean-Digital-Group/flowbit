@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { AgingReport, PartnerStatement } from '~/utils/receivables'
+import { summarizeOpenOrders } from '~/utils/receivables'
+import type { AgingReport, PartnerCreditSummary, PartnerStatement } from '~/utils/receivables'
 
 export type BalanceKind = 'sale' | 'purchase'
 
@@ -69,5 +70,28 @@ export const useReceivables = () => {
     return data as unknown as PartnerStatement
   }
 
-  return { getAgingReport, getPartnerStatement, lastError }
+  /**
+   * Saldo abierto y vencido de un contacto (moneda de la empresa), para el
+   * badge «Vencido» y el aviso de límite de crédito. Reutiliza
+   * `get_partner_statement` con `from` = hoy para no traer el historial de
+   * movimientos: solo interesa `open_orders`. Devuelve `null` si el RPC falla
+   * (p. ej. migración sin aplicar); quien llama no muestra nada en ese caso.
+   */
+  const getPartnerCreditSummary = async (
+    companyId: string,
+    partnerId: string,
+    kind: BalanceKind = 'sale',
+    excludeOrderId?: string | null
+  ): Promise<(PartnerCreditSummary & { currency: string }) | null> => {
+    const now = new Date()
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    const statement = await getPartnerStatement(companyId, partnerId, kind, today)
+    if (!statement) return null
+    return {
+      ...summarizeOpenOrders(statement.open_orders ?? [], excludeOrderId),
+      currency: statement.currency || 'MXN'
+    }
+  }
+
+  return { getAgingReport, getPartnerStatement, getPartnerCreditSummary, lastError }
 }
