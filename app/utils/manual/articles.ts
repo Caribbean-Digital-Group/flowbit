@@ -3688,6 +3688,101 @@ export const ARTICLES: DocArticle[] = [
     tags: ['reabastecimiento', 'compras', 'orden de compra', 'proveedor', 'stock mínimo', 'inventario', 'surtir']
   },
   {
+    id: 'inventory-count',
+    routePatterns: ['/admin/inventory/counts', '/admin/inventory/counts/:id'],
+    module: 'pickings',
+    moduleLabel: 'Pickings / Movimientos',
+    moduleEmoji: '🚚',
+    title: 'Conteo físico de inventario',
+    viewType: 'scan',
+    level: 'basico',
+    isNew: true,
+    summary: 'Cuenta tu almacén desde el celular, ve las diferencias en unidades y en dinero, y ajusta todo en un solo paso.',
+    description: 'Un conteo toma una foto de la existencia de cada producto del almacén al iniciar. Tú capturas lo que cuentas, buscando por nombre o escaneando el código, y el sistema compara contra esa foto. Al aplicar, cada diferencia se registra como ajuste en el libro de inventario.',
+    importance: 'Tarde o temprano el sistema y el estante dejan de coincidir: mermas, errores de captura o robos. Contar en papel y luego ajustar producto por producto es lento y propenso a errores. El conteo guiado lo hace en un flujo y deja rastro de cada diferencia, con su costo.',
+    tips: [
+      'La existencia esperada se congela al iniciar. Puedes seguir vendiendo mientras cuentas: esas ventas no se pierden al aplicar.',
+      'Con un lector de códigos de barras, escanea en el buscador: la línea del producto se selecciona sola y solo escribes la cantidad.',
+      'Usa «✓ Igual» cuando lo contado coincide con lo esperado: ahorra teclear en los productos que cuadran.',
+      'Haz conteos cíclicos por categoría: una categoría por semana es más fácil que cerrar la tienda un día para contar todo.',
+      'Varias personas pueden capturar en el mismo conteo desde su celular. Solo un owner o admin lo aplica.',
+      'Marca «Tratar los productos sin contar como 0» solo si recorriste todo el almacén. Si no, los productos sin capturar quedan igual.',
+      'Revisa el filtro «Con diferencia» antes de aplicar: una diferencia grande suele ser un error de conteo, no de inventario.'
+    ],
+    process: [
+      { step: 1, title: 'Inicia', description: 'Elige almacén y, si quieres, una categoría.' },
+      { step: 2, title: 'Cuenta', description: 'Busca o escanea y captura cantidades.' },
+      { step: 3, title: 'Revisa', description: 'Filtra las diferencias y recuenta las dudosas.' },
+      { step: 4, title: 'Aplica', description: 'Un owner o admin registra los ajustes.' }
+    ],
+    wizard: {
+      id: 'wz-inventory-count',
+      title: 'Haz tu primer conteo físico',
+      description: 'De la foto del sistema al inventario cuadrado en cuatro pasos.',
+      estimatedMinutes: 20,
+      steps: [
+        {
+          id: 'start',
+          title: 'Inicia el conteo',
+          description: 'En Conteo físico pulsa «Nuevo conteo», elige el almacén y, si solo vas a contar una parte, la categoría.',
+          action: { label: 'Abrir conteo físico', route: '/admin/inventory/counts' },
+          checklist: ['Almacén elegido', 'Categoría (opcional) para un conteo parcial'],
+          tip: 'Cada almacén admite un conteo en curso a la vez, para no ajustar dos veces lo mismo.'
+        },
+        {
+          id: 'count',
+          title: 'Cuenta y captura',
+          description: 'Recorre el almacén. Para cada producto, búscalo o escanea su código y escribe la cantidad que encontraste. Enter guarda.',
+          checklist: ['Productos que cuadran marcados con «✓ Igual»', 'Cantidades capturadas en los demás'],
+          tip: 'Abre el mismo conteo en el celular de cada persona para contar en paralelo.'
+        },
+        {
+          id: 'review',
+          title: 'Revisa las diferencias',
+          description: 'Usa el filtro «Con diferencia». Recuenta los productos con diferencias grandes o de mucho valor antes de aplicar.',
+          checklist: ['Diferencias grandes recontadas', 'Productos «Sin contar» revisados'],
+          warning: 'Si marcas «Tratar los productos sin contar como 0», todo lo que no capturaste se da de baja.'
+        },
+        {
+          id: 'apply',
+          title: 'Aplica los ajustes',
+          description: 'Un owner o admin pulsa «Aplicar ajustes». Cada diferencia queda en el libro de inventario con el folio del conteo y su costo.',
+          action: { label: 'Ver el inventario', route: '/admin/inventory' },
+          tip: 'Abre la trazabilidad de un producto para ver el ajuste con la referencia CNT-…'
+        }
+      ]
+    },
+    faqs: [
+      {
+        question: '¿Qué pasa si vendo mientras cuento?',
+        answer: 'Nada se pierde. La diferencia se calcula contra la existencia del inicio del conteo y se suma a la existencia de hoy. Si había 100, contaste 97 y vendiste 5 mientras contabas, el almacén queda en 92.'
+      },
+      {
+        question: '¿Con qué costo se valoran las diferencias?',
+        answer: 'Con el costo promedio de cada producto al iniciar el conteo. Los sobrantes entran al inventario con ese costo y los faltantes salen al promedio vigente, igual que cualquier ajuste.'
+      },
+      {
+        question: '¿Por qué un faltante dice «Se ajustará hasta 0»?',
+        answer: 'Porque salió mercancía durante el conteo y hoy hay menos de lo que faltaría descontar. El sistema nunca deja un almacén en negativo: ajusta solo hasta cero.'
+      },
+      {
+        question: '¿Puedo deshacer un conteo aplicado?',
+        answer: 'No. El libro de inventario es inmutable. Si algo quedó mal, haz otro conteo de esos productos o un ajuste manual con su motivo.'
+      },
+      {
+        question: '¿Quién puede capturar y quién puede aplicar?',
+        answer: 'Cualquier persona del equipo puede capturar cantidades. Aplicar o cancelar un conteo lo hace un owner o admin.'
+      }
+    ],
+    relatedModules: [
+      { label: 'Inventario', route: '/admin/inventory' },
+      { label: 'Almacenes', route: '/admin/warehouses' },
+      { label: 'Productos', route: '/admin/products' }
+    ],
+    relatedArticles: ['inventory-report', 'inventory-traceability', 'pickings-scan'],
+    tags: ['conteo', 'conteo físico', 'inventario físico', 'toma de inventario', 'auditoría', 'ajuste', 'merma', 'diferencias', 'escáner', 'código de barras']
+  },
+  {
     id: 'inventory-traceability',
     routePatterns: ['/admin/inventory/:id'],
     module: 'pickings',

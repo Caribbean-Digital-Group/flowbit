@@ -175,7 +175,7 @@ a $20 y Norte a $25, cada uno se valora con su costo.
 | Tipos | `types/inventory.types.ts` (shim hasta regenerar `database.types.ts`) |
 | Composables | `app/composables/useInventory.ts`, `app/composables/useRestock.ts` |
 | Utilidades | `app/utils/restock.ts` (cálculo puro, probado en `tests/utils/restock.test.ts`) |
-| Páginas | `app/pages/admin/inventory/index.vue`, `app/pages/admin/inventory/[id].vue`, `app/pages/admin/inventory/restock.vue` |
+| Páginas | `app/pages/admin/inventory/index.vue`, `app/pages/admin/inventory/[id].vue`, `app/pages/admin/inventory/restock.vue`, `app/pages/admin/inventory/counts/` |
 | Componentes | `app/components/Inventory/SettingsModal.vue` |
 
 ## Verificación
@@ -204,3 +204,71 @@ Migración `20261103140000_warehouse_stock_and_reservations` (ver
 
 Las devoluciones de venta reingresan al costo con el que salió la mercancía y
 las recepciones de compra al precio neto de la orden de compra.
+
+## Conteo físico
+
+Migración `20261118120000_create_stock_count` (TRY-42). Sustituye el «cuenta en
+papel y ajusta producto por producto» por una sesión de conteo por almacén.
+
+### Regla de cálculo
+
+Al iniciar, la base **congela** por cada producto inventariable activo del
+almacén (opcionalmente de una categoría) su existencia en ese almacén
+(`stock_quant`) y su costo promedio (`avg_cost`, o `cost_price` si no hay).
+
+```
+diferencia = contado − esperado (congelado al iniciar)
+ajuste     = diferencia
+             salvo faltante mayor que la existencia actual → ajuste hasta 0
+```
+
+El ajuste se suma a la existencia **de hoy**, así que las ventas y entradas
+hechas mientras se contaba se respetan. Ejemplo: esperado 100, contado 97 y se
+vendieron 5 durante el conteo (hoy hay 95) → ajuste −3 → el almacén queda en 92.
+Si comparáramos contra la existencia actual (como hace `create_stock_adjustment`)
+el ajuste sería +2 y la venta desaparecería del inventario.
+
+### Modelo
+
+| Tabla | Contenido |
+|---|---|
+| `stock_count` | Sesión: folio `CNT-00001` por empresa, almacén, categoría opcional, estado (`in_progress` → `applied` / `cancelled`), notas, quién y cuándo aplicó |
+| `stock_count_line` | Producto, `expected_quantity` y `unit_cost` congelados, `counted_quantity` (NULL = sin contar), quién contó, `adjusted_quantity` y `stock_move_id` al aplicar |
+
+Un almacén admite **un conteo en curso** (índice único parcial): dos conteos
+simultáneos ajustarían dos veces la misma diferencia.
+
+### API
+
+| RPC | Quién | Qué hace |
+|---|---|---|
+| `start_stock_count(almacén, categoría?, notas?)` | Miembro | Crea la sesión y congela las líneas. Devuelve el id |
+| `set_stock_count_line(línea, cantidad \| NULL)` | Miembro | Captura o borra lo contado mientras el conteo esté abierto |
+| `apply_stock_count(conteo, sin_contar_como_cero?)` | Owner/admin | Escribe un asiento `adjustment` por diferencia con `record_stock_move`, referencia = folio, costo congelado en las entradas. Devuelve un resumen |
+| `cancel_stock_count(conteo)` | Owner/admin | Cancela sin tocar el inventario |
+
+Las tablas tienen RLS de lectura para el equipo y **no** admiten escritura
+directa: todo cambio pasa por estos RPC.
+
+### Interfaz
+
+| Ruta | Contenido |
+|---|---|
+| `/admin/inventory/counts` | Listado de conteos y formulario para iniciar uno |
+| `/admin/inventory/counts/[id]` | Captura (buscador que acepta lector de códigos, «✓ Igual»), filtros «Sin contar» / «Con diferencia», resumen en unidades y pesos, aplicar o cancelar |
+
+El cálculo que se muestra antes de aplicar está en `app/utils/stockCount.ts`
+(probado en `tests/utils/stockCount.test.ts`) y replica la regla de la base.
+
+### Verificación
+
+Probado contra PostgreSQL 16 con la cadena completa de migraciones: congelado al
+iniciar, bloqueo de un segundo conteo en el mismo almacén, rechazo de escritura
+directa y de cantidades negativas, venta durante el conteo (100 → 97 contado,
+5 vendidos → 92), faltante recortado a cero, sobrante al costo congelado,
+miembro sin permiso para aplicar, doble aplicación rechazada y cancelación.
+
+### Pendiente
+
+- Aprobación con el motor de Aprobaciones cuando el valor de la diferencia
+  supere un monto (opcional, ver TRY-42).

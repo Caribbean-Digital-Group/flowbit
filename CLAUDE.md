@@ -174,10 +174,15 @@ flowbit/
 |---|---|---|
 | Tablero de inventario | `/admin/inventory` | `useInventory` |
 | Por reabastecer (OC sugeridas) | `/admin/inventory/restock` | `useRestock` |
+| Conteo físico (sesiones de conteo y ajuste en un paso) | `/admin/inventory/counts`, `/admin/inventory/counts/[id]` | `useStockCount` |
 | Productos | `/admin/products` | `useProduct` |
 | Almacenes | `/admin/warehouses` | `useWarehouse` |
 | Movimientos (Pickings) | `/admin/pickings` | `usePicking`, `usePickingLine` |
 | Líneas de picking | `/admin/picking-lines` | `usePickingLine` |
+
+> Conteo físico: la existencia esperada se congela al iniciar y el ajuste es `contado − esperado` sobre la existencia de hoy
+> (RPC `start_stock_count` / `set_stock_count_line` / `apply_stock_count`; cálculo puro en `app/utils/stockCount.ts`).
+> Tipos temporales en `types/stockCount.types.ts` hasta correr `db:types`. Documentación en `docs/inventory.md` («Conteo físico»).
 
 ### Proyectos
 
@@ -583,7 +588,7 @@ El layout incluye:
   1. General (Dashboard, Agenda, Contactos)
   2. CRM (Tablero, Leads, Pipeline, Motivos de pérdida)
   3. Ventas/Compras (Órdenes, Por surtir, Gastos, Reporte de ventas, Estado de resultados, Cuentas por cobrar, Líneas de orden, Métodos de pago, Categorías de gasto)
-  4. Inventario (Inventario, Por reabastecer, Productos, Almacenes, Movimientos, Líneas de picking)
+  4. Inventario (Inventario, Por reabastecer, Conteo físico, Productos, Almacenes, Movimientos, Líneas de picking)
   5. Proyectos (Proyectos, Tareas)
   6. Aprobaciones (Solicitudes, Tablero, Flujos, Categorías, Aprobadores, Configuración)
   7. Sitio web (Ajustes, Páginas, Menús, Blog, Categorías, Etiquetas, Autores, Comentarios, Medios, Galerías, Mensajes, Redirecciones)

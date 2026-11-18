@@ -252,7 +252,8 @@ export const FEATURE_MODULES: FeatureModule[] = [
       { title: 'Reporte de inventario', description: 'Existencias y valor por producto y almacén, con alerta de productos sin costo.' },
       { title: 'Kardex y trazabilidad', description: 'Historial de entradas y salidas de cada producto con costo unitario y saldo.' },
       { title: 'Integrado con ventas', description: 'Órdenes, punto de venta y tienda en línea mueven el mismo inventario.' },
-      { title: 'Órdenes de compra sugeridas', description: 'Lista de productos bajo su mínimo, descontando lo reservado, con la cantidad a pedir y las órdenes de compra en borrador agrupadas por proveedor.' }
+      { title: 'Órdenes de compra sugeridas', description: 'Lista de productos bajo su mínimo, descontando lo reservado, con la cantidad a pedir y las órdenes de compra en borrador agrupadas por proveedor.' },
+      { title: 'Conteo físico guiado', description: 'Cuenta el almacén desde el celular o con lector de códigos, revisa las diferencias en unidades y en pesos, y ajústalas todas en un paso, sin perder las ventas hechas durante el conteo.' }
     ],
     useCases: [
       'Comercios con bodega y piso de venta que necesitan saber qué reponer.',
@@ -264,7 +265,7 @@ export const FEATURE_MODULES: FeatureModule[] = [
       { question: '¿Qué método de costeo usa Flowbit?', answer: 'Costo promedio ponderado. Se recalcula con cada entrada y cada movimiento guarda el costo, de modo que la valoración de cualquier fecha se puede reconstruir.' },
       { question: '¿Puedo usar el celular en el almacén?', answer: 'Sí. Los movimientos tienen código QR y una vista de escaneo pensada para el celular.' }
     ],
-    manualArticles: ['products-create', 'warehouses-list', 'pickings-scan', 'inventory-report', 'inventory-restock', 'inventory-traceability'],
+    manualArticles: ['products-create', 'warehouses-list', 'pickings-scan', 'inventory-report', 'inventory-restock', 'inventory-count', 'inventory-traceability'],
     related: ['ventas', 'punto-de-venta', 'tienda-en-linea']
   },
   {
