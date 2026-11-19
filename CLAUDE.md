@@ -550,6 +550,11 @@ npm run db:types   # Regenerar types/database.types.ts (usa la Management API)
 En producción este paso es automático: al llegar migraciones a `main`, `.github/workflows/db-migrations.yml`
 ejecuta `db push` y sube los tipos regenerados a `develop`. Los PR hacia `main` muestran un `--dry-run`.
 
+Antes de eso, el job `migrations` de `ci.yml` aplica toda la cadena en un PostgreSQL 16 limpio en cada PR
+(`npm run db:check` en local, con `DATABASE_URL` de una base vacía). También rechaza los PR que editan
+migraciones pasadas o agregan una con timestamp anterior a la última de la base. Stubs de Supabase en
+`scripts/ci/supabase-stubs.sql`; detalles en `CONTRIBUTING.md`.
+
 ---
 
 ## Autenticación y multi-tenancy
@@ -622,6 +627,7 @@ npm run db:migration:list      # Listar migraciones
 npm run db:push                # Push de migraciones a Supabase Cloud
 npm run db:pull                # Pull de schema desde Supabase Cloud
 npm run db:diff                # Ver diferencias de schema
+npm run db:check               # Aplicar toda la cadena de migraciones en un PostgreSQL vacío (DATABASE_URL)
 npm run db:types               # Regenerar types/database.types.ts
 ```
 
