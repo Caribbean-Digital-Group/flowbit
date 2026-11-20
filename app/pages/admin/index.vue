@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { APPROVAL_STATUS_LABELS } from '~/utils/approvals'
-import type { Database, Tables } from '~/types/database.types'
+import type { Database } from '~/types/database.types'
 import type { RevenueLedgerView, SalesKpis } from '~/types/sales.types'
 import type { DashboardPreset, DateRange } from '~/utils/dashboard'
 import {
@@ -10,13 +10,14 @@ import {
   formatRangeLabel,
   granularityFor,
   isDashboardPreset,
-  isInRange,
   isIsoDate,
   presetRange,
   previousRange,
   toIsoDate,
   toLocalDateKey
 } from '~/utils/dashboard'
+import type { DashboardSnapshot, DashboardSnapshotLists } from '~/utils/dashboardSnapshot'
+import { buildDashboardSnapshot, normalizeCurrencyCode, sumPostedInRange } from '~/utils/dashboardSnapshot'
 import type { DashboardStat, DashboardStatTrend } from '~/components/Dashboard/StatCard.vue'
 import type { AttentionItem } from '~/components/Dashboard/AttentionList.vue'
 import type { BarListItem } from '~/components/Dashboard/BarList.vue'
@@ -33,16 +34,15 @@ definePageMeta({
  *
  * Los paneles «Pendientes» y «Requiere atención» son una foto al día de hoy y
  * no dependen del periodo.
+ *
+ * Todo lo que no sale de `get_sales_kpis` llega en una sola petición:
+ * `get_dashboard_snapshot` (TRY-33). Si la base aún no tiene ese RPC, el mismo
+ * snapshot se arma en el navegador con los listados completos.
  */
 
 type OrderRow = Database['public']['Views']['v_orders']['Row']
-type PartnerRow = Tables<'partner'>
-type ProductRow = Tables<'product'>
 type ProjectViewRow = Database['public']['Views']['v_projects']['Row']
-type PickingViewRow = Database['public']['Views']['v_pickings']['Row']
 type ApprovalRequestViewRow = import('~/types/approval.types').ApprovalRequestViewRow
-type ProjectTaskViewRow = Database['public']['Views']['v_project_tasks']['Row']
-type CrmLeadViewRow = Database['public']['Views']['v_crm_leads']['Row']
 type PickingStatus = Database['public']['Enums']['picking_status']
 type PickingType = Database['public']['Enums']['picking_type']
 type ProjectTaskStatusEnum = Database['public']['Enums']['project_task_status']
@@ -134,75 +134,81 @@ watch([preset, rangeFrom, rangeTo], ([p, from, to]) => {
   void router.replace({ query })
 })
 
-// ── Datos base (por empresa) ────────────────────────────────────────────────
+// ── Foto del tablero (una petición; respaldo con listados si falta el RPC) ──
 
+const { getSnapshot } = useDashboard()
 const isLoading = ref(false)
-const partners = ref<PartnerRow[]>([])
-const products = ref<ProductRow[]>([])
-const orders = ref<OrderRow[]>([])
-const projects = ref<ProjectViewRow[]>([])
-const pickings = ref<PickingViewRow[]>([])
-const approvalRequests = ref<ApprovalRequestViewRow[]>([])
-const projectTasks = ref<ProjectTaskViewRow[]>([])
-const leads = ref<CrmLeadViewRow[]>([])
+const snapshot = ref<DashboardSnapshot | null>(null)
 
-const resetBaseData = () => {
-  partners.value = []
-  products.value = []
-  orders.value = []
-  projects.value = []
-  pickings.value = []
-  approvalRequests.value = []
-  projectTasks.value = []
-  leads.value = []
+/** Listados completos: solo en modo respaldo y una sola vez por empresa. */
+let fallbackLists: { companyId: string; lists: DashboardSnapshotLists } | null = null
+/** El RPC no existe en la base: no se vuelve a intentar en esta visita. */
+let snapshotMissing = false
+
+const loadFallbackLists = async (companyId: string): Promise<DashboardSnapshotLists> => {
+  if (fallbackLists?.companyId === companyId) return fallbackLists.lists
+  const [partners, products, orders, projects, pickings, approvals, tasks, leads] = await Promise.all([
+    getPartnersByCompany(companyId),
+    getProductsByCompany(companyId),
+    getOrdersByCompany(companyId),
+    getProjectsByCompany(companyId),
+    getPickingsByCompany(companyId),
+    getRequestsByCompany(companyId),
+    getTasksByCompany(companyId, { active: true, orderByCreatedDesc: true }),
+    getLeadsByCompany(companyId)
+  ])
+  const lists: DashboardSnapshotLists = { partners, products, orders, projects, pickings, approvals, tasks, leads }
+  fallbackLists = { companyId, lists }
+  return lists
 }
 
-let baseRequest = 0
-const loadBase = async () => {
+const browserTimeZone = (): string => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  } catch {
+    return 'UTC'
+  }
+}
+
+let snapshotRequest = 0
+const loadSnapshot = async () => {
   const companyId = selectedCompanyId.value
-  const requestId = ++baseRequest
+  const range = activeRange.value
+  const comparison = comparisonRange.value
+  const requestId = ++snapshotRequest
   if (!companyId) {
-    resetBaseData()
+    snapshot.value = null
     return
   }
+  // Con fechas inválidas se conserva la foto anterior: pendientes y atención no dependen del periodo.
+  if (!range) return
 
+  const today = toIsoDate(new Date())
   isLoading.value = true
   try {
-    const [
-      partnerList,
-      productList,
-      orderList,
-      projectList,
-      pickingList,
-      approvalList,
-      taskList,
-      leadList
-    ] = await Promise.all([
-      getPartnersByCompany(companyId),
-      getProductsByCompany(companyId),
-      getOrdersByCompany(companyId),
-      getProjectsByCompany(companyId),
-      getPickingsByCompany(companyId),
-      getRequestsByCompany(companyId),
-      getTasksByCompany(companyId, { active: true, orderByCreatedDesc: true }),
-      getLeadsByCompany(companyId)
-    ])
-    if (requestId !== baseRequest) return
-
-    partners.value = partnerList
-    products.value = productList
-    orders.value = orderList
-    projects.value = projectList
-    pickings.value = pickingList
-    approvalRequests.value = approvalList
-    projectTasks.value = taskList
-    leads.value = leadList
+    let next: DashboardSnapshot | null = null
+    if (!snapshotMissing) {
+      const result = await getSnapshot(companyId, { range, comparison, today, timeZone: browserTimeZone() })
+      snapshotMissing = result.missing
+      next = result.snapshot
+    }
+    if (snapshotMissing) {
+      const lists = await loadFallbackLists(companyId)
+      next = buildDashboardSnapshot(lists, {
+        range,
+        comparison,
+        today,
+        companyCurrency: selectedCompany.value?.currency
+      })
+    }
+    if (requestId !== snapshotRequest) return
+    snapshot.value = next
   } finally {
-    if (requestId === baseRequest) isLoading.value = false
+    if (requestId === snapshotRequest) isLoading.value = false
   }
 }
 
-watch(selectedCompanyId, () => { void loadBase() }, { immediate: true })
+watch([selectedCompanyId, activeRange, comparisonRange], () => { void loadSnapshot() }, { immediate: true })
 
 // ── Reabastecimiento: aviso cuando hay productos bajo su mínimo ─────────────
 
@@ -268,18 +274,16 @@ watch([selectedCompanyId, activeRange, preset], () => { void loadPeriod() }, { i
 
 const companyCurrency = computed(() =>
   kpis.value?.totals.currency?.trim().toUpperCase()
-  || orders.value.find((o) => o.company_currency)?.company_currency?.trim().toUpperCase()
+  || snapshot.value?.company_currency
   || 'MXN'
 )
 
 const normalizeCurrency = (value: string | null | undefined): string =>
-  value?.trim().toUpperCase() || companyCurrency.value
+  normalizeCurrencyCode(value, companyCurrency.value)
 
-const activeCurrencies = computed(() => {
-  const currencies = new Set<string>([companyCurrency.value])
-  for (const order of orders.value) currencies.add(normalizeCurrency(order.currency))
-  return Array.from(currencies).sort()
-})
+const activeCurrencies = computed(() =>
+  Array.from(new Set<string>([companyCurrency.value, ...(snapshot.value?.currencies ?? [])])).sort()
+)
 
 const selectedCurrency = ref('')
 watch(
@@ -341,33 +345,14 @@ const financeFromKpis = (k: SalesKpis): PeriodFinance => {
 }
 
 const financeFromOrders = (range: DateRange): PeriodFinance => {
-  let income = 0
-  let expense = 0
-  let incomeCount = 0
-  let expenseCount = 0
-
-  for (const order of orders.value) {
-    if (order.order_state !== 'posted') continue
-    if (normalizeCurrency(order.currency) !== displayCurrency.value) continue
-    if (!isInRange(toLocalDateKey(order.order_date ?? order.created_at), range)) continue
-
-    const amount = Number(order.amount_total ?? 0)
-    if (order.order_type === 'sale') {
-      income += amount
-      incomeCount += 1
-    } else if (order.order_type === 'purchase') {
-      expense += amount
-      expenseCount += 1
-    }
-  }
-
+  const t = sumPostedInRange(snapshot.value?.posted_daily ?? [], range, displayCurrency.value)
   return {
-    income,
-    expense,
-    net: income - expense,
-    incomeCount,
-    expenseCount,
-    averageTicket: incomeCount > 0 ? income / incomeCount : 0,
+    income: t.income,
+    expense: t.expense,
+    net: t.income - t.expense,
+    incomeCount: t.incomeCount,
+    expenseCount: t.expenseCount,
+    averageTicket: t.incomeCount > 0 ? t.income / t.incomeCount : 0,
     marginPercent: null
   }
 }
@@ -526,20 +511,15 @@ const chartData = computed<ChartBar[]>(() => {
       }
     }
   } else {
-    for (const order of orders.value) {
-      if (order.order_state !== 'posted') continue
-      if (normalizeCurrency(order.currency) !== displayCurrency.value) continue
-      const key = bucketKeyFor(toLocalDateKey(order.order_date ?? order.created_at), range, gran)
+    for (const row of snapshot.value?.posted_daily ?? []) {
+      if (row.currency !== displayCurrency.value) continue
+      const key = bucketKeyFor(row.day, range, gran)
       const bucket = key ? byKey.get(key) : undefined
       if (!bucket) continue
-      const amount = Number(order.amount_total ?? 0)
-      if (order.order_type === 'sale') {
-        bucket.income += amount
-        bucket.incomeCount += 1
-      } else if (order.order_type === 'purchase') {
-        bucket.expense += amount
-        bucket.expenseCount += 1
-      }
+      bucket.income += row.sale_amount
+      bucket.incomeCount += row.sale_count
+      bucket.expense += row.purchase_amount
+      bucket.expenseCount += row.purchase_count
     }
   }
 
@@ -574,31 +554,20 @@ const receivablesAging = computed<BarListItem[]>(() => {
 
 /** Borradores en la moneda elegida (cotizaciones y compras sin confirmar). */
 const draftTotals = computed(() => {
-  let saleDraft = 0
-  let saleDraftCount = 0
-  let purchaseDraft = 0
-  let purchaseDraftCount = 0
-  for (const order of orders.value) {
-    if (order.order_state !== 'draft') continue
-    if (normalizeCurrency(order.currency) !== displayCurrency.value) continue
-    const amount = Number(order.amount_total ?? 0)
-    if (order.order_type === 'sale') {
-      saleDraft += amount
-      saleDraftCount += 1
-    } else if (order.order_type === 'purchase') {
-      purchaseDraft += amount
-      purchaseDraftCount += 1
-    }
+  const row = snapshot.value?.drafts.find((d) => d.currency === displayCurrency.value)
+  return {
+    saleDraft: row?.sale_amount ?? 0,
+    saleDraftCount: row?.sale_count ?? 0,
+    purchaseDraft: row?.purchase_amount ?? 0,
+    purchaseDraftCount: row?.purchase_count ?? 0
   }
-  return { saleDraft, saleDraftCount, purchaseDraft, purchaseDraftCount }
 })
 
 // ── Requiere atención ───────────────────────────────────────────────────────
 
-const today = toIsoDate(new Date())
-
 const attentionItems = computed<AttentionItem[]>(() => {
   const items: AttentionItem[] = []
+  const attention = snapshot.value?.attention
   const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
   const receivables = kpis.value?.receivables
@@ -618,23 +587,19 @@ const attentionItems = computed<AttentionItem[]>(() => {
     })
   }
 
-  const overdueTasks = projectTasks.value.filter((task) => {
-    const due = toLocalDateKey(task.due_date)
-    return due !== null && due < today && (task.status === 'pending' || task.status === 'in_progress')
-  })
-  if (overdueTasks.length > 0) {
-    const oldest = overdueTasks.reduce((min, t) => ((t.due_date ?? '') < (min.due_date ?? '') ? t : min))
+  const overdueTasks = attention?.overdue_tasks ?? 0
+  if (overdueTasks > 0) {
     items.push({
       key: 'overdue-tasks',
       label: 'Tareas vencidas',
-      value: String(overdueTasks.length),
-      detail: `La más antigua: ${oldest.name?.trim() || oldest.code || 'Tarea'}`,
+      value: String(overdueTasks),
+      detail: `La más antigua: ${attention?.oldest_overdue_task ?? 'Tarea'}`,
       to: '/admin/tasks',
       tone: 'danger'
     })
   }
 
-  const pendingApprovals = approvalRequests.value.filter((r) => r.status === 'published').length
+  const pendingApprovals = attention?.pending_approvals ?? 0
   if (pendingApprovals > 0) {
     items.push({
       key: 'approvals',
@@ -658,20 +623,19 @@ const attentionItems = computed<AttentionItem[]>(() => {
     })
   }
 
-  const openLeads = leads.value.filter((l) => !l.is_won && !l.is_lost)
-  const overdueActivities = openLeads.reduce((sum, l) => sum + (l.overdue_activity_count ?? 0), 0)
+  const overdueActivities = attention?.crm_overdue_activities ?? 0
   if (overdueActivities > 0) {
     items.push({
       key: 'crm-activities',
       label: 'Actividades de CRM vencidas',
       value: String(overdueActivities),
-      detail: plural(openLeads.filter((l) => (l.overdue_activity_count ?? 0) > 0).length, 'lead afectado', 'leads afectados'),
+      detail: plural(attention?.crm_leads_with_overdue ?? 0, 'lead afectado', 'leads afectados'),
       to: '/admin/crm/leads',
       tone: 'warning'
     })
   }
 
-  const rottingLeads = openLeads.filter((l) => l.is_rotting).length
+  const rottingLeads = attention?.crm_rotting_leads ?? 0
   if (rottingLeads > 0) {
     items.push({
       key: 'crm-rotting',
@@ -683,7 +647,7 @@ const attentionItems = computed<AttentionItem[]>(() => {
     })
   }
 
-  const openPickings = pickings.value.filter((p) => p.status === 'borrador' || p.status === 'publicado').length
+  const openPickings = attention?.open_pickings ?? 0
   if (openPickings > 0) {
     items.push({
       key: 'pickings',
@@ -700,50 +664,21 @@ const attentionItems = computed<AttentionItem[]>(() => {
 
 // ── Comercial (CRM) ─────────────────────────────────────────────────────────
 
-const leadCloseDate = (lead: CrmLeadViewRow): string | null =>
-  toLocalDateKey(lead.actual_close_date ?? lead.stage_changed_at ?? lead.updated_at)
-
 const crmStats = computed(() => {
-  const range = activeRange.value
-  let created = 0
-  let won = 0
-  let lost = 0
-  let wonAmount = 0
-  let openCount = 0
-  let openAmount = 0
-  let weightedAmount = 0
-
-  for (const lead of leads.value) {
-    const sameCurrency = normalizeCurrency(lead.currency) === displayCurrency.value
-    const amount = sameCurrency ? Number(lead.amount ?? 0) : 0
-
-    if (range && isInRange(toLocalDateKey(lead.created_at), range)) created += 1
-
-    if (lead.is_won) {
-      if (range && isInRange(leadCloseDate(lead), range)) {
-        won += 1
-        wonAmount += sameCurrency ? Number(lead.won_amount ?? lead.amount ?? 0) : 0
-      }
-    } else if (lead.is_lost) {
-      if (range && isInRange(leadCloseDate(lead), range)) lost += 1
-    } else {
-      openCount += 1
-      openAmount += amount
-      const probability = lead.probability ?? lead.stage_probability ?? 0
-      weightedAmount += amount * (probability / 100)
-    }
-  }
-
+  const crm = snapshot.value?.crm
+  const money = crm?.by_currency.find((row) => row.currency === displayCurrency.value)
+  const won = crm?.won ?? 0
+  const lost = crm?.lost ?? 0
   const closed = won + lost
   return {
-    created,
+    created: crm?.created ?? 0,
     won,
     lost,
-    wonAmount,
+    wonAmount: money?.won_amount ?? 0,
     winRate: closed > 0 ? Math.round((won / closed) * 100) : null,
-    openCount,
-    openAmount,
-    weightedAmount
+    openCount: crm?.open_count ?? 0,
+    openAmount: money?.open_amount ?? 0,
+    weightedAmount: money?.weighted_amount ?? 0
   }
 })
 
@@ -762,31 +697,16 @@ const topProducts = computed<BarListItem[]>(() =>
 // ── Operación ───────────────────────────────────────────────────────────────
 
 const operationStats = computed(() => {
-  let activeProjects = 0
-  let progressSum = 0
-  for (const project of projects.value) {
-    if (project.status !== 'in_progress') continue
-    activeProjects += 1
-    progressSum += project.progress ?? 0
-  }
-  // Bucle explícito: `.filter` sobre `Tables<'product'>` dispara TS2589.
-  let activeProducts = 0
-  for (const product of products.value) {
-    if (product.status === 'active') activeProducts += 1
-  }
+  const counts = snapshot.value?.counts
   return {
-    activeProjects,
-    averageProgress: activeProjects > 0 ? Math.round(progressSum / activeProjects) : 0,
-    activePartners: partners.value.filter((p) => p.active !== false).length,
-    activeProducts
+    activeProjects: counts?.active_projects ?? 0,
+    averageProgress: counts?.average_project_progress ?? 0,
+    activePartners: counts?.active_partners ?? 0,
+    activeProducts: counts?.active_products ?? 0
   }
 })
 
-const publicProjects = computed(() =>
-  projects.value
-    .filter((p) => Boolean((p as ProjectViewRow & { is_public?: boolean | null }).is_public))
-    .slice(0, 4)
-)
+const publicProjects = computed<ProjectViewRow[]>(() => snapshot.value?.public_projects ?? [])
 
 const openPublicProjectView = (projectId: string | null) => {
   if (!projectId || typeof window === 'undefined') return
@@ -841,8 +761,10 @@ const orderStateLabel = (state: OrderRow['order_state']): string =>
 
 const recentActivity = computed<ActivityItem[]>(() => {
   const events: ActivityItem[] = []
+  const recent = snapshot.value?.recent
+  if (!recent) return events
 
-  for (const order of orders.value.slice(0, 6)) {
+  for (const order of recent.orders) {
     const cur = normalizeCurrency(order.currency)
     events.push({
       id: `order-${order.id}`,
@@ -854,7 +776,7 @@ const recentActivity = computed<ActivityItem[]>(() => {
     })
   }
 
-  for (const picking of pickings.value.slice(0, 4)) {
+  for (const picking of recent.pickings) {
     if (!picking.id) continue
     const statusLabel = picking.status ? pickingStatusLabels[picking.status] : 'Sin estado'
     const typeLabel = picking.type ? pickingTypeLabels[picking.type] : 'Picking'
@@ -868,7 +790,7 @@ const recentActivity = computed<ActivityItem[]>(() => {
     })
   }
 
-  for (const request of approvalRequests.value.slice(0, 4)) {
+  for (const request of recent.approvals) {
     if (!request.id) continue
     const numLabel = typeof request.request_number === 'number' ? `#${request.request_number}` : ''
     events.push({
@@ -881,7 +803,7 @@ const recentActivity = computed<ActivityItem[]>(() => {
     })
   }
 
-  for (const proj of projects.value.slice(0, 4)) {
+  for (const proj of recent.projects) {
     if (!proj.id) continue
     events.push({
       id: `project-${proj.id}`,
@@ -893,7 +815,7 @@ const recentActivity = computed<ActivityItem[]>(() => {
     })
   }
 
-  for (const task of projectTasks.value.slice(0, 4)) {
+  for (const task of recent.tasks) {
     if (!task.id) continue
     const projectLabel = task.project_name?.trim() || task.project_code?.trim()
     events.push({
@@ -906,7 +828,7 @@ const recentActivity = computed<ActivityItem[]>(() => {
     })
   }
 
-  for (const lead of leads.value.slice(0, 4)) {
+  for (const lead of recent.leads) {
     if (!lead.id) continue
     events.push({
       id: `lead-${lead.id}`,
@@ -918,7 +840,7 @@ const recentActivity = computed<ActivityItem[]>(() => {
     })
   }
 
-  for (const partner of partners.value.slice(0, 3)) {
+  for (const partner of recent.partners) {
     events.push({
       id: `partner-${partner.id}`,
       typeLabel: 'Contacto',
@@ -1020,7 +942,7 @@ const recentActivity = computed<ActivityItem[]>(() => {
           isPeriodLoading && dashboardStats.length > 0 ? 'opacity-60' : ''
         ]"
       >
-        <template v-if="(isLoading || isPeriodLoading) && !kpis && orders.length === 0">
+        <template v-if="(isLoading || isPeriodLoading) && !kpis && !snapshot">
           <DashboardStatCard v-for="i in 4" :key="`stat-skeleton-${i}`" loading />
         </template>
         <DashboardStatCard
