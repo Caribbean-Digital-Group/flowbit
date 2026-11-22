@@ -111,20 +111,20 @@ const printReport = (): void => {
   if (!s || !session.value) return
 
   const countRows = counts.value.map(c => `<tr>
-      <td>${methodNames.value.get(c.payment_method_id) ?? c.payment_method_id}</td>
+      <td>${escapeHtml(methodNames.value.get(c.payment_method_id) ?? c.payment_method_id)}</td>
       <td style="text-align:right">${formatCurrency(Number(c.expected))}</td>
       <td style="text-align:right">${formatCurrency(Number(c.counted))}</td>
       <td style="text-align:right">${formatCurrency(Number(c.difference))}</td>
     </tr>`).join('')
 
   const methodRows = s.methods.map(m => `<tr>
-      <td>${m.name}</td>
+      <td>${escapeHtml(m.name)}</td>
       <td style="text-align:right">${formatCurrency(m.sales_amount)}</td>
       <td style="text-align:right">-${formatCurrency(m.refunds_amount)}</td>
     </tr>`).join('')
 
   const movementRows = movements.value.map(m => `<tr>
-      <td>${m.movement_type === 'in' ? 'Entrada' : 'Salida'}: ${m.reason}</td>
+      <td>${m.movement_type === 'in' ? 'Entrada' : 'Salida'}: ${escapeHtml(m.reason)}</td>
       <td style="text-align:right">${m.movement_type === 'in' ? '' : '-'}${formatCurrency(Number(m.amount))}</td>
     </tr>`).join('')
 
@@ -132,7 +132,7 @@ const printReport = (): void => {
   if (!win) return
 
   win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
-    <title>Corte — ${s.session_name}</title>
+    <title>Corte — ${escapeHtml(s.session_name)}</title>
     <style>
       body { font-family: 'Courier New', monospace; font-size: 12px; width: 320px; margin: 0 auto; padding: 12px; color: #111; }
       h1 { font-size: 14px; text-align: center; margin: 0 0 4px; }
@@ -142,7 +142,7 @@ const printReport = (): void => {
       .sep { border-top: 1px dashed #111; margin: 6px 0; }
     </style></head><body>
     <h1>REPORTE DE CORTE</h1>
-    <p style="text-align:center">${session.value.register_name ?? ''} · ${s.session_name}</p>
+    <p style="text-align:center">${escapeHtml(session.value.register_name)} · ${escapeHtml(s.session_name)}</p>
     <p style="text-align:center">Apertura: ${formatDateTime(s.opened_at)}</p>
     <p style="text-align:center">Cierre: ${formatDateTime(s.closed_at)}</p>
     <div class="sep"></div>
