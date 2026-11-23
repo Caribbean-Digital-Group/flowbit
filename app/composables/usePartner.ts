@@ -1,5 +1,6 @@
 import type { Database, Tables, TablesInsert, TablesUpdate } from '~/types/database.types'
 import { escapeIlikeTerm } from '~/utils/search'
+import { fetchAllRows, fetchByIdChunks } from '~/utils/pagination'
 
 type Partner = Tables<'partner'>
 type PartnerInsert = TablesInsert<'partner'>
@@ -113,54 +114,57 @@ export const usePartner = () => {
       offset?: number
     }
   ): Promise<Partner[]> => {
-    let relQuery = supabase
-      .from('rel_partner_company')
-      .select('partner_id, is_active, role, relationship_type')
-      .eq('company_id', companyId)
-      .eq('relationship_type', options?.relationshipType ?? 'partner')
+    // 1. Relaciones, por bloques: Supabase corta cada respuesta en 1000 filas.
+    const { data: rels, error: relError } = await fetchAllRows((from, to) => {
+      let relQuery = supabase
+        .from('rel_partner_company')
+        .select('id, partner_id')
+        .eq('company_id', companyId)
+        .eq('relationship_type', options?.relationshipType ?? 'partner')
+        .eq('is_active', options?.relationActive ?? true)
 
-    relQuery = relQuery.eq('is_active', options?.relationActive ?? true)
+      if (options?.role) {
+        relQuery = relQuery.eq('role', options.role)
+      }
 
-    if (options?.role) {
-      relQuery = relQuery.eq('role', options.role)
-    }
-
-    const { data: rels, error: relError } = await relQuery
+      return relQuery.order('id').range(from, to)
+    })
 
     if (relError) {
       console.error('Error fetching partner relations by company:', relError)
       return []
     }
 
-    const partnerIds = Array.from(new Set((rels ?? []).map(r => r.partner_id)))
+    const partnerIds = Array.from(new Set(rels.map(r => r.partner_id)))
     if (partnerIds.length === 0) return []
 
-    let query = supabase
-      .from('partner')
-      .select('*')
-      .in('id', partnerIds)
+    // 2. Contactos, por lotes de IDs: un `.in('id', …)` con cientos de UUID
+    //    excede el largo de URL de PostgREST y la petición falla.
+    const { data, error } = await fetchByIdChunks(partnerIds, (chunk) => {
+      let query = supabase
+        .from('partner')
+        .select('*')
+        .in('id', chunk)
 
-    if (options?.active !== undefined) {
-      query = query.eq('active', options.active)
-    }
-    if (options?.companyType) {
-      query = query.eq('company_type', options.companyType)
-    }
-    if (options?.limit) {
-      query = query.limit(options.limit)
-    }
-    if (options?.offset) {
-      query = query.range(options.offset, options.offset + (options.limit || 10) - 1)
-    }
+      if (options?.active !== undefined) {
+        query = query.eq('active', options.active)
+      }
+      if (options?.companyType) {
+        query = query.eq('company_type', options.companyType)
+      }
 
-    const { data, error } = await query.order('name')
+      return query
+    })
 
     if (error) {
       console.error('Error fetching partners by company:', error)
       return []
     }
 
-    return data ?? []
+    // El orden y la ventana limit/offset se aplican al final, sobre todos los lotes.
+    const sorted = data.sort((a, b) => a.name.localeCompare(b.name, 'es-MX'))
+    const offset = options?.offset ?? 0
+    return options?.limit ? sorted.slice(offset, offset + options.limit) : sorted.slice(offset)
   }
 
   /**

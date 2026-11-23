@@ -56,3 +56,43 @@ export const fetchAllRows = async <T, E = unknown>(
 
   return { data: rows, error: null, truncated: true }
 }
+
+/**
+ * Máximo de IDs por filtro `.in('id', …)`.
+ *
+ * PostgREST recibe el filtro en la URL de una petición GET: cada UUID suma ~37
+ * caracteres. Con unos cientos de IDs la URL supera el límite del gateway y la
+ * petición falla. 150 IDs dejan la URL por debajo de ~6 KB.
+ */
+export const IN_FILTER_CHUNK_SIZE = 150
+
+/** Parte `items` en bloques consecutivos de `size` elementos como máximo. */
+export const chunkArray = <T>(items: readonly T[], size: number): T[][] => {
+  const step = Math.max(1, Math.floor(size))
+  const chunks: T[][] = []
+  for (let i = 0; i < items.length; i += step) chunks.push(items.slice(i, i + step))
+  return chunks
+}
+
+/**
+ * Lee filas por una lista de IDs arbitrariamente larga, en lotes de
+ * `IN_FILTER_CHUNK_SIZE`, para no exceder el largo de URL de PostgREST.
+ *
+ * - Quita IDs duplicados antes de partir la lista.
+ * - Los lotes se piden en secuencia; si uno falla se detiene y devuelve el error
+ *   junto con las filas ya leídas.
+ * - No garantiza orden entre lotes: ordena el resultado en el llamador.
+ */
+export const fetchByIdChunks = async <T, E = unknown>(
+  ids: readonly string[],
+  fetchChunk: (chunk: string[]) => PromiseLike<PageResult<T, E>>,
+  chunkSize: number = IN_FILTER_CHUNK_SIZE
+): Promise<{ data: T[]; error: E | null }> => {
+  const rows: T[] = []
+  for (const chunk of chunkArray([...new Set(ids)], chunkSize)) {
+    const { data, error } = await fetchChunk(chunk)
+    if (error) return { data: rows, error }
+    rows.push(...(data ?? []))
+  }
+  return { data: rows, error: null }
+}
