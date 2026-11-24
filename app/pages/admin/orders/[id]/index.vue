@@ -180,6 +180,13 @@ const menuOptions = computed<MenuOption[]>(() => {
     action: () => handlePrintPosTicket(),
     variant: 'default'
   })
+  opts.push({
+    id: 'duplicate-order',
+    label: 'Duplicar',
+    icon: 'M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z',
+    action: () => void router.push({ path: '/admin/orders/create', query: { from: orderId.value } }),
+    variant: 'default'
+  })
   if (canPost.value) {
     opts.push({
       id: 'post',
