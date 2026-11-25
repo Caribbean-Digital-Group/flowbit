@@ -318,7 +318,7 @@ const itemsByDay = computed(() => {
   return map
 })
 
-const todayKey = new Date().toISOString().slice(0, 10)
+const todayKey = localDateKey()
 
 const selectedCalendarDay = ref<string | null>(todayKey)
 
