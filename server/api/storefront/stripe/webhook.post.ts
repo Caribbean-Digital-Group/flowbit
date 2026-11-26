@@ -1,6 +1,8 @@
 import Stripe from 'stripe'
 import {
   callStorefrontServiceRpc,
+  fetchStorefrontOrderOwner,
+  isOrderOwnedByStore,
   isValidStorefrontSlug,
   fromStripeAmount,
   type StripeStoreConfig
@@ -15,8 +17,12 @@ import {
  * Resolución multi-tenant: el slug de la tienda viaja en la metadata del
  * objeto del evento. Ese slug SIN VERIFICAR solo se usa para elegir con qué
  * webhook secret validar la firma; si la firma no corresponde a esa tienda,
- * el evento se rechaza, así que un payload forjado con el slug de otra
- * empresa nunca pasa la verificación.
+ * el evento se rechaza.
+ *
+ * La firma NO prueba que la orden sea de esa tienda: cualquier empresa
+ * controla su propio webhook secret y podría firmar un evento con el
+ * flowbit_order_id de una orden ajena. Por eso, antes de registrar el pago,
+ * se exige que la orden pertenezca a la empresa de la tienda verificada.
  *
  * Eventos manejados: checkout.session.completed y
  * checkout.session.async_payment_succeeded (pagos diferidos tipo OXXO/SPEI).
@@ -106,6 +112,24 @@ export default defineEventHandler(async (event) => {
 
   if (session.payment_status !== 'paid' || !UUID_REGEX.test(orderId)) {
     return { received: true, ignored: 'not_paid_or_missing_order' }
+  }
+
+  // Multi-tenant: la orden debe ser de la empresa cuyo secret validó la firma
+  const owner = await fetchStorefrontOrderOwner(event, orderId)
+  if (owner === undefined) {
+    // Error transitorio al leer la orden: 500 para que Stripe reintente
+    setResponseStatus(event, 500)
+    return { status: 'error' }
+  }
+  if (!isOrderOwnedByStore(owner, storeConfig.company_id)) {
+    // Evento firmado por una tienda sobre una orden que no es suya (o que no
+    // existe): no se registra el pago. 200 para que Stripe no lo reintente.
+    console.error('Stripe webhook order does not belong to the signing store:', {
+      slug,
+      orderId,
+      sessionId: session.id
+    })
+    return { received: true, ignored: 'order_not_in_store' }
   }
 
   const result = await callStorefrontServiceRpc<{ status: string; payment_status?: string }>(

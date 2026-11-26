@@ -62,7 +62,9 @@ la tienda sigue operando con los métodos de pago manuales.
    - **Webhook** `POST /api/storefront/stripe/webhook`: multi-tenant — el slug
      viaja en la metadata del evento y solo se usa para elegir con qué
      `stripe_webhook_secret` verificar la firma; un payload forjado con el
-     slug de otra empresa no pasa la verificación. Si
+     slug de otra empresa no pasa la verificación. Después exige que la
+     orden (`flowbit_order_id`) pertenezca a la empresa de esa tienda: si no,
+     el evento se ignora (200) y no se registra ningún pago. Si
      `payment_status='paid'`, llama `mark_storefront_order_paid`.
    - **Retorno del cliente**: la página de confirmación
      (`?stripe=success&session_id=...`) llama
@@ -87,6 +89,15 @@ la tienda sigue operando con los métodos de pago manuales.
 - Los endpoints `session`/`status` aplican rate-limit por IP (mismo limiter de
   analítica) y validan shape de slug/ref/email.
 - Precios, montos y estado de pago se resuelven siempre en servidor.
+- **La firma del webhook no prueba que la orden sea de la tienda.** Cualquier
+  empresa controla su propio webhook secret y podría firmar un evento con el
+  id de una orden ajena (el `order_id` se le devuelve a quien compra). Por eso
+  el webhook lee la orden con service_role y compara su `company_id` con el de
+  la tienda verificada (`isOrderOwnedByStore` en
+  `server/utils/storefrontStripe.ts`, probado en
+  `tests/server/storefrontStripe.test.ts`). `session` y `status` ya resuelven
+  la orden con `get_storefront_stripe_order(slug, ref, email)`, que filtra por
+  empresa.
 
 ## Archivos
 
