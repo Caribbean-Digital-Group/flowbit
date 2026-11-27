@@ -12582,6 +12582,18 @@ export type Database = {
           role: string
         }[]
       }
+      get_dashboard_snapshot: {
+        Args: {
+          p_company_id: string
+          p_compare_from?: string
+          p_compare_to?: string
+          p_from: string
+          p_to: string
+          p_today?: string
+          p_tz?: string
+        }
+        Returns: Json
+      }
       get_inventory_summary: { Args: { p_company_id: string }; Returns: Json }
       get_my_invitations: {
         Args: never
@@ -12960,6 +12972,10 @@ export type Database = {
       }
       is_company_admin: { Args: { p_company_id: string }; Returns: boolean }
       is_company_member: { Args: { p_company_id: string }; Returns: boolean }
+      is_company_owner_user: {
+        Args: { p_company_id: string }
+        Returns: boolean
+      }
       is_invited_to_company: {
         Args: { p_company_id: string }
         Returns: boolean
