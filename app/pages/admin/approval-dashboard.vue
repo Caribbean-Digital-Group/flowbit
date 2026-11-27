@@ -12,8 +12,8 @@ const { selectedCompanyId } = storeToRefs(authStore)
 const { getDashboard, lastError } = useApprovalSettings()
 
 const today = new Date()
-const from = ref(new Date(today.getFullYear(), today.getMonth() - 2, 1).toISOString().slice(0, 10))
-const to = ref(today.toISOString().slice(0, 10))
+const from = ref(localMonthStartKey(-2, today))
+const to = ref(localDateKey(today))
 const data = ref<ApprovalDashboard | null>(null)
 const isLoading = ref(false)
 

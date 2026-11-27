@@ -31,7 +31,7 @@ export interface ApprovalRequestFormData {
 export const createEmptyApprovalRequestForm = (): ApprovalRequestFormData => ({
   title: '',
   category_id: '',
-  request_date: new Date().toISOString().split('T')[0] || '',
+  request_date: localDateKey(),
   description: '',
   amount: '',
   currency: 'MXN',

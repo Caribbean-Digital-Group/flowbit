@@ -80,7 +80,7 @@ export const createEmptyOrderForm = (): OrderFormData => ({
   partner_name: '',
   created_by_partner_id: null,
   created_by_partner_name: '',
-  order_date: new Date().toISOString().split('T')[0] || '',
+  order_date: localDateKey(),
   confirmation_date: null,
   delivery_date: '',
   currency: 'MXN',

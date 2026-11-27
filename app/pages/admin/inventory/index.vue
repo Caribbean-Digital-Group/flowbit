@@ -238,7 +238,7 @@ const exportCsv = () => {
     STOCK_STATUS_LABELS[r.stock_status]
   ])
 
-  downloadCsv(`inventario-${new Date().toISOString().slice(0, 10)}`, header, lines)
+  downloadCsv(`inventario-${localDateKey()}`, header, lines)
 }
 
 const statusTabs: { value: 'all' | StockStatus; label: string }[] = [

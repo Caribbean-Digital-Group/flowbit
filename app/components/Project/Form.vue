@@ -35,7 +35,7 @@ export const createEmptyProjectForm = (): ProjectFormData => ({
   responsible_name: '',
   status: 'pending',
   priority: 'medium',
-  start_date: new Date().toISOString().split('T')[0] || '',
+  start_date: localDateKey(),
   end_date_estimated: '',
   end_date_actual: '',
   budget_estimated: 0,

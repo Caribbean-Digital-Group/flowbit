@@ -215,7 +215,7 @@ const saveTemplate = async (result: ActionDialogResult): Promise<void> => {
       assigned_approval_manager_id: form.value.assigned_approval_manager_id || null
     },
     recurrence: scope === 'weekly' || scope === 'monthly' ? scope : null,
-    nextRunOn: scope === 'weekly' || scope === 'monthly' ? new Date().toISOString().slice(0, 10) : null
+    nextRunOn: scope === 'weekly' || scope === 'monthly' ? localDateKey() : null
   })
   if (saved) {
     templates.value = [...templates.value, saved]

@@ -324,6 +324,7 @@ pages/admin/{module}/
 - Emits siempre tipados: `defineEmits<{ 'event-name': [payload: Type] }>()`
 - `const` sobre `let`, nunca `var`
 - Sin `console.log` en código productivo; solo `console.error` en manejo de errores
+- Fechas de calendario («hoy», fecha de una orden o de un cobro): `localDateKey()` de `app/utils/dates.ts`. Nunca `new Date().toISOString().slice(0, 10)`: da la fecha UTC y en México cambia a las 18:00
 
 ### Componentes Vue
 

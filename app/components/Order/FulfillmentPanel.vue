@@ -219,7 +219,7 @@ const paymentForm = reactive({
 const openPayment = () => {
   if (!canPay.value) return
   paymentForm.amount = balance.value
-  paymentForm.paidAt = new Date().toISOString().slice(0, 10)
+  paymentForm.paidAt = localDateKey()
   paymentForm.methodId = props.defaultPaymentMethodId ?? ''
   paymentForm.reference = ''
   paymentForm.notes = ''
