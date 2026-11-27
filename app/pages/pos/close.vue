@@ -189,20 +189,20 @@ const printReport = (type: 'X' | 'Z'): void => {
   if (!s) return
 
   const rows = (type === 'Z' ? countRows.value : []).map(row => `<tr>
-      <td>${row.name}</td>
+      <td>${escapeHtml(row.name)}</td>
       <td style="text-align:right">${formatCurrency(row.expected)}</td>
       <td style="text-align:right">${formatCurrency(row.counted)}</td>
       <td style="text-align:right">${formatCurrency(differenceOf(row))}</td>
     </tr>`).join('')
 
   const methodRows = s.methods.map(m => `<tr>
-      <td>${m.name}</td>
+      <td>${escapeHtml(m.name)}</td>
       <td style="text-align:right">${formatCurrency(m.sales_amount)}</td>
       <td style="text-align:right">-${formatCurrency(m.refunds_amount)}</td>
     </tr>`).join('')
 
   const movementRows = movements.value.map(m => `<tr>
-      <td>${m.movement_type === 'in' ? 'Entrada' : 'Salida'}: ${m.reason}</td>
+      <td>${m.movement_type === 'in' ? 'Entrada' : 'Salida'}: ${escapeHtml(m.reason)}</td>
       <td style="text-align:right">${m.movement_type === 'in' ? '' : '-'}${formatCurrency(Number(m.amount))}</td>
     </tr>`).join('')
 
@@ -210,7 +210,7 @@ const printReport = (type: 'X' | 'Z'): void => {
   if (!win) return
 
   win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
-    <title>Corte ${type} — ${s.session_name}</title>
+    <title>Corte ${type} — ${escapeHtml(s.session_name)}</title>
     <style>
       body { font-family: 'Courier New', monospace; font-size: 12px; width: 320px; margin: 0 auto; padding: 12px; color: #111; }
       h1 { font-size: 14px; text-align: center; margin: 0 0 4px; }
@@ -220,9 +220,9 @@ const printReport = (type: 'X' | 'Z'): void => {
       .sep { border-top: 1px dashed #111; margin: 6px 0; }
     </style></head><body>
     <h1>CORTE ${type} ${type === 'Z' ? '(cierre de sesión)' : '(informativo)'}</h1>
-    <p style="text-align:center">${register.value?.name ?? ''} · ${s.session_name}</p>
+    <p style="text-align:center">${escapeHtml(register.value?.name)} · ${escapeHtml(s.session_name)}</p>
     <p style="text-align:center">${new Date().toLocaleString('es-MX')}</p>
-    <p style="text-align:center">Cajero: ${authStore.partnerDisplayName}</p>
+    <p style="text-align:center">Cajero: ${escapeHtml(authStore.partnerDisplayName)}</p>
     <div class="sep"></div>
     <p>Apertura: ${formatDateTime(s.opened_at)} · ${formatCurrency(s.opening_balance)}</p>
     <p>Transacciones: ${s.sales_count} · Ticket promedio: ${formatCurrency(s.avg_ticket)}</p>

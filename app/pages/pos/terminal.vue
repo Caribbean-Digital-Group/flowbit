@@ -806,7 +806,9 @@ const confirmSale = async (): Promise<void> => {
       payments: paymentsSnapshot,
       totals,
       customer: customerSnapshot,
-      change: round2(change)
+      cashier: authStore.partnerDisplayName,
+      change: round2(change),
+      company: authStore.selectedCompany
     })
   }
 
@@ -832,77 +834,6 @@ const printHtml = (html: string): void => {
   setTimeout(() => { win.print() }, 250)
 }
 
-const buildReceiptHtml = (params: {
-  orderName: string
-  lines: TicketLine[]
-  payments: PaymentEntry[]
-  totals: { subtotal: number; discount: number; tax: number; total: number }
-  customer: string
-  change: number
-}): string => {
-  const co = authStore.selectedCompany
-  const company = co?.name ?? 'Flowbit'
-  const companyDesc = co?.description || ''
-  const logoInitial = (company[0] || 'F').toUpperCase()
-  const logoHtml = co?.logo_url
-    ? `<img src="${co.logo_url}" alt="${company}" style="display:block;width:80px;height:80px;object-fit:contain;border-radius:6px;margin:0 auto 6px" />`
-    : `<div style="width:64px;height:64px;border-radius:50%;background:#2563eb;color:#fff;font-size:24px;font-weight:800;line-height:64px;text-align:center;margin:0 auto 6px;font-family:sans-serif">${logoInitial}</div>`
-  const rows = params.lines.map(l => {
-    const a = lineAmounts(l)
-    return `<tr>
-      <td>${l.quantity} × ${l.description}${l.discount_percent > 0 ? ` (-${l.discount_percent}%)` : ''}</td>
-      <td style="text-align:right">${formatCurrency(a.total)}</td>
-    </tr>`
-  }).join('')
-  const pays = params.payments.map(p => {
-    const base = `<tr>
-      <td>${p.method_name}</td>
-      <td style="text-align:right">${formatCurrency(p.amount)}</td>
-    </tr>`
-    const received = p.is_cash && p.tendered
-      ? `<tr>
-      <td>Recibido</td>
-      <td style="text-align:right">${formatCurrency(p.tendered)}</td>
-    </tr>`
-      : ''
-    return base + received
-  }).join('')
-
-  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>${params.orderName}</title>
-    <style>
-      body { font-family: 'Courier New', monospace; font-size: 12px; width: 280px; margin: 0 auto; padding: 12px; color: #111; }
-      h1 { font-size: 14px; text-align: center; margin: 0 0 4px; }
-      p { margin: 2px 0; text-align: center; }
-      table { width: 100%; border-collapse: collapse; margin: 8px 0; }
-      td { padding: 2px 0; vertical-align: top; }
-      .sep { border-top: 1px dashed #111; margin: 6px 0; }
-      .total { font-size: 16px; font-weight: bold; }
-    </style></head><body>
-    <div style="text-align:center;margin-bottom:8px">${logoHtml}</div>
-    <h1>${company}</h1>
-    <p>Ticket ${params.orderName}</p>
-    <p>${new Date().toLocaleString('es-MX')}</p>
-    <p>Cliente: ${params.customer}</p>
-    <p>Atendió: ${authStore.partnerDisplayName}</p>
-    <div class="sep"></div>
-    <table>${rows}</table>
-    <div class="sep"></div>
-    <table>
-      <tr><td>Subtotal</td><td style="text-align:right">${formatCurrency(params.totals.subtotal)}</td></tr>
-      ${params.totals.discount > 0 ? `<tr><td>Descuento</td><td style="text-align:right">-${formatCurrency(params.totals.discount)}</td></tr>` : ''}
-      <tr><td>Impuestos</td><td style="text-align:right">${formatCurrency(params.totals.tax)}</td></tr>
-      <tr class="total"><td>TOTAL</td><td style="text-align:right">${formatCurrency(params.totals.total)}</td></tr>
-    </table>
-    <div class="sep"></div>
-    <table>${pays}
-      ${params.change > 0 ? `<tr class="total"><td>CAMBIO</td><td style="text-align:right">${formatCurrency(params.change)}</td></tr>` : ''}
-    </table>
-    <div class="sep"></div>
-    ${companyDesc ? `<p style="font-size:10px;color:#333;white-space:pre-line;margin:4px 0 8px;text-align:center">${companyDesc}</p>` : ''}
-    <p>¡Gracias por su compra!</p>
-    </body></html>`
-}
-
 const printCorteX = async (): Promise<void> => {
   const summary = await getSessionSummary(sessionId.value)
   if (!summary) {
@@ -911,13 +842,13 @@ const printCorteX = async (): Promise<void> => {
   }
 
   const methodRows = summary.methods.map(m => `<tr>
-      <td>${m.name}</td>
+      <td>${escapeHtml(m.name)}</td>
       <td style="text-align:right">${formatCurrency(m.sales_amount)}</td>
       <td style="text-align:right">-${formatCurrency(m.refunds_amount)}</td>
       <td style="text-align:right">${formatCurrency(m.expected)}</td>
     </tr>`).join('')
 
-  printHtml(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Corte X — ${summary.session_name}</title>
+  printHtml(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Corte X — ${escapeHtml(summary.session_name)}</title>
     <style>
       body { font-family: 'Courier New', monospace; font-size: 12px; width: 300px; margin: 0 auto; padding: 12px; color: #111; }
       h1 { font-size: 14px; text-align: center; margin: 0 0 4px; }
@@ -927,7 +858,7 @@ const printCorteX = async (): Promise<void> => {
       .sep { border-top: 1px dashed #111; margin: 6px 0; }
     </style></head><body>
     <h1>CORTE X (informativo)</h1>
-    <p style="text-align:center">${register.value?.name ?? ''} · ${summary.session_name}</p>
+    <p style="text-align:center">${escapeHtml(register.value?.name)} · ${escapeHtml(summary.session_name)}</p>
     <p style="text-align:center">${new Date().toLocaleString('es-MX')}</p>
     <div class="sep"></div>
     <p>Apertura: ${formatCurrency(summary.opening_balance)}</p>

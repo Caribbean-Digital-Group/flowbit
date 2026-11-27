@@ -94,3 +94,13 @@ El historial de cortes está en **Punto de Venta → Sesiones de caja** del pane
 - Los productos con lote o serie salen con el lote/serie real más antiguo del almacén (FIFO).
 - Cada cobro y reembolso del POS se refleja en el libro de pagos general (`order_payment`), que es la fuente del reporte de ventas; el corte de caja sigue usando `pos_payment`.
 - Las devoluciones generan un documento `RF-…` (`order_refund`) y reingresan al costo con que salió la mercancía.
+
+## Tickets y cortes imprimibles (desarrolladores)
+
+- El ticket de venta se arma en `app/utils/posReceipt.ts` (`buildReceiptHtml`), una función pura con
+  pruebas en `tests/utils/posReceipt.test.ts`. La terminal solo le pasa líneas, pagos, totales y empresa.
+- Ticket, corte X, corte Z y reporte de corte se abren con `window.open` + `document.write`, que heredan
+  el origen del panel (y su sesión en `localStorage`). Por eso **todo texto capturado por usuarios**
+  —productos, clientes, empresa, cajas, métodos de pago, motivos de movimientos— pasa por `escapeHtml`
+  de `app/utils/html.ts`, y el logo por `safeImageUrl` (solo `http(s)` o `data:image`).
+- Si agregas un documento imprimible nuevo (en el POS o en cualquier módulo), usa el mismo helper.
