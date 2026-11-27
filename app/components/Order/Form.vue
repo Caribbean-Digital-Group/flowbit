@@ -80,7 +80,7 @@ export const createEmptyOrderForm = (): OrderFormData => ({
   partner_name: '',
   created_by_partner_id: null,
   created_by_partner_name: '',
-  order_date: new Date().toISOString().split('T')[0] || '',
+  order_date: localDateKey(),
   confirmation_date: null,
   delivery_date: '',
   currency: 'MXN',
@@ -208,6 +208,13 @@ const paymentMethodSelectModel = computed({
     formData.value.payment_method_name = opt?.label ?? ''
   }
 })
+
+const showCreditStatus = computed(() =>
+  formData.value.order_type === 'sale' &&
+  !!formData.value.partner_id &&
+  !!props.companyId &&
+  formData.value.order_state !== 'cancel'
+)
 
 const orderTypeOptions = [
   { value: 'sale', label: 'Venta' },
@@ -801,6 +808,20 @@ const formatCurrency = (value: number): string => {
             <span class="text-lg font-bold text-white">{{ formatCurrency(formData.amount_total) }}</span>
           </div>
         </div>
+      </div>
+
+      <!-- Crédito del cliente: badge «Vencido» y aviso de límite (solo aviso, no bloquea).
+           Una orden en borrador aún no está en el saldo abierto, así que se suma su total;
+           una confirmada ya está incluida en el saldo y no se vuelve a sumar. -->
+      <div v-if="showCreditStatus" class="flex justify-end mt-4">
+        <PartnerCreditStatus
+          class="w-full max-w-xl"
+          :company-id="companyId"
+          :partner-id="formData.partner_id"
+          :order-amount="formData.order_state === 'draft' ? formData.amount_total : 0"
+          :order-currency="formData.currency"
+          :exchange-rate="formData.exchange_rate"
+        />
       </div>
     </div>
 

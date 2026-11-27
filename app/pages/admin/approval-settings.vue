@@ -122,7 +122,7 @@ const exportConfig = async (): Promise<void> => {
   if (!cid) return
   const config = await settingsApi.exportConfig(cid)
   if (!config) { errorMessage.value = settingsApi.lastError.value; return }
-  downloadText(`aprobaciones-configuracion-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(config, null, 2), 'application/json')
+  downloadText(`aprobaciones-configuracion-${localDateKey()}.json`, JSON.stringify(config, null, 2), 'application/json')
 }
 
 const importConfig = async (event: Event): Promise<void> => {

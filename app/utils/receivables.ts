@@ -194,6 +194,98 @@ export const statementTotals = (openingBalance: number, entries: StatementEntry[
   }
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// Crédito del cliente: saldo vencido y aviso de límite de crédito (TRY-44)
+// ────────────────────────────────────────────────────────────────────────────
+
+/** Saldo abierto y vencido de un contacto, sumado de `open_orders` del RPC. */
+export interface PartnerCreditSummary {
+  openBalance: number
+  overdue: number
+  openOrderCount: number
+  overdueOrderCount: number
+  maxDaysOverdue: number
+}
+
+/**
+ * Resume las órdenes abiertas que entrega `get_partner_statement`. Solo suma
+ * los saldos que ya calculó la base (en moneda de la empresa); no recalcula
+ * pagos. `excludeOrderId` quita la orden que se está editando, para que no
+ * cuente dos veces cuando después se suma su total como «esta orden».
+ */
+export const summarizeOpenOrders = (
+  orders: Pick<StatementOpenOrder, 'order_id' | 'balance' | 'days_overdue'>[],
+  excludeOrderId?: string | null
+): PartnerCreditSummary => {
+  const relevant = orders.filter(o => o.order_id !== excludeOrderId && (Number(o.balance) || 0) > 0.005)
+  const buckets = bucketBalances(relevant)
+  const overdueOrders = relevant.filter(o => o.days_overdue > 0)
+  return {
+    openBalance: buckets.total,
+    overdue: overdueAmount(buckets),
+    openOrderCount: relevant.length,
+    overdueOrderCount: overdueOrders.length,
+    maxDaysOverdue: overdueOrders.reduce((max, o) => Math.max(max, o.days_overdue), 0)
+  }
+}
+
+/**
+ * Convierte el total de una orden a la moneda de la empresa con su tipo de
+ * cambio (misma regla que la base: si la moneda difiere se multiplica por
+ * `exchange_rate`, y un tipo de cambio vacío o cero vale 1).
+ */
+export const toCompanyCurrency = (
+  amount: number,
+  orderCurrency: string | null | undefined,
+  companyCurrency: string | null | undefined,
+  exchangeRate: number | null | undefined
+): number => {
+  const value = Number(amount) || 0
+  const from = orderCurrency?.trim().toUpperCase() || ''
+  const to = companyCurrency?.trim().toUpperCase() || ''
+  if (!from || !to || from === to) return roundCents(value)
+  return roundCents(value * (Number(exchangeRate) || 1))
+}
+
+export interface CreditStatusInput {
+  openBalance: number
+  overdue: number
+  /** Total de la orden en captura (moneda de la empresa). 0 si no aplica. */
+  orderTotal?: number
+  /** `partner.credit_limit`; 0 o vacío = sin límite. */
+  creditLimit?: number | null
+}
+
+export interface CreditStatus {
+  hasLimit: boolean
+  hasOverdue: boolean
+  /** Saldo abierto + esta orden. */
+  projectedBalance: number
+  /** Crédito disponible antes de esta orden (puede ser negativo). Null sin límite. */
+  available: number | null
+  /** El saldo proyectado supera el límite. Solo es un aviso: nunca bloquea. */
+  exceedsLimit: boolean
+  /** Cuánto se pasa del límite (0 si no lo supera). */
+  excess: number
+}
+
+/** Decide si mostrar el aviso de límite de crédito. Pura: no bloquea nada. */
+export const evaluateCreditStatus = ({ openBalance, overdue, orderTotal = 0, creditLimit }: CreditStatusInput): CreditStatus => {
+  const limit = Math.max(Number(creditLimit) || 0, 0)
+  const open = roundCents(Math.max(Number(openBalance) || 0, 0))
+  const projectedBalance = roundCents(open + Math.max(Number(orderTotal) || 0, 0))
+  const hasLimit = limit > 0
+  const exceedsLimit = hasLimit && projectedBalance - limit > 0.005
+  return {
+    hasLimit,
+    hasOverdue: (Number(overdue) || 0) > 0.005,
+    projectedBalance,
+    available: hasLimit ? roundCents(limit - open) : null,
+    exceedsLimit,
+    excess: exceedsLimit ? roundCents(projectedBalance - limit) : 0
+  }
+}
+
 /** Filtra contactos por nombre, correo o teléfono (sin acentos ni mayúsculas). */
 export const filterAgingPartners = (rows: AgingPartnerRow[], term: string): AgingPartnerRow[] => {
   const normalize = (s: string | null | undefined) =>

@@ -755,7 +755,7 @@ const exportToCSV = () => {
   })
 
   // Escape RFC 4180 y protección contra inyección de fórmulas: ver app/utils/csv.ts
-  downloadCsv(`${props.exportFilename}-${new Date().toISOString().split('T')[0]}`, headers, rows)
+  downloadCsv(`${props.exportFilename}-${localDateKey()}`, headers, rows)
 }
 
 // Watchers

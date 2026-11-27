@@ -137,14 +137,6 @@ const exportCsv = () => {
   downloadCsv(`estado-de-cuenta-${slug || 'contacto'}-${s.as_of}`, header, body)
 }
 
-const escapeHtml = (value: string | number | null | undefined): string =>
-  String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-
 /** Imprime el estado de cuenta en un iframe oculto (sin el layout del panel). */
 const printStatement = () => {
   const s = statement.value

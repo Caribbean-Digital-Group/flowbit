@@ -201,8 +201,9 @@ watch([rowId, selectedCompanyId], () => {
 
 // ── PDF Report ───────────────────────────────────────────────────────────────
 const downloadValuationPdf = () => {
-  const warehouseName = row.value?.name ?? 'Almacén'
-  const companyName = selectedCompany.value?.name ?? ''
+  // Datos capturados por usuarios: se escapan porque el reporte abre una URL blob: del mismo origen.
+  const warehouseName = escapeHtml(row.value?.name ?? 'Almacén')
+  const companyName = escapeHtml(selectedCompany.value?.name ?? '')
   const generatedAt = new Date().toLocaleDateString('es-MX', {
     day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
   })
@@ -212,35 +213,36 @@ const downloadValuationPdf = () => {
     const cost = p.cost_price ?? 0
     const sale = p.sale_price ?? 0
     const cur = p.currency ?? 'MXN'
+    const curLabel = escapeHtml(cur)
     return `<tr>
-      <td>${p.sku ?? p.internal_ref ?? '—'}</td>
-      <td>${p.display_name ?? p.name ?? '—'}</td>
+      <td>${escapeHtml(p.sku ?? p.internal_ref ?? '—')}</td>
+      <td>${escapeHtml(p.display_name ?? p.name ?? '—')}</td>
       <td class="right">${fmtNum(qty)}</td>
       <td class="right">${fmtCur(cost, cur)}</td>
       <td class="right">${fmtCur(qty * cost, cur)}</td>
       <td class="right">${fmtCur(sale, cur)}</td>
       <td class="right">${fmtCur(qty * sale, cur)}</td>
-      <td class="center">${cur}</td>
+      <td class="center">${curLabel}</td>
     </tr>`
   }).join('')
 
   const currencyTotals = valuationByCurrency.value.map(v => `
     <tr class="subtotal">
-      <td colspan="4" class="right">Subtotal ${v.currency}:</td>
+      <td colspan="4" class="right">Subtotal ${escapeHtml(v.currency)}:</td>
       <td class="right">${fmtCur(v.costTotal, v.currency)}</td>
       <td></td>
       <td class="right">${fmtCur(v.saleTotal, v.currency)}</td>
-      <td class="center">${v.currency}</td>
+      <td class="center">${escapeHtml(v.currency)}</td>
     </tr>`).join('')
 
   const outOfStockRows = outOfStockProducts.value.map(p => `
     <tr>
-      <td>${p.sku ?? p.internal_ref ?? '—'}</td>
-      <td>${p.display_name ?? p.name ?? '—'}</td>
+      <td>${escapeHtml(p.sku ?? p.internal_ref ?? '—')}</td>
+      <td>${escapeHtml(p.display_name ?? p.name ?? '—')}</td>
       <td class="right">${fmtNum(p.stock_quantity ?? 0)}</td>
       <td class="right">${fmtNum(p.stock_min ?? 0)}</td>
       <td class="right">${fmtCur(p.cost_price ?? 0, p.currency ?? 'MXN')}</td>
-      <td class="center">${p.currency ?? 'MXN'}</td>
+      <td class="center">${escapeHtml(p.currency ?? 'MXN')}</td>
     </tr>`).join('')
 
   const outOfStockSection = outOfStockProducts.value.length > 0 ? `

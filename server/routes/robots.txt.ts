@@ -3,17 +3,13 @@
  *
  * El archivo estático anterior fijaba `https://flowbit.app`, que no es el
  * dominio donde corre la plataforma: el sitemap declarado apuntaba a un sitio
- * inexistente. Aquí se toma el dominio real de la petición.
+ * inexistente. Ahora se usa el dominio canónico (NUXT_PUBLIC_SITE_URL).
  */
-import { callWebsiteAnonRpc } from '../utils/websitePublic'
+import { callWebsiteAnonRpc, requestBaseUrl } from '../utils/websitePublic'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
-
-  // Se prefiere el dominio desde el que se sirve; el configurado es el respaldo.
-  const host = getRequestHeader(event, 'x-forwarded-host') ?? getRequestHeader(event, 'host')
-  const proto = getRequestHeader(event, 'x-forwarded-proto') ?? 'https'
-  const base = host ? `${proto}://${host}` : String(config.public.siteUrl).replace(/\/$/, '')
+  // Dominio canónico (NUXT_PUBLIC_SITE_URL), igual que las etiquetas canónicas
+  const base = requestBaseUrl(event)
 
   const sites = await callWebsiteAnonRpc<{ slug: string }[]>(event, 'get_active_websites', {})
   const siteSlugs = (sites ?? []).map(s => s.slug).filter(slug => /^[a-z0-9-]{1,100}$/.test(slug))

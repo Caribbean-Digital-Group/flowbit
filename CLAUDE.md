@@ -83,7 +83,7 @@ flowbit/
 
 | Módulo | Ruta admin | Composable(s) |
 |---|---|---|
-| Dashboard (con «Primeros pasos» para empresas nuevas, `app/utils/onboarding.ts`) | `/admin` | `useOnboarding` |
+| Dashboard (con «Primeros pasos» para empresas nuevas, `app/utils/onboarding.ts`; foto agregada en un RPC, `docs/dashboard.md`) | `/admin` | `useDashboard`, `useSalesReport`, `useOnboarding` |
 | Agenda | `/admin/agenda` | — |
 | Contactos (Partners) | `/admin/partners` | `usePartner` |
 | Perfil | `/admin/profile` | — |
@@ -113,7 +113,7 @@ flowbit/
 | Gastos | `/admin/expenses` | `useExpense`, `useExpenseLookups` |
 | Categorías de gasto | `/admin/expense-categories` | `useExpenseCategory` |
 | Estado de resultados | `/admin/reports/profit-loss` | `useSalesReport`, `useExpense`, `useExpenseCategory` |
-| Cuentas por cobrar / por pagar (antigüedad y estado de cuenta) | `/admin/reports/receivables` (`?kind=purchase` = proveedores), `/admin/reports/receivables/[partnerId]` | `useReceivables` |
+| Cuentas por cobrar / por pagar (antigüedad, estado de cuenta, badge «Vencido» y aviso de límite de crédito en contacto y venta) | `/admin/reports/receivables` (`?kind=purchase` = proveedores), `/admin/reports/receivables/[partnerId]` | `useReceivables` |
 
 > Flujo comercial (entrega derivada de pickings, libro de pagos `order_payment`,
 > devoluciones, reservas por almacén, ingreso en base de caja): `docs/sales-flow-analysis.md`.
@@ -246,12 +246,16 @@ flowbit/
 | Empresa | — | `useCompany` |
 | Proyecto público | `/public/projects/[id]` | `usePublicProject` |
 | Salud de la plataforma | `/health` (público), `/api/health/keepalive` | — (rutas Nitro) |
+| Encabezados de seguridad HTTP | todas las rutas (`routeRules['/**']` en `nuxt.config.ts`) | — |
 
 > `/health` reporta el estado de la plataforma (200 ok / 503 base caída) y
 > `/api/health/keepalive` escribe un latido que evita que Supabase Cloud pause
 > el proyecto por inactividad. Lo disparan la función programada de Netlify
 > (`netlify/functions/keepalive.mts`) y, como respaldo,
 > `.github/workflows/keepalive.yml`. Documentado en `docs/health.md`.
+>
+> Encabezados de seguridad (nosniff, anti-clickjacking, Permissions-Policy, HSTS) en una sola
+> fuente: `securityHeaders` de `nuxt.config.ts`. No los dupliques en `netlify.toml`. Ver `docs/security-headers.md`.
 
 ### Funcionalidades y SEO (sección pública)
 
@@ -320,6 +324,7 @@ pages/admin/{module}/
 - Emits siempre tipados: `defineEmits<{ 'event-name': [payload: Type] }>()`
 - `const` sobre `let`, nunca `var`
 - Sin `console.log` en código productivo; solo `console.error` en manejo de errores
+- Fechas de calendario («hoy», fecha de una orden o de un cobro): `localDateKey()` de `app/utils/dates.ts`. Nunca `new Date().toISOString().slice(0, 10)`: da la fecha UTC y en México cambia a las 18:00
 
 ### Componentes Vue
 
@@ -478,6 +483,7 @@ export const useEntity = () => {
 - Filtrar siempre por `company_id` (multi-tenant)
 - Para búsqueda de texto usar `.ilike('field', '%term%')` o full-text search con config `spanish`
 - Listados completos (todas las filas de una empresa): envolver la consulta en `fetchAllRows` (`app/utils/pagination.ts`). Supabase corta cada respuesta en 1000 filas sin avisar; el helper lee por bloques con `.range()`. Construir la consulta dentro del callback y terminar el `.order()` en una columna única (`id`)
+- Filtros `.in('id', ids)` con listas que pueden crecer (contactos, productos…): usar `fetchByIdChunks` (`app/utils/pagination.ts`), que pide por lotes de 150 IDs. Un `.in()` con cientos de UUID excede el largo de URL de PostgREST y la consulta falla
 
 ### Helpers de autenticación (`useSupabase.ts`)
 
@@ -549,6 +555,11 @@ npm run db:types   # Regenerar types/database.types.ts (usa la Management API)
 
 En producción este paso es automático: al llegar migraciones a `main`, `.github/workflows/db-migrations.yml`
 ejecuta `db push` y sube los tipos regenerados a `develop`. Los PR hacia `main` muestran un `--dry-run`.
+
+Antes de eso, el job `migrations` de `ci.yml` aplica toda la cadena en un PostgreSQL 16 limpio en cada PR
+(`npm run db:check` en local, con `DATABASE_URL` de una base vacía). También rechaza los PR que editan
+migraciones pasadas o agregan una con timestamp anterior a la última de la base. Stubs de Supabase en
+`scripts/ci/supabase-stubs.sql`; detalles en `CONTRIBUTING.md`.
 
 ---
 
@@ -622,6 +633,7 @@ npm run db:migration:list      # Listar migraciones
 npm run db:push                # Push de migraciones a Supabase Cloud
 npm run db:pull                # Pull de schema desde Supabase Cloud
 npm run db:diff                # Ver diferencias de schema
+npm run db:check               # Aplicar toda la cadena de migraciones en un PostgreSQL vacío (DATABASE_URL)
 npm run db:types               # Regenerar types/database.types.ts
 ```
 
