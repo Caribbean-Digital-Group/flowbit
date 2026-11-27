@@ -83,7 +83,7 @@ flowbit/
 
 | Módulo | Ruta admin | Composable(s) |
 |---|---|---|
-| Dashboard (con «Primeros pasos» para empresas nuevas, `app/utils/onboarding.ts`) | `/admin` | `useOnboarding` |
+| Dashboard (con «Primeros pasos» para empresas nuevas, `app/utils/onboarding.ts`; foto agregada en un RPC, `docs/dashboard.md`) | `/admin` | `useDashboard`, `useSalesReport`, `useOnboarding` |
 | Agenda | `/admin/agenda` | — |
 | Contactos (Partners) | `/admin/partners` | `usePartner` |
 | Perfil | `/admin/profile` | — |
