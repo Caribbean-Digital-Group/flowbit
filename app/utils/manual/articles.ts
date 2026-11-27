@@ -108,7 +108,9 @@ export const ARTICLES: DocArticle[] = [
       'Las métricas se actualizan en tiempo real conforme se realizan operaciones en la plataforma.',
       'Desde el header puedes acceder rápidamente a tus tareas asignadas, solicitudes por aprobar y actividades de seguimiento CRM.',
       'El ícono de campana en el header muestra notificaciones de tareas y aprobaciones pendientes.',
-      'Si eres owner o admin de una empresa nueva, la tarjeta «Primeros pasos» te indica qué configurar primero y enlaza a cada pantalla y a su guía. Se completa sola con los datos reales de la empresa.'
+      'Si eres owner o admin de una empresa nueva, la tarjeta «Primeros pasos» te indica qué configurar primero y enlaza a cada pantalla y a su guía. Se completa sola con los datos reales de la empresa.',
+      '«Actividad reciente» muestra lo último que se registró en la empresa (contactos, órdenes, proyectos), ordenado por la fecha en que se creó cada registro. Una orden capturada hoy con fecha de la semana pasada aparece arriba.',
+      'El tablero carga igual de rápido sin importar cuántas órdenes o contactos tengas: las cifras se calculan en el servidor y llegan ya resumidas.'
     ],
     relatedModules: [
       { label: 'Agenda', route: '/admin/agenda' },
@@ -2316,6 +2318,10 @@ export const ARTICLES: DocArticle[] = [
     },
     faqs: [
       {
+        question: '¿Puedo mostrar mi tienda dentro de otra página web con un iframe?',
+        answer: 'No. Por seguridad, las páginas de Flowbit (panel, tienda y sitio web) no se pueden incrustar en un iframe de otro dominio: el navegador las bloquea para evitar que un tercero las suplante. Enlaza a la dirección de tu tienda con un botón o un enlace.'
+      },
+      {
         question: '¿Las ventas de la tienda descuentan inventario automáticamente?',
         answer: 'Se apartan en el momento de la compra y se descuentan al surtir. La orden llega confirmada con su entrega ya preparada: el stock queda reservado en el almacén de la tienda (nadie más puede venderlo) y se descuenta cuando el almacén confirma el picking de salida.'
       },
@@ -2994,6 +3000,7 @@ export const ARTICLES: DocArticle[] = [
     faqs: [
       { question: '¿Necesito tener tienda en línea para usar el sitio web?', answer: 'No. Son módulos independientes que comparten el slug y el motor de temas. Si la tienda está activa, el sitio puede enlazarla y mostrar productos destacados.' },
       { question: '¿Quién puede ver el sitio mientras está inactivo?', answer: 'Solo los miembros de la empresa con sesión iniciada, usando el enlace «Vista previa» (añade ?preview=1 a la URL).' },
+      { question: '¿Puedo incrustar mi sitio en otra página con un iframe?', answer: 'No. Por seguridad, las páginas de Flowbit no se muestran dentro de un iframe de otro dominio. Si rediriges tu propio dominio hacia el sitio, usa una redirección normal (301 o 302): el «reenvío con enmascaramiento» que ofrecen algunos proveedores usa un iframe y mostrará la página en blanco.' },
       { question: '¿Puedo usar mi propio dominio?', answer: 'Todavía no desde el panel. Por ahora el sitio vive en /sites/tu-slug y puedes redirigir tu dominio a esa dirección desde tu proveedor de DNS.' }
     ],
     relatedModules: [
