@@ -1,6 +1,6 @@
 import { ARTICLES } from '../../app/utils/manual/articles'
 import { FEATURE_MODULES } from '../../app/utils/features'
-import { callWebsiteAnonRpc } from '../utils/websitePublic'
+import { callWebsiteAnonRpc, requestBaseUrl } from '../utils/websitePublic'
 
 /**
  * Sitemap dinámico.
@@ -16,11 +16,8 @@ interface SitemapEntry {
 }
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
-
-  const host = getRequestHeader(event, 'x-forwarded-host') ?? getRequestHeader(event, 'host')
-  const proto = getRequestHeader(event, 'x-forwarded-proto') ?? 'https'
-  const base = host ? `${proto}://${host}` : String(config.public.siteUrl).replace(/\/$/, '')
+  // Dominio canónico (NUXT_PUBLIC_SITE_URL), igual que las etiquetas canónicas
+  const base = requestBaseUrl(event)
 
   const lastmod = new Date().toISOString().slice(0, 10)
 
