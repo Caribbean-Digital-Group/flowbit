@@ -1,4 +1,5 @@
 import type { H3Event } from 'h3'
+import { resolvePublicBaseUrl } from './publicBaseUrl'
 
 /**
  * Helpers del backend para el sitio web público.
@@ -43,12 +44,18 @@ export const callWebsiteAnonRpc = async <T>(
   }
 }
 
-/** Base pública de la petición (respeta el proxy de Netlify). */
+/**
+ * Base pública canónica (NUXT_PUBLIC_SITE_URL). El host de la petición solo es
+ * respaldo si no hay URL configurada: ver server/utils/publicBaseUrl.ts.
+ */
 export const requestBaseUrl = (event: H3Event): string => {
   const config = useRuntimeConfig(event)
-  const host = getRequestHeader(event, 'x-forwarded-host') ?? getRequestHeader(event, 'host')
-  const proto = getRequestHeader(event, 'x-forwarded-proto') ?? 'https'
-  return host ? `${proto}://${host}` : String(config.public.siteUrl).replace(/\/$/, '')
+  return resolvePublicBaseUrl({
+    siteUrl: config.public.siteUrl,
+    forwardedHost: getRequestHeader(event, 'x-forwarded-host'),
+    host: getRequestHeader(event, 'host'),
+    forwardedProto: getRequestHeader(event, 'x-forwarded-proto')
+  })
 }
 
 export const escapeXml = (value: string): string =>
