@@ -244,6 +244,14 @@ watch([partnerId, selectedCompanyId], () => {
       {{ errorMessage }}
     </div>
 
+    <PartnerCreditStatus
+      v-if="partner"
+      class="mb-6"
+      :company-id="selectedCompanyId"
+      :partner-id="partner.id"
+      :credit-limit="partner.credit_limit ?? 0"
+    />
+
     <PartnerForm v-model="partnerForm" :readonly="!isEditing" />
 
     <PartnerEmployeeCard

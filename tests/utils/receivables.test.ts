@@ -5,10 +5,13 @@ import {
   bucketShare,
   buildStatement,
   daysOverdue,
+  evaluateCreditStatus,
   filterAgingPartners,
   overdueAmount,
   resolveDueDate,
   statementTotals,
+  summarizeOpenOrders,
+  toCompanyCurrency,
   type AgingPartnerRow,
   type StatementEntry
 } from '../../app/utils/receivables'
@@ -135,5 +138,86 @@ describe('filterAgingPartners', () => {
     expect(filterAgingPartners(rows, 'example.com')).toHaveLength(1)
     expect(filterAgingPartners(rows, '1234')).toHaveLength(1)
     expect(filterAgingPartners(rows, '  ')).toHaveLength(3)
+  })
+})
+
+describe('summarizeOpenOrders', () => {
+  const orders = [
+    { order_id: 'a', balance: 100, days_overdue: -5 },
+    { order_id: 'b', balance: 250.5, days_overdue: 12 },
+    { order_id: 'c', balance: 49.5, days_overdue: 95 },
+    { order_id: 'd', balance: 0, days_overdue: 40 }
+  ]
+
+  it('sums open and overdue balances returned by the RPC', () => {
+    expect(summarizeOpenOrders(orders)).toEqual({
+      openBalance: 400,
+      overdue: 300,
+      openOrderCount: 3,
+      overdueOrderCount: 2,
+      maxDaysOverdue: 95
+    })
+  })
+
+  it('excludes the order being edited', () => {
+    const summary = summarizeOpenOrders(orders, 'b')
+    expect(summary.openBalance).toBe(149.5)
+    expect(summary.overdue).toBe(49.5)
+    expect(summary.overdueOrderCount).toBe(1)
+  })
+
+  it('returns zeros when there are no open orders', () => {
+    expect(summarizeOpenOrders([])).toEqual({
+      openBalance: 0, overdue: 0, openOrderCount: 0, overdueOrderCount: 0, maxDaysOverdue: 0
+    })
+  })
+})
+
+describe('toCompanyCurrency', () => {
+  it('keeps the amount when currencies match or are unknown', () => {
+    expect(toCompanyCurrency(100, 'MXN', 'mxn', 17)).toBe(100)
+    expect(toCompanyCurrency(100, null, 'MXN', 17)).toBe(100)
+  })
+
+  it('applies the exchange rate when currencies differ (0 or empty = 1)', () => {
+    expect(toCompanyCurrency(100, 'USD', 'MXN', 17.25)).toBe(1725)
+    expect(toCompanyCurrency(100, 'USD', 'MXN', 0)).toBe(100)
+  })
+})
+
+describe('evaluateCreditStatus', () => {
+  it('never flags a partner without credit limit', () => {
+    const status = evaluateCreditStatus({ openBalance: 1_000_000, overdue: 0, orderTotal: 500, creditLimit: 0 })
+    expect(status.hasLimit).toBe(false)
+    expect(status.exceedsLimit).toBe(false)
+    expect(status.available).toBeNull()
+    expect(status.projectedBalance).toBe(1_000_500)
+  })
+
+  it('flags when open balance plus this order exceeds the limit', () => {
+    const status = evaluateCreditStatus({ openBalance: 800, overdue: 0, orderTotal: 300, creditLimit: 1000 })
+    expect(status.exceedsLimit).toBe(true)
+    expect(status.excess).toBe(100)
+    expect(status.available).toBe(200)
+  })
+
+  it('does not flag when the projected balance equals the limit', () => {
+    const status = evaluateCreditStatus({ openBalance: 700, overdue: 0, orderTotal: 300, creditLimit: 1000 })
+    expect(status.exceedsLimit).toBe(false)
+    expect(status.excess).toBe(0)
+  })
+
+  it('flags an existing balance over the limit without an order', () => {
+    const status = evaluateCreditStatus({ openBalance: 1500, overdue: 200, creditLimit: 1000 })
+    expect(status.exceedsLimit).toBe(true)
+    expect(status.hasOverdue).toBe(true)
+    expect(status.available).toBe(-500)
+  })
+
+  it('treats negative or invalid inputs as zero', () => {
+    const status = evaluateCreditStatus({ openBalance: Number.NaN, overdue: -5, orderTotal: -10, creditLimit: -1 })
+    expect(status).toEqual({
+      hasLimit: false, hasOverdue: false, projectedBalance: 0, available: null, exceedsLimit: false, excess: 0
+    })
   })
 })

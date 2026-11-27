@@ -820,7 +820,8 @@ export const ARTICLES: DocArticle[] = [
       'Usa «Solo con saldo vencido» para armar tu lista de cobranza del día.',
       'Cambia a «Por pagar (proveedores)» para ver tus compras pendientes de pago con la misma antigüedad.',
       'Imprime el estado de cuenta (o guárdalo como PDF) y envíalo al cliente antes de llamarle.',
-      'Las cifras salen del libro de cobros: al registrar un abono en la orden, el reporte se actualiza solo.'
+      'Las cifras salen del libro de cobros: al registrar un abono en la orden, el reporte se actualiza solo.',
+      'Captura el «Límite de crédito» en la ficha del cliente (0 = sin límite). La ficha y las órdenes de venta muestran el badge «Vencido» con el monto atrasado y un aviso ámbar cuando el saldo abierto más la venta nueva rebasa el límite.'
     ],
     process: [
       { step: 1, title: 'Revisa el total vencido', description: 'Las tarjetas superiores muestran cuánto está al corriente, cuánto vencido y cuánto tiene más de 90 días.' },
@@ -844,6 +845,10 @@ export const ARTICLES: DocArticle[] = [
       {
         question: '¿Por qué una devolución aparece como abono y luego un reembolso como cargo?',
         answer: 'La devolución reduce lo que el cliente debe. Si además le regresaste el dinero, ese reembolso se registra como cargo, así que el saldo queda igual que antes de la devolución.'
+      },
+      {
+        question: '¿El límite de crédito impide venderle a un cliente?',
+        answer: 'No. Es solo un aviso. Al capturar una venta, Flowbit suma el saldo abierto del cliente y el total de la orden; si rebasa su límite de crédito, muestra un aviso ámbar junto a los totales, pero puedes guardar y confirmar la orden. Si el cliente tiene saldo vencido, verás además el badge «Vencido» con el monto, que abre su estado de cuenta.'
       }
     ],
     relatedModules: [
