@@ -533,7 +533,8 @@ export const ARTICLES: DocArticle[] = [
       '«Registrar cobro» admite abonos: captura monto, fecha, método y referencia. El estado pasa a «Pago parcial» o «Pagado» según el saldo.',
       'Una devolución acredita al cliente y, si eliges cuántas unidades regresan, las reingresa al almacén al mismo costo con que salieron.',
       'Solo puedes cancelar una orden si nada salió del almacén ni se cobró; si no, registra una devolución.',
-      'Elige el almacén de salida en la orden si no es el predeterminado.'
+      'Elige el almacén de salida en la orden si no es el predeterminado.',
+      '«Duplicar» (menú de opciones) abre una orden nueva en borrador con el mismo contacto, almacén, condiciones y líneas. Eliges si usar los precios de la orden original o los actuales del catálogo; las líneas de productos archivados se omiten con un aviso.'
     ],
     process: [
       { step: 1, title: 'Confirmar', description: 'La orden queda en firme (una compra queda lista para recibir).' },
@@ -552,6 +553,10 @@ export const ARTICLES: DocArticle[] = [
         answer: 'Cuando se cobra. El reporte de ventas trabaja en base de caja: suma los cobros en la fecha en que entraron, no la fecha en que se confirmó la orden.'
       },
       {
+        question: '¿Cómo repito un pedido o armo una cotización parecida a otra?',
+        answer: 'Abre la orden original y elige «Duplicar» en el menú de opciones. Se abre el formulario de nueva orden con todo precargado para que lo revises antes de guardar. La copia nace en borrador, con folio nuevo y fecha de hoy, sin cobros, entregas ni enlace de cotización.'
+      },
+      {
         question: 'Registré un cobro por error, ¿cómo lo corrijo?',
         answer: 'Un administrador puede anularlo desde la tabla de cobros indicando el motivo; queda en el historial marcado como anulado. Los cobros del punto de venta y de Stripe se corrigen con una devolución.'
       }
@@ -563,7 +568,7 @@ export const ARTICLES: DocArticle[] = [
       { label: 'Reporte de ventas', route: '/admin/reports/sales' }
     ],
     relatedArticles: ['sales-report', 'pickings-detail', 'storefront-fulfillment'],
-    tags: ['orden', 'detalle', 'estado', 'picking', 'entrega', 'cobro', 'abono', 'devolución', 'backorder', 'reserva']
+    tags: ['orden', 'detalle', 'estado', 'picking', 'entrega', 'cobro', 'abono', 'devolución', 'backorder', 'reserva', 'duplicar', 'recompra']
   },
 
   {
