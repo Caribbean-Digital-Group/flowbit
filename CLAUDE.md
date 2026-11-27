@@ -243,7 +243,7 @@ flowbit/
 | Módulo | Ruta admin | Composable(s) |
 |---|---|---|
 | Equipo | `/admin/team` | `useMembership` |
-| Empresa | — | `useCompany` |
+| Mis empresas (multiempresa: crear, cambiar, predeterminada) | `/admin/companies`, `/admin/companies/create` | `useCompany` |
 | Proyecto público | `/public/projects/[id]` | `usePublicProject` |
 | Salud de la plataforma | `/health` (público), `/api/health/keepalive` | — (rutas Nitro) |
 | Encabezados de seguridad HTTP | todas las rutas (`routeRules['/**']` en `nuxt.config.ts`) | — |
@@ -570,6 +570,8 @@ migraciones pasadas o agregan una con timestamp anterior a la última de la base
 - `partner` — registro de persona vinculado al `user.id` de Supabase
 - `selectedCompanyId` persiste en `localStorage` con la clave `flowbit:selected-company-id`
 - Empresas accesibles obtenidas via RPC `get_partner_companies`
+- Empresas adicionales: se crean solo con el RPC `create_company` (deja a quien la crea como owner; límite `max_owned_companies()`, espejo en `app/utils/company.ts`). No hay INSERT directo en `company`. La predeterminada se cambia con `set_default_company`
+- Las pantallas operan sobre `selectedCompanyId` (empresa en uso), nunca sobre la predeterminada
 - Todos los datos de negocio están scoped por `company_id`
 - Membresías de equipo: tabla `partner_company_relationship` (roles: `owner`, `admin`, `member`)
 - Invitaciones: flujo asincrónico via `useMembership`
@@ -600,7 +602,7 @@ El layout incluye:
   7. Sitio web (Ajustes, Páginas, Menús, Blog, Categorías, Etiquetas, Autores, Comentarios, Medios, Galerías, Mensajes, Redirecciones)
   8. Recursos Humanos (Empleados, Departamentos, Asistencias, Reporte de asistencias, Inasistencias, Vacaciones y permisos, Saldos de vacaciones, Tipos de ausencia, Horarios, Días festivos, Kioscos)
   9. Nómina (Periodos de nómina, Salarios, Mis recibos, Configuración fiscal)
-  10. Sistema (Equipo, Manual, Configuración)
+  10. Sistema (Equipo, Mis empresas, Manual, Configuración)
   - Además, entre Ventas/Compras e Inventario: **Tienda en línea** (Ajustes de tienda, Cupones, Métodos de envío, Analítica) y **Punto de Venta** (Terminal POS, Cajas, Sesiones de caja)
 - **Header sticky** con:
   - Botón hamburguesa (mobile)
@@ -608,7 +610,7 @@ El layout incluye:
   - Acceso al Manual de usuario
   - Notificaciones (Tareas + avisos de Aprobaciones + CRM) con badge y dropdown
   - Invitaciones recibidas con badge y dropdown
-  - Selector de empresa multi-empresa
+  - Selector de empresa multi-empresa (con accesos a «Mis empresas» y «Nueva empresa»)
   - Avatar dropdown (perfil, logout)
 - Badges numéricas con límite "99+"
 - Transiciones y animaciones suaves

@@ -12462,6 +12462,10 @@ export type Database = {
         Args: { p_submission_id: string }
         Returns: Json
       }
+      create_company: {
+        Args: { p_country_code?: string; p_currency?: string; p_name: string }
+        Returns: string
+      }
       create_order: {
         Args: {
           p_company_id: string
@@ -12994,6 +12998,7 @@ export type Database = {
         }
         Returns: Json
       }
+      max_owned_companies: { Args: never; Returns: number }
       open_pos_session: {
         Args: {
           p_notes?: string
@@ -13296,6 +13301,7 @@ export type Database = {
       }
       seed_crm_stages: { Args: { p_company_id: string }; Returns: undefined }
       seed_product_uoms: { Args: { p_company_id: string }; Returns: undefined }
+      set_default_company: { Args: { p_company_id: string }; Returns: boolean }
       set_picking_status: {
         Args: {
           p_new_status: Database["public"]["Enums"]["picking_status"]
