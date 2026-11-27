@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { createEmptyCompanyForm, type CompanyFormData } from '~/components/Company/Form.vue'
 import type { TablesUpdate } from '~/types/database.types'
 
@@ -6,7 +7,9 @@ definePageMeta({
   layout: 'admin'
 })
 
-const { getCurrentCompany, updateCompany } = useCompany()
+const authStore = useAuthStore()
+const { selectedCompanyId } = storeToRefs(authStore)
+const { getCompanyById, updateCompany } = useCompany()
 
 const formData = ref<CompanyFormData>(createEmptyCompanyForm())
 const companyId = ref<string | null>(null)
@@ -49,7 +52,12 @@ const loadCompany = async () => {
   isLoading.value = true
   errorMessage.value = ''
 
-  const company = await getCurrentCompany()
+  // La empresa en uso (selector del encabezado), no la predeterminada: con
+  // varias empresas son distintas y aquí se edita la que está seleccionada.
+  const targetId = selectedCompanyId.value
+  if (!targetId) return // la sesión aún carga; el watcher vuelve a llamar
+  const company = await getCompanyById(targetId)
+  if (targetId !== selectedCompanyId.value) return
   if (company) {
     companyId.value = company.id
     formData.value = mapCompanyToForm(company)
@@ -112,6 +120,8 @@ const handleSave = async () => {
     originalForm.value = { ...formData.value }
     isEditing.value = false
     successMessage.value = 'Configuración guardada correctamente.'
+    // Refresca el nombre en el selector de empresa y en «Mis empresas».
+    void authStore.fetchCompanies()
     setTimeout(() => { successMessage.value = '' }, 4000)
   } else {
     errorMessage.value = 'Error al guardar los cambios. Intenta de nuevo.'
@@ -120,9 +130,11 @@ const handleSave = async () => {
   isSaving.value = false
 }
 
-onMounted(() => {
-  loadCompany()
-})
+watch(selectedCompanyId, () => {
+  isEditing.value = false
+  successMessage.value = ''
+  void loadCompany()
+}, { immediate: true })
 </script>
 
 <template>

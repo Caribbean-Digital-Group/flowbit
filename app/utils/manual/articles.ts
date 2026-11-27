@@ -2189,14 +2189,81 @@ export const ARTICLES: DocArticle[] = [
     importance: 'Una configuración correcta garantiza que los documentos, reportes y comunicaciones reflejen correctamente la identidad de tu empresa. Los datos fiscales son críticos para la facturación.',
     tips: [
       'El nombre y logo de la empresa aparecen en documentos y en el selector de empresa del header.',
+      'Si tienes varias empresas, aquí se edita la empresa en uso (la que muestra el selector del encabezado). Cambia de empresa para configurar otra.',
       'Configura la moneda predeterminada para que se use en nuevas órdenes y solicitudes.',
       'La zona horaria afecta las fechas y horarios en notificaciones y reportes.',
       'Los datos fiscales (RFC, dirección fiscal) son necesarios para emitir documentos oficiales.'
     ],
     relatedModules: [
-      { label: 'Equipo', route: '/admin/team' }
+      { label: 'Equipo', route: '/admin/team' },
+      { label: 'Mis empresas', route: '/admin/companies' }
     ],
     tags: ['configuración', 'empresa', 'ajustes', 'preferencias', 'fiscal', 'RFC']
+  },
+
+  // ─── MULTIEMPRESA ─────────────────────────────────────────────────────────────
+  {
+    id: 'companies',
+    routePatterns: ['/admin/companies', '/admin/companies/create'],
+    module: 'core',
+    moduleLabel: 'General',
+    moduleEmoji: '🏠',
+    title: 'Mis empresas: crear y administrar varias empresas',
+    viewType: 'config',
+    level: 'basico',
+    isNew: true,
+    summary: 'Con una sola cuenta puedes llevar varias empresas, cada una con sus propios datos, y cambiar entre ellas desde el encabezado.',
+    description: '«Mis empresas» reúne todas las empresas en las que trabajas: las que creaste y las que te invitaron. Desde ahí creas una empresa nueva, eliges en cuál trabajar, marcas la que se abre al iniciar sesión y entras a su configuración o a su equipo. Cada empresa es independiente: contactos, productos, órdenes, inventario, tienda, sitio web, empleados y nómina no se comparten entre empresas.',
+    importance: 'Si tienes más de un negocio, o llevas la administración de varios clientes, no necesitas una cuenta por cada uno. Entras una vez y cambias de empresa en un clic, sin riesgo de mezclar información.',
+    tips: [
+      'El selector de empresa del encabezado también tiene los accesos «Mis empresas» y «Nueva empresa».',
+      'La empresa «En uso» es en la que estás trabajando ahora. Todo lo que captures se guarda en ella.',
+      'La «Predeterminada» es la que se abre al iniciar sesión en un dispositivo nuevo. En el mismo navegador, Flowbit recuerda la última que usaste.',
+      'Una empresa nueva empieza vacía. Al entrar verás «Primeros pasos» en el dashboard para configurarla.',
+      'Al crear una empresa quedas como propietario. Invita a tu equipo desde Equipo: cada empresa tiene sus propios miembros y roles.',
+      'Puedes tener hasta 10 empresas propias. Las empresas a las que te invitan no cuentan para ese límite.',
+      'Configuración siempre muestra la empresa en uso. Revisa el nombre en el encabezado antes de editar.'
+    ],
+    fields: [
+      { label: 'Nombre', required: true, type: 'text', description: 'Nombre con el que identificas la empresa (2 a 120 caracteres). Aparece en el selector del encabezado.' },
+      { label: 'Moneda', required: false, type: 'select', description: 'Moneda predeterminada de las órdenes de esta empresa.', tip: 'Cada empresa puede usar una moneda distinta.' },
+      { label: 'Datos fiscales y de contacto', required: false, type: 'text', description: 'Razón social, RFC, dirección, correo y teléfono. Puedes completarlos después en Configuración.' }
+    ],
+    process: [
+      { step: 1, title: 'Crea', description: 'En Mis empresas pulsa «Nueva empresa» y escribe el nombre.' },
+      { step: 2, title: 'Configura', description: 'Completa los datos fiscales y sigue «Primeros pasos».' },
+      { step: 3, title: 'Invita', description: 'Agrega a tu equipo desde Equipo.' },
+      { step: 4, title: 'Cambia', description: 'Usa el selector del encabezado para pasar de una empresa a otra.' }
+    ],
+    faqs: [
+      {
+        question: '¿Los datos de una empresa se ven en otra?',
+        answer: 'No. Cada empresa tiene sus propios contactos, productos, órdenes, inventario, empleados y reportes. Al cambiar de empresa, el panel muestra solo lo de la empresa en uso.'
+      },
+      {
+        question: '¿Mi equipo ve todas mis empresas?',
+        answer: 'No. Cada persona solo ve las empresas a las que fue invitada. Si quieres que alguien trabaje en dos empresas, invítalo en cada una.'
+      },
+      {
+        question: '¿Puedo copiar productos o contactos de una empresa a otra?',
+        answer: 'No hay una copia directa. Exporta el listado a CSV en la empresa de origen e impórtalo en la de destino.'
+      },
+      {
+        question: '¿Puedo eliminar una empresa?',
+        answer: 'Todavía no desde el panel. Si creaste una empresa por error, simplemente no la uses; no afecta a las demás.'
+      },
+      {
+        question: '¿Qué diferencia hay entre «En uso» y «Predeterminada»?',
+        answer: '«En uso» es la empresa en la que trabajas en este momento. «Predeterminada» es la que se abre cuando inicias sesión en un navegador donde no habías entrado antes.'
+      }
+    ],
+    relatedModules: [
+      { label: 'Mis empresas', route: '/admin/companies' },
+      { label: 'Configuración', route: '/admin/settings' },
+      { label: 'Equipo', route: '/admin/team' }
+    ],
+    relatedArticles: ['settings'],
+    tags: ['multiempresa', 'empresas', 'nueva empresa', 'crear empresa', 'cambiar de empresa', 'sucursal', 'negocios', 'predeterminada', 'selector']
   },
 
   // ─── MANUAL ───────────────────────────────────────────────────────────────────

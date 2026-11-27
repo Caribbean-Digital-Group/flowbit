@@ -903,6 +903,13 @@ const menuGroups: MenuGroup[] = [
         ]
       },
       {
+        title: 'Mis empresas',
+        to: '/admin/companies',
+        iconPaths: [
+          'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'
+        ]
+      },
+      {
         title: 'Manual',
         to: '/manual',
         iconPaths: [
@@ -1683,6 +1690,30 @@ const handleLogout = async () => {
                     class="px-3 py-4 text-center"
                   >
                     <p class="text-sm text-slate-500">No hay empresas disponibles</p>
+                  </div>
+
+                  <!-- Multiempresa: administrar y crear -->
+                  <div class="border-t border-slate-100 pt-1 mt-1">
+                    <NuxtLink
+                      to="/admin/companies"
+                      class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                      @click="isCompanySelectorOpen = false"
+                    >
+                      <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                      </svg>
+                      Mis empresas
+                    </NuxtLink>
+                    <NuxtLink
+                      to="/admin/companies/create"
+                      class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-indigo-700 hover:bg-indigo-50 transition-colors"
+                      @click="isCompanySelectorOpen = false"
+                    >
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                      </svg>
+                      Nueva empresa
+                    </NuxtLink>
                   </div>
                 </div>
               </Transition>
