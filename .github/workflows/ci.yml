@@ -1,4 +1,4 @@
-# CI: ejecuta las pruebas unitarias y compila la app en cada PR hacia develop/main para detectar errores antes de revisar.
+# CI: ejecuta las pruebas unitarias, compila la app y valida las migraciones SQL en cada PR hacia develop/main para detectar errores antes de revisar.
 name: CI
 
 on:
@@ -60,3 +60,36 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # Migraciones SQL (TRY-48): aplica toda la cadena de supabase/migrations sobre un
+  # PostgreSQL 16 limpio con stubs de Supabase (roles, auth, storage). Así un error
+  # de SQL se ve en el PR y no hasta que db-migrations.yml hace `db push` en main.
+  # Corre en cada PR, sin filtro de rutas, para que pueda marcarse como check requerido.
+  migrations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Historial completo para comparar contra la rama base del PR.
+          fetch-depth: 0
+      # No se editan migraciones pasadas y las nuevas van después de la última de la base.
+      - name: Historial de migraciones
+        if: github.event_name == 'pull_request'
+        run: scripts/ci/check-migration-history.sh "origin/${{ github.base_ref }}"
+      - name: Aplicar migraciones
+        run: scripts/ci/check-migrations.sh

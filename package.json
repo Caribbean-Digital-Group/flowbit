@@ -19,6 +19,7 @@
     "db:push": "supabase db push",
     "db:pull": "supabase db pull",
     "db:diff": "supabase db diff",
+    "db:check": "bash scripts/ci/check-migrations.sh",
     "db:types": "mkdir -p supabase/.temp && supabase gen types typescript --project-id pmnurkwkqchxbofottyn --schema public > supabase/.temp/database.types.ts && mv supabase/.temp/database.types.ts types/database.types.ts",
     "typecheck": "nuxi typecheck",
     "test": "vitest run",
