@@ -10,6 +10,19 @@ const searchVerificationMeta = [
   { name: 'msvalidate.01', content: process.env.NUXT_PUBLIC_BING_SITE_VERIFICATION },
 ].filter((meta): meta is { name: string, content: string } => Boolean(meta.content))
 
+// Base de encabezados HTTP de seguridad. Sin CSP completa todavía: Nuxt inyecta
+// scripts inline y el panel habla con Supabase y Stripe (ver docs/security-headers.md).
+// Sin Referrer-Policy global a propósito: Netlify concatena valores repetidos de
+// reglas que se traslapan y anularía el `no-referrer` del kiosco; el navegador ya
+// usa strict-origin-when-cross-origin por defecto.
+const securityHeaders = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'SAMEORIGIN',
+  'Content-Security-Policy': "frame-ancestors 'self'",
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), browsing-topics=()',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+}
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -30,6 +43,10 @@ export default defineNuxtConfig({
     },
   },
   routeRules: {
+    // Encabezados de seguridad para todas las rutas (docs/security-headers.md).
+    // Nitro los aplica en el servidor y el preset de Netlify los copia a `_headers`.
+    // SAMEORIGIN (no DENY): la impresión de órdenes usa un iframe del mismo origen.
+    '/**': { headers: securityHeaders },
     // El manual pasó de /admin/manual y /help a la sección pública /manual.
     '/help': { redirect: { to: '/manual', statusCode: 301 } },
     '/help/**': { redirect: { to: '/manual/**', statusCode: 301 } },

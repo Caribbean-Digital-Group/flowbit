@@ -246,12 +246,16 @@ flowbit/
 | Empresa | — | `useCompany` |
 | Proyecto público | `/public/projects/[id]` | `usePublicProject` |
 | Salud de la plataforma | `/health` (público), `/api/health/keepalive` | — (rutas Nitro) |
+| Encabezados de seguridad HTTP | todas las rutas (`routeRules['/**']` en `nuxt.config.ts`) | — |
 
 > `/health` reporta el estado de la plataforma (200 ok / 503 base caída) y
 > `/api/health/keepalive` escribe un latido que evita que Supabase Cloud pause
 > el proyecto por inactividad. Lo disparan la función programada de Netlify
 > (`netlify/functions/keepalive.mts`) y, como respaldo,
 > `.github/workflows/keepalive.yml`. Documentado en `docs/health.md`.
+>
+> Encabezados de seguridad (nosniff, anti-clickjacking, Permissions-Policy, HSTS) en una sola
+> fuente: `securityHeaders` de `nuxt.config.ts`. No los dupliques en `netlify.toml`. Ver `docs/security-headers.md`.
 
 ### Funcionalidades y SEO (sección pública)
 
