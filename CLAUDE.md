@@ -54,7 +54,7 @@ flowbit/
 │   │   ├── marketing.vue              # Landing y /funcionalidades (header + footer con enlaces a módulos)
 │   │   ├── default.vue
 │   │   └── public.vue
-│   ├── middleware/                    # admin-guard.global.ts: exige sesión en /admin (conserva ?redirect=)
+│   ├── middleware/                    # admin-guard.global.ts: exige sesión en /admin y /valle-bit (conserva ?redirect=)
 │   ├── pages/
 │   │   ├── sites/[company_slug]/      # Sitio web público por empresa (CMS + blog)
 │   │   ├── index.vue                  # Landing / login
@@ -85,10 +85,17 @@ flowbit/
 |---|---|---|
 | Dashboard (con «Primeros pasos» para empresas nuevas, `app/utils/onboarding.ts`; foto agregada en un RPC, `docs/dashboard.md`) | `/admin` | `useDashboard`, `useSalesReport`, `useOnboarding` |
 | Agenda | `/admin/agenda` | — |
+| Valle Bit (vista de juego: mapa recorrible, marcadores, avatar, Bit) | `/valle-bit` | `useValleWorld`, `useValleAvatar` |
 | Contactos (Partners) | `/admin/partners` | `usePartner` |
 | Perfil | `/admin/profile` | — |
 | Configuración | `/admin/settings` | — |
 | Invitaciones | `/admin/invitations` | `useMembership` |
+
+> Valle Bit es otra vista del mismo ERP, no un módulo con datos propios: reutiliza los composables del panel
+> (mismo RLS) y no calcula cifras por su cuenta. Motor propio en Canvas 2D y pixel art por código en
+> `app/utils/valle/` (puro, probado en `tests/utils/valle.test.ts`); el catálogo de lugares es
+> `app/utils/valle/locations.ts`. `valle_avatar` va por usuario, sin `company_id`. Tipos temporales en
+> `types/valle.types.ts`. Fases pendientes y decisiones: `docs/valle-bit.md`.
 
 ### CRM
 
@@ -593,7 +600,7 @@ El layout incluye:
 
 - **Sidebar colapsable** — 20 rem expandido / 5 rem colapsado en desktop, full-width en mobile
 - **Grupos de navegación colapsables** organizados por dominio:
-  1. General (Dashboard, Agenda, Contactos)
+  1. General (Dashboard, Agenda, Valle Bit, Contactos)
   2. CRM (Tablero, Leads, Pipeline, Motivos de pérdida)
   3. Ventas/Compras (Órdenes, Por surtir, Gastos, Reporte de ventas, Estado de resultados, Cuentas por cobrar, Líneas de orden, Métodos de pago, Categorías de gasto)
   4. Inventario (Inventario, Por reabastecer, Productos, Almacenes, Movimientos, Líneas de picking)

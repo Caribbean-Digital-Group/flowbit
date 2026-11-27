@@ -3952,6 +3952,58 @@ export const ARTICLES: DocArticle[] = [
     relatedArticles: ['crm-stages-list', 'crm-leads-create'],
     tags: ['etapa', 'pipeline', 'embudo', 'crm', 'proceso', 'venta']
   },
+  // ─── VALLE BIT ───────────────────────────────────────────────────────────────
+  {
+    id: 'valle-bit',
+    routePatterns: ['/valle-bit'],
+    module: 'core',
+    moduleLabel: 'General',
+    moduleEmoji: '🏠',
+    title: 'Valle Bit: tu empresa como un mundo de juego',
+    viewType: 'dashboard',
+    level: 'basico',
+    isNew: true,
+    summary: 'Valle Bit convierte tu empresa en un pueblo que recorres con tu avatar: cada edificio es un módulo de Flowbit y los marcadores muestran tus cifras reales del mes.',
+    description: 'Valle Bit es otra forma de ver el mismo ERP. Es un mapa en 2D que recorres con un avatar: el Mercado son tus ventas, el Banco tus finanzas, el Almacén tu inventario, el Ayuntamiento tus aprobaciones y así con cada módulo. Arriba siempre ves los marcadores del mes (cobrado, gastos, utilidad, ingresos previstos, por cobrar, stock bajo y pendientes). Todo lo que muestra son los datos reales de la empresa seleccionada.',
+    importance: 'Da una vista general de la empresa que se entiende de un vistazo y hace más ameno revisar pendientes. No reemplaza al panel: desde cada lugar puedes abrir su módulo para trabajar como siempre.',
+    tips: [
+      'Entra desde el botón «Entrar a Valle Bit» del dashboard o desde el menú lateral. Para regresar, usa «Volver al panel».',
+      'Camina con las flechas o WASD, o toca el punto del mapa al que quieras ir. En el celular tienes además un joystick.',
+      'Acércate a la puerta de un lugar y pulsa «Entrar» o la tecla E para ver su resumen. También puedes tocar el edificio y tu avatar camina hasta él.',
+      'Toca un marcador y tu avatar va al lugar donde se explica esa cifra.',
+      'Bit te acompaña: al llegar a un lugar te dice qué es y qué pasa hoy ahí. Tócalo o pulsa B para ver consejos, preguntas frecuentes y la guía del módulo.',
+      'En «Tu casa» personalizas tu avatar: tono de piel, peinado, color de cabello, ropa y accesorio. Es el mismo en todas tus empresas.',
+      'Si prefieres no usar el mapa, el botón «Lista» muestra los mismos lugares como tarjetas.',
+      'Ves exactamente lo mismo que tu rol te permite ver en el panel: Valle Bit no muestra datos adicionales.'
+    ],
+    process: [
+      { step: 1, title: 'Entra al valle', description: 'En el dashboard, pulsa «Entrar a Valle Bit».' },
+      { step: 2, title: 'Revisa los marcadores', description: 'Arriba están las cifras del mes en curso, con una flecha que las compara contra el mismo tramo del mes anterior.' },
+      { step: 3, title: 'Visita un lugar', description: 'Camina hasta un edificio y entra para ver su resumen y sus registros recientes.' },
+      { step: 4, title: 'Trabaja en el panel', description: 'Usa «Abrir en el panel» para ir al módulo y hacer cambios.' }
+    ],
+    faqs: [
+      { question: '¿Las cifras de Valle Bit son reales?', answer: 'Sí. Son las mismas que ves en el dashboard, el estado de resultados y los reportes, para la empresa que tienes seleccionada y el mes en curso.' },
+      { question: '¿Cómo se calculan «Gastos» y «Utilidad»?', answer: 'Gastos suma las compras pagadas y los gastos de operación pagados en el mes. Utilidad es lo cobrado menos esos gastos, igual que en el estado de resultados (base de caja).' },
+      { question: '¿Qué son los «Ingresos previstos»?', answer: 'Lo que falta por cobrar de tus ventas confirmadas más el embudo de CRM ponderado por la probabilidad de cada etapa.' },
+      { question: '¿Puedo crear o editar registros dentro del valle?', answer: 'Por ahora Valle Bit es de consulta: cada lugar muestra su resumen y te lleva al módulo del panel para hacer cambios.' },
+      { question: '¿Mis compañeros ven mi avatar?', answer: 'Todavía no. Tu avatar se ve solo en tu mapa.' }
+    ],
+    shortcuts: [
+      { keys: 'Flechas / WASD', action: 'Caminar' },
+      { keys: 'E', action: 'Entrar al lugar cercano' },
+      { keys: 'B', action: 'Abrir la ayuda de Bit' },
+      { keys: 'Esc', action: 'Salir de un lugar' }
+    ],
+    relatedModules: [
+      { label: 'Valle Bit', route: '/valle-bit' },
+      { label: 'Dashboard', route: '/admin' },
+      { label: 'Agenda', route: '/admin/agenda' }
+    ],
+    relatedArticles: ['dashboard', 'bit-assistant'],
+    tags: ['valle bit', 'juego', 'mapa', 'avatar', 'gamificación', 'marcadores', 'bit']
+  },
+
   // ─── AYUDA Y ASISTENTE ───────────────────────────────────────────────────────
   {
     id: 'bit-assistant',
