@@ -1,4 +1,5 @@
 import { isRateLimited } from '../../utils/analyticsIngest'
+import { checkRequestSession } from '../../utils/supabaseSession'
 import {
   renderWebsiteDocument,
   renderWebsiteHtml,
@@ -12,8 +13,10 @@ import {
  *  · { html }     → HTML libre (sección «HTML personalizado»)
  *  · { sections } → arreglo de secciones: sanea sus props html
  *
- * Es una transformación pura (no toca la base). Exige sesión para no ser un
- * sanitizador público abierto y limita por IP.
+ * Es una transformación pura (no toca la base). Exige una sesión válida de
+ * Supabase (el token se confirma contra Supabase Auth, con caché breve; ver
+ * server/utils/supabaseSession.ts) para no ser un sanitizador público abierto,
+ * y limita por IP.
  */
 
 const MAX_BODY_BYTES = 1_500_000
@@ -36,8 +39,12 @@ export default defineEventHandler(async (event) => {
     return { status: 'rate_limited' }
   }
 
-  const auth = headers.authorization ?? ''
-  if (!/^Bearer\s+\S+/.test(auth)) {
+  const session = await checkRequestSession(event)
+  if (session === 'unavailable') {
+    setResponseStatus(event, 503)
+    return { status: 'unavailable' }
+  }
+  if (session !== 'valid') {
     setResponseStatus(event, 401)
     return { status: 'unauthorized' }
   }

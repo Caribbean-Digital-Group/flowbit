@@ -97,7 +97,7 @@ contadores de aplausos/comentarios y guardia de HTML peligroso.
 
 ### Contenido y sanitización
 - El cuerpo de los posts es un documento **Tiptap (JSON)**. Al guardar, el
-  cliente llama a `POST /api/website/render` (exige sesión, rate limit por IP),
+  cliente llama a `POST /api/website/render` (exige una sesión válida de Supabase —el token se confirma contra Supabase Auth y se guarda en caché unos minutos, `server/utils/supabaseSession.ts`—, rate limit por IP),
   que genera el HTML con las mismas extensiones del editor (`@tiptap/html`),
   lo pasa por **sanitize-html** (lista blanca de etiquetas, `href`/`src`
   solo `http(s)|mailto|tel`, iframes solo de YouTube, Vimeo, Google Maps y
