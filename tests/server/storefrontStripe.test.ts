@@ -1,34 +1,25 @@
 import { describe, expect, it } from 'vitest'
 import {
+  classifyMarkPaidResult,
   fromStripeAmount,
-  isOrderOwnedByStore,
   toStripeAmount
 } from '../../server/utils/storefrontStripe'
 
-const STORE_A = '11111111-1111-4111-8111-111111111111'
-const STORE_B = '22222222-2222-4222-8222-222222222222'
-
-describe('isOrderOwnedByStore', () => {
-  it('acepta una orden de la misma empresa que firmó el evento', () => {
-    expect(isOrderOwnedByStore({ company_id: STORE_A }, STORE_A)).toBe(true)
+describe('classifyMarkPaidResult', () => {
+  it('registra el pago cuando el RPC responde ok', () => {
+    expect(classifyMarkPaidResult({ status: 'ok', payment_status: 'paid' })).toBe('paid')
+    expect(classifyMarkPaidResult({ status: 'ok', already_paid: true })).toBe('paid')
   })
 
-  it('rechaza una orden de otra empresa (evento forjado con el secret propio)', () => {
-    expect(isOrderOwnedByStore({ company_id: STORE_B }, STORE_A)).toBe(false)
+  it('ignora (sin reintento) una orden de otra empresa o inexistente', () => {
+    // Desde TRY-71 el RPC exige la empresa: una orden ajena llega como not_found
+    expect(classifyMarkPaidResult({ status: 'not_found' })).toBe('ignore')
   })
 
-  it('rechaza cuando la orden no existe o no es del storefront', () => {
-    expect(isOrderOwnedByStore(null, STORE_A)).toBe(false)
-    expect(isOrderOwnedByStore(undefined, STORE_A)).toBe(false)
-  })
-
-  it('rechaza cuando no se conoce la empresa de la tienda', () => {
-    expect(isOrderOwnedByStore({ company_id: STORE_A }, undefined)).toBe(false)
-    expect(isOrderOwnedByStore({ company_id: STORE_A }, '')).toBe(false)
-  })
-
-  it('rechaza una orden sin empresa', () => {
-    expect(isOrderOwnedByStore({ company_id: '' }, '')).toBe(false)
+  it('pide reintento ante errores o falta de respuesta', () => {
+    expect(classifyMarkPaidResult({ status: 'error', code: 'currency_mismatch' })).toBe('retry')
+    expect(classifyMarkPaidResult(null)).toBe('retry')
+    expect(classifyMarkPaidResult(undefined)).toBe('retry')
   })
 })
 

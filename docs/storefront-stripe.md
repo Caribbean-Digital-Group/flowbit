@@ -62,16 +62,18 @@ la tienda sigue operando con los métodos de pago manuales.
    - **Webhook** `POST /api/storefront/stripe/webhook`: multi-tenant — el slug
      viaja en la metadata del evento y solo se usa para elegir con qué
      `stripe_webhook_secret` verificar la firma; un payload forjado con el
-     slug de otra empresa no pasa la verificación. Después exige que la
-     orden (`flowbit_order_id`) pertenezca a la empresa de esa tienda: si no,
-     el evento se ignora (200) y no se registra ningún pago. Si
-     `payment_status='paid'`, llama `mark_storefront_order_paid`.
+     slug de otra empresa no pasa la verificación. Si
+     `payment_status='paid'`, llama `mark_storefront_order_paid` con el
+     `company_id` de esa tienda: si la orden (`flowbit_order_id`) es de otra
+     empresa, el RPC responde `not_found`, el evento se ignora (200) y no se
+     registra ningún pago.
    - **Retorno del cliente**: la página de confirmación
      (`?stripe=success&session_id=...`) llama
      `POST /api/storefront/stripe/status`, que consulta la sesión
      directamente en la API de Stripe con la secret key y marca la orden si
      ya fue cobrada. El cliente no puede forzar el estado.
-5. `mark_storefront_order_paid` valida moneda y monto (tolerancia de $0.50 por
+5. `mark_storefront_order_paid(p_company_id, p_order_id, …)` solo acepta
+   órdenes del storefront de esa empresa (TRY-71), valida moneda y monto (tolerancia de $0.50 por
    redondeo a unidades mínimas), marca `paid` (o `partial` si el monto no
    alcanza), y registra `paid_at`, `stripe_session_id` y
    `stripe_payment_intent_id`. Es idempotente ante reintentos del webhook.
@@ -92,12 +94,15 @@ la tienda sigue operando con los métodos de pago manuales.
 - **La firma del webhook no prueba que la orden sea de la tienda.** Cualquier
   empresa controla su propio webhook secret y podría firmar un evento con el
   id de una orden ajena (el `order_id` se le devuelve a quien compra). Por eso
-  el webhook lee la orden con service_role y compara su `company_id` con el de
-  la tienda verificada (`isOrderOwnedByStore` en
-  `server/utils/storefrontStripe.ts`, probado en
-  `tests/server/storefrontStripe.test.ts`). `session` y `status` ya resuelven
-  la orden con `get_storefront_stripe_order(slug, ref, email)`, que filtra por
-  empresa.
+  la regla vive en la base (TRY-71): `mark_storefront_order_paid` y
+  `record_storefront_stripe_session` reciben `p_company_id` y filtran
+  `o.company_id = p_company_id`. El webhook pasa el `company_id` de la tienda
+  cuyo secret validó la firma; `session` y `status` pasan el de la orden que
+  devuelve `get_storefront_stripe_order(slug, ref, email)`, que ya filtra por
+  empresa. Las firmas anteriores, sin empresa, se eliminaron. La respuesta del
+  RPC se traduce a la respuesta del webhook con `classifyMarkPaidResult`
+  (`server/utils/storefrontStripe.ts`, probado en
+  `tests/server/storefrontStripe.test.ts`).
 
 ## Archivos
 

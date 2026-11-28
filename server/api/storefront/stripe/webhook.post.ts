@@ -1,10 +1,10 @@
 import Stripe from 'stripe'
 import {
   callStorefrontServiceRpc,
-  fetchStorefrontOrderOwner,
-  isOrderOwnedByStore,
+  classifyMarkPaidResult,
   isValidStorefrontSlug,
   fromStripeAmount,
+  type MarkStorefrontOrderPaidResult,
   type StripeStoreConfig
 } from '../../../utils/storefrontStripe'
 
@@ -21,8 +21,9 @@ import {
  *
  * La firma NO prueba que la orden sea de esa tienda: cualquier empresa
  * controla su propio webhook secret y podría firmar un evento con el
- * flowbit_order_id de una orden ajena. Por eso, antes de registrar el pago,
- * se exige que la orden pertenezca a la empresa de la tienda verificada.
+ * flowbit_order_id de una orden ajena. Por eso el pago se registra con la
+ * empresa de la tienda verificada y `mark_storefront_order_paid` solo acepta
+ * órdenes de esa empresa (TRY-70, regla en la base desde TRY-71).
  *
  * Eventos manejados: checkout.session.completed y
  * checkout.session.async_payment_succeeded (pagos diferidos tipo OXXO/SPEI).
@@ -114,14 +115,28 @@ export default defineEventHandler(async (event) => {
     return { received: true, ignored: 'not_paid_or_missing_order' }
   }
 
-  // Multi-tenant: la orden debe ser de la empresa cuyo secret validó la firma
-  const owner = await fetchStorefrontOrderOwner(event, orderId)
-  if (owner === undefined) {
-    // Error transitorio al leer la orden: 500 para que Stripe reintente
-    setResponseStatus(event, 500)
-    return { status: 'error' }
+  if (!storeConfig.company_id) {
+    setResponseStatus(event, 400)
+    return { status: 'webhook_not_configured' }
   }
-  if (!isOrderOwnedByStore(owner, storeConfig.company_id)) {
+
+  // Multi-tenant: el RPC solo registra el pago si la orden es de la empresa
+  // cuyo secret validó la firma
+  const result = await callStorefrontServiceRpc<MarkStorefrontOrderPaidResult>(
+    event,
+    'mark_storefront_order_paid',
+    {
+      p_company_id: storeConfig.company_id,
+      p_order_id: orderId,
+      p_session_id: session.id,
+      p_payment_intent: typeof session.payment_intent === 'string' ? session.payment_intent : null,
+      p_amount: fromStripeAmount(session.amount_total ?? 0, session.currency ?? ''),
+      p_currency: (session.currency ?? '').toUpperCase()
+    }
+  )
+
+  const outcome = classifyMarkPaidResult(result)
+  if (outcome === 'ignore') {
     // Evento firmado por una tienda sobre una orden que no es suya (o que no
     // existe): no se registra el pago. 200 para que Stripe no lo reintente.
     console.error('Stripe webhook order does not belong to the signing store:', {
@@ -131,20 +146,7 @@ export default defineEventHandler(async (event) => {
     })
     return { received: true, ignored: 'order_not_in_store' }
   }
-
-  const result = await callStorefrontServiceRpc<{ status: string; payment_status?: string }>(
-    event,
-    'mark_storefront_order_paid',
-    {
-      p_order_id: orderId,
-      p_session_id: session.id,
-      p_payment_intent: typeof session.payment_intent === 'string' ? session.payment_intent : null,
-      p_amount: fromStripeAmount(session.amount_total ?? 0, session.currency ?? ''),
-      p_currency: (session.currency ?? '').toUpperCase()
-    }
-  )
-
-  if (!result || result.status !== 'ok') {
+  if (outcome === 'retry' || !result) {
     // 500 para que Stripe reintente el evento más tarde
     console.error('Could not mark storefront order as paid:', orderId, result)
     setResponseStatus(event, 500)
