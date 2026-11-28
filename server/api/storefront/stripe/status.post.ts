@@ -81,6 +81,7 @@ export default defineEventHandler(async (event) => {
       event,
       'mark_storefront_order_paid',
       {
+        p_company_id: order.company_id,
         p_order_id: order.id,
         p_session_id: session.id,
         p_payment_intent: typeof session.payment_intent === 'string' ? session.payment_intent : null,
